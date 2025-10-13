@@ -1,0 +1,283 @@
+/* components/Post/PostActions.css */
+.post-actions {
+  border-top: 1px solid #f0f0f0;
+  padding: 8px 0 0;
+}
+
+/* Stats Bar */
+.post-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 0 16px 8px;
+  border-bottom: 1px solid #f8f9fa;
+  margin-bottom: 8px;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #65676b;
+  cursor: pointer;
+}
+
+.stat-item:hover {
+  text-decoration: underline;
+}
+
+.stat-icon {
+  font-size: 14px;
+}
+
+.stat-count {
+  font-weight: 500;
+}
+
+/* Actions Container */
+.actions-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  padding: 0 4px;
+}
+
+.action-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 14px;
+  font-weight: 500;
+  color: #65676b;
+  position: relative;
+  min-height: 36px;
+}
+
+.action-btn:hover {
+  background-color: #f0f2f5;
+  transform: translateY(-1px);
+}
+
+.action-btn:active {
+  transform: translateY(0);
+}
+
+/* Like Button States */
+.like-btn.liked {
+  color: #f91880;
+}
+
+.like-btn.liked:hover {
+  background-color: #fff0f6;
+}
+
+.like-btn.emotion-love {
+  color: #f91880;
+}
+
+.like-btn.emotion-haha {
+  color: #f7b928;
+}
+
+.like-btn.emotion-wow {
+  color: #f7b928;
+}
+
+.like-btn.emotion-sad {
+  color: #f7b928;
+}
+
+.like-btn.emotion-angry {
+  color: #f7b928;
+}
+
+.like-button-content {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.like-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid #f0f0f0;
+  border-top: 2px solid #f91880;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Emotion Picker */
+.emotion-picker-container {
+  position: relative;
+}
+
+.emotion-picker-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: none;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: #65676b;
+  margin-left: 4px;
+}
+
+.emotion-picker-btn:hover {
+  background-color: #f0f2f5;
+  color: #1c1e21;
+}
+
+.emotion-picker {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 12px;
+  padding: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  z-index: 1000;
+  margin-bottom: 8px;
+}
+
+.emotion-picker-arrow {
+  position: absolute;
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-right: 1px solid #e4e6ea;
+  border-bottom: 1px solid #e4e6ea;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.emotion-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+}
+
+.emotion-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 8px;
+  border: none;
+  background: none;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 60px;
+}
+
+.emotion-option:hover {
+  background-color: #f0f2f5;
+  transform: scale(1.1);
+}
+
+.emotion-option.selected {
+  background-color: #e7f3ff;
+  border: 1px solid #1b74e4;
+}
+
+.emotion-icon {
+  font-size: 20px;
+  line-height: 1;
+}
+
+.emotion-label {
+  font-size: 10px;
+  color: #65676b;
+  text-align: center;
+  line-height: 1.2;
+}
+
+/* Comment Button */
+.comment-btn.active {
+  color: #1b74e4;
+  background-color: #e7f3ff;
+}
+
+.comment-btn:hover {
+  color: #1b74e4;
+}
+
+/* Action Text */
+.action-text {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-weight: 500;
+}
+
+.action-count {
+  font-size: 12px;
+  color: #65676b;
+  background: #f0f2f5;
+  padding: 1px 6px;
+  border-radius: 10px;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 13px;
+  }
+
+  .action-text span:last-child {
+    display: none;
+  }
+
+  .emotion-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .emotion-option {
+    min-width: 40px;
+    padding: 6px;
+  }
+
+  .emotion-label {
+    display: none;
+  }
+}
