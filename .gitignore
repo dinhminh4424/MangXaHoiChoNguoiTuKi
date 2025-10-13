@@ -9,6 +9,12 @@ Thumbs.db
 .env.local
 .env.development
 .env.production
+.env.test
+.env.backup
+*.pid
+*.seed
+*.tar
+*.zip
 
 # ==============================
 # Build output
@@ -17,6 +23,8 @@ dist/
 build/
 coverage/
 .cache/
+.temp/
+out/
 
 # ==============================
 # IDE / Editor
@@ -29,6 +37,7 @@ coverage/
 *.njsproj
 *.sln
 *.user
+*.code-workspace
 
 # ==============================
 # OS specific
@@ -43,6 +52,10 @@ frontend/node_modules/
 frontend/build/
 frontend/.env
 frontend/.cache/
+frontend/.next/
+frontend/.turbo/
+frontend/.vercel/
+frontend/.eslintcache
 
 # ==============================
 # Node.js (backend)
@@ -51,3 +64,31 @@ backend/node_modules/
 backend/logs/
 backend/.env
 backend/uploads/
+backend/temp/
+backend/.cache/
+backend/.DS_Store
+
+# ==============================
+# Misc / Deployment
+# ==============================
+*.bak
+*.tmp
+*.orig
+*.rej
+*.swp
+*.swo
+
+# Local debug and test data
+debug.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Optional lock files (if switching between npm/yarn/pnpm)
+pnpm-lock.yaml
+yarn.lock
+
+# ==============================
+# Git
+# ==============================
+.gitignore~
