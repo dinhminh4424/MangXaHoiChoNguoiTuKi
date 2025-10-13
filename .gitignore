@@ -1,0 +1,53 @@
+# ==============================
+# Common
+# ==============================
+node_modules/
+*.log
+.DS_Store
+Thumbs.db
+.env
+.env.local
+.env.development
+.env.production
+
+# ==============================
+# Build output
+# ==============================
+dist/
+build/
+coverage/
+.cache/
+
+# ==============================
+# IDE / Editor
+# ==============================
+.vscode/
+.idea/
+*.swp
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.user
+
+# ==============================
+# OS specific
+# ==============================
+*.bak
+*.tmp
+
+# ==============================
+# React (frontend)
+# ==============================
+frontend/node_modules/
+frontend/build/
+frontend/.env
+frontend/.cache/
+
+# ==============================
+# Node.js (backend)
+# ==============================
+backend/node_modules/
+backend/logs/
+backend/.env
+backend/uploads/
