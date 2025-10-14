@@ -10,6 +10,7 @@ const quoteRoutes = require("./qoute");
 const journalRoutes = require("./journals");
 const notificationRoutes = require("./notification");
 const postsRoutes = require("./posts");
+const commentsRoutes = require("./comments");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -20,6 +21,7 @@ router.use("/quote", quoteRoutes);
 router.use("/journals", journalRoutes);
 router.use("/notifications", notificationRoutes);
 router.use("/posts", postsRoutes);
+router.use("/comments", commentsRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {

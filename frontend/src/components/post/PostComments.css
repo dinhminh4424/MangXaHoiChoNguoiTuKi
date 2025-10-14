@@ -352,3 +352,313 @@
     max-height: 120px;
   }
 }
+
+.menu-container {
+  position: relative;
+}
+
+.dropdown-menu {
+  position: absolute;
+  top: 28px;
+  right: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 6px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000; /* tăng z-index để nổi lên */
+  min-width: 120px;
+}
+.dropdown-menu .menu-item {
+  display: block;
+  width: 100%;
+  padding: 8px 12px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 0.9rem;
+  color: #333;
+  transition: background 0.2s ease;
+}
+.dropdown-menu .menu-item:hover {
+  background: #f0f0f0;
+}
+.dropdown-menu .delete {
+  color: #c62828;
+}
+
+/* Sửa đổi cho bố cục Comment Item */
+.comment-item {
+  display: flex;
+  gap: 12px;
+  padding: 12px 16px; /* Giảm padding một chút */
+  border-bottom: 1px solid #f0f0f0;
+  background: white;
+  align-items: flex-start; /* Căn các item theo chiều dọc */
+}
+
+.comment-content {
+  flex: 1;
+  display: flex;
+  flex-direction: column; /* Sắp xếp nội dung theo chiều dọc */
+  min-width: 0;
+}
+
+.comment-body {
+  background-color: #f0f2f5; /* Màu nền xám nhạt cho comment */
+  border-radius: 18px; /* Bo tròn các góc */
+  padding: 8px 12px;
+  display: inline-block; /* Để khối nền vừa với nội dung */
+  max-width: 100%;
+}
+
+.comment-header {
+  margin-bottom: 2px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.user-name {
+  font-weight: 600; /* Tăng độ đậm */
+  color: #050505;
+  font-size: 13px;
+  margin-right: 0;
+}
+
+.comment-text {
+  font-size: 14px;
+  line-height: 1.4;
+  color: #050505;
+  white-space: pre-line;
+  word-wrap: break-word;
+  margin-bottom: 0; /* Bỏ margin bottom */
+}
+
+.comment-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 4px;
+  padding-left: 12px; /* Thụt vào cho thẳng hàng với text */
+}
+
+.comment-time {
+  font-size: 12px;
+  color: #65676b;
+}
+
+.footer-action-btn {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+  color: #65676b;
+}
+
+.footer-action-btn:hover {
+  text-decoration: underline;
+}
+
+.comment-more-actions {
+  padding-top: 8px; /* Đẩy icon xuống một chút */
+}
+
+/* Thay thế CSS cho Dropdown */
+.comment-more-actions .action-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #666;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.comment-more-actions .action-btn:hover {
+  background: #f0f0f0;
+}
+
+.menu-container {
+  position: relative;
+}
+
+/* CSS cho Menu tùy chỉnh */
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%; /* Đặt menu ngay dưới nút bấm */
+  right: 0;
+  background: white;
+  border-radius: 8px; /* Bo góc */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); /* Đổ bóng */
+  z-index: 1000;
+  min-width: 180px; /* Tăng chiều rộng */
+  padding: 8px 0;
+  margin-top: 4px;
+  overflow: hidden;
+}
+
+.custom-dropdown-menu .menu-item {
+  display: block;
+  width: 100%;
+  padding: 10px 16px;
+  background: none;
+  border: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 14px;
+  color: #050505;
+  transition: background 0.2s ease;
+  white-space: nowrap; /* Ngăn text xuống dòng */
+}
+
+.custom-dropdown-menu .menu-item:hover {
+  background: #f0f2f5; /* Màu hover */
+}
+
+.custom-dropdown-menu .menu-item.delete {
+  color: #c62828;
+}
+
+/* Reply Styles */
+.comment-reply {
+  margin-left: 40px;
+  border-left: 2px solid #e0e0e0;
+  padding-left: 12px;
+}
+
+.reply-input-container {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border-radius: 8px;
+}
+
+.user-avatar.small img {
+  width: 24px;
+  height: 24px;
+}
+
+.reply-input-wrapper {
+  display: flex;
+  flex: 1;
+  gap: 8px;
+  align-items: center;
+}
+
+.reply-input {
+  flex: 1;
+  border: 1px solid #e0e0e0;
+  border-radius: 20px;
+  padding: 8px 12px;
+  font-size: 14px;
+  background: white;
+}
+
+.reply-input:focus {
+  outline: none;
+  border-color: #2196f3;
+}
+
+.submit-reply-btn {
+  background: #2196f3;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.submit-reply-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Replies Section */
+.replies-section {
+  margin-top: 8px;
+}
+
+.view-replies-btn {
+  background: none;
+  border: none;
+  color: #65676b;
+  font-size: 12px;
+  cursor: pointer;
+  padding: 4px 0;
+  font-weight: 500;
+}
+
+.view-replies-btn:hover {
+  text-decoration: underline;
+}
+
+.replies-list {
+  margin-top: 8px;
+}
+
+/* Like Button Styles */
+.action-btn.like {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  color: #65676b;
+}
+
+.action-btn.like.liked {
+  color: #1877f2;
+}
+
+.like-count {
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.footer-action-btn.like.liked {
+  color: #1877f2;
+  font-weight: 600;
+}
+
+/* Reply Button */
+.action-btn.reply-btn {
+  color: #65676b;
+}
+
+.action-btn.reply-btn:hover {
+  color: #1877f2;
+}
+
+/* Comment Actions Layout */
+.comment-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .comment-reply {
+    margin-left: 20px;
+  }
+
+  .reply-input-container {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .reply-input-wrapper {
+    width: 100%;
+  }
+}

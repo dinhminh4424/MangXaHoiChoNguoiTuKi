@@ -1,0 +1,346 @@
+.emotion-picker {
+  position: absolute;
+  z-index: 10000 !important;
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 28px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+}
+
+/* THÊM VÀO ĐÂY - .emotion-picker-content đang bị thiếu */
+.emotion-picker-content {
+  position: relative;
+  background: white;
+  border: 1px solid #e4e6ea;
+  border-radius: 28px;
+  padding: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+  backdrop-filter: blur(10px);
+  min-width: max-content;
+}
+
+/* TẤT CẢ Positions - Đều hiển thị ngang */
+.emotion-picker--top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-bottom: 12px;
+  animation: emotionPickerSlideDown 0.2s ease-out;
+}
+
+.emotion-picker--top-left {
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 12px;
+  animation: emotionPickerSlideDown 0.2s ease-out;
+}
+
+.emotion-picker--top-right {
+  bottom: 100%;
+  right: 0;
+  margin-bottom: 12px;
+  animation: emotionPickerSlideDown 0.2s ease-out;
+}
+
+.emotion-picker--bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  margin-top: 12px;
+  animation: emotionPickerSlideUp 0.2s ease-out;
+}
+
+.emotion-picker--bottom-left {
+  top: 100%;
+  left: 0;
+  margin-top: 12px;
+  animation: emotionPickerSlideUp 0.2s ease-out;
+}
+
+.emotion-picker--bottom-right {
+  top: 100%;
+  right: 0;
+  margin-top: 12px;
+  animation: emotionPickerSlideUp 0.2s ease-out;
+}
+
+.emotion-picker--left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-right: 12px;
+  animation: emotionPickerSlideRight 0.2s ease-out;
+}
+
+.emotion-picker--left-top {
+  right: 100%;
+  top: 0;
+  margin-right: 12px;
+  animation: emotionPickerSlideRight 0.2s ease-out;
+}
+
+.emotion-picker--left-bottom {
+  right: 100%;
+  bottom: 0;
+  margin-right: 12px;
+  animation: emotionPickerSlideRight 0.2s ease-out;
+}
+
+.emotion-picker--right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  margin-left: 12px;
+  animation: emotionPickerSlideLeft 0.2s ease-out;
+}
+
+.emotion-picker--right-top {
+  left: 100%;
+  top: 0;
+  margin-left: 12px;
+  animation: emotionPickerSlideLeft 0.2s ease-out;
+}
+
+.emotion-picker--right-bottom {
+  left: 100%;
+  bottom: 0;
+  margin-left: 12px;
+  animation: emotionPickerSlideLeft 0.2s ease-out;
+}
+
+/* Emotion Grid - LUÔN hiển thị ngang */
+.emotion-grid {
+  display: flex;
+  gap: 4px;
+  flex-wrap: nowrap; /* Quan trọng: không xuống dòng */
+}
+
+.emotion-option {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 6px 8px;
+  border: none;
+  background: none;
+  border-radius: 20px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 50px;
+  position: relative;
+  z-index: 1;
+  flex-shrink: 0; /* Quan trọng: không bị co lại */
+}
+
+.emotion-option:hover {
+  background-color: #f0f2f5;
+  transform: scale(1.3);
+  z-index: 2;
+}
+
+.emotion-option.selected {
+  background-color: #e7f3ff;
+  border: 1px solid #1b74e4;
+}
+
+.emotion-icon {
+  font-size: 20px;
+  line-height: 1;
+  transition: transform 0.2s ease;
+}
+
+.emotion-label {
+  font-size: 10px;
+  color: white;
+  text-align: center;
+  line-height: 1.2;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* Arrow Positioning */
+.emotion-picker-arrow {
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: white;
+  border-right: 1px solid #e4e6ea;
+  border-bottom: 1px solid #e4e6ea;
+}
+
+/* Top Arrows */
+.emotion-picker--top .emotion-picker-arrow {
+  bottom: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(45deg);
+}
+
+.emotion-picker--top-left .emotion-picker-arrow {
+  bottom: -6px;
+  left: 20px;
+  transform: rotate(45deg);
+}
+
+.emotion-picker--top-right .emotion-picker-arrow {
+  bottom: -6px;
+  right: 20px;
+  transform: rotate(45deg);
+}
+
+/* Bottom Arrows */
+.emotion-picker--bottom .emotion-picker-arrow {
+  top: -6px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-135deg);
+}
+
+.emotion-picker--bottom-left .emotion-picker-arrow {
+  top: -6px;
+  left: 20px;
+  transform: rotate(-135deg);
+}
+
+.emotion-picker--bottom-right .emotion-picker-arrow {
+  top: -6px;
+  right: 20px;
+  transform: rotate(-135deg);
+}
+
+/* Left Arrows */
+.emotion-picker--left .emotion-picker-arrow {
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(135deg);
+}
+
+.emotion-picker--left-top .emotion-picker-arrow {
+  right: -6px;
+  top: 20px;
+  transform: rotate(135deg);
+}
+
+.emotion-picker--left-bottom .emotion-picker-arrow {
+  right: -6px;
+  bottom: 20px;
+  transform: rotate(135deg);
+}
+
+/* Right Arrows */
+.emotion-picker--right .emotion-picker-arrow {
+  left: -6px;
+  top: 50%;
+  transform: translateY(-50%) rotate(-45deg);
+}
+
+.emotion-picker--right-top .emotion-picker-arrow {
+  left: -6px;
+  top: 20px;
+  transform: rotate(-45deg);
+}
+
+.emotion-picker--right-bottom .emotion-picker-arrow {
+  left: -6px;
+  bottom: 20px;
+  transform: rotate(-45deg);
+}
+
+/* Animations */
+@keyframes emotionPickerSlideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes emotionPickerSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes emotionPickerSlideRight {
+  from {
+    opacity: 0;
+    transform: translateX(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes emotionPickerSlideLeft {
+  from {
+    opacity: 0;
+    transform: translateX(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .emotion-picker-content {
+    padding: 6px;
+    border-radius: 24px;
+  }
+
+  .emotion-grid {
+    gap: 2px;
+  }
+
+  .emotion-option {
+    min-width: 44px;
+    padding: 4px 6px;
+  }
+
+  .emotion-icon {
+    font-size: 18px;
+  }
+
+  .emotion-label {
+    font-size: 9px;
+  }
+
+  /* Trên mobile nhỏ, cho phép wrap nếu cần */
+  @media (max-width: 360px) {
+    .emotion-grid {
+      flex-wrap: wrap;
+      max-width: 200px;
+      justify-content: center;
+    }
+  }
+}
+
+@media (max-width: 480px) {
+  .emotion-picker-content {
+    padding: 4px;
+    border-radius: 20px;
+  }
+
+  .emotion-option {
+    min-width: 40px;
+    padding: 3px 4px;
+  }
+
+  .emotion-icon {
+    font-size: 16px;
+  }
+
+  .emotion-label {
+    font-size: 8px;
+  }
+}

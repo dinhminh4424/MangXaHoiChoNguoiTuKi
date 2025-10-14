@@ -1,76 +1,103 @@
 // components/Post/PostActions.js
-import React, { useState } from "react";
-import { Heart, MessageCircle, Share, Smile } from "lucide-react";
+import React from "react";
+import { MessageCircle, Share } from "lucide-react";
+import { useEmotionPicker } from "../../hooks/useEmotionPicker";
+import {
+  EMOTIONS,
+  EMOTION_ICONS,
+  EMOTION_COLORS,
+} from "../../constants/emotions";
+import EmotionPicker from "./EmojiPicker";
 import "./PostActions.css";
 
 const PostActions = ({
   isLiked,
   userEmotion,
-  emotionIcons,
+  emotionIcons = EMOTION_ICONS,
   isLiking,
   onLike,
   onComment,
   showComments,
   onEmotionSelect,
-  likeCount = 0, // Thêm prop likeCount
-  commentCount = 0, // Thêm prop commentCount
+  likeCount = 0,
+  commentCount = 0,
 }) => {
-  const [showEmotionPicker, setShowEmotionPicker] = useState(false);
-
-  const emotions = [
-    { key: "like", icon: "👍", label: "Thích" },
-    { key: "love", icon: "❤️", label: "Yêu thích" },
-    { key: "haha", icon: "😂", label: "Haha" },
-    { key: "wow", icon: "😮", label: "Wow" },
-    { key: "sad", icon: "😢", label: "Buồn" },
-    { key: "angry", icon: "😠", label: "Phẫn nộ" },
-  ];
-
-  const handleEmotionSelect = (emotion) => {
-    setShowEmotionPicker(false);
-    if (onEmotionSelect) {
-      onEmotionSelect(emotion);
-    }
-  };
+  const {
+    showEmotionPicker,
+    hoverEmotion,
+    likeButtonRef,
+    pickerRef,
+    setHoverEmotion,
+    handleEmotionSelect,
+    handleLikeMouseEnter,
+    handleLikeMouseLeave,
+    handlePickerMouseEnter,
+    handlePickerMouseLeave,
+  } = useEmotionPicker(onEmotionSelect);
 
   const handleLikeClick = () => {
-    if (onLike) {
-      onLike();
-    }
+    onLike?.();
   };
 
-  // Hàm format số like
   const formatLikeCount = (count) => {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + "M";
-    } else if (count >= 1000) {
-      return (count / 1000).toFixed(1) + "K";
-    }
+    if (count >= 1000000) return (count / 1000000).toFixed(1) + "M";
+    if (count >= 1000) return (count / 1000).toFixed(1) + "K";
     return count.toString();
   };
 
-  // Lấy icon hiển thị cho like button
   const getLikeIcon = () => {
-    if (isLiked && userEmotion) {
-      return emotionIcons[userEmotion];
-    }
-    return "🤍";
+    if (isLiked && userEmotion) return emotionIcons[userEmotion];
+    if (hoverEmotion)
+      return EMOTION_ICONS[hoverEmotion] || getDefaultLikeIcon();
+    return getDefaultLikeIcon();
   };
 
-  // Lấy class cho like button dựa trên emotion
+  const getDefaultLikeIcon = () => (
+    <svg
+      width="20"
+      height="20"
+      xmlns="http://www.w3.org/2000/svg"
+      viewBox="0 0 24 24"
+    >
+      <path
+        fill="none"
+        stroke="currentColor"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        strokeWidth="1.5"
+        d="M.836 10.252h1.39c2.098 0 4.112-.074 5.608-1.544a8 8 0 0 0 2.392-5.566c0-3.385 4.278-1.8 4.278 1.22v3.89a2 2 0 0 0 2 2h4.709c1.046 0 1.925.806 1.946 1.852c.065 3.336-.49 5.763-1.84 8.346c-.778 1.49-2.393 2.32-4.073 2.283c-11.675-.261-10.165-2.231-16.41-2.231"
+      />
+    </svg>
+  );
+
   const getLikeButtonClass = () => {
-    let className = `action-btn like-btn ${isLiked ? "liked" : ""}`;
+    return `action-btn like-btn ${isLiked ? "liked" : ""} ${
+      isLiked && userEmotion ? `emotion-${userEmotion}` : ""
+    }`;
+  };
 
-    if (isLiked && userEmotion) {
-      className += ` emotion-${userEmotion}`;
+  const getLikeButtonStyle = () => {
+    if (hoverEmotion) {
+      return { color: EMOTION_COLORS[hoverEmotion] };
     }
+    if (isLiked && userEmotion) {
+      return { color: EMOTION_COLORS[userEmotion] };
+    }
+    return {};
+  };
 
-    return className;
+  const getSelectedEmotion = () => (isLiked ? userEmotion : null);
+
+  const getLikeButtonText = () => {
+    if (isLiked && userEmotion) {
+      const emotion = EMOTIONS.find((e) => e.key === userEmotion);
+      return emotion?.label || "Thích";
+    }
+    return "Thích";
   };
 
   return (
     <div className="post-actions">
-      {/* Stats Bar - Hiển thị số like và comment */}
       <div className="post-stats-bar">
         {likeCount > 0 && (
           <div className="stat-item">
@@ -78,7 +105,6 @@ const PostActions = ({
             <span className="stat-count">{formatLikeCount(likeCount)}</span>
           </div>
         )}
-
         {commentCount > 0 && (
           <div className="stat-item">
             <span className="stat-icon">💬</span>
@@ -87,25 +113,30 @@ const PostActions = ({
         )}
       </div>
 
-      {/* Actions Container */}
       <div className="actions-container">
-        {/* Like Button với Emotion Picker */}
         <div className="action-group">
           <button
+            ref={likeButtonRef}
             className={getLikeButtonClass()}
             onClick={handleLikeClick}
+            onMouseEnter={handleLikeMouseEnter}
+            onMouseLeave={handleLikeMouseLeave}
             disabled={isLiking}
-            title={isLiked ? `Đã thích (${userEmotion || "like"})` : "Thích"}
+            style={getLikeButtonStyle()}
+            title={
+              isLiked
+                ? `Đã thích (${
+                    EMOTIONS.find((e) => e.key === userEmotion)?.label || "like"
+                  })`
+                : "Thích"
+            }
           >
             <div className="like-button-content">
-              <Heart size={18} className={isLiked ? "filled" : ""} />
               <span className="action-text">
                 <span className="emotion-icon">{getLikeIcon()}</span>
-                Thích
+                {getLikeButtonText()}
               </span>
             </div>
-
-            {/* Loading indicator */}
             {isLiking && (
               <div className="like-loading">
                 <div className="loading-spinner"></div>
@@ -113,39 +144,18 @@ const PostActions = ({
             )}
           </button>
 
-          <div className="emotion-picker-container">
-            <button
-              className="emotion-picker-btn"
-              onClick={() => setShowEmotionPicker(!showEmotionPicker)}
-              title="Chọn biểu cảm"
-            >
-              <Smile size={16} />
-            </button>
-
-            {showEmotionPicker && (
-              <div className="emotion-picker">
-                <div className="emotion-grid">
-                  {emotions.map((emotion) => (
-                    <button
-                      key={emotion.key}
-                      className={`emotion-option ${
-                        isLiked && userEmotion === emotion.key ? "selected" : ""
-                      }`}
-                      onClick={() => handleEmotionSelect(emotion.key)}
-                      title={emotion.label}
-                    >
-                      <span className="emotion-icon">{emotion.icon}</span>
-                      <span className="emotion-label">{emotion.label}</span>
-                    </button>
-                  ))}
-                </div>
-                <div className="emotion-picker-arrow"></div>
-              </div>
-            )}
-          </div>
+          <EmotionPicker
+            isOpen={showEmotionPicker}
+            selectedEmotion={getSelectedEmotion()}
+            hoverEmotion={hoverEmotion}
+            onEmotionSelect={handleEmotionSelect}
+            onHoverEmotion={setHoverEmotion}
+            pickerRef={pickerRef}
+            onMouseEnter={handlePickerMouseEnter}
+            onMouseLeave={handlePickerMouseLeave}
+          />
         </div>
 
-        {/* Comment Button */}
         <button
           className={`action-btn comment-btn ${showComments ? "active" : ""}`}
           onClick={onComment}
@@ -162,7 +172,6 @@ const PostActions = ({
           </span>
         </button>
 
-        {/* Share Button */}
         <button className="action-btn share-btn" title="Chia sẻ">
           <Share size={18} />
           <span className="action-text">Chia sẻ</span>

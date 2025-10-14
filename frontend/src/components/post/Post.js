@@ -7,6 +7,8 @@ import PostMedia from "./PostMedia";
 import PostStats from "./PostStats";
 import PostActions from "./PostActions";
 import PostComments from "./PostComments";
+import { EMOTION_ICONS } from "../../constants/emotions";
+
 import "./Post.css";
 
 const Post = ({ post, onUpdate, onDelete, onEdit }) => {
@@ -25,16 +27,6 @@ const Post = ({ post, onUpdate, onDelete, onEdit }) => {
 
   // ✅ THÊM DEBUG
   const isLiked = hasUserLiked(post);
-  console.log("🔍 Post Debug:", {
-    postId: post?._id,
-    userId: user?.id,
-    userLike: post?.likes?.find(
-      (like) => like.user?.toString() === user?.id?.toString()
-    ),
-    isLiked: isLiked,
-    userEmotion: userEmotion,
-    likesCount: post?.likes?.length,
-  });
 
   const handleLike = async () => {
     if (isLiking || !post) return;
@@ -93,14 +85,16 @@ const Post = ({ post, onUpdate, onDelete, onEdit }) => {
     }
   };
 
-  const emotionIcons = {
-    like: "👍",
-    love: "❤️",
-    haha: "😂",
-    wow: "😮",
-    sad: "😢",
-    angry: "😠",
-  };
+  // const emotionIcons = {
+  //   like: "👍",
+  //   love: "❤️",
+  //   haha: "😂",
+  //   wow: "😮",
+  //   sad: "😢",
+  //   angry: "😠",
+  // };
+
+  const emotionIcons = EMOTION_ICONS;
 
   if (!post) {
     return <div className="post-card">Bài viết không tồn tại</div>;

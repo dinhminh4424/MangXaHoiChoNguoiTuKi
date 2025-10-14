@@ -3,6 +3,8 @@ import React from "react";
 import { Heart, MessageCircle, Eye, Users } from "lucide-react";
 import "./PostStats.css";
 
+import { EMOTION_ICONS } from "../../constants/emotions";
+
 const PostStats = ({
   likeCount = 0,
   commentCount = 0,
@@ -10,14 +12,16 @@ const PostStats = ({
   likes = [],
 }) => {
   // Định nghĩa emotions
-  const emotionIcons = {
-    like: "👍",
-    love: "❤️",
-    haha: "😂",
-    wow: "😮",
-    sad: "😢",
-    angry: "😠",
-  };
+  // const emotionIcons = {
+  //   like: "👍",
+  //   love: "❤️",
+  //   haha: "😂",
+  //   wow: "😮",
+  //   sad: "😢",
+  //   angry: "😠",
+  // };
+
+  const emotionIcons = EMOTION_ICONS;
 
   // Format số
   const formatCount = (count) => {

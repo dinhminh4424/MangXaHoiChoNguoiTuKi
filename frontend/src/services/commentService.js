@@ -18,11 +18,7 @@ class CommentService {
         formData.append("file", commentData.file);
       }
 
-      const response = await api.post("/api/comments/create", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      });
+      const response = await api.post("/api/comments/create", formData);
 
       return response.data;
     } catch (error) {
@@ -34,8 +30,11 @@ class CommentService {
   async getCommentsByPost(postId, params = {}) {
     try {
       const response = await api.get(`/api/comments/post/${postId}`, {
-        params,
+        query: params,
       });
+
+      console.log("MMMMMMMMMMMMMMMMMMMMM");
+      console.log(response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

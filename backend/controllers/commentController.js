@@ -9,13 +9,14 @@ class CommentController {
     session.startTransaction();
 
     try {
-      const { postID, content, parentCommentID } = req.body;
+      const { postID, content } = req.body;
       const userID = req.user.userId;
+
+      const parentCommentID = req.body.parentCommentID || null;
 
       // Kiểm tra post tồn tại
       const post = await Post.findById(postID);
       if (!post) {
-        await session.abortTransaction();
         return res.status(404).json({
           success: false,
           message: "Bài viết không tồn tại",
@@ -34,9 +35,11 @@ class CommentController {
           fileFolder = "audio";
         }
 
-        const fileUrl = `${req.protocol}://${req.get(
-          "host"
-        )}/api/uploads/${fileFolder}/${req.file.filename}`;
+        // const fileUrl = `${req.protocol}://${req.get(
+        //   "host"
+        // )}/api/uploads/${fileFolder}/${req.file.filename}`;
+
+        const fileUrl = `/api/uploads/${fileFolder}/${req.file.filename}`;
 
         let messageType = "file";
         if (req.file.mimetype.startsWith("image/")) {
@@ -64,29 +67,21 @@ class CommentController {
         file: file || null,
       });
 
-      await comment.save({ session });
+      await comment.save();
 
       // Cập nhật counter
       if (!parentCommentID) {
         // Comment gốc - tăng commentCount trong Post
-        await Post.findByIdAndUpdate(
-          postID,
-          { $inc: { commentCount: 1 } },
-          { session }
-        );
+        await Post.findByIdAndUpdate(postID, { $inc: { commentCount: 1 } });
       } else {
         // Reply comment - tăng replyCount trong comment cha
-        await Comment.findByIdAndUpdate(
-          parentCommentID,
-          { $inc: { replyCount: 1 } },
-          { session }
-        );
+        await Comment.findByIdAndUpdate(parentCommentID, {
+          $inc: { replyCount: 1 },
+        });
       }
 
-      await session.commitTransaction();
-
       // Populate user info
-      await comment.populate("userID", "username avatar fullName");
+      await comment.populate("userID", "_id username profile.avatar fullName");
 
       res.status(201).json({
         success: true,
@@ -94,13 +89,10 @@ class CommentController {
         comment,
       });
     } catch (error) {
-      await session.abortTransaction();
       res.status(400).json({
         success: false,
         message: error.message,
       });
-    } finally {
-      session.endSession();
     }
   }
 
@@ -126,7 +118,7 @@ class CommentController {
       };
 
       const comments = await Comment.find(query)
-        .populate("userID", "username avatar fullName")
+        .populate("userID", "username profile.avatar fullName")
         .sort(sort)
         .limit(parseInt(limit))
         .skip(skip)
