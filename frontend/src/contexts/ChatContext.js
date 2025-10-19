@@ -388,10 +388,13 @@ export const ChatProvider = ({ children }) => {
           name: groupName,
         });
 
-        const newConversation = response.data.data;
-        setConversations((prev) => [newConversation, ...prev]);
-
-        return { success: true, conversation: newConversation };
+        if (response.data.success) {
+          const newConversation = response.data.data;
+          if (!response.data.isExisting) {
+            setConversations((prev) => [newConversation, ...prev]);
+          }
+          return { success: true, conversation: newConversation };
+        }
       } catch (error) {
         console.error("Lỗi khi tạo cuộc trò chuyện:", error);
         setError("Không thể tạo cuộc trò chuyện");

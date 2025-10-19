@@ -21,20 +21,27 @@ const Chat = () => {
     startConversation,
     scrollToBottom,
     clearError,
-    loadMoreMessages, // Thêm hàm mới để tải thêm tin nhắn
-    hasMoreMessages, // Thêm state để kiểm tra còn tin nhắn không
-    loadingMore, // Thêm state loading khi tải thêm
+    loadMoreMessages,
+    hasMoreMessages,
+    loadingMore,
   } = useChat();
 
   const [newMessage, setNewMessage] = useState("");
   const [isUploading, setIsUploading] = useState(false);
   const [selectedFile, setSelectedFile] = useState(null);
   const [filePreview, setFilePreview] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [showUserDetails, setShowUserDetails] = useState(false);
+  const [showChatDetails, setShowChatDetails] = useState(false);
+  const [showUserSelect, setShowUserSelect] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+  const [typingUser, setTypingUser] = useState("");
+
   const fileInputRef = useRef(null);
   const messagesContainerRef = useRef(null);
   const [isNearTop, setIsNearTop] = useState(false);
 
-  // THÊM: State cho modal xem hình ảnh lớn
+  // State cho modal xem hình ảnh lớn
   const [showImageModal, setShowImageModal] = useState(false);
   const [selectedImageUrl, setSelectedImageUrl] = useState(null);
   const [selectedImageName, setSelectedImageName] = useState("");
@@ -42,6 +49,50 @@ const Chat = () => {
   const otherUser = !selectedChat?.isGroup
     ? selectedChat?.members?.find((i) => i._id !== user.id)
     : null;
+
+  // Lọc conversations theo search term
+  const filteredConversations = conversations.filter((conversation) => {
+    if (!searchTerm) return true;
+
+    const searchLower = searchTerm.toLowerCase();
+    if (conversation.isGroup) {
+      return conversation.name?.toLowerCase().includes(searchLower);
+    } else {
+      const otherUser = conversation.members?.find(
+        (member) => member._id !== user.id
+      );
+      return (
+        otherUser?.fullName?.toLowerCase().includes(searchLower) ||
+        otherUser?.email?.toLowerCase().includes(searchLower)
+      );
+    }
+  });
+
+  // Hàm xử lý hiển thị tên với "..." khi quá dài
+  const truncateName = (name, maxLength = 20) => {
+    if (!name) return "";
+    return name.length > maxLength
+      ? name.substring(0, maxLength) + "..."
+      : name;
+  };
+
+  // Format thời gian
+  const formatTime = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInHours = (now - date) / (1000 * 60 * 60);
+
+    if (diffInHours < 24) {
+      return date.toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } else if (diffInHours < 48) {
+      return "Hôm qua";
+    } else {
+      return date.toLocaleDateString();
+    }
+  };
 
   useEffect(() => {
     if (user) {
@@ -60,19 +111,7 @@ const Chat = () => {
     const container = messagesContainerRef.current;
     if (!container || loadingMore || !hasMoreMessages || !selectedChat) return;
 
-    // Khi scroll lên gần đầu (100px từ top)
     const scrollTop = container.scrollTop;
-    const scrollHeight = container.scrollHeight;
-    const clientHeight = container.clientHeight;
-
-    console.log(
-      `Scroll: top=${scrollTop}, client=${clientHeight}, scroll=${scrollHeight}`
-    );
-
-    // Tính toán vị trí scroll
-    const scrollPosition = (scrollTop / (scrollHeight - clientHeight)) * 100;
-
-    // Nếu scroll lên trên 10% từ đầu
     if (scrollTop < 50 && !loadingMore && hasMoreMessages) {
       setIsNearTop(true);
       loadMoreMessages(selectedChat._id);
@@ -85,11 +124,9 @@ const Chat = () => {
   useEffect(() => {
     const container = messagesContainerRef.current;
     if (container) {
-      console.log("✅ Đã thêm event listener scroll");
       container.addEventListener("scroll", handleScroll, { passive: true });
       return () => {
         container.removeEventListener("scroll", handleScroll);
-        console.log("🧹 Đã dọn dẹp event listener");
       };
     }
   }, [handleScroll]);
@@ -99,14 +136,14 @@ const Chat = () => {
     setIsNearTop(false);
   }, [selectedChat?._id]);
 
-  // THÊM: Hàm mở modal hình ảnh
+  // Hàm mở modal hình ảnh
   const openImageModal = (url, name = "") => {
     setSelectedImageUrl(url);
     setSelectedImageName(name);
     setShowImageModal(true);
   };
 
-  // THÊM: Hàm đóng modal
+  // Hàm đóng modal
   const closeImageModal = () => {
     setShowImageModal(false);
     setSelectedImageUrl(null);
@@ -116,12 +153,9 @@ const Chat = () => {
   const handleSendMessage = async (e) => {
     e.preventDefault();
 
-    // Nếu có file được chọn, gửi file trước
     if (selectedFile) {
       await handleSendFile(newMessage);
-    }
-    // Nếu có nội dung tin nhắn, gửi tin nhắn
-    else if (newMessage.trim()) {
+    } else if (newMessage.trim()) {
       const result = await sendMessage(newMessage);
       if (result.success) {
         setNewMessage("");
@@ -133,7 +167,6 @@ const Chat = () => {
     const file = e.target.files[0];
     if (!file) return;
 
-    // Kiểm tra kích thước file (tối đa 10MB)
     const maxSize = 10 * 1024 * 1024;
     if (file.size > maxSize) {
       alert("File quá lớn. Kích thước tối đa là 10MB.");
@@ -142,8 +175,13 @@ const Chat = () => {
 
     setSelectedFile(file);
 
-    // Tạo preview cho ảnh
     if (file.type.startsWith("image/")) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        setFilePreview(e.target.result);
+      };
+      reader.readAsDataURL(file);
+    } else if (file.type.startsWith("video/")) {
       const reader = new FileReader();
       reader.onload = (e) => {
         setFilePreview(e.target.result);
@@ -153,7 +191,6 @@ const Chat = () => {
       setFilePreview(null);
     }
 
-    // Reset input file
     if (fileInputRef.current) {
       fileInputRef.current.value = "";
     }
@@ -186,15 +223,15 @@ const Chat = () => {
   const getFileIcon = (messageType) => {
     switch (messageType) {
       case "image":
-        return <i className="fa-solid fa-image"></i>; // ảnh
+        return <i className="fa-solid fa-image"></i>;
       case "video":
-        return <i className="fa-solid fa-video"></i>; // video
+        return <i className="fa-solid fa-video"></i>;
       case "audio":
-        return <i className="fa-solid fa-music"></i>; // âm thanh
+        return <i className="fa-solid fa-music"></i>;
       case "file":
-        return <i className="fa-solid fa-paperclip"></i>; // file đính kèm
+        return <i className="fa-solid fa-paperclip"></i>;
       default:
-        return <i className="fa-solid fa-file"></i>; // file mặc định
+        return <i className="fa-solid fa-file"></i>;
     }
   };
 
@@ -226,64 +263,84 @@ const Chat = () => {
     }
   };
 
+  const handleSearchChange = (e) => {
+    setSearchTerm(e.target.value);
+  };
+
+  const toggleUserDetails = () => {
+    setShowUserDetails(!showUserDetails);
+  };
+
+  const toggleChatDetails = () => {
+    setShowChatDetails(!showChatDetails);
+    console.log("1010101");
+  };
+
   if (loading) {
     return (
-      <div className="d-flex justify-content-center align-items-center vh-100">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
+      <div className="d-flex justify-content-center align-items-center vh-100 bg-light">
+        <div className="text-center">
+          <div
+            className="spinner-border text-primary mb-3"
+            style={{ width: "3rem", height: "3rem" }}
+            role="status"
+          >
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="text-muted">Đang tải dữ liệu...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="container-fluid vh-100">
+    <div className="container vh-100 bg-light">
       {/* Error Alert */}
       {error && (
         <div
-          className="alert alert-danger alert-dismissible fade show m-2"
+          className="alert alert-danger alert-dismissible fade show m-0 rounded-0"
           role="alert"
         >
-          {error}
-          <button
-            type="button"
-            className="btn-close"
-            onClick={clearError}
-          ></button>
+          <div className="container">
+            <i className="fa-solid fa-triangle-exclamation me-2"></i>
+            {error}
+            <button
+              type="button"
+              className="btn-close"
+              onClick={clearError}
+            ></button>
+          </div>
         </div>
       )}
 
       {/* Uploading Overlay */}
       {isUploading && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50 z-3">
-          <div className="bg-white rounded p-4 text-center">
+          <div className="bg-white rounded p-4 text-center shadow-lg">
             <div className="spinner-border text-primary mb-3" role="status">
               <span className="visually-hidden">Đang tải lên...</span>
             </div>
-            <p className="mb-0">Đang tải file lên...</p>
+            <p className="mb-0 fw-semibold">Đang tải file lên...</p>
           </div>
         </div>
       )}
 
-      {/* THÊM: Modal xem hình ảnh lớn */}
+      {/* Modal xem hình ảnh lớn */}
       {showImageModal && (
         <div
-          className="modal fade show d-block position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50 z-4"
+          className="modal fade show d-block position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-90 z-4"
           tabIndex="-1"
-          role="dialog"
-          style={{ zIndex: 1050 }}
         >
           <div
             className="modal-dialog modal-dialog-centered modal-xl"
             role="document"
           >
             <div className="modal-content border-0 bg-transparent">
-              <div className="modal-header border-0 justify-content-end p-2">
+              <div className="modal-header border-0 justify-content-end p-3">
                 <button
                   type="button"
-                  className="btn-close btn-close-white "
+                  className="btn-close btn-close-white bg-dark bg-opacity-50 rounded-circle p-2"
                   onClick={closeImageModal}
-                  aria-label="Đóng"
                 ></button>
               </div>
               <div className="modal-body p-0 d-flex align-items-center justify-content-center">
@@ -291,17 +348,17 @@ const Chat = () => {
                   <img
                     src={selectedImageUrl}
                     alt={selectedImageName || "Hình ảnh"}
-                    className="img-fluid rounded"
+                    className="img-fluid rounded shadow-lg"
                     style={{
-                      maxHeight: "90vh",
-                      maxWidth: "90vw",
+                      maxHeight: "85vh",
+                      maxWidth: "85vw",
                       objectFit: "contain",
                     }}
                   />
                 )}
                 {selectedImageName && (
-                  <div className="position-absolute bottom-0 start-50 translate-middle-x mb-3 text-white bg-dark bg-opacity-50 px-3 py-1 rounded">
-                    <small>{selectedImageName}</small>
+                  <div className="position-absolute bottom-0 start-50 translate-middle-x mb-4 text-white bg-dark bg-opacity-75 px-4 py-2 rounded-pill">
+                    <small>{truncateName(selectedImageName, 40)}</small>
                   </div>
                 )}
               </div>
@@ -310,438 +367,753 @@ const Chat = () => {
         </div>
       )}
 
-      <div className="row h-100">
-        {/* Sidebar */}
-        <div className="col-md-3 bg-light border-end">
-          <div className="d-flex flex-column h-100">
-            {/* Header */}
-            <div className="p-3 border-bottom bg-white">
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">Chat</h5>
-                <div className="dropdown">
-                  <button
-                    className="btn btn-outline-secondary btn-sm dropdown-toggle"
-                    type="button"
-                    data-bs-toggle="dropdown"
-                  >
-                    {user.fullName}
-                  </button>
-                  <ul className="dropdown-menu">
-                    <li>
-                      <button className="dropdown-item" onClick={handleLogout}>
-                        Đăng xuất
-                      </button>
-                    </li>
-                    <li>
-                      <button
-                        className="dropdown-item"
-                        onClick={handleRandomChat}
-                      >
-                        Nhắn Tin Ngẫu Nhiên
-                      </button>
-                    </li>
-                  </ul>
+      <div className="h-100">
+        <div className="row h-100">
+          {/* Sidebar */}
+          <div
+            className={`col-lg-4 col-xl-3 border-end bg-white ${
+              showUserDetails ? "d-none d-lg-block" : ""
+            }`}
+          >
+            <div className="d-flex flex-column h-100">
+              {/* User Profile Header */}
+              <div className="p-3 border-bottom">
+                <div className="d-flex align-items-center">
+                  <div className="position-relative">
+                    {user.profile?.avatar ? (
+                      <img
+                        src={user.profile.avatar}
+                        alt="avatar"
+                        className="avatar-50 rounded-circle"
+                      />
+                    ) : (
+                      <div className="avatar-50 rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold fs-5">
+                        {user.fullName?.charAt(0) || "U"}
+                      </div>
+                    )}
+                    <span
+                      className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
+                      style={{ width: "12px", height: "12px" }}
+                    ></span>
+                  </div>
+                  <div className="ms-3 flex-grow-1">
+                    <h6 className="mb-0 fw-bold">
+                      {truncateName(user.fullName)}
+                    </h6>
+                    <small className="text-muted">Đang hoạt động</small>
+                  </div>
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-link text-muted p-0"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                    >
+                      <i className="fa-solid fa-ellipsis-vertical fs-5"></i>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end">
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={toggleUserDetails}
+                        >
+                          <i className="fa-solid fa-user me-2"></i>Thông tin cá
+                          nhân
+                        </button>
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item"
+                          onClick={handleRandomChat}
+                        >
+                          <i className="fa-solid fa-shuffle me-2"></i>Chat ngẫu
+                          nhiên
+                        </button>
+                      </li>
+                      <li>
+                        <hr className="dropdown-divider" />
+                      </li>
+                      <li>
+                        <button
+                          className="dropdown-item text-danger"
+                          onClick={handleLogout}
+                        >
+                          <i className="fa-solid fa-right-from-bracket me-2"></i>
+                          Đăng xuất
+                        </button>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search Bar */}
+              <div className="p-3 border-bottom">
+                <div className="input-group">
+                  <span className="input-group-text bg-light border-end-0">
+                    <i className="fa-solid fa-search text-muted"></i>
+                  </span>
+                  <input
+                    type="text"
+                    className="form-control border-start-0 bg-light"
+                    placeholder="Tìm kiếm cuộc trò chuyện..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                </div>
+              </div>
+
+              {/* Conversations List */}
+              <div className="flex-grow-1 overflow-auto">
+                <div className="p-3">
+                  <h6 className="text-uppercase text-muted small fw-bold mb-3">
+                    Cuộc trò chuyện
+                  </h6>
+                  {filteredConversations.length > 0 ? (
+                    <div className="list-group list-group-flush">
+                      {filteredConversations.map((conversation) => (
+                        <button
+                          key={conversation._id}
+                          className={`list-group-item list-group-item-action border-0 rounded-3 p-3 mb-2 ${
+                            selectedChat?._id === conversation._id
+                              ? "bg-primary text-white"
+                              : "bg-light"
+                          }`}
+                          onClick={() => selectChat(conversation)}
+                        >
+                          <div className="d-flex align-items-center">
+                            <div className="position-relative me-3">
+                              {conversation.isGroup ? (
+                                <div className="avatar-45 rounded-circle bg-info d-flex align-items-center justify-content-center text-white fw-bold">
+                                  {conversation.name?.charAt(0) || "G"}
+                                </div>
+                              ) : (
+                                <div className="avatar-45 rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold">
+                                  {conversation.members
+                                    ?.find((m) => m._id !== user.id)
+                                    ?.fullName?.charAt(0) || "U"}
+                                </div>
+                              )}
+                              <span
+                                className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
+                                style={{ width: "10px", height: "10px" }}
+                              ></span>
+                            </div>
+                            <div className="flex-grow-1 text-start">
+                              <div className="d-flex justify-content-between align-items-center">
+                                <h6
+                                  className={`mb-1 ${
+                                    selectedChat?._id === conversation._id
+                                      ? "text-white"
+                                      : ""
+                                  }`}
+                                >
+                                  {conversation.isGroup
+                                    ? truncateName(conversation.name)
+                                    : truncateName(
+                                        conversation.members?.find(
+                                          (m) => m._id !== user.id
+                                        )?.fullName
+                                      ) || "Unknown User"}
+                                </h6>
+                                {conversation.lastMessage && (
+                                  <small
+                                    className={
+                                      selectedChat?._id === conversation._id
+                                        ? "text-white-50"
+                                        : "text-muted"
+                                    }
+                                  >
+                                    {formatTime(
+                                      conversation.lastMessage.createdAt
+                                    )}
+                                  </small>
+                                )}
+                              </div>
+                              <div className="d-flex justify-content-between align-items-center">
+                                <p
+                                  className={`mb-0 small text-truncate ${
+                                    selectedChat?._id === conversation._id
+                                      ? "text-white-50"
+                                      : "text-muted"
+                                  }`}
+                                >
+                                  {conversation.lastMessage?.content ||
+                                    "Chưa có tin nhắn"}
+                                  {conversation.lastMessage?.file && " 📎"}
+                                </p>
+                                {conversation.unreadCount > 0 && (
+                                  <span
+                                    className={`badge ${
+                                      selectedChat?._id === conversation._id
+                                        ? "bg-white text-primary"
+                                        : "bg-primary"
+                                    } rounded-pill ms-2`}
+                                  >
+                                    {conversation.unreadCount}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-5">
+                      <i className="fa-solid fa-comments text-muted fs-1 mb-3"></i>
+                      <p className="text-muted">
+                        Không tìm thấy cuộc trò chuyện nào
+                      </p>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
+          </div>
 
-            {/* Conversations */}
-            {conversations.length > 0 ? (
-              <div className="flex-grow-1 overflow-auto">
-                <div className="list-group list-group-flush">
-                  {conversations.map((conv) => (
-                    <button
-                      key={conv._id}
-                      className={`list-group-item list-group-item-action ${
-                        selectedChat?._id === conv._id ? "active" : ""
-                      }`}
-                      onClick={() => selectChat(conv)}
-                    >
-                      <div className="d-flex align-items-center">
-                        <div className="flex-shrink-0">
-                          <div
-                            className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white"
-                            style={{ width: "40px", height: "40px" }}
-                          >
-                            {conv.members?.[0]?.fullName?.charAt(0) || "U"}
+          {/* User Details Sidebar */}
+          {showUserDetails && (
+            <div className="col-lg-4 col-xl-3 border-end bg-white">
+              <div className="d-flex flex-column h-100">
+                <div className="p-3 border-bottom d-flex align-items-center">
+                  <button
+                    className="btn btn-link p-0 me-3"
+                    onClick={toggleUserDetails}
+                  >
+                    <i className="fa-solid fa-arrow-left"></i>
+                  </button>
+                  <h5 className="mb-0">Thông tin cá nhân</h5>
+                </div>
+                <div className="flex-grow-1 overflow-auto">
+                  <div className="text-center p-4">
+                    <div className="avatar-100 rounded-circle bg-primary d-flex align-items-center justify-content-center text-white fw-bold fs-1 mb-3 mx-auto">
+                      {user.fullName?.charAt(0) || "U"}
+                    </div>
+                    <h4 className="mb-2">{user.fullName}</h4>
+                    <p className="text-muted mb-4">{user.email}</p>
+                    <div className="row text-center">
+                      <div className="col-4">
+                        <div className="border rounded-3 p-3">
+                          <h5 className="text-primary mb-1">
+                            {conversations.length}
+                          </h5>
+                          <small className="text-muted">Cuộc trò chuyện</small>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="border rounded-3 p-3">
+                          <h5 className="text-success mb-1">{users.length}</h5>
+                          <small className="text-muted">Bạn bè</small>
+                        </div>
+                      </div>
+                      <div className="col-4">
+                        <div className="border rounded-3 p-3">
+                          <h5 className="text-info mb-1">
+                            {conversations.filter((c) => c.isGroup).length}
+                          </h5>
+                          <small className="text-muted">Nhóm</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Main Chat Area */}
+          <div
+            className={`${
+              showUserDetails ? "col-lg-8 col-xl-6" : "col-lg-8 col-xl-9"
+            } d-flex flex-column h-100`}
+          >
+            {selectedChat ? (
+              <>
+                {/* Chat Header */}
+                <div className="bg-white border-bottom p-3">
+                  <div className="d-flex justify-content-between align-items-center">
+                    <div className="d-flex align-items-center">
+                      <button
+                        className="btn btn-link text-muted d-lg-none p-0 me-2"
+                        onClick={toggleUserDetails}
+                      >
+                        <i className="fa-solid fa-bars"></i>
+                      </button>
+                      <div className="position-relative me-3">
+                        {selectedChat.isGroup ? (
+                          <div className="avatar-50 rounded-circle bg-info d-flex align-items-center justify-content-center text-white fw-bold">
+                            {selectedChat.name?.charAt(0) || "G"}
+                          </div>
+                        ) : (
+                          <div className="avatar-50 rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold">
+                            {otherUser?.fullName?.charAt(0) || "U"}
+                          </div>
+                        )}
+                        <span
+                          className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle"
+                          style={{ width: "12px", height: "12px" }}
+                        ></span>
+                      </div>
+                      <div>
+                        <h5 className="mb-1">
+                          {selectedChat.isGroup
+                            ? truncateName(selectedChat.name)
+                            : truncateName(otherUser?.fullName)}
+                        </h5>
+                        <small className="text-muted">
+                          {isTyping
+                            ? `${typingUser} đang soạn tin...`
+                            : selectedChat.isOnline
+                            ? "Đang hoạt động"
+                            : "Ngoại tuyến"}
+                        </small>
+                      </div>
+                    </div>
+                    <div className="d-flex">
+                      <button
+                        className="btn btn-light rounded-circle me-2"
+                        title="Gọi điện"
+                      >
+                        <i className="fa-solid fa-phone"></i>
+                      </button>
+                      <button
+                        className="btn btn-light rounded-circle me-2"
+                        title="Gọi video"
+                      >
+                        <i className="fa-solid fa-video"></i>
+                      </button>
+                      <button
+                        className="btn btn-light rounded-circle"
+                        title="Thông tin"
+                        onClick={toggleChatDetails}
+                      >
+                        <i className="fa-solid fa-info"></i>
+                      </button>
+                      <span className="dropdown bg-soft-primary  p-2 mx-1  d-flex justify-content-center align-items-center">
+                        <i
+                          className="ri-more-2-line cursor-pointer"
+                          data-bs-toggle="dropdown"
+                        ></i>
+                        <ul className="dropdown-menu">
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Ghim cuộc trò chuyện
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Xóa cuộc trò chuyện
+                            </a>
+                          </li>
+                          <li>
+                            <a className="dropdown-item" href="#">
+                              Chặn
+                            </a>
+                          </li>
+                        </ul>
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                {showChatDetails && (
+                  <div className="chat-user-detail-popup scroller">
+                    <div className="user-profile">
+                      <button type="submit" className="close-popup p-3">
+                        <i className="ri-close-fill"></i>
+                      </button>
+                      <div className="user mb-4 text-center">
+                        <a className="avatar m-0">
+                          <img
+                            src="../assets/images/user/05.jpg"
+                            alt="avatar"
+                          />
+                        </a>
+                        <div className="user-name mt-4">
+                          <h4>Bni Jordan 11 </h4>
+                        </div>
+                        <div className="user-desc">
+                          <p>Cape Town, RSA 12</p>
+                        </div>
+                      </div>
+                      <hr />
+                      <div className="chatuser-detail text-left mt-4">
+                        <div className="row">
+                          <div className="col-6 col-md-6 title">
+                            Bni Name: 13
+                          </div>
+                          <div className="col-6 col-md-6 text-right">Bni</div>
+                        </div>
+                        <hr />
+                        <div className="row">
+                          <div className="col-6 col-md-6 title">Tel:</div>
+                          <div className="col-6 col-md-6 text-right">
+                            072 143 9920 14
                           </div>
                         </div>
-                        <div className="flex-grow-1 ms-3">
-                          <div className="d-flex justify-content-between align-items-center">
-                            <h6 className="mb-0">
-                              {conv.isGroup
-                                ? conv.name
-                                : conv.members?.find((m) => m._id !== user.id)
-                                    ?.fullName || "Unknown User"}
-                            </h6>
+                        <hr />
+                        <div className="row">
+                          <div className="col-6 col-md-6 title">
+                            Date Of Birth:
                           </div>
-                          <small className="text-muted text-truncate">
-                            {conv.lastMessage?.content || "Chưa có tin nhắn"}
-                            {conv.lastMessage?.file && " 📎"}
+                          <div className="col-6 col-md-6 text-right">
+                            July 12, 1989 15
+                          </div>
+                        </div>
+                        <hr />
+                        <div className="row">
+                          <div className="col-6 col-md-6 title">Gender:</div>
+                          <div className="col-6 col-md-6 text-right">Male</div>
+                        </div>
+                        <hr />
+                        <div className="row">
+                          <div className="col-6 col-md-6 title">Language:</div>
+                          <div className="col-6 col-md-6 text-right">
+                            Engliah 16
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Messages Area */}
+                <div
+                  ref={messagesContainerRef}
+                  className="flex-grow-1 overflow-auto bg-chat"
+                >
+                  <div className="p-3">
+                    {/* Loading indicator */}
+                    {loadingMore && (
+                      <div className="text-center py-3">
+                        <div
+                          className="spinner-border spinner-border-sm text-primary me-2"
+                          role="status"
+                        ></div>
+                        <small className="text-muted">
+                          Đang tải tin nhắn cũ...
+                        </small>
+                      </div>
+                    )}
+
+                    {/* Load more messages hint */}
+                    {hasMoreMessages && !loadingMore && (
+                      <div className="text-center py-2">
+                        <small className="text-muted">
+                          Cuộn lên để xem tin nhắn cũ hơn
+                        </small>
+                      </div>
+                    )}
+
+                    {/* Messages */}
+                    {messages.map((message, index) => (
+                      <div
+                        key={message._id || index}
+                        className={`d-flex mb-4 ${
+                          message.sender?._id === user.id
+                            ? "justify-content-end"
+                            : "justify-content-start"
+                        }`}
+                      >
+                        {message.sender?._id !== user.id && (
+                          <div className="avatar-35 rounded-circle bg-success d-flex align-items-center justify-content-center text-white fw-bold me-2">
+                            {message.sender?.fullName?.charAt(0) || "U"}
+                          </div>
+                        )}
+                        <div
+                          className={`${
+                            message.sender?._id === user.id
+                              ? "bg-primary text-white"
+                              : "bg-white"
+                          } rounded-3 p-3 shadow-sm`}
+                          style={{ maxWidth: "70%" }}
+                        >
+                          {message.sender?._id !== user.id && (
+                            <div className="small fw-bold mb-1">
+                              {message.sender?.fullName}
+                            </div>
+                          )}
+
+                          {/* File message */}
+                          {message.fileUrl && (
+                            <div className="mb-2">
+                              {message.messageType === "image" ? (
+                                <div className="text-center">
+                                  <img
+                                    src={message.fileUrl}
+                                    alt={message.fileName || "Image"}
+                                    className="img-fluid rounded cursor-pointer"
+                                    style={{
+                                      maxHeight: "300px",
+                                      maxWidth: "100%",
+                                    }}
+                                    onClick={() =>
+                                      openImageModal(
+                                        message.fileUrl,
+                                        message.fileName
+                                      )
+                                    }
+                                  />
+                                  {message.fileName && (
+                                    <div className="mt-1 small opacity-75">
+                                      {truncateName(message.fileName, 25)}
+                                    </div>
+                                  )}
+                                </div>
+                              ) : message.messageType === "video" ? (
+                                <div className="text-center">
+                                  <video
+                                    controls
+                                    className="img-fluid rounded"
+                                    style={{
+                                      maxHeight: "300px",
+                                      maxWidth: "100%",
+                                    }}
+                                  >
+                                    <source
+                                      src={message.fileUrl}
+                                      type="video/mp4"
+                                    />
+                                    Trình duyệt của bạn không hỗ trợ video.
+                                  </video>
+                                </div>
+                              ) : (
+                                <div className="d-flex align-items-center p-2 bg-dark bg-opacity-10 rounded">
+                                  <span className="fs-5 me-3 text-primary">
+                                    {getFileIcon(message.messageType)}
+                                  </span>
+                                  <div className="flex-grow-1">
+                                    <div className="fw-bold small">
+                                      {truncateName(
+                                        message.fileName || "File",
+                                        25
+                                      )}
+                                    </div>
+                                    {message.fileSize && (
+                                      <div className="text-muted smaller">
+                                        {formatFileSize(message.fileSize)}
+                                      </div>
+                                    )}
+                                  </div>
+                                  <a
+                                    href={message.fileUrl}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-sm btn-outline-primary ms-2"
+                                  >
+                                    Tải xuống
+                                  </a>
+                                </div>
+                              )}
+                            </div>
+                          )}
+
+                          {/* Text message */}
+                          {message.content && (
+                            <div className="message-content">
+                              <p className="mb-0">{message.content}</p>
+                            </div>
+                          )}
+
+                          <div
+                            className={`small mt-2 ${
+                              message.sender?._id === user.id
+                                ? "text-white-50"
+                                : "text-muted"
+                            } text-end`}
+                          >
+                            {formatTime(message.createdAt)}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    <div ref={messagesEndRef} />
+                  </div>
+                </div>
+
+                {/* File Preview */}
+                {selectedFile && (
+                  <div className="bg-warning bg-opacity-10 border-top p-3">
+                    <div className="d-flex align-items-center justify-content-between">
+                      <div className="d-flex align-items-center">
+                        <span className="fs-4 me-3 text-warning">
+                          {getFileIcon(
+                            selectedFile.type.startsWith("image/")
+                              ? "image"
+                              : selectedFile.type.startsWith("video/")
+                              ? "video"
+                              : selectedFile.type.startsWith("audio/")
+                              ? "audio"
+                              : "file"
+                          )}
+                        </span>
+                        <div>
+                          <div className="fw-bold">
+                            {truncateName(selectedFile.name, 30)}
+                          </div>
+                          <small className="text-muted">
+                            {formatFileSize(selectedFile.size)}
                           </small>
                         </div>
                       </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ) : (
-              <div className="text-center text-muted p-3">
-                Không có cuộc trò chuyện nào!!! bạn có thể chọn ngẫu nhiên.
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Chat Area */}
-        <div className="col-md-9 d-flex flex-column">
-          {selectedChat ? (
-            <>
-              {/* Chat Header */}
-              <div className="p-3 border-bottom bg-white">
-                <div className="d-flex align-items-center">
-                  {selectedChat.isGroup === true ? (
-                    <>
-                      <div
-                        className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-3"
-                        style={{ width: "45px", height: "45px" }}
+                      <button
+                        type="button"
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={handleRemoveFile}
                       >
-                        {selectedChat.fullName?.charAt(0) || "M"}
-                      </div>
-                      <div>
-                        <h6 className="mb-0">{selectedChat.fullName}</h6>
-                        <small className="text-muted">
-                          {selectedChat.isOnline
-                            ? "Đang hoạt động"
-                            : "Hội Nhóm"}{" "}
-                        </small>
-                      </div>
-                    </>
-                  ) : (
-                    <>
-                      <div
-                        className="rounded-circle bg-primary d-flex align-items-center justify-content-center text-white me-3"
-                        style={{ width: "45px", height: "45px" }}
-                      >
-                        {otherUser?.fullName?.charAt(0) || "M"}
-                      </div>
-                      <div>
-                        <h6 className="mb-0">{otherUser?.fullName}</h6>
-                        <small className="text-muted">
-                          {selectedChat.isOnline
-                            ? "Đang hoạt động"
-                            : "Ngoại tuyến"}{" "}
-                        </small>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-
-              {/* Messages Container với Infinite Scroll */}
-              <div
-                ref={messagesContainerRef}
-                className="flex-grow-1 p-3 overflow-auto bg-light position-relative"
-                style={{
-                  minHeight: 0,
-                  height: "400px", // THÊM fixed height để đảm bảo scroll
-                  border: "1px solid #ddd", // THÊM border để thấy rõ container
-                }}
-              >
-                {/* Loading indicator khi tải thêm tin nhắn cũ */}
-                {loadingMore && (
-                  <div className="text-center py-2">
-                    <div
-                      className="spinner-border spinner-border-sm text-primary"
-                      role="status"
-                    >
-                      <span className="visually-hidden">
-                        Đang tải tin nhắn cũ...
-                      </span>
+                        <i className="fa-solid fa-xmark"></i>
+                      </button>
                     </div>
-                    <small className="text-muted ms-2">
-                      Đang tải tin nhắn cũ...
-                    </small>
+
+                    {filePreview && selectedFile.type.startsWith("image/") && (
+                      <div className="mt-2 text-center">
+                        <img
+                          src={filePreview}
+                          alt="Preview"
+                          className="img-fluid rounded"
+                          style={{ maxHeight: "150px" }}
+                        />
+                      </div>
+                    )}
+
+                    {filePreview && selectedFile.type.startsWith("video/") && (
+                      <div className="mt-2 text-center">
+                        <video
+                          controls
+                          className="img-fluid rounded"
+                          style={{ maxHeight: "150px" }}
+                        >
+                          <source src={filePreview} type={selectedFile.type} />
+                          Trình duyệt của bạn không hỗ trợ video preview.
+                        </video>
+                      </div>
+                    )}
                   </div>
                 )}
 
-                {/* Hiển thị thông báo khi còn tin nhắn cũ */}
-                {hasMoreMessages && !loadingMore && (
-                  <div className="text-center py-2">
-                    <small className="text-muted">
-                      Cuộn lên để xem tin nhắn cũ hơn
-                    </small>
-                  </div>
-                )}
-
-                {/* Danh sách tin nhắn */}
-                {messages.map((message, index) => (
-                  <div
-                    key={message._id || index}
-                    className={`d-flex mb-3 ${
-                      message.sender?._id === user.id
-                        ? "justify-content-end"
-                        : "justify-content-start"
-                    }`}
+                {/* Message Input */}
+                <div className="bg-white border-top p-3">
+                  <form
+                    className="d-flex align-items-center"
+                    onSubmit={handleSendMessage}
                   >
-                    <div
-                      className={`rounded p-3 ${
-                        message.sender?._id === user.id
-                          ? "bg-primary text-white"
-                          : "bg-white"
-                      }`}
-                      style={{ maxWidth: "70%" }}
-                    >
-                      {/* Hiển thị file/image/video/audio nếu có */}
-                      {message.fileUrl && (
-                        <div className="mb-2">
-                          {message.messageType === "image" ? (
-                            <div className="text-center">
-                              <img
-                                src={message.fileUrl}
-                                alt={message.fileName || "Image"}
-                                className="img-fluid rounded cursor-pointer" // THÊM class cursor-pointer cho chỉ báo click
-                                style={{ maxHeight: "300px", maxWidth: "100%" }}
-                                onClick={
-                                  () =>
-                                    openImageModal(
-                                      message.fileUrl,
-                                      message.fileName
-                                    ) // SỬA: Mở modal thay vì window.open
-                                }
-                                role="button"
-                              />
-                              {message.fileName && (
-                                <div className="mt-1 small opacity-75">
-                                  {message.fileName}
-                                </div>
-                              )}
-                            </div>
-                          ) : message.messageType === "video" ? (
-                            <div className="text-center">
-                              <video
-                                controls
-                                className="img-fluid rounded"
-                                style={{ maxHeight: "300px", maxWidth: "100%" }}
-                              >
-                                <source
-                                  src={message.fileUrl}
-                                  type="video/mp4"
-                                />
-                                Trình duyệt của bạn không hỗ trợ video.
-                              </video>
-                              {message.fileName && (
-                                <div className="mt-1 small opacity-75">
-                                  {message.fileName}
-                                </div>
-                              )}
-                            </div>
-                          ) : message.messageType === "audio" ? (
-                            <div className="d-flex align-items-center p-2 bg-dark bg-opacity-10 rounded">
-                              <span className="fs-4 me-3">
-                                {getFileIcon(message.messageType)}
-                              </span>
-                              <audio controls className="flex-grow-1">
-                                <source
-                                  src={message.fileUrl}
-                                  type="audio/mpeg"
-                                />
-                                Trình duyệt của bạn không hỗ trợ audio.
-                              </audio>
-                            </div>
-                          ) : (
-                            // File documents (PDF, Word, Excel, etc.)
-                            <div className="d-flex align-items-center p-2 bg-dark bg-opacity-10 rounded">
-                              <span className="fs-4 me-2">
-                                {getFileIcon(message.messageType)}
-                              </span>
-                              <div className="flex-grow-1">
-                                <div className="fw-bold small">
-                                  {message.fileName || "File"}
-                                </div>
-                                {message.fileSize && (
-                                  <div className="text-muted smaller">
-                                    {formatFileSize(message.fileSize)}
-                                  </div>
-                                )}
-                              </div>
-                              <a
-                                href={message.fileUrl}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`btn btn-sm ${
-                                  message.sender?._id === user.id
-                                    ? "btn-outline-light"
-                                    : "btn-outline-primary"
-                                } ms-2`}
-                              >
-                                Tải xuống
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      )}
-
-                      {/* Hiển thị nội dung tin nhắn */}
-                      {message.content && (
-                        <div className="message-content">{message.content}</div>
-                      )}
-
-                      <small
-                        className={`opacity-75 ${
-                          message.sender?._id === user.id
-                            ? "text-white-50"
-                            : "text-muted"
-                        }`}
-                      >
-                        {new Date(message.createdAt).toLocaleTimeString()}
-                      </small>
-                    </div>
-                  </div>
-                ))}
-                <div ref={messagesEndRef} />
-              </div>
-
-              {/* File Preview Area */}
-              {selectedFile && (
-                <div className="p-3 border-bottom bg-warning bg-opacity-10">
-                  <div className="d-flex align-items-center justify-content-between">
-                    <div className="d-flex align-items-center">
-                      <span className="fs-4 me-2">
-                        {getFileIcon(
-                          selectedFile.type.startsWith("image/")
-                            ? "image"
-                            : selectedFile.type.startsWith("video/")
-                            ? "video"
-                            : selectedFile.type.startsWith("audio/")
-                            ? "audio"
-                            : "file"
-                        )}
-                      </span>
-                      <div>
-                        <div className="fw-bold">{selectedFile.name}</div>
-                        <small className="text-muted">
-                          {formatFileSize(selectedFile.size)}
-                        </small>
-                      </div>
-                    </div>
                     <button
                       type="button"
-                      className="btn btn-sm btn-outline-danger"
-                      onClick={handleRemoveFile}
-                    >
-                      <i className="fa-solid fa-xmark"></i>
-                    </button>
-                  </div>
-
-                  {/* Image Preview */}
-                  {filePreview && selectedFile.type.startsWith("image/") && (
-                    <div className="mt-2 text-center">
-                      <img
-                        src={filePreview}
-                        alt="Preview"
-                        className="img-fluid rounded"
-                        style={{ maxHeight: "150px" }}
-                      />
-                    </div>
-                  )}
-
-                  {/* Video Preview */}
-                  {filePreview && selectedFile.type.startsWith("video/") && (
-                    <div className="mt-2 text-center">
-                      <video
-                        controls
-                        className="img-fluid rounded"
-                        style={{ maxHeight: "150px" }}
-                      >
-                        <source src={filePreview} type={selectedFile.type} />
-                        Trình duyệt của bạn không hỗ trợ video preview.
-                      </video>
-                    </div>
-                  )}
-
-                  <div className="mt-2">
-                    <small className="text-muted">
-                      File đã sẵn sàng để gửi. Nhấn nút "Gửi" để gửi file.
-                    </small>
-                  </div>
-                </div>
-              )}
-
-              {/* Message Input */}
-              <div className="p-3 border-top bg-white">
-                <form onSubmit={handleSendMessage}>
-                  <div className="input-group">
-                    <input
-                      type="text"
-                      className="form-control"
-                      placeholder={
-                        selectedFile
-                          ? "Nhập tin nhắn kèm file (tuỳ chọn)..."
-                          : "Nhập tin nhắn..."
-                      }
-                      value={newMessage}
-                      onChange={(e) => setNewMessage(e.target.value)}
+                      className="btn btn-light rounded-circle me-2"
+                      onClick={() => fileInputRef.current?.click()}
                       disabled={isUploading}
-                    />
+                    >
+                      <i className="fa-solid fa-paperclip"></i>
+                    </button>
+
                     <input
                       type="file"
                       ref={fileInputRef}
                       onChange={handleFileSelect}
-                      accept="image/*,video/*,audio/*,.pdf,.doc,.docx,.xls,.xlsx,.zip"
-                      style={{ display: "none" }}
-                      disabled={isUploading}
+                      className="d-none"
                     />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => fileInputRef.current?.click()}
-                      title="Chọn file"
-                      disabled={isUploading}
-                    >
-                      <i className="fa-solid fa-file-image"></i>
-                    </button>
+
+                    <div className="flex-grow-1 me-3">
+                      <input
+                        type="text"
+                        className="form-control rounded-pill"
+                        placeholder={
+                          selectedFile
+                            ? "Nhập tin nhắn kèm file..."
+                            : "Nhập tin nhắn..."
+                        }
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        disabled={isUploading}
+                      />
+                    </div>
+
                     <button
                       type="submit"
-                      className="btn btn-primary"
+                      className="btn btn-primary rounded-circle d-flex align-items-center justify-content-center"
+                      style={{ width: "45px", height: "45px" }}
                       disabled={
                         (!newMessage.trim() && !selectedFile) || isUploading
                       }
                     >
                       {isUploading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2" />
-                          Đang gửi...
-                        </>
+                        <div className="spinner-border spinner-border-sm text-white"></div>
                       ) : (
-                        "Gửi"
+                        <i className="fa-solid fa-paper-plane"></i>
                       )}
                     </button>
+                  </form>
+                  <div className="mt-2 small text-muted text-center">
+                    💡 Hỗ trợ file ảnh, video, audio và tài liệu (tối đa 10MB)
                   </div>
-                  <div className="mt-2 small text-muted">
-                    💡 Chọn file để gửi (tối đa 10MB)
-                  </div>
-                </form>
+                </div>
+              </>
+            ) : (
+              /* Welcome Screen */
+              <div className="d-flex flex-column justify-content-center align-items-center h-100 text-center bg-white">
+                <div className="mb-4">
+                  <i
+                    className="fa-solid fa-comments text-primary"
+                    style={{ fontSize: "5rem" }}
+                  ></i>
+                </div>
+                <h3 className="mb-3">
+                  Chào mừng đến với Autism Support Network
+                </h3>
+                <p className="text-muted mb-4">
+                  Chọn một cuộc trò chuyện để bắt đầu trò chuyện hoặc tạo cuộc
+                  trò chuyện mới
+                </p>
+                <div className="d-flex gap-3">
+                  <button
+                    className="btn btn-primary px-4"
+                    onClick={handleRandomChat}
+                  >
+                    <i className="fa-solid fa-shuffle me-2"></i>
+                    Chat ngẫu nhiên
+                  </button>
+                  <button
+                    className="btn btn-outline-primary px-4"
+                    onClick={toggleUserDetails}
+                  >
+                    <i className="fa-solid fa-user me-2"></i>
+                    Thông tin cá nhân
+                  </button>
+                </div>
               </div>
-            </>
-          ) : (
-            <div className="d-flex justify-content-center align-items-center h-100">
-              <div className="text-center text-muted">
-                <h4>Chào mừng đến với Autism Support Network</h4>
-                <p>Chọn một cuộc trò chuyện để bắt đầu</p>
-              </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
 
-      {/* THÊM: CSS cho cursor pointer (nếu chưa có Bootstrap CSS hỗ trợ) */}
       <style jsx>{`
+        .bg-chat {
+          background-color: #f8f9fa;
+          background-image: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%23e9ecef' fill-opacity='0.4' fill-rule='evenodd'/%3E%3C/svg%3E");
+        }
+        .avatar-35 {
+          width: 35px;
+          height: 35px;
+        }
+        .avatar-45 {
+          width: 45px;
+          height: 45px;
+        }
+        .avatar-50 {
+          width: 50px;
+          height: 50px;
+        }
+        .avatar-100 {
+          width: 100px;
+          height: 100px;
+        }
         .cursor-pointer {
           cursor: pointer;
         }
         .cursor-pointer:hover {
           opacity: 0.8;
+        }
+        .smaller {
+          font-size: 0.75rem;
         }
       `}</style>
     </div>

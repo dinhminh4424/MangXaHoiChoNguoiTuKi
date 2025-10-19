@@ -191,7 +191,9 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete }) => {
         <div className="user-info d-flex align-items-start">
           <Link to={`/profile/${post.userCreateID._id}`}>
             <img
-              src={post.userCreateID.avatar || "/images/default-avatar.png"}
+              src={
+                post.userCreateID.avatar || "/assets/images/default-avatar.png"
+              }
               alt="Avatar"
               className="user-avatar rounded-circle"
             />

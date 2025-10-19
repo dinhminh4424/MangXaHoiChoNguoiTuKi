@@ -1,5 +1,6 @@
 // controllers/commentController.js
 const Comment = require("../models/Comment");
+const GrpMember = require("../models/GroupMember");
 const Post = require("../models/Post");
 
 class CommentController {
@@ -20,6 +21,20 @@ class CommentController {
         return res.status(404).json({
           success: false,
           message: "Bài viết không tồn tại",
+        });
+      }
+
+      if (
+        !post.groupId &&
+        !GroupMember.findOne({
+          userId: userID,
+          groupId: post.groupId,
+          status: { $ne: "active" },
+        })
+      ) {
+        return res.json({
+          success: false,
+          message: "Bạn không có quyền đăng bài trong nhóm",
         });
       }
 

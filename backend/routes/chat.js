@@ -26,12 +26,13 @@ router.post("/conversation", auth, async (req, res) => {
       const existingChat = await Chat.findOne({
         isGroup: false,
         members: { $all: allMembers, $size: allMembers.length },
-      });
+      }).populate("members", "username fullName profile.avatar isOnline");
 
       if (existingChat) {
         return res.json({
           success: true,
           data: existingChat,
+          isExisting: true,
           message: "Cuộc trò chuyện đã tồn tại",
         });
       }
@@ -64,6 +65,7 @@ router.post("/conversation", auth, async (req, res) => {
     res.status(201).json({
       success: true,
       data: chat,
+      isExisting: false,
     });
   } catch (error) {
     res.status(500).json({
@@ -87,7 +89,14 @@ router.get("/conversations", auth, async (req, res) => {
       .populate("createdBy", "username fullName")
       .sort({ updatedAt: -1 });
 
-    res.json({
+    // if (conversations.members.length == 2) {
+    //   return res.json({
+    //     success: false,
+    //     data: conversations,
+    //   });
+    // }
+
+    return res.json({
       success: true,
       data: conversations,
     });

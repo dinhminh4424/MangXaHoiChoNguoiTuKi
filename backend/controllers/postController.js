@@ -6,6 +6,7 @@ exports.createPost = async (req, res) => {
   try {
     const {
       content,
+      groupId = null,
       privacy = "private",
       isAnonymous = false,
       emotions,
@@ -53,6 +54,7 @@ exports.createPost = async (req, res) => {
 
     const newPost = new Post({
       userCreateID: userCreateID,
+      groupId: groupId || null,
       content: content,
       files: files,
       privacy: privacy,

@@ -14,7 +14,7 @@ import {
   TrendingUp,
   Earth,
 } from "lucide-react";
-import Post from "../../components/post/Post";
+import Post from "../../components/Post/Post";
 import "./Feed.css";
 
 const Feed = () => {
@@ -263,7 +263,7 @@ const Feed = () => {
                       <option value="all">Tất cả</option>
                       <option value="public">Công khai</option>
                       <option value="friends">Bạn bè</option>
-                      <option value="private">Ânr danh</option>
+                      <option value="private">Ẩn danh</option>
                     </select>
                   </div>
 

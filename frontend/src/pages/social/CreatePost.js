@@ -1,6 +1,6 @@
 // pages/social/CreatePost.js
 import React, { useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { usePost } from "../../contexts/PostContext";
 import { useAuth } from "../../contexts/AuthContext";
 import {
@@ -18,10 +18,16 @@ import {
 } from "lucide-react";
 import "./CreatePost.css";
 
-const CreatePost = () => {
+const CreatePost = ({ idOfGroup = null }) => {
   const navigate = useNavigate();
   const { createPost } = usePost();
   const { user } = useAuth();
+
+  // Lấy groupId từ query parameters
+
+  const groupId = idOfGroup;
+
+  console.log("groupId: " + groupId);
 
   const [formData, setFormData] = useState({
     content: "",
@@ -119,6 +125,11 @@ const CreatePost = () => {
         files: files,
       };
 
+      // Thêm groupId nếu có
+      if (groupId) {
+        submitData.groupId = groupId;
+      }
+
       console.log("======================== submitData =================");
       console.log(submitData);
       console.log("======================== =================");
@@ -127,7 +138,15 @@ const CreatePost = () => {
 
       // Show success message
       alert("Đăng bài viết thành công!");
-      navigate("/feed");
+
+      // navigate("/feed");
+
+      // Quay về trang trước đó (group page nếu có groupId)
+      if (groupId) {
+        navigate(`/group/${groupId}`);
+      } else {
+        navigate("/feed");
+      }
     } catch (err) {
       setError(err.message || "Có lỗi xảy ra khi đăng bài viết");
     } finally {
@@ -209,7 +228,7 @@ const CreatePost = () => {
             <div className="user-info-card">
               <div className="d-flex align-items-center">
                 <img
-                  src={user?.avatar || "/images/default-avatar.png"}
+                  src={user?.avatar || "/assets/images/default-avatar.png"}
                   alt="Avatar"
                   className="user-avatar"
                 />

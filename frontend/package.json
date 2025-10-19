@@ -21,6 +21,7 @@
     "axios": "^1.12.2",
     "bootstrap": "^5.3.8",
     "dayjs": "^1.11.18",
+    "face-api.js": "^0.22.2",
     "lucide-react": "^0.544.0",
     "react": "^19.1.1",
     "react-bootstrap": "^2.10.10",

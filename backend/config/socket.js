@@ -38,6 +38,7 @@ const configureSocket = (server) => {
       console.log(`User left chat: ${chatId}`);
     });
 
+    // gửi tin
     socket.on("send_message", async (data) => {
       try {
         const {

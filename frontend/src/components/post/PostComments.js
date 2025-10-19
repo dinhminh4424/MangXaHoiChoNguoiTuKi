@@ -316,7 +316,8 @@ const PostComments = ({ postId, onCommentAdded }) => {
         <div className="comment-avatar">
           <img
             src={
-              comment.userID?.profile?.avatar || "/images/default-avatar.png"
+              comment.userID?.profile?.avatar ||
+              "assets/images/default-avatar.png"
             }
             alt="Avatar"
           />
@@ -444,7 +445,7 @@ const PostComments = ({ postId, onCommentAdded }) => {
             <div className="reply-input-container">
               <div className="user-avatar small">
                 <img
-                  src={user?.avatar || "/images/default-avatar.png"}
+                  src={user?.avatar || "assets/images/default-avatar.png"}
                   alt="Your avatar"
                 />
               </div>
@@ -530,7 +531,7 @@ const PostComments = ({ postId, onCommentAdded }) => {
         <div className="comment-input-container">
           <div className="user-avatar">
             <img
-              src={user?.avatar || "/images/default-avatar.png"}
+              src={user?.avatar || "/assets/images/default-avatar.png"}
               alt="Your avatar"
             />
           </div>

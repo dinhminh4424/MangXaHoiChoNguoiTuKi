@@ -28,7 +28,7 @@ export const postService = {
         }
       });
       //
-      console.log("==============postData==============");
+      console.log("==============formData123==============");
       console.log(formData);
       console.log("====================================");
 

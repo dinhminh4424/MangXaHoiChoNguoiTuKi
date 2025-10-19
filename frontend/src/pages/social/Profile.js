@@ -4,6 +4,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import ProfileView from "../../components/profile/ProfileView";
 import ProfileEdit from "../../components/profile/ProfileEdit";
 import ProfileJournal from "../../components/profile/profileJournal";
+import ProfilePosts from "../../components/profile/profilePost";
 
 const Profile = () => {
   const { userId } = useParams();
@@ -39,7 +40,7 @@ const Profile = () => {
                 className={`nav-link ${activeTab === "posts" ? "active" : ""}`}
                 onClick={() => handleTabSelect("posts")}
               >
-                📝 Bài viết
+                Bài viết
               </button>
             </li>
             <li className="nav-item">
@@ -49,7 +50,7 @@ const Profile = () => {
                 }`}
                 onClick={() => handleTabSelect("journals")}
               >
-                📝 Nhật kí
+                Nhật kí
               </button>
             </li>
             <li className="nav-item">
@@ -59,7 +60,7 @@ const Profile = () => {
                 }`}
                 onClick={() => handleTabSelect("friends")}
               >
-                👥 Bạn bè
+                Bạn bè
               </button>
             </li>
             {isOwnProfile && (
@@ -68,7 +69,7 @@ const Profile = () => {
                   className={`nav-link ${activeTab === "edit" ? "active" : ""}`}
                   onClick={() => handleTabSelect("edit")}
                 >
-                  ✏️ Chỉnh sửa
+                  Chỉnh sửa
                 </button>
               </li>
             )}
@@ -79,12 +80,7 @@ const Profile = () => {
             {activeTab === "posts" && (
               <div className="tab-pane fade show active">
                 {/* Component bài viết sẽ thêm sau */}
-                <div className="card">
-                  <div className="card-body text-center text-muted py-5">
-                    <h5>Chưa có bài viết nào</h5>
-                    <p>Người dùng chưa đăng bài viết nào</p>
-                  </div>
-                </div>
+                <ProfilePosts userId={userId} />
               </div>
             )}
 

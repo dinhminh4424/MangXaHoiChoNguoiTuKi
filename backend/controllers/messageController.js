@@ -5,7 +5,7 @@ const Post = require("../models/Post");
 exports.createComment = async (req, res) => {
   try {
     const { postID, content, parentCommentID } = req.body;
-    const userID = req.user.id; // từ auth middleware
+    const userID = req.user.userId; // từ auth middleware
 
     let file = null;
     if (req.file) {

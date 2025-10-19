@@ -1,0 +1,291 @@
+/* components/Group/GroupSettings.css */
+.group-settings {
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.settings-header {
+  text-align: center;
+  padding-bottom: 2rem;
+  border-bottom: 1px solid #e9ecef;
+  margin-bottom: 2rem;
+}
+
+.settings-header h2 {
+  color: #333;
+  font-weight: 700;
+  margin-bottom: 0.5rem;
+}
+
+.settings-header p {
+  color: #6c757d;
+  font-size: 1.1rem;
+}
+
+/* Card Styles */
+.group-settings .card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 1.5rem;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.group-settings .card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.group-settings .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1.25rem 1.5rem;
+  font-weight: 600;
+}
+
+.group-settings .card-header h5 {
+  margin: 0;
+  font-size: 1.1rem;
+}
+
+.group-settings .card-body {
+  padding: 1.5rem;
+}
+
+/* Form Styles */
+.group-settings .form-label {
+  font-weight: 600;
+  color: #495057;
+  margin-bottom: 0.5rem;
+}
+
+.group-settings .form-control,
+.group-settings .form-select {
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  padding: 0.75rem 1rem;
+  transition: all 0.3s ease;
+  font-size: 0.95rem;
+}
+
+.group-settings .form-control:focus,
+.group-settings .form-select:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+.group-settings textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Radio Buttons */
+.group-settings .form-check {
+  margin-bottom: 1rem;
+  padding: 1rem;
+  border: 1px solid #e9ecef;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.group-settings .form-check:hover {
+  border-color: #007bff;
+  background-color: #f8f9fa;
+}
+
+.group-settings .form-check-input {
+  margin-top: 0.3rem;
+}
+
+.group-settings .form-check-input:checked {
+  background-color: #007bff;
+  border-color: #007bff;
+}
+
+/* Submit Button */
+.group-settings .btn-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  border: none;
+  border-radius: 25px;
+  padding: 0.875rem 2rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 123, 255, 0.3);
+}
+
+.group-settings .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 123, 255, 0.4);
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+}
+
+.group-settings .btn-primary:disabled {
+  opacity: 0.7;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Danger Zone */
+.group-settings .border-danger {
+  border: 2px solid #dc3545 !important;
+}
+
+.group-settings .bg-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%) !important;
+}
+
+.group-settings .btn-outline-danger {
+  border-radius: 25px;
+  border: 2px solid #dc3545;
+  color: #dc3545;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.group-settings .btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.3);
+}
+
+/* Modal Styles */
+.group-settings .modal-header {
+  border-bottom: 1px solid #e9ecef;
+  padding: 1.5rem;
+}
+
+.group-settings .modal-title {
+  font-weight: 600;
+  color: #dc3545;
+}
+
+.group-settings .modal-body {
+  padding: 1.5rem;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+.group-settings .modal-footer {
+  border-top: 1px solid #e9ecef;
+  padding: 1.5rem;
+}
+
+.group-settings .modal .btn-danger {
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
+  border: none;
+  border-radius: 25px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.group-settings .modal .btn-danger:hover {
+  background: linear-gradient(135deg, #c82333 0%, #a71e2a 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(220, 53, 69, 0.4);
+}
+
+/* Alert Styles */
+.group-settings .alert {
+  border: none;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.group-settings .alert-dismissible .btn-close {
+  padding: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .group-settings {
+    padding: 0 1rem;
+  }
+
+  .settings-header {
+    padding-bottom: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .group-settings .card-body {
+    padding: 1.25rem;
+  }
+
+  .group-settings .form-check {
+    padding: 0.875rem;
+  }
+
+  .group-settings .btn-primary {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 576px) {
+  .settings-header h2 {
+    font-size: 1.75rem;
+  }
+
+  .group-settings .card-header {
+    padding: 1rem 1.25rem;
+  }
+
+  .group-settings .card-body {
+    padding: 1rem;
+  }
+
+  .group-settings .modal-header,
+  .group-settings .modal-body,
+  .group-settings .modal-footer {
+    padding: 1.25rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .group-settings .settings-header h2 {
+    color: #e2e8f0;
+  }
+
+  .group-settings .card {
+    background-color: #2d3748;
+  }
+
+  .group-settings .form-label {
+    color: #e2e8f0;
+  }
+
+  .group-settings .form-control,
+  .group-settings .form-select {
+    background-color: #4a5568;
+    border-color: #718096;
+    color: #e2e8f0;
+  }
+
+  .group-settings .form-check {
+    border-color: #4a5568;
+    background-color: #2d3748;
+  }
+
+  .group-settings .form-check:hover {
+    background-color: #4a5568;
+    border-color: #63b3ed;
+  }
+
+  .group-settings .modal-content {
+    background-color: #2d3748;
+    color: #e2e8f0;
+  }
+
+  .group-settings .modal-header,
+  .group-settings .modal-footer {
+    border-color: #4a5568;
+  }
+}

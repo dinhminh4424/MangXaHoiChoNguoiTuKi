@@ -9,6 +9,13 @@ const postSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    groupId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Group",
+      default: null,
+      index: true,
+      required: false,
+    },
     commentCount: {
       type: Number,
       default: 0,

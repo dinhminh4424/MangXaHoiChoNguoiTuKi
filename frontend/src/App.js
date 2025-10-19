@@ -14,8 +14,9 @@ import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
 
 import Navbar from "./components/Navbar"; // Import Navbar
-import "bootstrap/dist/css/bootstrap.min.css";
-import "./App.css";
+
+// import "bootstrap/dist/css/bootstrap.min.css";
+// import "./App.css";
 
 // Import các trang
 import Login from "./pages/auth/Login";
@@ -24,17 +25,26 @@ import Home from "./pages/Home";
 import Chat from "./pages/chat/Chat";
 import Feed from "./pages/social/Feed";
 import Profile from "./pages/social/Profile";
+
 import CreatePost from "./pages/social/CreatePost";
 import UpdatePost from "./pages/social/EditPost";
 import Explore from "./pages/social/Explore";
 import Contact from "./pages/support/Contact";
 import Resources from "./pages/support/Resources";
 
+import Emotion from "./pages/emotions/emotion";
+import Group from "./pages/social/Group";
+import GroupDetailPage from "./pages/social/GroupDetailPage";
+import CreateGroupPage from "./pages/social/CreateGroupPage";
+
 // Import các trang nhật ký
 import Journal from "./pages/journal/Journal";
 import JournalHistory from "./pages/journal/JournalHistory";
 import CreateJournal from "./pages/journal/CreateJournal";
 import JournalDetail from "./pages/journal/JournalDetail";
+
+import ChatTest from "./pages/chat/test";
+import ChatTest2 from "./pages/chat/test2";
 
 /**
  * COMPONENT: ProtectedRoute
@@ -125,6 +135,23 @@ function AppContent() {
           }
         />
         <Route
+          path="/chattest"
+          element={
+            <ProtectedRoute>
+              <ChatTest />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/chattest2"
+          element={
+            <ProtectedRoute>
+              <ChatTest2 />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
           path="/feed"
           element={
             <ProtectedRoute>
@@ -140,7 +167,38 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-
+        <Route
+          path="/nhandien"
+          element={
+            <ProtectedRoute>
+              <Emotion />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/Group"
+          element={
+            <ProtectedRoute>
+              <Group />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/group/:groupId"
+          element={
+            <ProtectedRoute>
+              <GroupDetailPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/create-group"
+          element={
+            <ProtectedRoute>
+              <CreateGroupPage />
+            </ProtectedRoute>
+          }
+        />
         <Route
           path="/profile/:userId"
           element={

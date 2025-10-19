@@ -1,0 +1,167 @@
+/* components/Group/GroupSidebar.css */
+.group-sidebar {
+  position: sticky;
+  top: 100px;
+}
+
+.group-sidebar .card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+
+.group-sidebar .card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+}
+
+.group-sidebar .card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  padding: 1rem 1.25rem;
+  font-weight: 600;
+}
+
+.group-sidebar .card-header h6 {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.group-sidebar .card-body {
+  padding: 1.25rem;
+}
+
+/* List Group Styles */
+.group-sidebar .list-group-item {
+  padding: 1rem 1.25rem;
+  border: none;
+  border-bottom: 1px solid #f0f0f0;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  color: #495057;
+  font-weight: 500;
+}
+
+.group-sidebar .list-group-item:last-child {
+  border-bottom: none;
+}
+
+.group-sidebar .list-group-item:hover {
+  background-color: #f8f9fa;
+  color: #007bff;
+  transform: translateX(4px);
+}
+
+.group-sidebar .list-group-item.active {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+  color: white;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 123, 255, 0.3);
+}
+
+.group-sidebar .list-group-item.active:hover {
+  background: linear-gradient(135deg, #0056b3 0%, #004085 100%);
+  transform: translateX(4px);
+}
+
+/* Badge Styles */
+.group-sidebar .badge {
+  font-size: 0.7rem;
+  padding: 0.35rem 0.6rem;
+  border-radius: 20px;
+  font-weight: 500;
+}
+
+.group-sidebar .badge.bg-light {
+  background-color: #e9ecef !important;
+  color: #495057 !important;
+  border: 1px solid #dee2e6;
+}
+
+.group-sidebar .badge.bg-outline-secondary {
+  background-color: transparent !important;
+  color: #6c757d !important;
+  border: 1px solid #6c757d;
+}
+
+.group-sidebar .badge.bg-outline-primary {
+  background-color: transparent !important;
+  color: #007bff !important;
+  border: 1px solid #007bff;
+}
+
+/* Text Styles */
+.group-sidebar .text-muted {
+  color: #6c757d !important;
+  font-size: 0.8rem;
+}
+
+.group-sidebar small {
+  font-size: 0.75rem;
+}
+
+.group-sidebar .card-body p.small {
+  line-height: 1.4;
+  margin-bottom: 1rem;
+}
+
+/* Admin Tools Specific Styles */
+.group-sidebar .card:last-child .list-group-item {
+  font-size: 0.85rem;
+  padding: 0.875rem 1.25rem;
+}
+
+.group-sidebar .card:last-child .list-group-item:hover {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .group-sidebar {
+    position: static;
+  }
+
+  .group-sidebar .card {
+    margin-bottom: 1rem;
+  }
+
+  .group-sidebar .list-group-item {
+    padding: 0.875rem 1rem;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .group-sidebar .card {
+    background-color: #2d3748;
+    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+  }
+
+  .group-sidebar .list-group-item {
+    background-color: #2d3748;
+    color: #e2e8f0;
+    border-bottom-color: #4a5568;
+  }
+
+  .group-sidebar .list-group-item:hover {
+    background-color: #4a5568;
+    color: #63b3ed;
+  }
+
+  .group-sidebar .list-group-item.active {
+    background: linear-gradient(135deg, #2b6cb0 0%, #2c5282 100%);
+  }
+
+  .group-sidebar .badge.bg-light {
+    background-color: #4a5568 !important;
+    color: #e2e8f0 !important;
+    border-color: #718096;
+  }
+
+  .group-sidebar .text-muted {
+    color: #a0aec0 !important;
+  }
+}
