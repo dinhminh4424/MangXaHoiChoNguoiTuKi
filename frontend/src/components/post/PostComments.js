@@ -4,7 +4,6 @@ import {
   Smile,
   Image,
   Paperclip,
-  Heart,
   MoreHorizontal,
   Reply,
 } from "lucide-react";
@@ -12,11 +11,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import commentService from "../../services/commentService";
 import { useEmotionPicker } from "../../hooks/useEmotionPicker";
 import EmotionPicker from "./EmojiPicker";
-import {
-  EMOTIONS,
-  EMOTION_ICONS,
-  EMOTION_COLORS,
-} from "../../constants/emotions";
+import { EMOTION_ICONS, EMOTION_COLORS } from "../../constants/emotions";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
@@ -426,7 +421,7 @@ const PostComments = ({ postId, onCommentAdded }) => {
                 pickerRef={pickerRef}
                 onMouseEnter={handlePickerMouseEnter}
                 onMouseLeave={handlePickerMouseLeave}
-                position={isLast ? "top-left" : "left-top"} // Có thể thay đổi thành các vị trí khác
+                position={isLast ? "left" : "left"} // Có thể thay đổi thành các vị trí khác
               />
             </div>
             {!isReply && (

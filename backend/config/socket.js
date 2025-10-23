@@ -49,6 +49,7 @@ const configureSocket = (server) => {
           fileUrl,
           fileName,
           fileSize,
+          repliedTo,
         } = data;
 
         // Kiểm tra chat tồn tại
@@ -70,6 +71,7 @@ const configureSocket = (server) => {
           fileName,
           fileSize,
           isReadBy: [sender.id],
+          repliedTo,
         });
 
         await message.save();
@@ -79,7 +81,17 @@ const configureSocket = (server) => {
         await chat.save();
 
         // Populate thông tin sender
-        await message.populate("sender", "username fullName profile.avatar");
+        await message.populate([
+          { path: "sender", select: "username fullName profile.avatar" },
+          {
+            path: "repliedTo",
+            select: "content sender messageType fileUrl fileName",
+            populate: {
+              path: "sender",
+              select: "fullName profile.avatar",
+            },
+          },
+        ]);
 
         // Gửi tin nhắn tới tất cả thành viên trong chat
         io.to(chatId).emit("receive_message", message);
@@ -131,6 +143,75 @@ const configureSocket = (server) => {
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
+    });
+
+    // Trong server socket
+    socket.on("delete_message", async (data) => {
+      try {
+        const { messageId, chatId } = data;
+
+        // Kiểm tra quyền xoá
+        const message = await Message.findById(messageId);
+        if (!message) return;
+
+        // Chỉ cho phép người gửi xoá
+        if (message.sender.toString() !== socket.userId) {
+          socket.emit("error", { message: "Không có quyền xoá tin nhắn" });
+          return;
+        }
+
+        // Soft delete
+        await Message.findByIdAndUpdate(messageId, {
+          $addToSet: { deletedFor: userId },
+        });
+
+        // Thông báo cho tất cả thành viên trong chat
+        io.to(chatId).emit("message_deleted", {
+          messageId,
+          deletedBy: userId,
+        });
+
+        // xoá hẳn
+        // await Message.findByIdAndDelete(messageId);
+
+        // Thông báo cho tất cả thành viên trong chat
+        // io.to(chatId).emit("message_deleted", { messageId });
+      } catch (error) {
+        console.error("Error deleting message:", error);
+        socket.emit("error", { message: "Lỗi khi xoá tin nhắn" });
+      }
+    });
+
+    // Trong socket server
+    socket.on("recall_message", async (data) => {
+      try {
+        const { messageId, chatId } = data;
+        const userId = socket.userId;
+
+        const message = await Message.findById(messageId);
+        if (!message) return;
+
+        // Chỉ người gửi mới được thu hồi
+        if (message.sender.toString() !== userId) {
+          socket.emit("error", {
+            message: "Chỉ người gửi mới có thể thu hồi tin nhắn",
+          });
+          return;
+        }
+
+        // Đánh dấu thu hồi
+        await Message.findByIdAndUpdate(messageId, {
+          recalled: true,
+        });
+
+        // Thông báo cho tất cả thành viên trong chat
+        io.to(chatId).emit("message_recalled", {
+          messageId,
+        });
+      } catch (error) {
+        console.error("Error recalling message:", error);
+        socket.emit("error", { message: "Lỗi khi thu hồi tin nhắn" });
+      }
     });
   });
 

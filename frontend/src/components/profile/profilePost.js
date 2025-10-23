@@ -3,6 +3,7 @@ import React, { useState, useEffect, useCallback } from "react";
 import { usePost } from "../../contexts/PostContext";
 import Post from "../Post/Post";
 import { RefreshCw } from "lucide-react";
+import { useAuth } from "../../contexts/AuthContext";
 
 const ProfilePosts = ({ userId }) => {
   const { posts, fetchPosts, loading, error, deletePost } = usePost();
@@ -10,18 +11,24 @@ const ProfilePosts = ({ userId }) => {
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
+  const { user: currentUser } = useAuth();
+
+  const isOwnProfile = !userId || userId === currentUser?.id;
+
   // Load posts cho profile
   const loadProfilePosts = useCallback(
     async (pageNum = 1, append = false) => {
       if (refreshing) return;
+
+      const id = userId || currentUser?.id;
 
       setRefreshing(true);
       try {
         const params = {
           page: pageNum,
           limit: 10,
-          userCreateID: userId, // Lọc theo userId
-          privacy: userId ? "all" : "public",
+          userCreateID: id, // Lọc theo userId
+          privacy: isOwnProfile ? "all" : "public",
           sortBy: "newest",
         };
 

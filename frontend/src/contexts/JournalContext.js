@@ -47,6 +47,7 @@ export const JournalProvider = ({ children }) => {
     try {
       const result = await journalService.getTodayJournal(userId);
 
+      console.log("vỪA VÔ WEB LÀ CHẠY DO ID USER THAY ĐỔI");
       if (result?.success && result?.data) {
         setTodayJournal(result.data);
       } else {

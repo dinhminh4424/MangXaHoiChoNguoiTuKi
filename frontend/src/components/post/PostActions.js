@@ -121,6 +121,7 @@ const PostActions = ({
             onClick={handleLikeClick}
             onMouseEnter={handleLikeMouseEnter}
             onMouseLeave={handleLikeMouseLeave}
+            onMouseDown={handleLikeMouseLeave}
             disabled={isLiking}
             style={getLikeButtonStyle()}
             title={
@@ -153,6 +154,7 @@ const PostActions = ({
             pickerRef={pickerRef}
             onMouseEnter={handlePickerMouseEnter}
             onMouseLeave={handlePickerMouseLeave}
+            position="top-right"
           />
         </div>
 

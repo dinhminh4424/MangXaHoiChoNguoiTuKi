@@ -1,4 +1,3 @@
-
 // pages/social/EditPost.js
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
@@ -15,7 +14,6 @@ import {
   Globe,
   Users,
   Lock,
-  Send,
   Save,
 } from "lucide-react";
 import "./CreatePost.css";

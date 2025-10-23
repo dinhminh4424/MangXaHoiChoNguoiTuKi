@@ -821,15 +821,16 @@ function Navbar() {
                     </div>
                   </a>
                   <div
-                    className="sub-drop dropdown-menu caption-menu"
+                    className="sub-drop dropdown-menu dropdown-menu-end caption-menu"
                     aria-labelledby="drop-down-arrow"
                   >
                     <div className="card shadow-none m-0">
                       <div className="card-header bg-primary">
                         <div className="header-title">
-                          <h5 className="mb-0 text-white">
-                            Hello {user?.username || "User"}
-                          </h5>
+                          <h6 className="mb-0 text-white">Hello</h6>
+                          <h6 className="mb-0 text-white">
+                            {user?.username || "User"}
+                          </h6>
                           <span className="text-white font-size-12">
                             Available
                           </span>

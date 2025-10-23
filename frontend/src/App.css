@@ -202,7 +202,7 @@
 /* Link Styles */
 .tiptap-editor .editor-link {
   color: #0d6efd;
-  text-decoration: underline;
+  text-decoration: none;
   cursor: pointer;
 }
 
@@ -243,5 +243,3 @@
     font-size: 14px;
   }
 }
-
-

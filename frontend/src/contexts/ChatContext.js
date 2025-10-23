@@ -58,7 +58,21 @@ export const ChatProvider = ({ children }) => {
     });
 
     socketRef.current.on("receive_message", (newMessage) => {
-      setMessages((prev) => [...prev, newMessage]);
+      setMessages((prev) => {
+        // Kiểm tra xem tin nhắn đã tồn tại chưa
+        const isDuplicate = prev.some(
+          (msg) =>
+            msg._id === newMessage._id ||
+            (msg.tempId && msg.tempId === newMessage.tempId)
+        );
+
+        if (isDuplicate) {
+          console.log("Tin nhắn trùng lặp đã được bỏ qua:", newMessage._id);
+          return prev;
+        }
+
+        return [...prev, newMessage];
+      });
 
       // Cập nhật last message trong conversations
       setConversations((prev) =>
@@ -112,7 +126,15 @@ export const ChatProvider = ({ children }) => {
 
       if (newMessages.length > 0) {
         // Thêm tin nhắn cũ vào đầu danh sách
-        setMessages((prev) => [...newMessages, ...prev]);
+        setMessages((prev) => {
+          // Lọc bỏ tin nhắn trùng lặp
+          const existingIds = new Set(prev.map((msg) => msg._id));
+          const uniqueNewMessages = newMessages.filter(
+            (msg) => !existingIds.has(msg._id)
+          );
+
+          return [...uniqueNewMessages, ...prev];
+        });
         setCurrentPage(nextPage);
         setHasMoreMessages(pagination.hasNext);
 
@@ -178,6 +200,7 @@ export const ChatProvider = ({ children }) => {
       });
 
       const { messages: newMessages, pagination } = response.data.data;
+      // console.log("tinnhan: ", response.data.data.messages);
       setMessages(newMessages);
       setHasMoreMessages(pagination.hasNext);
 
@@ -199,7 +222,9 @@ export const ChatProvider = ({ children }) => {
 
   // Send message
   const sendMessage = useCallback(
-    async (content, chatId = null) => {
+    async (content, chatId = null, repliedTo = null) => {
+      console.log("content: ", content);
+
       if (!content.trim()) return;
 
       const targetChatId = chatId || selectedChat?._id;
@@ -213,6 +238,7 @@ export const ChatProvider = ({ children }) => {
           chatId: targetChatId,
           content: content.trim(),
           sender: user,
+          repliedTo: repliedTo || null,
         };
 
         // Gửi qua Socket.io — server sẽ lưu và phản hồi lại
@@ -319,7 +345,7 @@ export const ChatProvider = ({ children }) => {
   //   }
   // };
 
-  const sendFileMessage = async (file, content = "") => {
+  const sendFileMessage = async (file, content = "", repliedTo = "") => {
     if (!selectedChat) {
       setError("Vui lòng chọn cuộc trò chuyện");
       return { success: false, error: "No chat selected" };
@@ -352,6 +378,7 @@ export const ChatProvider = ({ children }) => {
         fileUrl: uploadResult.fileUrl,
         fileName: uploadResult.fileName,
         fileSize: uploadResult.fileSize,
+        repliedTo: repliedTo || null,
       };
 
       // Bước 4: Gửi qua socket
@@ -459,6 +486,112 @@ export const ChatProvider = ({ children }) => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, []);
 
+  // Trong ChatContext, thêm 2 hàm
+  const deleteMessage = useCallback(
+    async (messageId) => {
+      try {
+        const response = await api.delete(`/api/chat/messages/${messageId}`);
+
+        if (response.data.success) {
+          // Cập nhật state - xoá tin nhắn khỏi danh sách
+          setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+
+          // Cập nhật lastMessage trong conversations
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (conv.lastMessage?._id === messageId) {
+                // Tìm tin nhắn mới nhất khác
+                const otherMessages = messages.filter(
+                  (msg) => msg.chatId === conv._id && msg._id !== messageId
+                );
+                return {
+                  ...conv,
+                  lastMessage: otherMessages[otherMessages.length - 1] || null,
+                };
+              }
+              return conv;
+            })
+          );
+
+          return { success: true };
+        }
+      } catch (error) {
+        console.error("Lỗi khi xoá tin nhắn:", error);
+        setError("Không thể xoá tin nhắn");
+        return { success: false, error: error.message };
+      }
+    },
+    [messages]
+  );
+
+  const recallMessage = useCallback(
+    async (messageId) => {
+      try {
+        const response = await api.post(
+          `/api/chat/messages/${messageId}/recall`
+        );
+
+        if (response.data.success) {
+          // Cập nhật state - đánh dấu tin nhắn đã thu hồi
+          setMessages((prev) => prev.filter((msg) => msg._id !== messageId));
+
+          // Cập nhật lastMessage trong conversations
+          setConversations((prev) =>
+            prev.map((conv) => {
+              if (conv.lastMessage?._id === messageId) {
+                // Tìm tin nhắn mới nhất khác
+                const otherMessages = messages.filter(
+                  (msg) => msg.chatId === conv._id && msg._id !== messageId
+                );
+                return {
+                  ...conv,
+                  lastMessage: otherMessages[otherMessages.length - 1] || null,
+                };
+              }
+              return conv;
+            })
+          );
+
+          return { success: true };
+        }
+      } catch (error) {
+        console.error("Lỗi khi thu hồi tin nhắn:", error);
+        setError("Không thể thu hồi tin nhắn");
+        return { success: false, error: error.message };
+      }
+    },
+    [messages]
+  );
+
+  // Cập nhật socket handler để xử lý tin nhắn bị xoá
+  // socketRef.current.on("message_deleted", (data) => {
+  //   const { messageId, deletedBy } = data;
+
+  //   setMessages((prev) =>
+  //     prev.map((msg) =>
+  //       msg._id === messageId
+  //         ? {
+  //             ...msg,
+  //             content:
+  //               deletedBy === user.id ? null : "Tin nhắn đã được thu hồi",
+  //             fileUrl: null,
+  //             isDeleted: true,
+  //           }
+  //         : msg
+  //     )
+  //   );
+  // });
+
+  // Hàm trả lời tin nhắn (nếu cần logic phức tạp hơn)
+  const replyToMessage = useCallback(
+    async (messageId, replyContent) => {
+      // Logic để gửi tin nhắn trả lời
+      // Có thể thêm field parentMessageId vào message schema
+      return await sendMessage(replyContent);
+    },
+    [sendMessage]
+  );
+
   // Context value
   const value = {
     // State
@@ -489,6 +622,9 @@ export const ChatProvider = ({ children }) => {
     clearError,
     scrollToBottom,
     loadMoreMessages,
+    deleteMessage,
+    recallMessage,
+    replyToMessage,
 
     // Setters (nếu cần)
     setSelectedChat,

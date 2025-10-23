@@ -8,6 +8,7 @@ import PostStats from "./PostStats";
 import PostActions from "./PostActions";
 import PostComments from "./PostComments";
 import { EMOTION_ICONS } from "../../constants/emotions";
+import notificationService from "../../services/notificationService"; // Import service
 
 import "./Post.css";
 
@@ -76,7 +77,12 @@ const Post = ({ post, onUpdate, onDelete, onEdit }) => {
   };
 
   const handleDelete = async () => {
-    if (window.confirm("Bạn có chắc muốn xóa bài viết này?") && post) {
+    let check = await notificationService.confirm({
+      title: "Bạn có chắc muốn xoá bài viết này?",
+      confirmText: "Chắc chắn xoá",
+      cancelText: "Huỷ xoá",
+    });
+    if (check.isConfirmed) {
       try {
         await onDelete(post._id);
       } catch (error) {

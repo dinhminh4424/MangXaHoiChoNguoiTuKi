@@ -25,7 +25,7 @@ class CommentController {
       }
 
       if (
-        !post.groupId &&
+        post.groupId &&
         !GroupMember.findOne({
           userId: userID,
           groupId: post.groupId,

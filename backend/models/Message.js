@@ -43,6 +43,11 @@ const messageSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
+    recalled: {
+      // thu hồi tin nhắn
+      type: Boolean,
+      default: false,
+    },
     repliedTo: {
       // Tin nhắn được trả lời (nếu có)
       type: mongoose.Schema.Types.ObjectId,

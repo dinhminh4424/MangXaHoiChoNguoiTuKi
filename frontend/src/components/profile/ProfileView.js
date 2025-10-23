@@ -95,7 +95,8 @@ const ProfileView = ({ userId }) => {
                 <div className="avatar-container position-relative d-inline-block">
                   <img
                     src={
-                      viewedUser.profile?.avatar || "/images/default-avatar.png"
+                      viewedUser.profile?.avatar ||
+                      "/assets/images/default-avatar.png"
                     }
                     className="rounded-circle border-4 border-white shadow-lg"
                     style={{
@@ -108,7 +109,7 @@ const ProfileView = ({ userId }) => {
                     }}
                     alt="Avatar"
                     onError={(e) => {
-                      e.target.src = "/images/default-avatar.png";
+                      e.target.src = "/assets/images/default-avatar.png";
                     }}
                   />
                   {viewedUser.isOnline && (

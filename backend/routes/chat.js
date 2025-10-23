@@ -113,8 +113,8 @@ router.get("/conversations", auth, async (req, res) => {
 router.get("/:chatId/messages", auth, async (req, res) => {
   try {
     const { chatId } = req.params;
-    const userId = req.user.userId; // ID người dùng hiện tại được lấy từ token xác thực (auth middleware)
-    const { page = 1, limit = 10 } = req.query; // Thêm tham số phân trang
+    const userId = req.user.userId;
+    const { page = 1, limit = 10 } = req.query;
     const pageNum = parseInt(page);
     const limitNum = parseInt(limit);
 
@@ -134,24 +134,64 @@ router.get("/:chatId/messages", auth, async (req, res) => {
     // Tính toán skip cho phân trang
     const skip = (pageNum - 1) * limitNum;
 
-    // Lấy tổng số tin nhắn để tính toán số trang
+    // Điều kiện lấy tin nhắn:
+    // - Không bị xoá cho user hiện tại (deletedFor)
+    // - Không bị thu hồi (recalled: false)
     const totalMessages = await Message.countDocuments({
       chatId,
       deletedFor: { $ne: userId },
+      $or: [{ recalled: { $exists: false } }, { recalled: false }],
     });
 
+    // Lấy tin nhắn với populate sâu
     const messages = await Message.find({
       chatId,
       deletedFor: { $ne: userId },
+      $or: [{ recalled: { $exists: false } }, { recalled: false }],
     })
-      .populate("sender", "username fullName profile.avatar")
-      .populate("repliedTo")
-      .sort({ createdAt: -1 }) // Sắp xếp mới nhất trước (cho phân trang)
+      .populate("sender", "_id username fullName profile.avatar")
+      .populate({
+        path: "repliedTo",
+        select:
+          "_id content messageType fileUrl fileName fileSize sender createdAt deletedFor recalled",
+        populate: {
+          path: "sender",
+          select: "_id username fullName profile.avatar",
+        },
+      })
+      .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limitNum);
 
+    // Xử lý tin nhắn đã bị xoá trong repliedTo
+    const processedMessages = messages.map((message) => {
+      // Nếu repliedTo tồn tại nhưng đã bị xoá cho user hiện tại HOẶC bị thu hồi
+      if (message.repliedTo) {
+        if (
+          message.repliedTo.deletedFor?.includes(userId) ||
+          message.repliedTo.recalled
+        ) {
+          return {
+            ...message.toObject(),
+            repliedTo: {
+              _id: message.repliedTo._id,
+              content: null,
+              messageType: "text",
+              fileUrl: null,
+              fileName: null,
+              fileSize: null,
+              sender: null,
+              createdAt: message.repliedTo.createdAt,
+              isDeleted: true,
+            },
+          };
+        }
+      }
+      return message;
+    });
+
     // Đảo ngược thứ tự để hiển thị từ cũ đến mới
-    const sortedMessages = messages.reverse();
+    const sortedMessages = processedMessages.reverse();
 
     // Đánh dấu tin nhắn là đã đọc (chỉ cho trang đầu tiên)
     if (pageNum === 1) {
@@ -181,6 +221,7 @@ router.get("/:chatId/messages", auth, async (req, res) => {
       },
     });
   } catch (error) {
+    console.error("Lỗi khi lấy tin nhắn:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi khi lấy lịch sử tin nhắn",
@@ -287,8 +328,8 @@ router.delete("/messages/:messageId", auth, async (req, res) => {
     const { messageId } = req.params;
     const userId = req.user.userId;
 
+    // Tìm tin nhắn
     const message = await Message.findById(messageId);
-
     if (!message) {
       return res.status(404).json({
         success: false,
@@ -296,27 +337,68 @@ router.delete("/messages/:messageId", auth, async (req, res) => {
       });
     }
 
-    // Kiểm tra quyền xóa
-    if (message.sender.toString() !== userId) {
-      return res.status(403).json({
-        success: false,
-        message: "Bạn chỉ có thể xóa tin nhắn của chính mình",
-      });
-    }
-
-    // Thêm user vào danh sách deletedFor
+    // Ai cũng có thể xoá (chỉ mình không thấy)
     await Message.findByIdAndUpdate(messageId, {
       $addToSet: { deletedFor: userId },
     });
 
+    // Gửi socket event để cập nhật real-time (chỉ cho user hiện tại)
+    // Có thể gửi qua socket hoặc để client tự xử lý
+
     res.json({
       success: true,
-      message: "Đã xóa tin nhắn",
+      message: "Tin nhắn đã được xoá",
     });
   } catch (error) {
+    console.error("Lỗi khi xoá tin nhắn:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi xóa tin nhắn",
+      message: "Lỗi khi xoá tin nhắn",
+      error: error.message,
+    });
+  }
+});
+
+// API thu hồi tin nhắn (cả 2 không thấy)
+router.post("/messages/:messageId/recall", auth, async (req, res) => {
+  try {
+    const { messageId } = req.params;
+    const userId = req.user.userId;
+
+    // Tìm tin nhắn
+    const message = await Message.findById(messageId);
+    if (!message) {
+      return res.status(404).json({
+        success: false,
+        message: "Tin nhắn không tồn tại",
+      });
+    }
+
+    // Chỉ người gửi mới được thu hồi
+    if (message.sender.toString() !== userId.toString()) {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ người gửi mới có thể thu hồi tin nhắn",
+      });
+    }
+
+    // Đánh dấu thu hồi
+    await Message.findByIdAndUpdate(messageId, {
+      recalled: true,
+    });
+
+    // Gửi socket event để cập nhật real-time cho tất cả
+    // (sẽ thêm socket sau)
+
+    res.json({
+      success: true,
+      message: "Tin nhắn đã được thu hồi",
+    });
+  } catch (error) {
+    console.error("Lỗi khi thu hồi tin nhắn:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi thu hồi tin nhắn",
       error: error.message,
     });
   }

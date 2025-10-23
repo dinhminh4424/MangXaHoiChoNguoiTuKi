@@ -159,7 +159,9 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete }) => {
         }
         break;
       case "delete":
-        if (onDelete) onDelete();
+        if (onDelete) {
+          onDelete();
+        }
         break;
       case "report":
         console.log("Report post:", post._id);

@@ -129,46 +129,62 @@ const GroupsPage = () => {
     const isMember = myGroups.some((g) => g._id === group._id);
 
     return (
-      <Card className="group-card h-100">
-        <div className="group-cover">
-          <div
-            className="cover-image"
-            style={{
-              backgroundImage: group.coverPhoto
-                ? `url(${group.coverPhoto})`
-                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-            }}
+      <div class="card mb-0">
+        <div class="top-bg-image">
+          <img
+            src={
+              group?.coverPhoto || "../assets/images/page-img/profile-bg1.jpg"
+            }
+            class="img-fluid w-100"
+            alt="group-bg"
           />
         </div>
-
-        <Card.Body className="d-flex flex-column">
-          <div className="group-avatar mb-3">
-            {group.avatar ? (
-              <img src={group.avatar} alt={group.name} className=" w-100" />
-            ) : (
-              <div className="avatar-placeholder rounded-circle">
-                {group.name.charAt(0).toUpperCase()}
-              </div>
-            )}
+        <div class="card-body text-center">
+          <div class="group-icon">
+            <img
+              src={group?.avatar || "../assets/images/page-img/gi-1.jpg"}
+              alt="profile-img"
+              class=" img-fluid rounded-circle avatar-120"
+            />
+          </div>
+          <div class="group-info pt-3 pb-3 d-flex justify-content-center align-items-center">
+            <div>
+              <h4>
+                <a
+                  href="#"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    navigate(`/group/${group._id}`);
+                  }}
+                  style={{ color: "inherit" }}
+                >
+                  {group.name}
+                </a>
+              </h4>
+              <p className="text-muted mb-0 ">{group.description}</p>
+            </div>
           </div>
 
-          <h5 className="group-name">{group.name}</h5>
-
-          <p className="group-description text-muted small flex-grow-1">
-            {group.description || "Chưa có mô tả..."}
-          </p>
-
-          <div className="group-meta mb-3">
-            <div className="d-flex justify-content-between align-items-center small text-muted">
-              <span className="d-flex align-items-center">
-                {getPrivacyIcon(group.visibility)}
-                {getPrivacyText(group.visibility)}
-              </span>
-              <span className="d-flex align-items-center">
-                <Users size={16} className="me-1" />
-                {group.memberCount} thành viên
-              </span>
-            </div>
+          <div class="group-details d-inline-block pb-3">
+            <ul class="d-flex align-items-center justify-content-between list-inline m-0 p-0">
+              <li class="pe-3 ps-3">
+                <p class="mb-0">Post</p>
+                <h6>600</h6>
+              </li>
+              <li class="pe-3 ps-3">
+                <p class="mb-0">Member</p>
+                <h6>{group.members || "899"}</h6>
+              </li>
+              <li class="pe-3 ps-3">
+                <p class="mb-0">Visit</p>
+                <h6>1.2k</h6>
+              </li>
+            </ul>
+          </div>
+          <div>
+            {group.category && group.category.length > 0 && (
+              <span className="badge bg-primary m-2">{group.category[0]}</span>
+            )}
           </div>
 
           {group.tags && group.tags.length > 0 && (
@@ -183,41 +199,81 @@ const GroupsPage = () => {
               ))}
             </div>
           )}
-
-          <div className="mt-auto">
-            {showJoinButton ? (
-              isMember ? (
-                <Button
-                  variant="outline-primary"
-                  size="sm"
-                  className="w-100"
-                  onClick={() => navigate(`/groups/${group._id}`)}
-                >
-                  Vào nhóm
-                </Button>
-              ) : (
-                <Button
-                  variant="primary"
-                  size="sm"
-                  className="w-100"
-                  onClick={() => handleJoinGroup(group._id)}
-                >
-                  Tham gia
-                </Button>
-              )
-            ) : (
+          <div class="group-member mb-3">
+            <div class="iq-media-group">
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/05.jpg"
+                  alt=""
+                />
+              </a>
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/06.jpg"
+                  alt=""
+                />
+              </a>
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/07.jpg"
+                  alt=""
+                />
+              </a>
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/08.jpg"
+                  alt=""
+                />
+              </a>
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/09.jpg"
+                  alt=""
+                />
+              </a>
+              <a href="#" class="iq-media">
+                <img
+                  class="img-fluid avatar-40 rounded-circle"
+                  src="../assets/images/user/10.jpg"
+                  alt=""
+                />
+              </a>
+            </div>
+          </div>
+          {showJoinButton ? (
+            isMember ? (
               <Button
                 variant="outline-primary"
-                size="sm"
-                className="w-100"
+                className="d-block w-100"
                 onClick={() => navigate(`/group/${group._id}`)}
               >
-                Quản lý
+                Xem Nhóm
               </Button>
-            )}
-          </div>
-        </Card.Body>
-      </Card>
+            ) : (
+              <Button
+                variant="primary"
+                className="d-block w-100"
+                onClick={() => handleJoinGroup(group._id)}
+              >
+                Vào Nhóm
+              </Button>
+            )
+          ) : (
+            <Button
+              variant="outline-primary"
+              className="d-block w-100"
+              onClick={() => navigate(`/group/${group._id}`)}
+            >
+              Quản lý
+            </Button>
+          )}
+        </div>
+      </div>
     );
   };
 
@@ -283,13 +339,13 @@ const GroupsPage = () => {
               <p className="mt-2 text-muted">Đang tải nhóm...</p>
             </div>
           ) : groups.length > 0 ? (
-            <Row>
+            <div className="d-grid gap-3 d-grid-template-1fr-19">
               {groups.map((group) => (
-                <Col key={group._id} lg={4} md={6} className="mb-4">
-                  <GroupCard group={group} showJoinButton={true} />
-                </Col>
+                // <Col key={group._id} lg={4} md={6} className="mb-4">
+                <GroupCard group={group} showJoinButton={true} />
+                // </Col>
               ))}
-            </Row>
+            </div>
           ) : (
             <div className="text-center py-5">
               <Users size={64} className="text-muted mb-3" />

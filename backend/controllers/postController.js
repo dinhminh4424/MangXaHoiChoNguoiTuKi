@@ -1,5 +1,7 @@
 const Post = require("../models/Post");
-const { param } = require("../routes/posts");
+const Comment = require("../models/Comment");
+// const { param } = require("../routes/posts");
+const FileManager = require("../utils/fileManager");
 
 // thêm bài viết
 exports.createPost = async (req, res) => {
@@ -397,37 +399,70 @@ exports.updatePost = async (req, res) => {
 };
 
 // xóa bài viết
+// Controller (Express)
 exports.deletePost = async (req, res) => {
-  try {
-    const { id } = req.params;
-    const post = await Post.findById(id);
+  const { id } = req.params;
 
+  // đảm bảo req.user có
+  if (!req.user || !req.user.userId) {
+    return res.status(401).json({ success: false, message: "Không xác thực" });
+  }
+
+  try {
+    const post = await Post.findById(id);
     if (!post) {
-      return res.status(404).json({
-        success: false,
-        message: "Bài viết không tồn tại",
-      });
+      return res
+        .status(404)
+        .json({ success: false, message: "Bài viết không tồn tại" });
     }
 
-    // ✅ SỬA: Kiểm tra quyền sở hữu ĐÚNG
-    if (post.userCreateID.toString() !== req.user.userId) {
+    // kiểm tra quyền sở hữu
+    if (
+      post.userCreateID.toString() !== req.user.userId &&
+      req.user.role !== "admin"
+    ) {
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền xóa bài viết này",
       });
     }
+    const postFiles = Array.isArray(post.files)
+      ? post.files.map((f) => f.fileUrl)
+      : [];
 
+    // xóa comment (trong transaction)
+    await Comment.deleteMany({ postID: id });
+
+    // xóa post (trong transaction)
     await Post.findByIdAndDelete(id);
 
-    return res.status(200).json({
-      success: true,
-      message: "Xóa bài viết thành công",
-    });
+    // --- XÓA FILES NGOÀI DB (sau khi DB đã commit)
+    // Nếu xóa file thất bại, không rollback DB (không có cách hoàn hảo) — ta log và có thể enqueue retry
+    if (postFiles.length > 0) {
+      try {
+        // FileManager.deleteMultipleFiles có thể nhận mảng và trả Promise
+        await FileManager.deleteMultipleFiles(postFiles);
+      } catch (fileErr) {
+        // Log lỗi để xử lý sau (ví dụ: push vào queue retry)
+        console.error("Lỗi khi xóa file sau khi xóa post:", fileErr);
+        // Tuỳ nhu cầu: bạn có thể trả trạng thái thành công nhưng kèm cảnh báo
+        return res.status(200).json({
+          success: true,
+          message:
+            "Xóa bài viết thành công. Tuy nhiên một số tệp không được xóa, sẽ thử lại sau.",
+        });
+      }
+    }
+
+    return res
+      .status(200)
+      .json({ success: true, message: "Xóa bài viết thành công" });
   } catch (err) {
-    return res.status(500).json({
-      success: false,
-      message: err.message,
-    });
+    // nếu transaction đang mở — abort
+    console.error(err);
+    return res
+      .status(500)
+      .json({ success: false, message: err.message || "Lỗi server" });
   }
 };
 

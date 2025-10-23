@@ -289,7 +289,7 @@
 }
 
 .download-link:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .view-replies {
@@ -303,7 +303,7 @@
 }
 
 .view-replies:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .load-more {
@@ -459,7 +459,7 @@
 }
 
 .footer-action-btn:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .comment-more-actions {
@@ -602,7 +602,7 @@
 }
 
 .view-replies-btn:hover {
-  text-decoration: underline;
+  text-decoration: none;
 }
 
 .replies-list {

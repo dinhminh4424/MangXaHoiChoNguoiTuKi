@@ -9,8 +9,6 @@ import {
   Filter,
   Search,
   RefreshCw,
-  Users,
-  Globe,
   TrendingUp,
   Earth,
 } from "lucide-react";
@@ -110,10 +108,31 @@ const Feed = () => {
   // Handle post deletion
   const handleDeletePost = async (postId) => {
     try {
-      await deletePost(postId);
+      const res = await deletePost(postId);
       // Posts will be updated automatically through context
+      if (res.success) {
+        notificationService.success({
+          title: "Xoá bài viết thành công",
+          text: "Bạn đã xoá bài viết thành công",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      } else {
+        notificationService.error({
+          title: "Xoá bài viết thất bại",
+          text: res.message,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
     } catch (err) {
       console.error("Error deleting post:", err);
+      notificationService.error({
+        title: "Xoá bài viết thất bại",
+        text: err,
+        timer: 3000,
+        showConfirmButton: false,
+      });
     }
   };
 

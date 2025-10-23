@@ -1,3 +1,9 @@
+const dotenv = require("dotenv");
+const dotenvExpand = require("dotenv-expand");
+
+const myEnv = dotenv.config();
+dotenvExpand.expand(myEnv);
+
 // Khai Báo các thư viện cần thiết
 const express = require("express");
 const cors = require("cors");

@@ -92,7 +92,7 @@ const groupService = {
 
   // Lấy nhóm theo emotion (cho recommendation)
   getGroupsByEmotion: async (emotion) => {
-    const res = await api.get("/api/groups", { params: { emotion } });
+    const res = await api.get("/api/groups", { params: { category: emotion } });
     return res.data;
   },
 

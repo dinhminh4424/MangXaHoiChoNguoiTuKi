@@ -15,8 +15,7 @@ import { PostProvider } from "./contexts/PostContext";
 
 import Navbar from "./components/Navbar"; // Import Navbar
 
-// import "bootstrap/dist/css/bootstrap.min.css";
-// import "./App.css";
+import "bootstrap/dist/css/bootstrap.min.css";
 
 // Import các trang
 import Login from "./pages/auth/Login";
@@ -43,8 +42,6 @@ import JournalHistory from "./pages/journal/JournalHistory";
 import CreateJournal from "./pages/journal/CreateJournal";
 import JournalDetail from "./pages/journal/JournalDetail";
 
-import ChatTest from "./pages/chat/test";
-import ChatTest2 from "./pages/chat/test2";
 
 /**
  * COMPONENT: ProtectedRoute
@@ -134,22 +131,7 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        <Route
-          path="/chattest"
-          element={
-            <ProtectedRoute>
-              <ChatTest />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/chattest2"
-          element={
-            <ProtectedRoute>
-              <ChatTest2 />
-            </ProtectedRoute>
-          }
-        />
+        
 
         <Route
           path="/feed"

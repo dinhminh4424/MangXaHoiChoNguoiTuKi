@@ -242,7 +242,7 @@ const NhanDien = () => {
         if (data.success) {
           showToast("Đã tham gia nhóm thành công!", "success");
           setShowRecommendations(false);
-          navigate(`/groups/${groupId}`);
+          navigate(`/group/${groupId}`);
         }
       } catch (error) {
         console.error("Lỗi tham gia nhóm:", error);
