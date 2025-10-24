@@ -42,7 +42,6 @@ import JournalHistory from "./pages/journal/JournalHistory";
 import CreateJournal from "./pages/journal/CreateJournal";
 import JournalDetail from "./pages/journal/JournalDetail";
 
-
 /**
  * COMPONENT: ProtectedRoute
  * MỤC ĐÍCH: Bảo vệ các route yêu cầu đăng nhập
@@ -131,7 +130,14 @@ function AppContent() {
             </ProtectedRoute>
           }
         />
-        
+        <Route
+          path="/chat/:chatUserId"
+          element={
+            <ProtectedRoute>
+              <Chat />
+            </ProtectedRoute>
+          }
+        />
 
         <Route
           path="/feed"

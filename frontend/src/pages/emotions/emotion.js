@@ -619,7 +619,7 @@ const NhanDien = () => {
         <Col md={8}>
           <Card className="shadow-sm">
             <Card.Body>
-              <Card.Title>🤖 Nhận diện cảm xúc (AI)</Card.Title>
+              <Card.Title> Nhận diện cảm xúc (AI)</Card.Title>
               <Badge
                 bg={modelsLoaded ? "success" : "secondary"}
                 className="mb-3"

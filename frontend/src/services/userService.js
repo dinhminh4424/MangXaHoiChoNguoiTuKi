@@ -99,6 +99,18 @@ class UserService {
       );
     }
   }
+
+  //Cập nhật ảnh bìa
+  async updateImageCover(formData) {
+    try {
+      const response = await api.put("/api/users/imageCover", formData);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+      );
+    }
+  }
 }
 
 export default new UserService();

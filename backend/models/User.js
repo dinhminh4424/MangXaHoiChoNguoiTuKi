@@ -34,6 +34,7 @@ const userSchema = new mongoose.Schema(
       avatar: String,
       location: String,
       skills: [String],
+      coverPhoto: { type: String, default: "" }, // Thêm field coverPhoto
     },
     isOnline: {
       type: Boolean,

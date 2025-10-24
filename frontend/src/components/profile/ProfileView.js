@@ -1,18 +1,68 @@
 import React from "react";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useAuth } from "../../contexts/AuthContext";
+import { Link, useNavigate } from "react-router-dom";
+import { Modal, Button } from "react-bootstrap";
+
 import "./profileView.css";
 
 const ProfileView = ({ userId }) => {
-  const { viewedUser, loading, error, isOwnProfile, viewUserProfile } =
-    useProfile();
+  const navigate = useNavigate();
+  const {
+    viewedUser,
+    loading,
+    error,
+    isOwnProfile,
+    viewUserProfile,
+    updateImageCover,
+  } = useProfile();
   const { user: currentUser } = useAuth();
+
+  const [showModalUpdateCoverPhoto, setShowModalUpdateCoverPhoto] =
+    React.useState(false);
+
+  const [previewImage, setPreviewImage] = React.useState(null);
+  const [file, setFile] = React.useState(null);
+  const fileInputRef = React.useRef(null);
+
+  const handleFileClick = (e) => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e) => {
+    const selectFile = e.target.files[0];
+
+    setFile(selectFile);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!file) {
+      alert("Bạn chưa chọn ảnh!!!!!");
+      return;
+    }
+
+    try {
+      const res = await updateImageCover(file);
+    } catch (error) {
+      alert("Lỗi: ", error);
+    }
+
+    return;
+  };
 
   React.useEffect(() => {
     if (userId) {
       viewUserProfile(userId);
     }
   }, [userId, viewUserProfile]);
+
+  React.useEffect(() => {
+    if (file) {
+      setPreviewImage(URL.createObjectURL(file));
+    }
+  }, [file]);
 
   if (loading) {
     return (
@@ -67,25 +117,51 @@ const ProfileView = ({ userId }) => {
     );
   }
 
+  const getBackgroundStyle = (user) => {
+    return user?.profile?.coverPhoto
+      ? {
+          backgroundImage: `url("${user.profile.coverPhoto}")`,
+          backgroundSize: "100% 100%", // 👉 Kéo ảnh phủ toàn vùng
+          backgroundPosition: "center",
+          backgroundRepeat: "no-repeat",
+        }
+      : {
+          backgroundImage:
+            "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
+        };
+  };
+
   return (
     <div className="card border-0 shadow-lg overflow-hidden">
       {/* Profile Header với gradient background */}
-      <div className="profile-header bg-gradient-primary position-relative">
+      <div
+        className="profile-header  position-relative"
+        style={{
+          ...getBackgroundStyle(viewedUser), // Sử dụng viewedUser thay vì currentUser
+        }}
+      >
+        {/* Cover Photo Section */}
         <div
           className="profile-cover"
           style={{
-            height: "200px",
-            background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+            height: "250px",
             position: "relative",
           }}
         >
           {isOwnProfile && (
-            <button className="btn btn-light btn-sm position-absolute top-0 end-0 m-3">
+            <button
+              className="btn btn-light btn-sm position-absolute top-0 end-0 m-3"
+              onClick={() => {
+                setShowModalUpdateCoverPhoto(true);
+              }}
+            >
               <i className="fas fa-camera me-1"></i>
               Thay ảnh bìa
             </button>
           )}
         </div>
+
+        {/* Modal Update Cover Photo */}
 
         {/* Avatar Section */}
         <div className="avatar-section position-relative">
@@ -124,6 +200,91 @@ const ProfileView = ({ userId }) => {
           </div>
         </div>
       </div>
+
+      <Modal
+        show={showModalUpdateCoverPhoto}
+        onHide={() => setShowModalUpdateCoverPhoto(false)}
+        centered
+        scrollable
+        animation
+        dialogClassName="rounded-4"
+        contentClassName="shadow-lg border border-2"
+        backdropClassName="bg-dark bg-opacity-75"
+      >
+        {/* ====== PHẦN HEADER ====== */}
+        <Modal.Header
+          closeButton
+          closeVariant="white"
+          className="bg-primary text-white"
+        >
+          <Modal.Title>Thay đổi hình nền</Modal.Title>
+        </Modal.Header>
+
+        {/* ====== PHẦN BODY ====== */}
+        <Modal.Body>
+          <form onSubmit={handleSubmit}>
+            {/* Nút chọn ảnh */}
+            <div className="d-flex flex-column align-items-center">
+              <button
+                type="button"
+                className="btn btn-outline-primary d-flex align-items-center gap-2 px-3 py-2"
+                onClick={handleFileClick}
+              >
+                <i className="fas fa-camera"></i>
+                <span>Chọn ảnh bìa</span>
+              </button>
+
+              {/* Input file ẩn */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                hidden
+                onChange={handleFileChange}
+              />
+
+              {/* Hiển thị ảnh preview nếu có */}
+              {previewImage && (
+                <div className="mt-3 position-relative w-100 text-center">
+                  <img
+                    src={previewImage}
+                    alt="Xem trước"
+                    className="img-fluid rounded shadow-sm"
+                    style={{ maxHeight: "250px", objectFit: "cover" }}
+                  />
+
+                  {/* Nút xóa ảnh */}
+                  <button
+                    type="button"
+                    className="btn btn-danger btn-sm position-absolute top-0 end-0 m-2"
+                    onClick={() => setPreviewImage(null)}
+                    title="Xóa ảnh"
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Nút xác nhận */}
+            <div className="mt-4 text-end">
+              <button type="submit" className="btn btn-primary">
+                Lưu thay đổi
+              </button>
+            </div>
+          </form>
+        </Modal.Body>
+
+        {/* ====== PHẦN FOOTER ====== */}
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            onClick={() => setShowModalUpdateCoverPhoto(false)}
+          >
+            Đóng
+          </Button>
+        </Modal.Footer>
+      </Modal>
 
       {/* Profile Content */}
       <div className="card-body p-4 pt-5">
@@ -278,11 +439,22 @@ const ProfileView = ({ userId }) => {
                 <div className="card-body">
                   <h6 className="card-title fw-semibold mb-3">Kết nối</h6>
                   <div className="d-flex flex-wrap gap-2">
-                    <button className="btn btn-primary px-4 py-2 d-flex align-items-center">
+                    <button
+                      className="btn btn-primary px-4 py-2 d-flex align-items-center"
+                      onClick={() => {
+                        console.log("Nhắn tin");
+                        navigate("/chat/" + userId);
+                      }}
+                    >
                       <i className="fas fa-comment me-2"></i>
                       Nhắn tin
                     </button>
-                    <button className="btn btn-outline-primary px-4 py-2 d-flex align-items-center">
+                    <button
+                      className="btn btn-outline-primary px-4 py-2 d-flex align-items-center"
+                      onClick={() => {
+                        console.log("Nhắn tin");
+                      }}
+                    >
                       <i className="fas fa-user-plus me-2"></i>
                       Kết bạn
                     </button>
@@ -300,7 +472,10 @@ const ProfileView = ({ userId }) => {
               <div className="col-md-4">
                 <div className="card border-0 bg-gradient-primary text-white text-center">
                   <div className="card-body py-3">
-                    <h5 className="mb-1">128</h5>
+                    <h5 className="mb-1">
+                      {console.log(viewedUser?.countPost)}
+                      {viewedUser?.countPost || "Chưa cập nhật"}
+                    </h5>
                     <small>Bài viết</small>
                   </div>
                 </div>

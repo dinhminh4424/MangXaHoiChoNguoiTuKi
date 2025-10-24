@@ -699,7 +699,7 @@ function Navbar() {
                     <i className="ri-group-line"></i>
                   </a>
                   <div
-                    className="sub-drop sub-drop-large dropdown-menu"
+                    className="sub-drop sub-drop-large dropdown-menu dropdown-menu-end"
                     aria-labelledby="group-drop"
                   >
                     <div className="card shadow-none m-0">
@@ -729,7 +729,7 @@ function Navbar() {
                 </li>
 
                 {/* Notifications Dropdown */}
-                <li className="nav-item dropdown">
+                <li className="nav-item dropdown ">
                   <a
                     href="#"
                     className="search-toggle dropdown-toggle"
@@ -739,7 +739,7 @@ function Navbar() {
                     <i className="ri-notification-4-line"></i>
                   </a>
                   <div
-                    className="sub-drop dropdown-menu"
+                    className="sub-drop dropdown-menu dropdown-menu-end"
                     aria-labelledby="notification-drop"
                   >
                     <div className="card shadow-none m-0">
@@ -777,7 +777,7 @@ function Navbar() {
                     <i className="ri-mail-line"></i>
                   </a>
                   <div
-                    className="sub-drop dropdown-menu"
+                    className="sub-drop dropdown-menu dropdown-menu-end"
                     aria-labelledby="mail-drop"
                   >
                     <div className="card shadow-none m-0">

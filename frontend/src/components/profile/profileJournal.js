@@ -93,7 +93,7 @@ const ProfileJournal = ({ userId }) => {
   return (
     <div className="space-y-4">
       <div className="d-flex justify-content-between align-items-center">
-        <h5 className="mb-0">📝 Nhật ký {!isOwnProfile && "của người dùng"}</h5>
+        <h5 className="mb-0"> Nhật ký {!isOwnProfile && "của người dùng"}</h5>
         <span className="text-muted">{journalUserHistory.length} bài</span>
       </div>
 

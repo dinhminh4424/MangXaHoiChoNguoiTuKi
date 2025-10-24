@@ -193,6 +193,31 @@ export const ProfileProvider = ({ children }) => {
     }
   };
 
+  const updateImageCover = async (file) => {
+    try {
+      setLoading(true);
+
+      const formData = new FormData();
+
+      formData.append("file", file);
+
+      const res = await userService.updateImageCover(formData);
+
+      setViewedUser((prev) => ({
+        ...prev,
+        ...res.user,
+        profile: {
+          ...prev.profile,
+          ...res.user.profile,
+        },
+      }));
+    } catch (error) {
+      setError("LỖI: ", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Clear error
   const clearError = () => {
     setError("");
@@ -228,6 +253,7 @@ export const ProfileProvider = ({ children }) => {
     setViewedUser,
     viewUserProfileByUsername,
     updateProfileWithAvatar,
+    updateImageCover,
   };
 
   return (

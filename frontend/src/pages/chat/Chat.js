@@ -2,10 +2,11 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useChat } from "../../contexts/ChatContext";
 import { Modal } from "react-bootstrap";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 
 const Chat = () => {
   const { user, logout } = useAuth();
+  const { chatUserId } = useParams();
   const navigate = useNavigate();
   const {
     conversations,
@@ -110,6 +111,13 @@ const Chat = () => {
       return date.toLocaleDateString();
     }
   };
+
+  useEffect(() => {
+    let userIdChat = chatUserId;
+    if (userIdChat) {
+      startConversation(userIdChat);
+    }
+  }, [chatUserId]);
 
   useEffect(() => {
     if (user) {
