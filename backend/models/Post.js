@@ -46,6 +46,10 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    reportCount: {
+      type: Number,
+      default: 0,
+    },
     editedAt: Date,
     content: {
       // nội dung bài viết
@@ -76,6 +80,7 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    violationCount: { type: Number, default: 0 },
     isBlocked: {
       // bài viết bị ẩn do vi phạm
       type: Boolean,

@@ -1,499 +1,436 @@
 /* components/Post/PostStats.css */
 .post-stats {
-  padding: 16px;
-  border-bottom: 1px solid #f0f2f5;
-  background: #fafbfc;
-  border-radius: 0 0 12px 12px;
+  position: relative;
+  padding: 12px 0;
+  border-top: 1px solid #f0f2f5;
+  margin-top: 8px;
 }
 
-/* Emotions Section */
-.emotions-section {
-  margin-bottom: 12px;
-  padding: 12px;
-  background: white;
-  border-radius: 8px;
-  border: 1px solid #e4e6ea;
-}
-
-.emotions-header {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-}
-
-.emotions-icon {
-  color: #65676b;
-}
-
-.emotions-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #65676b;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.emotions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
-  gap: 8px;
-}
-
-.emotion-item {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding: 6px;
-  background: #f8f9fa;
-  border-radius: 6px;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.emotion-item:hover {
-  background: #e9ecef;
-  transform: translateY(-1px);
-}
-
-.emotion-icon {
-  font-size: 18px;
-  margin-bottom: 2px;
-}
-
-.emotion-count {
-  font-size: 11px;
-  font-weight: 600;
-  color: #65676b;
-}
-
-/* Stats Main */
-.stats-main {
+/* Engagement Bar */
+.engagement-bar {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 12px;
-  flex-wrap: wrap;
-  gap: 12px;
+  font-size: 14px;
+  color: #65676b;
+  margin-bottom: 8px;
 }
 
-.stats-numbers {
+.engagement-bar-content {
   display: flex;
   align-items: center;
   gap: 16px;
+  flex: 1;
 }
 
-.stat-item {
+.engagement-item {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 6px;
+  transition: background-color 0.2s ease;
+}
+
+.engagement-item:hover {
+  background-color: #f0f2f5;
+  text-decoration: underline;
+}
+
+/* Reactions Summary */
+.reactions-summary {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 6px 10px;
-  background: white;
-  border-radius: 6px;
-  border: 1px solid #e4e6ea;
-  transition: all 0.2s ease;
   cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.reactions-summary:hover {
+  background-color: rgba(0, 0, 0, 0.05);
+}
+
+.reaction-icons {
+  display: flex;
+  align-items: center;
   position: relative;
 }
 
-.stat-item:hover {
-  border-color: #d0d4d9;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+.reaction-icon-wrapper {
+  position: relative;
+  margin-right: -4px;
+  transition: transform 0.2s ease;
 }
 
-.stat-icon {
+.reaction-icon-wrapper:hover {
+  transform: scale(1.2);
+  z-index: 10;
+}
+
+.reaction-icon {
+  display: inline-block;
+  font-size: 16px;
+  filter: drop-shadow(0 1px 2px rgba(0, 0, 0, 0.1));
+}
+
+.reaction-count {
+  font-weight: 500;
   color: #65676b;
 }
 
-.stat-count {
-  font-size: 13px;
+/* Reactions Detail Popover */
+.reactions-detail-popover {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  border: 1px solid #dddfe2;
+  z-index: 1000;
+  min-width: 280px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.reactions-detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  border-bottom: 1px solid #f0f2f5;
+}
+
+.reactions-detail-header h4 {
+  margin: 0;
+  font-size: 16px;
   font-weight: 600;
-  color: #65676b;
+  color: #1c1e21;
 }
 
-/* Emotions Preview trong like count */
-.emotions-preview {
+.close-detail {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #65676b;
+  padding: 0;
+  width: 24px;
+  height: 24px;
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
-}
-
-.preview-emotion {
-  font-size: 12px;
-  display: inline-flex;
-  align-items: center;
   justify-content: center;
-  width: 16px;
-  height: 16px;
-  background: #f0f2f5;
   border-radius: 50%;
 }
 
-.more-emotions {
-  font-size: 10px;
-  color: #8a8d91;
-  font-weight: 500;
+.close-detail:hover {
+  background-color: #f0f2f5;
 }
 
-/* Engagement Badges */
-.engagement-badges {
+.reactions-detail-list {
+  padding: 8px 0;
+}
+
+.reaction-detail-item {
   display: flex;
   align-items: center;
-  gap: 6px;
-  flex-wrap: wrap;
+  padding: 8px 16px;
+  gap: 12px;
+  transition: background-color 0.2s ease;
 }
 
-.badge {
-  padding: 3px 8px;
-  border-radius: 12px;
-  font-size: 11px;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.3px;
+.reaction-detail-item:hover {
+  background-color: #f8f9fa;
 }
 
-.badge.popular {
-  background: #fff0f6;
-  color: #c41d7f;
-  border: 1px solid #ffadd2;
+.reaction-detail-icon {
+  font-size: 20px;
+  width: 24px;
+  text-align: center;
 }
 
-.badge.active {
-  background: #f6ffed;
-  color: #389e0d;
-  border: 1px solid #b7eb8f;
-}
-
-.badge.viral {
-  background: #f0f7ff;
-  color: #0958d9;
-  border: 1px solid #91caff;
-}
-
-.badge.emotional {
-  background: #f9f0ff;
-  color: #722ed1;
-  border: 1px solid #d3adf7;
-}
-
-/* Engagement Progress */
-.engagement-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.progress-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.progress-label {
-  font-size: 11px;
-  font-weight: 600;
-  color: #65676b;
-  min-width: 60px;
-  text-transform: uppercase;
-}
-
-.progress-bar {
+.reaction-detail-name {
   flex: 1;
-  height: 6px;
-  background: #e4e6ea;
-  border-radius: 3px;
-  overflow: hidden;
+  font-weight: 500;
+  color: #1c1e21;
 }
 
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.progress-fill.likes {
-  background: linear-gradient(90deg, #ff6b6b, #ff8787);
-}
-
-.progress-fill.comments {
-  background: linear-gradient(90deg, #4dabf7, #74c0fc);
-}
-
-.progress-percent {
-  font-size: 11px;
+.reaction-detail-count {
   font-weight: 600;
   color: #65676b;
   min-width: 30px;
   text-align: right;
 }
 
-/* No Engagement */
-.no-engagement {
-  text-align: center;
-  padding: 20px;
-  color: #8a8d91;
-  font-size: 14px;
-  font-style: italic;
+.reaction-detail-bar {
+  width: 60px;
+  height: 4px;
+  background-color: #f0f2f5;
+  border-radius: 2px;
+  overflow: hidden;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .post-stats {
-    padding: 12px;
-  }
-
-  .stats-main {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 8px;
-  }
-
-  .stats-numbers {
-    justify-content: space-around;
-  }
-
-  .engagement-badges {
-    justify-content: center;
-  }
-
-  .emotions-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-
-  .progress-item {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 4px;
-  }
-
-  .progress-label {
-    min-width: auto;
-  }
+.reaction-detail-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #1877f2, #42b883);
+  border-radius: 2px;
+  transition: width 0.3s ease;
 }
 
-.post-stats {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 16px;
-  margin: 12px 0;
-  border: 1px solid #e9ecef;
-}
-
-.no-engagement {
-  text-align: center;
-  color: #6c757d;
-  font-style: italic;
-  padding: 8px;
-}
-
-/* Emotions Section */
-.emotions-section {
-  margin-bottom: 16px;
-  padding-bottom: 12px;
-  border-bottom: 1px solid #e9ecef;
-}
-
-.emotions-header {
+/* View Count */
+.view-count {
   display: flex;
   align-items: center;
-  gap: 6px;
-  margin-bottom: 8px;
-  color: #495057;
-  font-size: 14px;
-  font-weight: 500;
+  gap: 4px;
+  font-size: 13px;
+  color: #65676b;
 }
 
-.emotions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+/* No Engagement State */
+.no-engagement {
+  text-align: center;
+  padding: 16px;
+  color: #65676b;
+}
+
+.no-engagement-content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   gap: 8px;
 }
 
-.emotion-item {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 8px;
-  background: white;
+.sparkle-icon {
+  color: #ffd700;
+  animation: sparkle 2s ease-in-out infinite;
+}
+
+@keyframes sparkle {
+  0%,
+  100% {
+    opacity: 0.7;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 1;
+    transform: scale(1.1);
+  }
+}
+
+/* Interactive Stats */
+.interactive-stats {
+  margin-top: 16px;
+  padding: 16px;
+  background: #f8f9fa;
   border-radius: 8px;
-  border: 1px solid #dee2e6;
-  font-size: 12px;
+  border: 1px solid #e4e6eb;
 }
 
-.emotion-icon {
-  font-size: 14px;
-}
-
-.emotion-count {
-  color: #495057;
-  font-weight: 500;
-}
-
-/* Stats Main */
-.stats-main {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
 }
 
-.stats-numbers {
-  display: flex;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.stat-item {
+.stat-card {
   display: flex;
   align-items: center;
-  gap: 6px;
-  padding: 6px 10px;
+  gap: 8px;
+  padding: 12px;
   background: white;
   border-radius: 8px;
-  border: 1px solid #dee2e6;
-  font-size: 13px;
-  font-weight: 500;
-}
-
-.stat-item.likes {
-  color: #e74c3c;
-  border-color: #fadbd8;
-}
-
-.stat-item.comments {
-  color: #3498db;
-  border-color: #d6eaf8;
-}
-
-.stat-item.views {
-  color: #95a5a6;
-  border-color: #ebedef;
+  border: 1px solid #e4e6eb;
 }
 
 .stat-icon {
-  flex-shrink: 0;
-}
-
-.emotions-preview {
   display: flex;
   align-items: center;
-  gap: 2px;
-  margin-left: 4px;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: #f0f2f5;
+  border-radius: 6px;
+  color: #65676b;
 }
 
-.preview-emotion {
-  font-size: 12px;
-}
-
-.more-emotions {
-  font-size: 10px;
-  color: #6c757d;
-  margin-left: 2px;
-}
-
-/* Engagement Badges */
-.engagement-badges {
+.stat-content {
   display: flex;
-  gap: 6px;
-  flex-wrap: wrap;
+  flex-direction: column;
 }
 
-.badge {
+.stat-number {
+  font-weight: 700;
+  font-size: 16px;
+  color: #1c1e21;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: #65676b;
+}
+
+/* Engagement Breakdown */
+.engagement-breakdown h5 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #1c1e21;
+}
+
+.breakdown-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.breakdown-label {
+  font-size: 12px;
+  color: #65676b;
+  min-width: 60px;
+}
+
+.breakdown-bar {
+  flex: 1;
+  height: 6px;
+  background-color: #f0f2f5;
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.breakdown-fill {
+  height: 100%;
+  border-radius: 3px;
+  transition: width 0.3s ease;
+}
+
+.breakdown-fill.reactions {
+  background: linear-gradient(90deg, #1877f2, #42b883);
+}
+
+.breakdown-fill.comments {
+  background: linear-gradient(90deg, #ff6b6b, #ffa726);
+}
+
+.breakdown-fill.shares {
+  background: linear-gradient(90deg, #9c27b0, #e91e63);
+}
+
+.breakdown-percent {
+  font-size: 12px;
+  font-weight: 600;
+  color: #1c1e21;
+  min-width: 30px;
+  text-align: right;
+}
+
+/* Engagement Highlights */
+.engagement-highlights {
+  margin-top: 12px;
+}
+
+.highlight-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.highlight-badge {
+  display: flex;
+  align-items: center;
+  gap: 4px;
   padding: 4px 8px;
   border-radius: 12px;
   font-size: 11px;
   font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
-.badge.popular {
-  background: #fff2e6;
-  color: #e67e22;
+.highlight-badge.popular {
+  background: linear-gradient(135deg, #ff6b6b, #ffa726);
+  color: white;
 }
 
-.badge.active {
-  background: #e8f4fd;
-  color: #3498db;
+.highlight-badge.active {
+  background: linear-gradient(135deg, #4ecdc4, #44a08d);
+  color: white;
 }
 
-.badge.viral {
-  background: #f0f8ff;
-  color: #2980b9;
+.highlight-badge.viral {
+  background: linear-gradient(135deg, #9c27b0, #e91e63);
+  color: white;
 }
 
-.badge.emotional {
-  background: #fce4ec;
-  color: #e91e63;
+.highlight-badge.emotional {
+  background: linear-gradient(135deg, #667eea, #764ba2);
+  color: white;
 }
 
-/* Engagement Progress */
-.engagement-progress {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  padding-top: 12px;
-  border-top: 1px solid #e9ecef;
-}
-
-.progress-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 12px;
-}
-
-.progress-label {
-  min-width: 60px;
-  color: #495057;
-  font-weight: 500;
-}
-
-.progress-bar {
-  flex: 1;
-  height: 6px;
-  background: #e9ecef;
-  border-radius: 3px;
-  overflow: hidden;
-}
-
-.progress-fill {
-  height: 100%;
-  border-radius: 3px;
-  transition: width 0.3s ease;
-}
-
-.progress-fill.likes {
-  background: linear-gradient(90deg, #e74c3c, #e67e22);
-}
-
-.progress-fill.comments {
-  background: linear-gradient(90deg, #3498db, #2980b9);
-}
-
-.progress-percent {
-  min-width: 30px;
-  text-align: right;
-  color: #6c757d;
-  font-weight: 500;
-}
-
-/* Responsive */
+/* Responsive Design */
 @media (max-width: 768px) {
-  .post-stats {
-    padding: 12px;
-  }
-
-  .stats-main {
+  .engagement-bar {
     flex-direction: column;
+    align-items: flex-start;
     gap: 8px;
   }
 
-  .stats-numbers {
+  .engagement-bar-content {
+    flex-wrap: wrap;
     gap: 8px;
   }
 
-  .engagement-badges {
-    justify-content: flex-start;
+  .stats-grid {
+    grid-template-columns: 1fr;
   }
+
+  .reactions-detail-popover {
+    position: fixed;
+    bottom: 50%;
+    left: 50%;
+    transform: translate(-50%, 50%);
+    width: 90vw;
+    max-width: 320px;
+  }
+}
+
+/* Animation for reactions */
+@keyframes bounceIn {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.reaction-icon-wrapper {
+  animation: bounceIn 0.3s ease-out;
+}
+
+/* Hover effects */
+.reactions-summary:hover .reaction-count {
+  color: #1877f2;
+}
+
+.engagement-item.comments:hover .engagement-count {
+  color: #ff6b6b;
+}
+
+.engagement-item.shares:hover .engagement-count {
+  color: #45bd62;
 }

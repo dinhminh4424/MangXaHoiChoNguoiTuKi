@@ -20,11 +20,13 @@ const Login = () => {
       [e.target.name]: e.target.value,
     });
     // Xóa lỗi khi người dùng bắt đầu nhập lại
-    // if (error) setError("");
+    if (error) setError("");
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
+    e.preventDefault(); // Quan trọng: ngăn reload trang
+
+    console.log("Form submitted - page should NOT reload");
 
     if (!formData.email || !formData.password) {
       setError("Vui lòng nhập đầy đủ thông tin");
@@ -36,33 +38,24 @@ const Login = () => {
 
     try {
       const result = await login(formData.email, formData.password);
+
       if (result.success) {
-        // Thông báo thành công
-        // await notificationService.success({
-        //   title: "Đăng nhập thành công!",
-        //   text: "Chào mừng bạn trở lại!",
-        //   timer: 2000,
-        //   showConfirmButton: false,
-        // });
-        // navigate("/");
+        console.log("✅ Login successful");
 
-        console.log("✅ Login successful, checking auth state...");
-        console.log("📦 Token in localStorage:", localStorage.getItem("token"));
-        console.log("🕒 Waiting 100ms before navigate...");
-
-        // Thêm delay nhỏ để đảm bảo state được update
-
-        console.log("🚀 Navigating to / ...");
         notificationService.success({
           title: "Đăng nhập thành công!",
-          text: "Chào mừng bạn trở lại!: " + result.token,
+          text: "Chào mừng bạn trở lại! : ",
           timer: 3000,
           showConfirmButton: false,
         });
-        navigate("/");
+
+        // Thêm timeout nhỏ để đảm bảo state được cập nhật
+        setTimeout(() => {
+          navigate("/");
+        }, 100);
       } else {
         // Hiển thị lỗi bằng SweetAlert2
-        await notificationService.error({
+        notificationService.error({
           title: "Đăng nhập thất bại",
           text: result.message,
           confirmButtonText: "Thử lại",
@@ -71,8 +64,9 @@ const Login = () => {
         setError(result.message);
       }
     } catch (error) {
-      // Xử lý lỗi không mong muốn
-      await notificationService.error({
+      console.error("Login error:", error);
+
+      notificationService.error({
         title: "Lỗi hệ thống",
         text: "Có lỗi xảy ra, vui lòng thử lại sau!",
         confirmButtonText: "Đóng",
@@ -83,87 +77,6 @@ const Login = () => {
       setLoading(false);
     }
   };
-
-  // return (
-  //   <div className="container-fluid vh-100 bg-light">
-  //     <div className="row h-100 justify-content-center align-items-center">
-  //       <div className="col-md-4">
-  //         <div className="card shadow">
-  //           <div className="card-body p-5">
-  //             <div className="text-center mb-4">
-  //               <h2 className="text-primary">Đăng nhập</h2>
-  //               <p className="text-muted">Kết nối và hỗ trợ cộng đồng</p>
-  //             </div>
-
-  //             {error && (
-  //               <div className="alert alert-danger" role="alert">
-  //                 {error}
-  //               </div>
-  //             )}
-
-  //             <form onSubmit={handleSubmit}>
-  //               <div className="mb-3">
-  //                 <label htmlFor="email" className="form-label">
-  //                   Email
-  //                 </label>
-  //                 <input
-  //                   type="email"
-  //                   className="form-control"
-  //                   id="email"
-  //                   name="email"
-  //                   value={formData.email}
-  //                   onChange={handleChange}
-  //                   required
-  //                   disabled={loading}
-  //                 />
-  //               </div>
-
-  //               <div className="mb-3">
-  //                 <label htmlFor="password" className="form-label">
-  //                   Mật khẩu
-  //                 </label>
-  //                 <input
-  //                   type="password"
-  //                   className="form-control"
-  //                   id="password"
-  //                   name="password"
-  //                   value={formData.password}
-  //                   onChange={handleChange}
-  //                   required
-  //                   disabled={loading}
-  //                 />
-  //               </div>
-
-  //               <button
-  //                 type="submit"
-  //                 className="btn btn-primary w-100 py-2"
-  //                 disabled={loading}
-  //               >
-  //                 {loading ? (
-  //                   <>
-  //                     <span className="spinner-border spinner-border-sm me-2" />
-  //                     Đang đăng nhập...
-  //                   </>
-  //                 ) : (
-  //                   "Đăng nhập"
-  //                 )}
-  //               </button>
-  //             </form>
-
-  //             <div className="text-center mt-3">
-  //               <p className="mb-0">
-  //                 Chưa có tài khoản?{" "}
-  //                 <Link to="/register" className="text-decoration-none">
-  //                   Đăng ký ngay
-  //                 </Link>
-  //               </p>
-  //             </div>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   </div>
-  // );
 
   return (
     <section className="sign-in-page">
@@ -234,9 +147,25 @@ const Login = () => {
                 Nhập địa chỉ email và mật khẩu của bạn để truy cập vào bảng quản
                 trị.
               </p>
+              {/* hiển thị lỗi */}
+              {error && (
+                <div
+                  className="alert alert-danger alert-dismissible fade show"
+                  role="alert"
+                >
+                  {error}
+                  <button
+                    type="button"
+                    className="btn-close"
+                    data-bs-dismiss="alert"
+                    aria-label="Close"
+                  ></button>
+                </div>
+              )}
+
               <form className="mt-4" onSubmit={handleSubmit}>
                 <div className="form-group">
-                  <label className="form-label" for="email">
+                  <label className="form-label" htmlFor="email">
                     Email
                   </label>
                   <input
@@ -252,12 +181,15 @@ const Login = () => {
                   />
                 </div>
                 <div className="form-group">
-                  <label className="form-label" for="password">
+                  <label className="form-label" htmlFor="password">
                     Mật Khẩu
                   </label>
-                  <a href="#" className="float-end">
+                  <Link
+                    to="/forgot-password"
+                    className="float-end text-decoration-none"
+                  >
                     Quên mật khẩu?
-                  </a>
+                  </Link>
                   <input
                     type="password"
                     className="form-control mb-0"
@@ -277,7 +209,7 @@ const Login = () => {
                       className="form-check-input"
                       id="customCheck11"
                     />
-                    <label className="form-check-label" for="customCheck11">
+                    <label className="form-check-label" htmlFor="customCheck11">
                       Ghi nhớ tôi!
                     </label>
                   </div>

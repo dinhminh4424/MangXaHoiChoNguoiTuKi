@@ -181,4 +181,33 @@ export const postService = {
       throw error.response?.data || error;
     }
   },
+
+  reportPost: async (reportData) => {
+    try {
+
+
+      const formData = new FormData();
+      //
+      // // thêm các giá trị từ form
+      Object.keys(reportData).forEach((key) => {
+        if (key === "files") {
+          if (reportData.files && reportData.files.length > 0) {
+            reportData.files.forEach((file) => {
+              formData.append("files", file);
+            });
+          }
+        } else if (reportData[key] !== undefined && reportData[key] !== null) {
+          if (Array.isArray(reportData[key])) {
+            reportData[key].forEach((item) => formData.append(key, item));
+          } else {
+            formData.append(key, reportData[key]);
+          }
+        }
+      });
+      const response = await api.post(`/api/posts/${reportData.id}/report`, formData);
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
 };

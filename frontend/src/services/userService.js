@@ -111,6 +111,18 @@ class UserService {
       );
     }
   }
+
+  // Thống kê
+  async getDashboardUserStats(query) {
+    try {
+      const response = await api.get("/api/users/dashboard", { params: query });
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
+      );
+    }
+  }
 }
 
 export default new UserService();

@@ -73,6 +73,32 @@ export const AuthProvider = ({ children }) => {
   }, []); // ✅ GIỮ NGUYÊN empty dependencies
 
   // Hàm đăng nhập
+  // const login = async (email, password) => {
+  //   try {
+  //     // Gọi API đăng nhập
+  //     const response = await api.post("/api/auth/login", {
+  //       email,
+  //       password,
+  //     });
+
+  //     // Lưu thông tin user và token
+  //     const { user, token } = response.data.data;
+  //     localStorage.setItem("token", token);
+  //     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+
+  //     setUser(user);
+  //     setToken(token);
+
+  //     return { success: true, data: token };
+  //   } catch (error) {
+  //     return {
+  //       success: false,
+  //       message: error.response?.data?.message || "Đăng nhập thất bại",
+  //     };
+  //   }
+  // };
+
+  // Hàm đăng nhập trong AuthContext
   const login = async (email, password) => {
     try {
       // Gọi API đăng nhập
@@ -89,11 +115,27 @@ export const AuthProvider = ({ children }) => {
       setUser(user);
       setToken(token);
 
-      return { success: true, data: token };
+      return { success: true, token };
     } catch (error) {
+      console.error("Login error:", error);
+
+      // Xử lý các loại lỗi khác nhau
+      let errorMessage = "Đăng nhập thất bại";
+
+      if (error.response) {
+        // Lỗi từ server
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        // Không nhận được response
+        errorMessage = "Không thể kết nối đến server";
+      } else {
+        // Lỗi khác
+        errorMessage = error.message || errorMessage;
+      }
+
       return {
         success: false,
-        message: error.response?.data?.message || "Đăng nhập thất bại",
+        message: errorMessage,
       };
     }
   };
@@ -147,6 +189,37 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  const resetPassword = async (formData) => {
+    try {
+      const response = await api.post("/api/auth/reset-password", {
+        email: formData.email,
+        otp: formData.otp,
+        newPassword: formData.newPassword,
+      });
+      return response.data;
+    } catch (error) {
+      console.error("Đăng ký lỗi:", error);
+      return {
+        success: false,
+        message: error.response?.data?.message || "Đăng ký thất bại" + error,
+      };
+    }
+  };
+
+  const forgotPassword = async (objData) => {
+    try {
+      const response = await api.post("/api/auth/forgot-password", objData);
+      return response.data;
+    } catch (error) {
+      console.error("Forgot lỗi:", error);
+      return {
+        success: false,
+        message:
+          error.response?.data?.message || "forgotPassword thất bại" + error,
+      };
+    }
+  };
+
   // Giá trị cung cấp cho các component con sử dụng context
   const value = {
     user,
@@ -157,6 +230,8 @@ export const AuthProvider = ({ children }) => {
     register,
     logout,
     loadUserChats,
+    resetPassword,
+    forgotPassword,
   };
 
   return (

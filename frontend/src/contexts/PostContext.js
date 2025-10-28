@@ -227,6 +227,20 @@ export const PostProvider = ({ children }) => {
     [user, isSameUser]
   );
 
+  // báo cáo bài viết
+  const reportPost = useCallback(
+    async (reportData) => {
+      try {
+        const res = postService.reportPost(reportData);
+        return res;
+      } catch (error) {
+        setError(error.message || "Có lỗi xảy ra khi báo cáo bài viết");
+        throw error;
+      }
+    },
+    [currentPost]
+  );
+
   const value = {
     posts,
     currentPost,
@@ -244,6 +258,7 @@ export const PostProvider = ({ children }) => {
     setPosts,
     setCurrentPost,
     setError,
+    reportPost,
   };
 
   return <PostContext.Provider value={value}>{children}</PostContext.Provider>;

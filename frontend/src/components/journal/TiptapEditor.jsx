@@ -1,5 +1,5 @@
-// // components/journal/TiptapEditor.jsx
-import React, { useCallback, useState, useEffect, useRef } from "react";
+// components/journal/TiptapEditor.jsx
+import React, { useCallback, useState, useRef } from "react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import TextAlign from "@tiptap/extension-text-align";
@@ -34,12 +34,29 @@ import {
   Eraser,
 } from "lucide-react";
 
-const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
+/**
+ * Props:
+ *  - value, onChange, placeholder, onImageUpload: giữ nguyên
+ *  - maxHeight: string (e.g. "40vh") or number (px). Default "60vh".
+ *  - minContentHeight: number (px). Default 120.
+ */
+const TiptapEditor = ({
+  value,
+  onChange,
+  placeholder,
+  onImageUpload,
+  maxHeight = "60vh",
+  minContentHeight = 120,
+}) => {
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [linkUrl, setLinkUrl] = useState("");
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const editorRef = useRef(null);
+
+  // helper to normalize height prop
+  const normalizeHeight = (h) =>
+    typeof h === "number" ? `${h}px` : h || "60vh";
 
   const handleImageUpload = useCallback(
     async (file) => {
@@ -58,6 +75,8 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
     extensions: [
       StarterKit.configure({
         heading: { levels: [1, 2, 3] },
+
+        link: false,
       }),
       TextAlign.configure({
         types: ["heading", "paragraph"],
@@ -126,23 +145,39 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
   }, [editor, linkUrl]);
 
   const clearFormatting = useCallback(() => {
+    if (!editor) return;
     editor.chain().focus().unsetAllMarks().clearNodes().run();
   }, [editor]);
 
   if (!editor)
     return <div className="p-3 text-muted">Đang tải trình soạn thảo...</div>;
 
+  // compute inline styles based on props & fullscreen
+  const rootMaxHeight = isFullscreen ? "100vh" : normalizeHeight(maxHeight);
+  const editorRootStyle = {
+    overflowY: "auto",
+    maxHeight: rootMaxHeight,
+    display: "flex",
+    flexDirection: "column",
+  };
+
+  const contentStyle = {
+    flex: "1 1 auto",
+    overflowY: "auto",
+    minHeight: `${minContentHeight}px`,
+    /* ensure content doesn't push beyond rootMaxHeight (root is flex column) */
+  };
+
   return (
     <div
       ref={editorRef}
       className={`tiptap-editor border rounded bg-white ${
-        isFullscreen ? "position-fixed top-0 start-0 w-100 h-100 z-50" : ""
+        isFullscreen ? "tiptap-fullscreen" : ""
       }`}
-      style={{ overflowY: "auto" }}
+      style={editorRootStyle}
     >
       {/* Toolbar */}
       <div className="toolbar border-bottom p-2 d-flex flex-wrap gap-2 align-items-center bg-light">
-        {/* Undo / Redo */}
         <button
           type="button"
           onClick={() => editor.chain().focus().undo().run()}
@@ -160,7 +195,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Font family */}
         <select
           className="form-select form-select-sm"
           style={{ width: "120px" }}
@@ -176,7 +210,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
           <option value="Roboto">Roboto</option>
         </select>
 
-        {/* Font size */}
         <select
           className="form-select form-select-sm"
           style={{ width: "80px" }}
@@ -195,7 +228,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Text format */}
         <button
           type="button"
           onMouseDown={(e) => e.preventDefault()}
@@ -236,7 +268,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Heading */}
         {[1, 2, 3, 4, 5].map((level) => (
           <button
             type="button"
@@ -256,7 +287,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Align */}
         <button
           type="button"
           onClick={() => editor.chain().focus().setTextAlign("left").run()}
@@ -281,7 +311,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Lists */}
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleBulletList().run()}
@@ -299,7 +328,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Color & Highlight */}
         <input
           type="color"
           title="Màu chữ"
@@ -323,7 +351,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Link, Image, Video */}
         <button
           type="button"
           onClick={setLink}
@@ -360,7 +387,6 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
 
         <div className="vr"></div>
 
-        {/* Code / Fullscreen */}
         <button
           type="button"
           onClick={() => editor.chain().focus().toggleCodeBlock().run()}
@@ -383,9 +409,9 @@ const TiptapEditor = ({ value, onChange, placeholder, onImageUpload }) => {
         </button>
       </div>
 
-      {/* Content */}
-      <div className="editor-content p-3">
-        <EditorContent editor={editor} />
+      {/* Content (cuộn độc lập) */}
+      <div className="editor-content p-3" style={contentStyle}>
+        <EditorContent editor={editor} className="prosemirror-content" />
       </div>
 
       {/* Link Modal */}

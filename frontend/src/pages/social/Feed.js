@@ -17,7 +17,15 @@ import "./Feed.css";
 
 const Feed = () => {
   const navigate = useNavigate();
-  const { posts, fetchPosts, loading, error, setError, deletePost } = usePost();
+  const {
+    posts,
+    fetchPosts,
+    loading,
+    error,
+    setError,
+    deletePost,
+    reportPost,
+  } = usePost();
   const { user } = useAuth();
 
   const [filters, setFilters] = useState({
@@ -160,6 +168,36 @@ const Feed = () => {
       // }
     } catch (err) {
       console.error("Error updating post:", err);
+    }
+  };
+
+  const handleReportPost = async (reportData) => {
+    try {
+      const finalReportData = {
+        targetType: reportData.targetType,
+        targetId: reportData.targetId,
+        reason: reportData.reason,
+        notes: reportData.notes,
+        files: reportData.files, // Các file object gốc
+      };
+      console.log("reportData :", finalReportData);
+      const res = await reportPost(finalReportData);
+      if (res.success) {
+        notificationService.success({
+          title: "Thành Công",
+          text: res?.message,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error updating post:", error);
+      notificationService.error({
+        title: "Thất Bại",
+        text: error,
+        timer: 3000,
+        showConfirmButton: false,
+      });
     }
   };
 
@@ -380,6 +418,7 @@ const Feed = () => {
                       post={post}
                       onUpdate={handleUpdatePost}
                       onDelete={handleDeletePost}
+                      onReport={handleReportPost}
                     />
                   ))}
 

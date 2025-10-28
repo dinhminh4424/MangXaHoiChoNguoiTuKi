@@ -19,6 +19,7 @@ const groupSchema = new mongoose.Schema(
       {
         type: String,
         enum: [
+          "all",
           "happy",
           "sad",
           "angry",

@@ -1,7 +1,10 @@
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
+const User = require("../models/User");
 // const { param } = require("../routes/posts");
 const FileManager = require("../utils/fileManager");
+const Violation = require("../models/Violation");
+const mailService = require("../services/mailService");
 
 // thêm bài viết
 exports.createPost = async (req, res) => {
@@ -91,7 +94,9 @@ exports.getPosts = async (req, res) => {
       tags,
       privacy,
       sortBy,
+      search = "",
     } = req.query;
+
     page = parseInt(page);
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
@@ -631,3 +636,176 @@ exports.unLikePost = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+exports.reportPost = async (req, res) => {
+  try {
+    const {
+      targetType,
+      targetId,
+      reason,
+      notes,
+      status = "pending",
+    } = req.body;
+
+    const userId = req.user.userId;
+
+    // xử lý file nếu có
+    let files = [];
+    if (req.files) {
+      files = req.files.map((file) => {
+        let fileFolder = "documents";
+        if (file.mimetype.startsWith("image/")) {
+          fileFolder = "images";
+        } else if (file.mimetype.startsWith("video/")) {
+          fileFolder = "videos";
+        } else if (file.mimetype.startsWith("audio/")) {
+          fileFolder = "audio";
+        }
+
+        const fileUrl = `/api/uploads/${fileFolder}/${file.filename}`;
+
+        let messageType = "file";
+        if (file.mimetype.startsWith("image/")) {
+          messageType = "image";
+        } else if (file.mimetype.startsWith("video/")) {
+          messageType = "video";
+        } else if (file.mimetype.startsWith("audio/")) {
+          messageType = "audio";
+        }
+
+        return {
+          type: messageType,
+          fileUrl: fileUrl,
+          fileName: file.originalname,
+          fileSize: file.size,
+        };
+      });
+
+      // tạo bản ghi mới
+      const newViolation = new Violation({
+        targetType: targetType,
+        targetId: targetId,
+        reason: reason,
+        notes: notes,
+        status: status,
+        files: files,
+        userId: userId,
+      });
+
+      // lưu
+      newViolation.save();
+
+      const post = await Post.findById(targetId);
+      const reporter = await User.findById(userId);
+
+      if (post && reporter) {
+        // GỬI EMAIL THÔNG BÁO
+        await sendViolationEmails(newViolation, reporter, post);
+      }
+
+      return res.status(200).json({
+        success: true,
+        message: "Báo cáo bài viết thành công",
+        data: newViolation,
+      });
+    }
+  } catch (error) {
+    console.error("Tạo report bị lôi: ", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+/**
+ * Gửi email thông báo khi bài viết bị báo cáo
+ */
+async function sendViolationEmails(violation, reporter, post) {
+  try {
+    // Lấy thông tin người đăng bài
+    const postOwner = await User.findById(post.userCreateID);
+    if (!postOwner) return;
+
+    // 1. Gửi email cho người đăng bài
+    await mailService.sendEmail({
+      to: postOwner.email,
+      subject: "📢 Bài viết của bạn đã được báo cáo - Autism Support",
+      templateName: "POST_REPORTED",
+      templateData: {
+        postOwnerName: postOwner.fullName || postOwner.username,
+        reason: violation.reason,
+        notes: violation.notes,
+        reportTime: new Date(violation.createdAt).toLocaleString("vi-VN"),
+        reportId: violation._id.toString(),
+        postContent: post.content,
+        postFiles: post.files ? post.files.length : 0,
+        postTime: new Date(post.createdAt).toLocaleString("vi-VN"),
+        postLink: `${process.env.FRONTEND_URL}/posts/${post._id}`,
+        contactLink: `${process.env.FRONTEND_URL}/support`,
+      },
+    });
+
+    // 2. Gửi email cho admin về báo cáo mới
+    const admins = await User.find({
+      role: { $in: ["admin", "supporter"] },
+      email: { $exists: true, $ne: "" },
+    });
+
+    if (admins.length > 0) {
+      const adminEmails = admins.map((admin) => admin.email);
+
+      await mailService.sendEmail({
+        to: adminEmails,
+        subject: "🔔 Báo cáo mới cần xử lý - Autism Support",
+        templateName: "ADMIN_REPORT_ALERT",
+        templateData: {
+          reportId: violation._id.toString(),
+          contentType: "Bài viết",
+          reason: violation.reason,
+          priority: "medium", // Có thể tính toán dựa trên loại vi phạm
+          reportTime: new Date(violation.createdAt).toLocaleString("vi-VN"),
+          reporterName: reporter.fullName || reporter.username,
+          postOwnerName: postOwner.fullName || postOwner.username,
+          ownerViolationCount: postOwner.violationCount || 0,
+          ownerRole: postOwner.role,
+          reviewLink: `${process.env.FRONTEND_URL}/admin/reports/${violation._id}`,
+          adminDashboardLink: `${process.env.FRONTEND_URL}/admin`,
+        },
+      });
+    }
+
+    console.log("✅ Đã gửi email thông báo vi phạm");
+  } catch (error) {
+    console.error("❌ Lỗi gửi email thông báo vi phạm:", error);
+  }
+}
+
+/**
+ * Gửi email thông báo khi bài viết bị ẩn
+ */
+async function sendPostBlockedEmail(post, admin, reason) {
+  try {
+    const postOwner = await User.findById(post.userCreateID);
+    if (!postOwner) return;
+
+    await mailService.sendEmail({
+      to: postOwner.email,
+      subject: "🚫 Bài viết của bạn đã bị ẩn - Autism Support",
+      templateName: "POST_BLOCKED",
+      templateData: {
+        userName: postOwner.fullName || postOwner.username,
+        violationReason: reason,
+        severityLevel: "Nghiêm trọng",
+        actionTime: new Date().toLocaleString("vi-VN"),
+        adminName: admin.fullName || admin.username,
+        details: "Bài viết vi phạm nguyên tắc cộng đồng và đã bị ẩn",
+        postContent: post.content,
+        guidelinesLink: `${process.env.FRONTEND_URL}/guidelines`,
+        appealLink: `${process.env.FRONTEND_URL}/appeal`,
+        supportEmail: process.env.EMAIL_USER,
+      },
+    });
+
+    console.log("✅ Đã gửi email thông báo bài viết bị ẩn");
+  } catch (error) {
+    console.error("❌ Lỗi gửi email thông báo bài viết bị ẩn:", error);
+  }
+}

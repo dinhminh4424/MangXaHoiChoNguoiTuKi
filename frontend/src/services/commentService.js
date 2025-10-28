@@ -33,8 +33,6 @@ class CommentService {
         query: params,
       });
 
-      console.log("MMMMMMMMMMMMMMMMMMMMM");
-      console.log(response.data);
       return response.data;
     } catch (error) {
       throw error.response?.data || error;
@@ -42,15 +40,14 @@ class CommentService {
   }
 
   // Lấy replies của bình luận
-  async getCommentReplies(commentId, params = {}) {
-    try {
-      const response = await api.get(`/api/comments/${commentId}/replies`, {
-        params,
-      });
-      return response.data;
-    } catch (error) {
-      throw error.response?.data || error;
-    }
+  async getCommentReplies(commentId, options = {}) {
+    const { page = 1, limit = 10 } = options;
+
+    const response = await api.get(`/api/comments/${commentId}/replies`, {
+      params: { page, limit },
+    });
+
+    return response.data;
   }
 
   // Cập nhật bình luận

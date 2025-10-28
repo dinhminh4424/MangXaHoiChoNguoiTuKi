@@ -232,6 +232,36 @@ export const ProfileProvider = ({ children }) => {
   const isOwnProfile =
     viewedUser && currentUser && viewedUser.id === currentUser.id;
 
+  const dashboardUserStats = useCallback(async (query) => {
+    try {
+      setLoading(true);
+      setError("");
+
+      const res = await userService.getDashboardUserStats(query);
+
+      if (res?.success) {
+        return res;
+      } else {
+        const message = res?.message || "Lỗi không xác định";
+        setError("Lỗi: " + message);
+        return {
+          success: false,
+          message: message,
+        };
+      }
+    } catch (error) {
+      const errorMessage = error.message || "Lỗi khi tải thống kê";
+      setError("Lỗi: " + errorMessage);
+      console.log("Lỗi dashboard:", errorMessage);
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    } finally {
+      setLoading(false);
+    }
+  }, []); // Empty dependencies để function ổn định
+
   const value = {
     // State
     viewedUser,
@@ -254,6 +284,8 @@ export const ProfileProvider = ({ children }) => {
     viewUserProfileByUsername,
     updateProfileWithAvatar,
     updateImageCover,
+    dashboardUserStats,
+    setError,
   };
 
   return (

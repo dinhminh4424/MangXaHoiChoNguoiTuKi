@@ -1,0 +1,886 @@
+const User = require("../models/User");
+const Post = require("../models/Post");
+const Journal = require("../models/Journal");
+const Group = require("../models/Group");
+const Comment = require("../models/Comment");
+const Notification = require("../models/Notification");
+const Message = require("../models/Message");
+const MoodLog = require("../models/MoodLog");
+
+/**
+ * ADMIN CONTROLLER
+ * Chứa tất cả các chức năng quản lý dành cho admin
+ */
+
+// Dashboard - Thống kê tổng quan
+const getDashboardStats = async (req, res) => {
+  try {
+    const [
+      totalUsers,
+      totalPosts,
+      totalJournals,
+      totalGroups,
+      totalComments,
+      totalMessages,
+      recentUsers,
+      recentPosts,
+      moodStats,
+    ] = await Promise.all([
+      User.countDocuments(),
+      Post.countDocuments(),
+      Journal.countDocuments(),
+      Group.countDocuments(),
+      Comment.countDocuments(),
+      Message.countDocuments(),
+      User.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .select("username email role createdAt"),
+      Post.find()
+        .sort({ createdAt: -1 })
+        .limit(5)
+        .populate("userCreateID", "username"),
+      MoodLog.aggregate([
+        {
+          $group: {
+            _id: "$emotion",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]),
+    ]);
+
+    // Thống kê theo thời gian (7 ngày gần nhất)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+
+    const [newUsersThisWeek, newPostsThisWeek, newJournalsThisWeek] =
+      await Promise.all([
+        User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+        Post.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+        Journal.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
+      ]);
+
+    res.json({
+      success: true,
+      data: {
+        overview: {
+          totalUsers,
+          totalPosts,
+          totalJournals,
+          totalGroups,
+          totalComments,
+          totalMessages,
+        },
+        weeklyStats: {
+          newUsers: newUsersThisWeek,
+          newPosts: newPostsThisWeek,
+          newJournals: newJournalsThisWeek,
+        },
+        recentActivity: {
+          users: recentUsers,
+          posts: recentPosts,
+        },
+        moodStats,
+      },
+    });
+  } catch (error) {
+    console.error("Dashboard stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê dashboard2",
+    });
+  }
+};
+
+// Quản lý người dùng
+const getAllUsers = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "", role = "" } = req.query;
+    const skip = (page - 1) * limit;
+
+    // Tạo filter
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { username: { $regex: search, $options: "i" } },
+        { email: { $regex: search, $options: "i" } },
+        { fullName: { $regex: search, $options: "i" } },
+      ];
+    }
+    if (role) {
+      filter.role = role;
+    }
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .select("-password")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      User.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        users,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all users error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách người dùng",
+    });
+  }
+};
+
+const getUserById = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    // Lấy thống kê của user
+    const [postsCount, journalsCount, groupsCount] = await Promise.all([
+      Post.countDocuments({ author: userId }),
+      Journal.countDocuments({ author: userId }),
+      Group.countDocuments({ members: userId }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        user,
+        stats: {
+          postsCount,
+          journalsCount,
+          groupsCount,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get user by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin người dùng",
+    });
+  }
+};
+
+const updateUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { fullName, email, profile, role } = req.body;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { fullName, email, profile, role },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Cập nhật thông tin người dùng thành công",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật thông tin người dùng",
+    });
+  }
+};
+
+const deleteUser = async (req, res) => {
+  try {
+    const { userId } = req.params;
+
+    // Không cho phép xóa chính mình
+    if (userId === req.user.userId.toString()) {
+      return res.status(400).json({
+        success: false,
+        message: "Không thể xóa chính mình",
+      });
+    }
+
+    const user = await User.findByIdAndDelete(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    // Xóa các dữ liệu liên quan
+    await Promise.all([
+      Post.deleteMany({ author: userId }),
+      Journal.deleteMany({ author: userId }),
+      Comment.deleteMany({ author: userId }),
+      Message.deleteMany({ $or: [{ sender: userId }, { receiver: userId }] }),
+      Group.updateMany({ members: userId }, { $pull: { members: userId } }),
+    ]);
+
+    res.json({
+      success: true,
+      message: "Xóa người dùng thành công",
+    });
+  } catch (error) {
+    console.error("Delete user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa người dùng",
+    });
+  }
+};
+
+const updateUserRole = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { role } = req.body;
+
+    if (!["user", "supporter", "admin", "doctor"].includes(role)) {
+      return res.status(400).json({
+        success: false,
+        message: "Role không hợp lệ",
+      });
+    }
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { role },
+      { new: true }
+    ).select("-password");
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Cập nhật role thành công",
+      data: user,
+    });
+  } catch (error) {
+    console.error("Update user role error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật role",
+    });
+  }
+};
+
+// Quản lý bài viết
+const getAllPosts = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { content: { $regex: search, $options: "i" } },
+        { "author.username": { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const [posts, total] = await Promise.all([
+      Post.find(filter)
+        .populate("author", "username email")
+        .populate("comments")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Post.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        posts,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all posts error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách bài viết",
+    });
+  }
+};
+
+const getPostById = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findById(postId)
+      .populate("author", "username email")
+      .populate({
+        path: "comments",
+        populate: {
+          path: "author",
+          select: "username email",
+        },
+      });
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bài viết",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: post,
+    });
+  } catch (error) {
+    console.error("Get post by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin bài viết",
+    });
+  }
+};
+
+const deletePost = async (req, res) => {
+  try {
+    const { postId } = req.params;
+    const post = await Post.findByIdAndDelete(postId);
+
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bài viết",
+      });
+    }
+
+    // Xóa các comment liên quan
+    await Comment.deleteMany({ post: postId });
+
+    res.json({
+      success: true,
+      message: "Xóa bài viết thành công",
+    });
+  } catch (error) {
+    console.error("Delete post error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa bài viết",
+    });
+  }
+};
+
+// Quản lý nhật ký
+const getAllJournals = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { content: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const [journals, total] = await Promise.all([
+      Journal.find(filter)
+        .populate("author", "username email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Journal.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        journals,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all journals error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách nhật ký",
+    });
+  }
+};
+
+const getJournalById = async (req, res) => {
+  try {
+    const { journalId } = req.params;
+    const journal = await Journal.findById(journalId).populate(
+      "author",
+      "username email"
+    );
+
+    if (!journal) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhật ký",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: journal,
+    });
+  } catch (error) {
+    console.error("Get journal by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin nhật ký",
+    });
+  }
+};
+
+const deleteJournal = async (req, res) => {
+  try {
+    const { journalId } = req.params;
+    const journal = await Journal.findByIdAndDelete(journalId);
+
+    if (!journal) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhật ký",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Xóa nhật ký thành công",
+    });
+  } catch (error) {
+    console.error("Delete journal error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa nhật ký",
+    });
+  }
+};
+
+// Quản lý nhóm
+const getAllGroups = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const [groups, total] = await Promise.all([
+      Group.find(filter)
+        .populate("admin", "username email")
+        .populate("members", "username email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Group.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        groups,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all groups error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách nhóm",
+    });
+  }
+};
+
+const getGroupById = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await Group.findById(groupId)
+      .populate("admin", "username email")
+      .populate("members", "username email");
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhóm",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: group,
+    });
+  } catch (error) {
+    console.error("Get group by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin nhóm",
+    });
+  }
+};
+
+const deleteGroup = async (req, res) => {
+  try {
+    const { groupId } = req.params;
+    const group = await Group.findByIdAndDelete(groupId);
+
+    if (!group) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy nhóm",
+      });
+    }
+
+    // Xóa các bài viết trong nhóm
+    await Post.deleteMany({ group: groupId });
+
+    res.json({
+      success: true,
+      message: "Xóa nhóm thành công",
+    });
+  } catch (error) {
+    console.error("Delete group error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa nhóm",
+    });
+  }
+};
+
+// Quản lý bình luận
+const getAllComments = async (req, res) => {
+  try {
+    const { page = 1, limit = 10, search = "" } = req.query;
+    const skip = (page - 1) * limit;
+
+    const filter = {};
+    if (search) {
+      filter.content = { $regex: search, $options: "i" };
+    }
+
+    const [comments, total] = await Promise.all([
+      Comment.find(filter)
+        .populate("author", "username email")
+        .populate("post", "content")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Comment.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        comments,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all comments error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách bình luận",
+    });
+  }
+};
+
+const deleteComment = async (req, res) => {
+  try {
+    const { commentId } = req.params;
+    const comment = await Comment.findByIdAndDelete(commentId);
+
+    if (!comment) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bình luận",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Xóa bình luận thành công",
+    });
+  } catch (error) {
+    console.error("Delete comment error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa bình luận",
+    });
+  }
+};
+
+// Quản lý thông báo
+const getAllNotifications = async (req, res) => {
+  try {
+    const { page = 1, limit = 10 } = req.query;
+    const skip = (page - 1) * limit;
+
+    const [notifications, total] = await Promise.all([
+      Notification.find()
+        .populate("user", "username email")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Notification.countDocuments(),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        notifications,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get all notifications error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách thông báo",
+    });
+  }
+};
+
+const createNotification = async (req, res) => {
+  try {
+    const { userId, title, message, type = "info" } = req.body;
+
+    const notification = new Notification({
+      user: userId,
+      title,
+      message,
+      type,
+    });
+
+    await notification.save();
+
+    res.json({
+      success: true,
+      message: "Tạo thông báo thành công",
+      data: notification,
+    });
+  } catch (error) {
+    console.error("Create notification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo thông báo",
+    });
+  }
+};
+
+const deleteNotification = async (req, res) => {
+  try {
+    const { notificationId } = req.params;
+    const notification = await Notification.findByIdAndDelete(notificationId);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy thông báo",
+      });
+    }
+
+    res.json({
+      success: true,
+      message: "Xóa thông báo thành công",
+    });
+  } catch (error) {
+    console.error("Delete notification error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xóa thông báo",
+    });
+  }
+};
+
+// Báo cáo và phân tích
+const getUserReports = async (req, res) => {
+  try {
+    const { period = "30" } = req.query; // Số ngày
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+
+    const reports = await User.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.json({
+      success: true,
+      data: reports,
+    });
+  } catch (error) {
+    console.error("Get user reports error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo người dùng",
+    });
+  }
+};
+
+const getPostReports = async (req, res) => {
+  try {
+    const { period = "30" } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+
+    const reports = await Post.aggregate([
+      {
+        $match: {
+          createdAt: { $gte: startDate },
+        },
+      },
+      {
+        $group: {
+          _id: {
+            $dateToString: {
+              format: "%Y-%m-%d",
+              date: "$createdAt",
+            },
+          },
+          count: { $sum: 1 },
+        },
+      },
+      { $sort: { _id: 1 } },
+    ]);
+
+    res.json({
+      success: true,
+      data: reports,
+    });
+  } catch (error) {
+    console.error("Get post reports error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo bài viết",
+    });
+  }
+};
+
+const getActivityReports = async (req, res) => {
+  try {
+    const { period = "7" } = req.query;
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(period));
+
+    const [posts, journals, comments, messages] = await Promise.all([
+      Post.countDocuments({ createdAt: { $gte: startDate } }),
+      Journal.countDocuments({ createdAt: { $gte: startDate } }),
+      Comment.countDocuments({ createdAt: { $gte: startDate } }),
+      Message.countDocuments({ createdAt: { $gte: startDate } }),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        posts,
+        journals,
+        comments,
+        messages,
+        period: parseInt(period),
+      },
+    });
+  } catch (error) {
+    console.error("Get activity reports error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo hoạt động",
+    });
+  }
+};
+
+module.exports = {
+  getDashboardStats,
+  getAllUsers,
+  getUserById,
+  updateUser,
+  deleteUser,
+  updateUserRole,
+  getAllPosts,
+  getPostById,
+  deletePost,
+  getAllJournals,
+  getJournalById,
+  deleteJournal,
+  getAllGroups,
+  getGroupById,
+  deleteGroup,
+  getAllComments,
+  deleteComment,
+  getAllNotifications,
+  createNotification,
+  deleteNotification,
+  getUserReports,
+  getPostReports,
+  getActivityReports,
+};

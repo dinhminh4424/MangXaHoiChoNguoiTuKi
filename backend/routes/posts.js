@@ -33,5 +33,7 @@ router.post("/:id/like", postController.likePost);
 // unlike
 
 router.post("/:id/unlike", postController.unLikePost);
+// báo cáo bài viết
+router.post("/:id/report", upload.array("files"), postController.reportPost);
 
 module.exports = router;

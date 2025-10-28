@@ -12,7 +12,7 @@ import notificationService from "../../services/notificationService"; // Import 
 
 import "./Post.css";
 
-const Post = ({ post, onUpdate, onDelete, onEdit }) => {
+const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
   const { user } = useAuth();
   const { likePost, unlikePost, hasUserLiked, getUserEmotion } = usePost();
   const [showComments, setShowComments] = useState(false);
@@ -115,6 +115,7 @@ const Post = ({ post, onUpdate, onDelete, onEdit }) => {
         onUpdate={onUpdate}
         onDelete={handleDelete}
         onEdit={onEdit}
+        onReport={onReport}
       />
 
       {/* Content */}
