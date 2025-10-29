@@ -8,12 +8,13 @@ const chatRoutes = require("./chat");
 const uploadRoutes = require("./upload");
 const quoteRoutes = require("./qoute");
 const journalRoutes = require("./journals");
-const notificationRoutes = require("./notification");
+// const notificationRoutes = require("./notification");
 const postsRoutes = require("./posts");
 const commentsRoutes = require("./comments");
 const groupRoutes = require("./groups");
 const moodRoutes = require("./mood");
 const adminRoutes = require("./admin");
+const notificationsRoutes = require("./notifications");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -22,7 +23,8 @@ router.use("/chat", chatRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/quote", quoteRoutes);
 router.use("/journals", journalRoutes);
-router.use("/notifications", notificationRoutes);
+// router.use("/notifications", notificationRoutes);
+router.use("/notifications", notificationsRoutes);
 router.use("/posts", postsRoutes);
 router.use("/comments", commentsRoutes);
 router.use("/groups", groupRoutes);

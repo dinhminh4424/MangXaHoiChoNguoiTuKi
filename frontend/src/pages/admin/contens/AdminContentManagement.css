@@ -339,3 +339,8 @@
     justify-content: center;
   }
 }
+
+.card:hover {
+  transform: translateY(-4px);
+  transition: 0.2s ease-in-out;
+}

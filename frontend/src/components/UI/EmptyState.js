@@ -1,6 +1,6 @@
 // components/UI/EmptyState.js
 import React from "react";
-import "./EmptyState.css";
+// import "./EmptyState.css";
 
 const EmptyState = ({ icon = "📝", title, message, action, children }) => {
   return (

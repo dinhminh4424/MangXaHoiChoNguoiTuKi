@@ -63,20 +63,20 @@ exports.createJournal = async (req, res) => {
     await newJournal.save();
 
     // Tạo thông báo
-    const notification = new Notification({
-      userId,
-      message: `📝 Bạn vừa ghi nhật ký "${title}" thành công! Hãy tiếp tục duy trì thói quen tốt này nhé!`,
-      read: false,
-    });
+    // const notification = new Notification({
+    //   userId,
+    //   message: `📝 Bạn vừa ghi nhật ký "${title}" thành công! Hãy tiếp tục duy trì thói quen tốt này nhé!`,
+    //   read: false,
+    // });
 
-    await notification.save();
+    // await notification.save();
 
     res.status(201).json({
       success: true,
       message: "Ghi nhật ký thành công!",
       data: {
         journal: newJournal,
-        notification: notification,
+        // notification: notification,
       },
     });
   } catch (error) {
@@ -141,20 +141,20 @@ exports.updateTodayJournal = async (req, res) => {
     }
 
     // Tạo thông báo cập nhật
-    const notification = new Notification({
-      userId,
-      message: `✏️ Nhật ký "${updatedJournal.title}" đã được cập nhật!`,
-      read: false,
-    });
+    // const notification = new Notification({
+    //   userId,
+    //   message: `✏️ Nhật ký "${updatedJournal.title}" đã được cập nhật!`,
+    //   read: false,
+    // });
 
-    await notification.save();
+    // await notification.save();
 
     res.json({
       success: true,
       message: "Cập nhật nhật ký thành công!",
       data: {
         journal: updatedJournal,
-        notification: notification,
+        // notification: notification,
       },
     });
   } catch (error) {
@@ -257,21 +257,21 @@ exports.updateJournal = async (req, res) => {
     }
 
     // ✅ Tạo notification
-    try {
-      const notification = new Notification({
-        userId: existingJournal.userId,
-        type: "journal_updated",
-        message: `✏️ Nhật ký "${updatedJournal.title}" đã được cập nhật!`,
-        relatedId: journalId,
-        read: false,
-      });
+    // try {
+    //   const notification = new Notification({
+    //     userId: existingJournal.userId,
+    //     type: "journal_updated",
+    //     message: `✏️ Nhật ký "${updatedJournal.title}" đã được cập nhật!`,
+    //     relatedId: journalId,
+    //     read: false,
+    //   });
 
-      await notification.save();
-      console.log("✅ Notification created successfully");
-    } catch (notificationError) {
-      console.error("❌ Notification creation failed:", notificationError);
-      // Không throw error - journal đã update thành công
-    }
+    //   await notification.save();
+    //   console.log("✅ Notification created successfully");
+    // } catch (notificationError) {
+    //   console.error("❌ Notification creation failed:", notificationError);
+    //   // Không throw error - journal đã update thành công
+    // }
 
     res.json({
       success: true,

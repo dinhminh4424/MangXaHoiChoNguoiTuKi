@@ -13,7 +13,7 @@ const path = require("path");
 // Config
 const config = require("./config");
 const connectDB = require("./config/database");
-const configureSocket = require("./config/socket");
+const { configureSocket } = require("./config/socket"); // ← SỬA Ở ĐÂY
 const corsOptions = require("./config/cors");
 
 const app = express();

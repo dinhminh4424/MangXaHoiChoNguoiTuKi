@@ -1,7 +1,7 @@
 // components/UI/ConfirmModal.js
 import React from "react";
 import { X, AlertTriangle } from "lucide-react";
-import "./ConfirmModal.css";
+// import "./ConfirmModal.css";
 
 const ConfirmModal = ({
   isOpen,

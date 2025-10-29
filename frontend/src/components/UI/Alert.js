@@ -1,6 +1,7 @@
 // components/UI/Alert.js
 import React from "react";
 import { X } from "lucide-react";
+import "./Alert.css";
 
 const Alert = ({
   variant = "info",

@@ -53,4 +53,9 @@ router.get("/reports/users", adminController.getUserReports);
 router.get("/reports/posts", adminController.getPostReports);
 router.get("/reports/activity", adminController.getActivityReports);
 
+// Quản lý báo cáo
+
+router.put("/violation/:id", adminController.updateViolationStatus);
+router.get("/violation/posts", adminController.getPostViolation);
+
 module.exports = router;

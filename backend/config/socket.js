@@ -1,9 +1,12 @@
 const socketIo = require("socket.io");
 const Message = require("../models/Message");
 const Chat = require("../models/Chat");
+const Notification = require("../models/Notification");
+const User = require("../models/User");
 
+let io;
 const configureSocket = (server) => {
-  const io = socketIo(server, {
+  io = socketIo(server, {
     cors: {
       origin: process.env.FRONTEND_URL || "http://localhost:3000",
       methods: ["GET", "POST"],
@@ -213,9 +216,45 @@ const configureSocket = (server) => {
         socket.emit("error", { message: "Lỗi khi thu hồi tin nhắn" });
       }
     });
+
+    // thông báo
+    socket.on("join_notifications", (userId) => {
+      socket.join(`user_${userId}`);
+      console.log(`User ${userId} joined notification room`);
+    });
+
+    socket.on("join_admin_notifications", () => {
+      socket.join("admin_notifications");
+      console.log(`User joined admin notifications room`);
+    });
+
+    socket.on("mark_notification_read", async (data) => {
+      try {
+        const { notificationId, userId } = data;
+
+        await Notification.findByIdAndUpdate(notificationId, {
+          read: true,
+          readAt: new Date(),
+        });
+
+        socket.emit("notification_marked_read", { notificationId });
+      } catch (error) {
+        console.error("Error marking notification as read:", error);
+        socket.emit("error", { message: "Lỗi khi đánh dấu thông báo đã đọc" });
+      }
+    });
   });
 
   return io;
 };
 
-module.exports = configureSocket;
+// thông báo
+const getIO = () => {
+  if (!io) {
+    throw new Error("Socket.io not initialized");
+  }
+  return io;
+};
+
+// module.exports =  configureSocket ;
+module.exports = { configureSocket, getIO };

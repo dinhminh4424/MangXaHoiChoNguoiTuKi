@@ -459,13 +459,13 @@ const Chat = () => {
                               <img
                                 src={user.profile.avatar}
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle "
+                                className="avatar-60 rounded-circle w-100"
                               />
                             ) : (
                               <img
                                 src="/assets/images/default-avatar.png"
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle "
+                                className="avatar-60 rounded-circle w-100"
                               />
                             )}
                           </div>
@@ -498,7 +498,7 @@ const Chat = () => {
                                   <img
                                     src={user.profile.avatar}
                                     alt="avatar"
-                                    className="w-50"
+                                    className="w-100"
                                   />
                                 ) : (
                                   <img
@@ -661,7 +661,7 @@ const Chat = () => {
                                           "/assets/images/default-avatar.png"
                                         }
                                         alt="chatuserimage"
-                                        className="avatar-50 rounded-circle "
+                                        className="avatar-50 rounded-circle w-100"
                                       />
                                       <span className="avatar-status">
                                         <i className="ri-checkbox-blank-circle-fill text-success"></i>
@@ -764,7 +764,7 @@ const Chat = () => {
                                           "/assets/images/default-avatar.png"
                                         }
                                         alt="avatar"
-                                        className="avatar-50 rounded-circle "
+                                        className="avatar-50 rounded-circle w-100"
                                       />
                                     )}
                                     <span className="avatar-status">
@@ -789,7 +789,10 @@ const Chat = () => {
                                     </Modal.Title>
                                   </Modal.Header>
                                   <Modal.Body>
-                                    <div className="user mb-4 text-center">
+                                    <div
+                                      className="user mb-4 text-center"
+                                      style={{ textAlign: "center" }}
+                                    >
                                       <a className="avatar m-0">
                                         <img
                                           src={
@@ -797,7 +800,7 @@ const Chat = () => {
                                             "/assets/images/default-avatar.png"
                                           }
                                           alt="avatar"
-                                          className="w-50"
+                                          className="w-100 img-fluid"
                                         />
                                       </a>
                                       <div className="user-name mt-4">
@@ -1006,7 +1009,7 @@ const Chat = () => {
                                             "/assets/images/default-avatar.png"
                                           }
                                           alt="avatar"
-                                          className="avatar-35 rounded-circle "
+                                          className="avatar-35 rounded-circle w-100"
                                         />
                                       ) : (
                                         <img
@@ -1015,7 +1018,7 @@ const Chat = () => {
                                             "/assets/images/default-avatar.png"
                                           }
                                           alt="avatar"
-                                          className="avatar-35 rounded-circle"
+                                          className="avatar-35 rounded-circle w-100"
                                         />
                                       )}
                                     </a>

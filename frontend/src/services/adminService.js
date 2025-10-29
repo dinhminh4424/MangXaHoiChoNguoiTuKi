@@ -95,13 +95,36 @@ export const deleteNotification = (notificationId) => {
 
 // Báo cáo và phân tích
 export const getUserReports = (period = 30) => {
-  return api.get("/api/admin/reports/users", { params: { period } });
+  const res = api.get("/api/admin/reports/users", { params: { period } });
+  return res.data;
 };
 
 export const getPostReports = (period = 30) => {
-  return api.get("/api/admin/reports/posts", { params: { period } });
+  const res = api.get("/api/admin/reports/posts", { params: { period } });
+  return res.data;
 };
 
 export const getActivityReports = (period = 7) => {
   return api.get("/api/admin/reports/activity", { params: { period } });
+};
+
+// Quản Lý Reports
+// Report Post
+export const getPostViolation = async (
+  params = {
+    page: 1,
+    limit: 10,
+    status: "all",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+  }
+) => {
+  const res = await api.get("/api/admin/violation/posts", { params });
+  return res.data;
+};
+
+export const updateViolationStatus = async (violationId, updateData) => {
+  const res = await api.put(`/api/admin/violation/${violationId}`, updateData);
+  return res.data;
 };

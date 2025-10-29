@@ -1,7 +1,7 @@
 // components/UI/Modal.js
 import React, { useEffect } from "react";
 import { X } from "lucide-react";
-import "./Modal.css";
+// import "./Modal.css";
 
 const Modal = ({
   isOpen,

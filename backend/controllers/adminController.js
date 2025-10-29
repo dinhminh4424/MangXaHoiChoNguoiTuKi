@@ -6,6 +6,8 @@ const Comment = require("../models/Comment");
 const Notification = require("../models/Notification");
 const Message = require("../models/Message");
 const MoodLog = require("../models/MoodLog");
+const Violation = require("../models/Violation");
+const NotificationService = require("../services/notificationService");
 
 /**
  * ADMIN CONTROLLER
@@ -296,23 +298,183 @@ const updateUserRole = async (req, res) => {
 };
 
 // Quản lý bài viết
+// const getAllPosts = async (req, res) => {
+//   try {
+//     // const { page = 1, limit = 10, postsSearch = [] } = req.query;
+//     const { page = 1, limit = 10, email, fromDate, toDate } = req.query;
+
+//     const skip = (page - 1) * limit;
+
+//     let postsSearch = {
+//       email,
+//       fromDate,
+//       toDate,
+//     };
+//     console.log("================= postsSearch: ", postsSearch);
+
+//     const filter = {};
+//     if (postsSearch) {
+//       if (postsSearch.email) {
+//         filter.$or = [
+//           {
+//             "userCreateID.username": {
+//               $regex: postsSearch.email,
+//               $options: "i",
+//             },
+//           },
+//           {
+//             "userCreateID.email": { $regex: postsSearch.email, $options: "i" },
+//           },
+//         ];
+//       }
+//       if (postsSearch.fromDate && postsSearch.toDate) {
+//         const toDateObj = new Date(toDate);
+//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
+//         const fromDateObj = new Date(toDateObj);
+//         fromDateObj.setHours(0, 0, 0, 0);
+//         filter.createdAt = [
+//           {
+//             $gte: new Date(postsSearch.fromDateObj),
+//             $lte: new Date(postsSearch.toDateObj),
+//           },
+//         ];
+//       } else if (postsSearch.fromDate) {
+//         const fromDateObj = new Date(toDateObj);
+//         fromDateObj.setHours(0, 0, 0, 0);
+//         filter.createdAt = {
+//           $gte: new Date(postsSearch.fromDateObj),
+//         };
+//       } else if (postsSearch.toDate) {
+//         const toDateObj = new Date(toDate);
+//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
+//         filter.createdAt = {
+//           $lte: new Date(postsSearch.toDateObj),
+//         };
+//       }
+//     }
+
+//     const [posts, total] = await Promise.all([
+//       Post.find(filter)
+//         .populate("userCreateID", "username email profile.avatar")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(parseInt(limit)),
+
+//       Post.countDocuments(filter),
+//     ]);
+
+//     res.json({
+//       success: true,
+//       data: {
+//         posts,
+//         pagination: {
+//           current: parseInt(page),
+//           pages: Math.ceil(total / limit),
+//           total,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Get all posts error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi lấy danh sách bài viết",
+//     });
+//   }
+// };
+
+// Trong adminController.js - cập nhật hàm getAllPosts
 const getAllPosts = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      email = "",
+      username = "",
+      postId = "",
+      fromDate = "",
+      toDate = "",
+      status = "",
+      minViolations = "",
+      maxViolations = "",
+      privacy = "",
+      hasFiles = "",
+    } = req.query;
+
     const skip = (page - 1) * limit;
 
     const filter = {};
-    if (search) {
-      filter.$or = [
-        { content: { $regex: search, $options: "i" } },
-        { "author.username": { $regex: search, $options: "i" } },
-      ];
+
+    // Tìm kiếm theo user (email hoặc username)
+    if (email || username) {
+      const userFilter = {};
+      if (email) userFilter.email = { $regex: email, $options: "i" };
+      if (username) userFilter.username = { $regex: username, $options: "i" };
+
+      const users = await User.find(userFilter).select("_id");
+      const userIds = users.map((user) => user._id);
+      filter.userCreateID = { $in: userIds };
+    }
+
+    // Tìm kiếm theo ID bài viết
+    if (postId) {
+      try {
+        filter._id = postId; // Có thể dùng regex nếu muốn tìm kiếm partial
+      } catch (error) {
+        return res.status(400).json({
+          success: false,
+          message: "ID bài viết không hợp lệ",
+        });
+      }
+    }
+
+    // Lọc theo thời gian
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+      if (fromDate) {
+        const fromDateObj = new Date(fromDate);
+        fromDateObj.setHours(0, 0, 0, 0);
+        filter.createdAt.$gte = fromDateObj;
+      }
+      if (toDate) {
+        const toDateObj = new Date(toDate);
+        toDateObj.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = toDateObj;
+      }
+    }
+
+    // Lọc theo trạng thái
+    if (status === "blocked") {
+      filter.isBlocked = true;
+    } else if (status === "active") {
+      filter.isBlocked = false;
+    }
+
+    // Lọc theo số lượng vi phạm
+    if (minViolations || maxViolations) {
+      filter.violationCount = {};
+      if (minViolations) filter.violationCount.$gte = parseInt(minViolations);
+      if (maxViolations) filter.violationCount.$lte = parseInt(maxViolations);
+    }
+
+    // Lọc theo quyền riêng tư
+    if (privacy) {
+      filter.privacy = privacy;
+    }
+
+    // Lọc bài viết có file đính kèm
+    if (hasFiles === "true") {
+      filter["files.0"] = { $exists: true };
+    } else if (hasFiles === "false") {
+      filter.files = { $size: 0 };
     }
 
     const [posts, total] = await Promise.all([
       Post.find(filter)
-        .populate("author", "username email")
-        .populate("comments")
+        .populate(
+          "userCreateID",
+          "username email profile.avatar violationCount"
+        )
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -343,11 +505,11 @@ const getPostById = async (req, res) => {
   try {
     const { postId } = req.params;
     const post = await Post.findById(postId)
-      .populate("author", "username email")
+      .populate("userCreateID", "username email profile.avatar")
       .populate({
         path: "comments",
         populate: {
-          path: "author",
+          path: "userId",
           select: "username email",
         },
       });
@@ -416,7 +578,7 @@ const getAllJournals = async (req, res) => {
 
     const [journals, total] = await Promise.all([
       Journal.find(filter)
-        .populate("author", "username email")
+        .populate("userId", "username email profile.avatar")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -512,8 +674,8 @@ const getAllGroups = async (req, res) => {
 
     const [groups, total] = await Promise.all([
       Group.find(filter)
-        .populate("admin", "username email")
-        .populate("members", "username email")
+        .populate("owner", "username email")
+        // .populate("members", "username email")
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(parseInt(limit)),
@@ -822,7 +984,7 @@ const getPostReports = async (req, res) => {
     console.error("Get post reports error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy báo cáo bài viết",
+      message: "Lỗi khi lấy báo cáo bài viết: " + error,
     });
   }
 };
@@ -859,6 +1021,266 @@ const getActivityReports = async (req, res) => {
   }
 };
 
+// lấy các repot báo cáo
+// const getPostViolation = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, status = "all" } = req.query;
+//     const skip = limit * (page - 1);
+//     const filter = {};
+//     if (status != "all") {
+//       filter.status = status;
+//     }
+//     filter.targetType = "Post";
+
+//     const [reportsPost, total] = await Promise.all([
+//       Violation.find(filter)
+//         .populate("reportedBy", "username email profile.avatar")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(parseInt(limit)),
+//       Violation.countDocuments(filter),
+//     ]);
+
+//     return res.status(200).json({
+//       success: true,
+//       data: {
+//         reportsPost,
+//         pagination: {
+//           current: parseInt(page),
+//           pages: Math.ceil(total / limit),
+//           total,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Lỗi khi lấy báo cáo:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi lấy báo cáo bài viết ",
+//     });
+//   }
+// };
+
+const getPostViolation = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = "all",
+      dateFrom = "",
+      dateTo = "",
+      search = "",
+      reportId = "",
+    } = req.query;
+    const skip = limit * (page - 1);
+
+    const filter = { targetType: "Post" };
+
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    if (search) {
+      filter.$or = [
+        { reason: { $regex: search, $options: "i" } },
+        { notes: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    if (reportId) {
+      filter.$or = [{ _id: { $regex: reportId, $options: "i" } }];
+    }
+
+    const [reportsPost, total] = await Promise.all([
+      Violation.find(filter)
+        .populate("reportedBy", "username email profile.avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Violation.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reportsPost,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo bài viết",
+    });
+  }
+};
+
+// Thêm API cập nhật violation
+// const updateViolationStatus = async (req, res) => {
+//   try {
+//     const { id } = req.params;
+//     const { status, actionTaken, reviewedAt } = req.body;
+
+//     const violation = await Violation.findByIdAndUpdate(
+//       id,
+//       {
+//         status,
+//         actionTaken,
+//         reviewedAt,
+//         reviewedBy: req.user.userId, // Giả sử có thông tin user từ auth middleware
+//       },
+//       { new: true }
+//     ).populate("reportedBy", "username email profile.avatar");
+
+//     if (!violation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Không tìm thấy báo cáo",
+//       });
+//     }
+
+//     // Nếu action là block_post hoặc ban_user, cập nhật bài viết hoặc user
+//     if (actionTaken === "block_post") {
+//       await Post.findByIdAndUpdate(violation.targetId, { isBlocked: true });
+//     } else if (actionTaken === "ban_user") {
+//       await User.findByIdAndUpdate(violation.userId, {
+//         active: false,
+//         violationCount: { $inc: 1 },
+//         lastViolationAt: new Date(),
+//       });
+//     }
+
+//     return res.status(200).json({
+//       success: true,
+//       data: violation,
+//       message: "Cập nhật trạng thái thành công",
+//     });
+//   } catch (error) {
+//     console.error("Lỗi khi cập nhật báo cáo:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi cập nhật báo cáo",
+//     });
+//   }
+// };
+const updateViolationStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, actionTaken = "block_post", reviewedAt } = req.body;
+
+    const violation = await Violation.findById(id)
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email fullName");
+
+    if (!violation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo",
+      });
+    }
+
+    const updatedViolation = await Violation.findByIdAndUpdate(
+      id,
+      {
+        status,
+        actionTaken,
+        reviewedAt,
+        reviewedBy: req.user.userId,
+      },
+      { new: true }
+    ).populate("reportedBy", "username email profile.avatar");
+
+    // Thông báo real-time dựa trên action
+    if (actionTaken === "block_post") {
+      await Post.findByIdAndUpdate(violation.targetId, { isBlocked: true });
+
+      // Thông báo cho người đăng bài
+      await NotificationService.createAndEmitNotification({
+        recipient: violation.userId,
+        sender: req.user._id,
+        type: "POST_BLOCKED",
+        title: "Bài viết đã bị ẩn",
+        message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`,
+        data: {
+          violationId: violation._id,
+          postId: violation.targetId,
+          reason: violation.reason,
+          action: "blocked",
+        },
+        priority: "high",
+        url: `/posts/${violation.targetId}`,
+      });
+    } else if (actionTaken === "ban_user") {
+      await User.findByIdAndUpdate(violation.userId, {
+        active: false,
+        $inc: { violationCount: 1 },
+        lastViolationAt: new Date(),
+      });
+
+      // Thông báo cho người bị ban
+      await NotificationService.createAndEmitNotification({
+        recipient: violation.userId,
+        sender: req.user._id,
+        type: "USER_BANNED",
+        title: "Tài khoản bị tạm ngưng",
+        message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+        data: {
+          violationId: violation._id,
+          reason: violation.reason,
+          action: "banned",
+        },
+        priority: "urgent",
+        url: `/support`,
+      });
+    }
+
+    // Thông báo cho admin về việc xử lý hoàn tất
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null,
+      sender: req.user._id,
+      type: "REPORT_RESOLVED",
+      title: "Báo cáo đã được xử lý",
+      message: `Báo cáo #${violation._id} đã được ${
+        req.user.fullName || req.user.username
+      } xử lý.`,
+      data: {
+        violationId: violation._id,
+        actionTaken: actionTaken,
+        resolvedBy: req.user._id,
+      },
+      priority: "medium",
+      url: `/admin/reports/${violation._id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: updatedViolation,
+      message: "Cập nhật trạng thái thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật báo cáo",
+    });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -883,4 +1305,6 @@ module.exports = {
   getUserReports,
   getPostReports,
   getActivityReports,
+  getPostViolation,
+  updateViolationStatus,
 };

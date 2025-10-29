@@ -466,10 +466,13 @@ import Emotion from "./pages/emotions/emotion";
 import Group from "./pages/social/Group";
 import GroupDetailPage from "./pages/social/GroupDetailPage";
 import CreateGroupPage from "./pages/social/CreateGroupPage";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
-import AdminContentManagement from "./pages/admin/AdminContentManagement";
+import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
+import ReportContent from "./pages/admin/reports/ReportContent";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
+
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
@@ -561,6 +564,12 @@ const routeConfigs = [
   {
     path: "/admin/content",
     component: AdminContentManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reports",
+    component: ReportContent,
     layout: AdminLayout,
     isAdmin: true,
   },

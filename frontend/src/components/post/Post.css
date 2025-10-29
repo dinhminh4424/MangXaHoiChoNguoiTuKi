@@ -1,4 +1,4 @@
-/* components/Post/Post.css */
+/* 
 .post-card {
   background: #fff;
   border-radius: 12px;
@@ -102,7 +102,7 @@
   font-weight: 500;
 }
 
-/* Responsive */
+
 @media (max-width: 768px) {
   .post-card {
     border-radius: 8px;
@@ -118,7 +118,7 @@
   }
 }
 
-/* Animation */
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -132,4 +132,184 @@
 
 .post-card {
   animation: fadeIn 0.3s ease;
+} */
+
+/* Post.css */
+/* .post-card {
+  background: #fff !important;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 16px;
+  overflow: hidden;
+  transition: box-shadow 0.3s ease;
+} */
+
+.post-card {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+  overflow: hidden;
+  transition: all 0.3s ease;
+  border: 1px solid #e0e0e0;
+}
+
+.post-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.post-content {
+  padding: 0 16px 12px;
+}
+
+.post-privacy {
+  margin-bottom: 12px;
+}
+
+.privacy-badge,
+.anonymous-badge {
+  font-size: 0.75rem;
+  padding: 4px 8px;
+  border-radius: 12px;
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.privacy-badge.public {
+  background-color: #e3f2fd;
+  color: #1976d2;
+}
+
+.privacy-badge.friends {
+  background-color: #f3e5f5;
+  color: #7b1fa2;
+}
+
+.privacy-badge.private {
+  background-color: #fff3e0;
+  color: #f57c00;
+}
+
+.anonymous-badge {
+  background-color: #f5f5f5;
+  color: #666;
+}
+
+.post-text {
+  margin-bottom: 12px;
+}
+
+.post-content-text {
+  position: relative;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.post-content-text.collapsed {
+  max-height: 192px; /* 8 dòng * 24px line-height */
+  mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 60%, transparent 100%);
+}
+
+.post-content-text.expanded {
+  max-height: none;
+  mask-image: none;
+  -webkit-mask-image: none;
+}
+
+.post-content-text p {
+  margin: 0;
+  line-height: 1.5;
+  color: #333;
+  white-space: pre-line;
+  word-wrap: break-word;
+  font-size: 0.95rem;
+}
+
+.read-more-btn {
+  background: none;
+  border: none;
+  color: #1976d2;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.9rem;
+  padding: 4px 0;
+  margin-top: 4px;
+  transition: color 0.2s ease;
+}
+
+.read-more-btn:hover {
+  color: #1565c0;
+  text-decoration: underline;
+}
+
+.post-meta {
+  margin: 12px 0;
+}
+
+.post-emotions,
+.post-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+
+.emotion-tag {
+  background-color: #fff3e0;
+  color: #f57c00;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.hash-tag {
+  background-color: #e3f2fd;
+  color: #1976d2;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  border-color: #1976d2;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .post-content {
+    padding: 0 12px 8px;
+  }
+
+  .post-content-text.collapsed {
+    max-height: 144px; /* 6 dòng trên mobile */
+  }
+
+  .post-content-text p {
+    font-size: 0.9rem;
+    line-height: 1.4;
+  }
+
+  .read-more-btn {
+    font-size: 0.85rem;
+  }
+}
+
+/* Dark mode support */
+
+/* Animation cho nội dung khi mở rộng */
+.post-content-text {
+  transition: all 0.3s ease;
+}
+
+/* Đảm bảo nội dung không bị cắt khi in */
+@media print {
+  .post-content-text {
+    max-height: none !important;
+    mask-image: none !important;
+    -webkit-mask-image: none !important;
+  }
+
+  .read-more-btn {
+    display: none;
+  }
 }

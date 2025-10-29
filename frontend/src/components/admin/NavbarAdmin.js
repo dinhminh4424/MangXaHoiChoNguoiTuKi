@@ -2,6 +2,7 @@ import React from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import TooltipWrapper from "../TooltipWrapper";
+import AdminNotifications from "../notification/AdminNotifications";
 
 function NavbarAdmin() {
   const { logout, user } = useAuth();
@@ -23,53 +24,61 @@ function NavbarAdmin() {
 
   // Admin navigation items - thiết kế giống hệt Navbar user
   const adminNavItems = [
-    { path: "/admin", icon: "ri-dashboard-line", label: "Dashboard" },
+    { path: "/admin", icon: "ri-dashboard-line", label: "Thống kê" },
     {
       path: "/admin/users",
       icon: "ri-user-line",
-      label: "User Management",
+      label: "Người Dùng",
       children: [
-        { path: "/admin/users", icon: "ri-list-check", label: "All Users" },
+        {
+          path: "/admin/users",
+          icon: "ri-list-check",
+          label: "Các Người Dùng",
+        },
         {
           path: "/admin/users/create",
           icon: "ri-user-add-line",
-          label: "Add User",
+          label: "Thêm Người Dùng",
         },
         {
           path: "/admin/users/roles",
           icon: "ri-shield-keyhole-line",
-          label: "Role Management",
+          label: "Quản Lý Phân Quyền",
         },
       ],
     },
     {
       path: "/admin/content",
       icon: "ri-file-text-line",
-      label: "Content Management",
+      label: "Quản Lý Trang Web",
       children: [
-        { path: "/admin/content", icon: "ri-article-line", label: "All Posts" },
+        {
+          path: "/admin/content",
+          icon: "ri-article-line",
+          label: "Bài Viết",
+        },
         {
           path: "/admin/content/comments",
           icon: "ri-chat-3-line",
-          label: "Comments",
+          label: "Bình Luận",
         },
         {
           path: "/admin/content/reports",
           icon: "ri-flag-line",
-          label: "Reported Content",
+          label: "Báo Cáo",
         },
       ],
     },
     {
       path: "/admin/groups",
       icon: "ri-group-line",
-      label: "Group Management",
+      label: "Quản Lý Hội Nhóm",
       children: [
         { path: "/admin/groups", icon: "ri-team-line", label: "All Groups" },
         {
           path: "/admin/groups/reports",
           icon: "ri-alarm-warning-line",
-          label: "Reported Groups",
+          label: "Báo Cáo Nhóm",
         },
       ],
     },
@@ -134,8 +143,10 @@ function NavbarAdmin() {
                     <i className="ri-admin-line text-primary fs-3"></i>
                   </div>
                   <div className="admin-details">
-                    <h6 className="mb-0 text-white">Admin Panel</h6>
-                    <small className="text-white-50">Quản trị hệ thống</small>
+                    <h6 className="mb-0 text">Admin Panel</h6>
+                    <small className="text-secondary-50">
+                      Quản trị hệ thống
+                    </small>
                   </div>
                 </div>
               </li>
@@ -233,7 +244,7 @@ function NavbarAdmin() {
         </div>
       </div>
 
-      {/* Top Navigation Bar - bên trên - GIỐNG HỆT Navbar user */}
+      {/* Top Navigation Bar - bên trên */}
       <div className="iq-top-navbar a">
         <div className="iq-navbar-custom">
           <nav className="navbar navbar-expand-lg navbar-light p-0">
@@ -340,7 +351,7 @@ function NavbarAdmin() {
                 </li>
 
                 {/* Notifications Dropdown */}
-                <li className="nav-item dropdown">
+                {/* <li className="nav-item dropdown">
                   <a
                     href="#"
                     className="search-toggle dropdown-toggle"
@@ -386,7 +397,9 @@ function NavbarAdmin() {
                       </div>
                     </div>
                   </div>
-                </li>
+                </li> */}
+
+                <AdminNotifications />
 
                 {/* System Status */}
                 <li className="nav-item dropdown">
@@ -467,10 +480,8 @@ function NavbarAdmin() {
                     <div className="card shadow-none m-0">
                       <div className="card-header bg-primary">
                         <div className="header-title">
-                          <h6 className="mb-0 text-white">Admin Panel</h6>
-                          <h6 className="mb-0 text-white">
-                            {user?.username || "Admin"}
-                          </h6>
+                          <h6 className="mb-0 ">Admin Panel</h6>
+                          <h6 className="mb-0 ">{user?.username || "Admin"}</h6>
                           <span className="text-white font-size-12">
                             Super Administrator
                           </span>

@@ -80,7 +80,7 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    violationCount: { type: Number, default: 0 },
+    violationCount: { type: Number, default: 0 }, // đém lỗi
     isBlocked: {
       // bài viết bị ẩn do vi phạm
       type: Boolean,

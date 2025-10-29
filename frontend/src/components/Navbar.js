@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
-
+import UserNotifications from "./notification/UserNotifications";
 function Navbar() {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
@@ -267,8 +267,10 @@ function Navbar() {
                   </div>
                 </li>
 
+                <UserNotifications />
+
                 {/* Notifications Dropdown */}
-                <li className="nav-item dropdown ">
+                {/* <li className="nav-item dropdown ">
                   <a
                     href="#"
                     className="search-toggle dropdown-toggle"
@@ -301,10 +303,10 @@ function Navbar() {
                       </div>
                     </div>
                   </div>
-                </li>
+                </li> */}
 
                 {/* Messages Dropdown */}
-                <li className="nav-item dropdown">
+                {/* <li className="nav-item dropdown">
                   <a
                     href="#"
                     className="dropdown-toggle"
@@ -336,7 +338,7 @@ function Navbar() {
                       </div>
                     </div>
                   </div>
-                </li>
+                </li> */}
 
                 {/* User Profile Dropdown */}
                 <li className="nav-item dropdown">

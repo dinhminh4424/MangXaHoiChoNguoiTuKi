@@ -5,6 +5,7 @@ const User = require("../models/User");
 const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
+const NotificationService = require("../services/notificationService");
 
 // thêm bài viết
 exports.createPost = async (req, res) => {
@@ -681,6 +682,8 @@ exports.reportPost = async (req, res) => {
         };
       });
 
+      const post = await Post.findById(targetId);
+
       // tạo bản ghi mới
       const newViolation = new Violation({
         targetType: targetType,
@@ -689,14 +692,48 @@ exports.reportPost = async (req, res) => {
         notes: notes,
         status: status,
         files: files,
-        userId: userId,
+        userId: post.userCreateID, // người bị báo cáo của bài viết
+        reportedBy: userId, // ngừời báo cáo
       });
 
       // lưu
       newViolation.save();
 
-      const post = await Post.findById(targetId);
       const reporter = await User.findById(userId);
+
+      // 1. Gửi thông báo real-time cho admin
+      await NotificationService.emitNotificationToAdmins({
+        recipient: null, // Gửi cho tất cả admin
+        sender: userId,
+        type: "REPORT_CREATED",
+        title: "Báo cáo mới cần xử lý",
+        message: `Bài viết đã được báo cáo với lý do: ${reason}`,
+        data: {
+          violationId: newViolation._id,
+          postId: targetId,
+          reporterId: userId,
+          reporterName: reporter.fullName || reporter.username,
+          reason: reason,
+        },
+        priority: "high",
+        url: `/admin/reports/${newViolation._id}`,
+      });
+
+      // 2. Gửi thông báo cho người đăng bài (nếu cần)
+      await NotificationService.createAndEmitNotification({
+        recipient: post.userCreateID._id,
+        sender: userId,
+        type: "USER_WARNED",
+        title: "Bài viết của bạn đã được báo cáo",
+        message: `Bài viết của bạn đã được báo cáo vì: ${reason}. Chúng tôi sẽ xem xét và thông báo kết quả.`,
+        data: {
+          violationId: newViolation._id,
+          postId: targetId,
+          reason: reason,
+        },
+        priority: "medium",
+        url: `/posts/${targetId}`,
+      });
 
       if (post && reporter) {
         // GỬI EMAIL THÔNG BÁO
