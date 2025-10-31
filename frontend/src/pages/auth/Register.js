@@ -47,6 +47,10 @@ const Register = () => {
     setLoading(false);
   };
 
+  // --- NEW: URL Backend cho Social Login ---
+  // !! QUAN TRỌNG: Đổi URL này nếu backend của bạn không chạy ở port 5000
+  const BACKEND_URL = "http://localhost:5000";
+
   // return (
   //   <div className="container-fluid vh-100 bg-light">
   //     <div className="row h-100 justify-content-center align-items-center">
@@ -372,9 +376,49 @@ const Register = () => {
                       )}
                     </button>
                   </div>
-                  <div className="sign-info">
+
+                  {/* --- NEW: Social Login Section --- */}
+                  <div className="mt-4 mb-3 text-center">
+                    <div
+                      className="d-flex align-items-center justify-content-center"
+                      style={{
+                        height: "1px",
+                        backgroundColor: "#e0e0e0",
+                        width: "100%",
+                      }}
+                    >
+                      <span
+                        className="bg-white px-3 text-muted"
+                        style={{ marginTop: "-2px" }}
+                      >
+                        Hoặc đăng ký bằng
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="d-flex flex-column gap-2">
+                    <a
+                      href={`${BACKEND_URL}/api/auth/google`}
+                      className="btn btn-danger d-flex align-items-center justify-content-center py-2"
+                      style={{ textDecoration: "none" }}
+                    >
+                      {/* <i className="ri-google-fill me-2"></i> */}
+                      Đăng ký với Google
+                    </a>
+                    <a
+                      href={`${BACKEND_URL}/api/auth/facebook`}
+                      className="btn btn-primary d-flex align-items-center justify-content-center py-2"
+                      style={{ textDecoration: "none" }}
+                    >
+                      {/* <i className="ri-facebook-box-fill me-2"></i> */}
+                      Đăng ký với Facebook
+                    </a>
+                  </div>
+                  {/* --- END: Social Login Section --- */}
+
+                  <div className="sign-info mt-4">
                     <span className="dark-color d-inline-block line-height-2">
-                      Đã có tài khoản ?
+                      Đã có tài khoản?{" "}
                       <Link to="/login" className="text-decoration-none">
                         Đăng nhập ngay
                       </Link>

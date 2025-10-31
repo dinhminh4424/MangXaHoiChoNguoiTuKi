@@ -140,6 +140,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // --- NEW FUNCTION ---
+  // Hàm xử lý đăng nhập từ Social (Google, Facebook)
+  const handleSocialLogin = async (newToken) => {
+    console.log("🔄 handleSocialLogin started...");
+    try {
+      // 1. Lưu token mới
+      localStorage.setItem("token", newToken);
+      setToken(newToken);
+      api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+
+      // 2. Lấy thông tin user ngay lập tức (giống checkAuth)
+      const response = await api.get("/api/users/me");
+
+      if (response.data && response.data.data && response.data.data.user) {
+        setUser(response.data.data.user);
+        console.log("✅ Social login successful, user set");
+        return { success: true };
+      } else {
+        throw new Error("Invalid user data structure");
+      }
+    } catch (error) {
+      console.error("❌ handleSocialLogin failed:", error);
+      // Nếu thất bại, đăng xuất
+      logout();
+      return { success: false };
+    }
+  };
+
   // Hàm đăng ký
   const register = async (userData) => {
     try {
@@ -228,6 +256,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
+    handleSocialLogin,
     logout,
     loadUserChats,
     resetPassword,

@@ -171,7 +171,7 @@ function Navbar() {
                   className="img-fluid"
                   alt="SocialV Logo"
                 />
-                <span>SocialV</span>
+                <span>Connect</span>
               </Link>
               <div className="iq-menu-bt align-self-center">
                 <div className="wrapper-menu">

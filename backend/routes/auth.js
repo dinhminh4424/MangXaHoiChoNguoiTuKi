@@ -317,6 +317,7 @@ const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 const mailService = require("../services/mailService");
 const router = express.Router();
+const { normalizeBaseUsername, generateUniqueUsernameFrom } = require("../utils/username");
 
 // Tạo token JWT với (userId) và thời gian hết hạn
 const generateToken = (userId) => {
@@ -360,6 +361,10 @@ router.post("/register", async (req, res) => {
   try {
     const { username, email, password, fullName, role } = req.body;
 
+    // Chuẩn hóa username đầu vào (loại bỏ dấu/khoảng trắng/ký tự đặc biệt)
+    const normalizedUsernameBase = normalizeBaseUsername(username || fullName || (email ? email.split("@")[0] : "user"));
+    const normalizedUsername = await generateUniqueUsernameFrom(normalizedUsernameBase);
+
     // Kiểm tra user đã tồn tại
     const existingUser = await User.findOne({
       $or: [{ email }, { username }],
@@ -374,7 +379,7 @@ router.post("/register", async (req, res) => {
 
     // Tạo user mới - LƯU LUÔN VÀO DATABASE
     const user = new User({
-      username,
+      username: normalizedUsername,
       email,
       password,
       fullName,

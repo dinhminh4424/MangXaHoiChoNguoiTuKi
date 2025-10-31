@@ -438,6 +438,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
+import AuthCallback from "./components/AuthCallback";
 
 // Style imports
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -583,6 +584,9 @@ function AppRoutes() {
   const { isAuthenticated } = useAuth();
   return (
     <Routes>
+      {/* --- NEW: Route xử lý callback từ Social Login --- */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
+
       {/* Render tất cả routes từ config */}
       {routeConfigs.map((route) => {
         const {
