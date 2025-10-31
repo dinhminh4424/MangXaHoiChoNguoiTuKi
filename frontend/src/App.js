@@ -444,6 +444,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 
 // Page imports
 import Login from "./pages/auth/Login";
+import FaceLogin from "./pages/auth/FaceLogin";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
@@ -479,6 +480,8 @@ import AdminLayout from "./components/layouts/AdminLayout";
 import Navbar from "./components/Navbar";
 import ErrorPage from "./components/error/pages-error";
 
+import Test from "./pages/test";
+
 /**
  * COMPONENT: ProtectedRoute
  */
@@ -511,8 +514,11 @@ function PublicRoute({ children }) {
 const routeConfigs = [
   // Public Routes
   { path: "/login", component: Login, isPublic: true },
+  { path: "/faceLogin", component: FaceLogin, isPublic: true },
   { path: "/register", component: Register, isPublic: true },
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
+
+  { path: "/test", component: Test, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },

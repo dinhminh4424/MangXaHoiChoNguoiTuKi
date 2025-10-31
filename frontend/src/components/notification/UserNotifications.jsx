@@ -424,7 +424,7 @@ const UserNotifications = () => {
     socketRef.current = socket;
 
     // Join user notification room
-    socket.emit("join_notifications", user._id);
+    socket.emit("join_notifications", user.id);
 
     // Lắng nghe thông báo mới
     socket.on("new_notification", (notification) => {

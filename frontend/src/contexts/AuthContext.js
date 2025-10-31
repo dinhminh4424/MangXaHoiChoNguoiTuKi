@@ -72,32 +72,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []); // ✅ GIỮ NGUYÊN empty dependencies
 
-  // Hàm đăng nhập
-  // const login = async (email, password) => {
-  //   try {
-  //     // Gọi API đăng nhập
-  //     const response = await api.post("/api/auth/login", {
-  //       email,
-  //       password,
-  //     });
-
-  //     // Lưu thông tin user và token
-  //     const { user, token } = response.data.data;
-  //     localStorage.setItem("token", token);
-  //     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-  //     setUser(user);
-  //     setToken(token);
-
-  //     return { success: true, data: token };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       message: error.response?.data?.message || "Đăng nhập thất bại",
-  //     };
-  //   }
-  // };
-
   // Hàm đăng nhập trong AuthContext
   const login = async (email, password) => {
     try {

@@ -3,6 +3,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useChat } from "../../contexts/ChatContext";
 import { Modal } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import TextReaderAdvanced from "../../components/TextReaderAdvanced";
+import SpeechToText from "../../components/SpeechToText";
 
 const Chat = () => {
   const { user, logout } = useAuth();
@@ -405,6 +407,12 @@ const Chat = () => {
 
   const toggleUserDetails = () => {
     setShowUserDetails(!showUserDetails);
+  };
+
+  const setVoiceNewMessage = (newData) => {
+    setNewMessage((prev) => {
+      return prev + " " + newData;
+    });
   };
 
   // Đóng menu khi click ra ngoài
@@ -1065,6 +1073,10 @@ const Chat = () => {
                                             <i className="ri-delete-bin-line"></i>{" "}
                                             Xoá
                                           </button>
+                                          <TextReaderAdvanced
+                                            text={message.content || "Khác"}
+                                            height={25}
+                                          />
 
                                           {/* Chỉ người gửi mới được thu hồi */}
                                           {message.sender?._id === user.id && (
@@ -1427,6 +1439,9 @@ const Chat = () => {
                                     setNewMessage(e.target.value)
                                   }
                                   disabled={isUploading}
+                                />
+                                <SpeechToText
+                                  onTextChange={setVoiceNewMessage}
                                 />
                                 <button
                                   type="submit"
