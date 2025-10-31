@@ -35,7 +35,36 @@ const userSchema = new mongoose.Schema(
       location: String,
       skills: [String],
       coverPhoto: { type: String, default: "" }, // Thêm field coverPhoto
+
+      // cccd
+      idCard: {
+        number: String,
+        fullName: String,
+        dob: String,
+        address: String,
+        issueDate: String,
+        expiryDate: String,
+        frontImage: String, // URL ảnh mặt trước
+        selfieImage: String, // ảnh selfie dùng để đăng nhập
+        verified: { type: Boolean, default: false },
+        verifiedAt: Date,
+      },
+
+      // LƯU DESCRIPTOR KHUÔN MẶT (128 số)
+      faceDescriptor: {
+        type: [Number],
+        default: null,
+        validate: {
+          validator: function (v) {
+            // Cho phép null hoặc undefined
+            if (!Array.isArray(v)) return !v;
+            return v.length === 128;
+          },
+          message: "Face descriptor phải có đúng 128 giá trị",
+        },
+      },
     },
+
     googleId: {
       type: String,
       unique: true,

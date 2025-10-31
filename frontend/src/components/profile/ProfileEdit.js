@@ -615,6 +615,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import "./profileEdit.css";
 import notificationService from "../../services/notificationService";
 
+
 const ProfileEdit = () => {
   const {
     viewedUser,
@@ -643,6 +644,17 @@ const ProfileEdit = () => {
   const dropAreaRef = useRef(null);
 
   const defaultAvatar = "/images/default-avatar.png";
+
+  // Trong ProfileEdit component
+  const [idVerifiedData, setIdVerifiedData] = useState(null);
+
+  const handleIdVerified = (data) => {
+    setIdVerifiedData(data);
+    setFormData((prev) => ({
+      ...prev,
+      fullName: data.fullName || prev.fullName,
+    }));
+  };
 
   useEffect(() => {
     if (viewedUser) {
@@ -1097,6 +1109,7 @@ const ProfileEdit = () => {
                               </div>
                             </div>
                           </div>
+                        
                         </div>
                       </div>
                     )}

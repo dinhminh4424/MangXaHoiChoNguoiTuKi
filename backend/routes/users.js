@@ -584,4 +584,32 @@ router.put(
 );
 router.put("/online-status", userController.updateOnlineStatus);
 
+// POST /api/users/me/verify-id
+router.post(
+  "/verify-id",
+  auth,
+  upload.fields([
+    { name: "idFront", maxCount: 1 },
+    { name: "idBack", maxCount: 1 },
+  ]),
+  async (req, res) => {
+    const { fullName, number, dob, address } = req.body;
+    const user = req.user;
+
+    user.profile.idCard = {
+      fullName,
+      number,
+      dob,
+      address,
+      frontImage: req.files.idFront?.[0]?.path,
+      backImage: req.files.idBack?.[0]?.path,
+      verified: true,
+      verifiedAt: new Date(),
+    };
+
+    await user.save();
+    res.json({ success: true, user });
+  }
+);
+
 module.exports = router;

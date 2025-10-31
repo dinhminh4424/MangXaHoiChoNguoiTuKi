@@ -311,6 +311,14 @@ const Login = () => {
                     </li>
                   </ul>
                 </div>
+                <div className="sign-info">
+                  <span className="dark-color d-inline-block line-height-2">
+                    Bạn chưa muốn đăng nhập bằng khuôn mặt
+                    <Link to="/faceLogin" className="text-decoration-none">
+                      Đăng nhập
+                    </Link>
+                  </span>
+                </div>
               </form>
             </div>
           </div>
