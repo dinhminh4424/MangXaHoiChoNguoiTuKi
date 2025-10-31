@@ -82,7 +82,11 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
   return (
     <>
       {/* Sidebar Navigation bên trái */}
-      <div className={`iq-sidebar sidebar-default ${isCollapsed ? "sidebar-mini" : ""}`}>
+      <div
+        className={`iq-sidebar sidebar-default ${
+          isCollapsed ? "sidebar-mini" : ""
+        }`}
+      >
         <div id="sidebar-scrollbar">
           <nav className="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" className="iq-menu">
@@ -174,16 +178,11 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                 <span>Connect</span>
               </Link>
               <div className="iq-menu-bt align-self-center">
-                <button
-                  type="button"
-                  className="wrapper-menu btn p-0 border-0 bg-transparent"
-                  onClick={onToggleSidebar}
-                  aria-label="Toggle sidebar"
-                >
+                <div className="wrapper-menu" onClick={onToggleSidebar}>
                   <div className="main-circle">
                     <i className="ri-menu-line"></i>
                   </div>
-                </button>
+                </div>
               </div>
             </div>
 
