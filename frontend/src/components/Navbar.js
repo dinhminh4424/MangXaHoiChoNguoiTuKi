@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
-function Navbar() {
+function Navbar({ isCollapsed = false, onToggleSidebar }) {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -82,7 +82,7 @@ function Navbar() {
   return (
     <>
       {/* Sidebar Navigation bên trái */}
-      <div className="iq-sidebar sidebar-default">
+      <div className={`iq-sidebar sidebar-default ${isCollapsed ? "sidebar-mini" : ""}`}>
         <div id="sidebar-scrollbar">
           <nav className="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" className="iq-menu">
@@ -174,11 +174,16 @@ function Navbar() {
                 <span>Connect</span>
               </Link>
               <div className="iq-menu-bt align-self-center">
-                <div className="wrapper-menu">
+                <button
+                  type="button"
+                  className="wrapper-menu btn p-0 border-0 bg-transparent"
+                  onClick={onToggleSidebar}
+                  aria-label="Toggle sidebar"
+                >
                   <div className="main-circle">
                     <i className="ri-menu-line"></i>
                   </div>
-                </div>
+                </button>
               </div>
             </div>
 
