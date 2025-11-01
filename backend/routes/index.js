@@ -40,4 +40,31 @@ router.get("/health", (req, res) => {
   });
 });
 
+// Debug: list all mounted routes (method + path)
+router.get('/routes', (req, res) => {
+  try {
+    const routes = [];
+    const stack = router.stack || [];
+
+    stack.forEach((layer) => {
+      if (layer.route && layer.route.path) {
+        const methods = Object.keys(layer.route.methods).map((m) => m.toUpperCase());
+        routes.push({ path: layer.route.path, methods });
+      } else if (layer.name === 'router' && layer.handle && layer.handle.stack) {
+        // nested router
+        layer.handle.stack.forEach((l) => {
+          if (l.route && l.route.path) {
+            const methods = Object.keys(l.route.methods).map((m) => m.toUpperCase());
+            routes.push({ path: layer.regexp && layer.regexp.source ? layer.regexp.source : layer.regexp, methods, nestedPath: l.route.path });
+          }
+        });
+      }
+    });
+
+    res.json({ success: true, routes });
+  } catch (err) {
+    res.status(500).json({ success: false, message: 'Could not list routes', error: err.message });
+  }
+});
+
 module.exports = router;

@@ -184,14 +184,30 @@ function Navbar() {
 
             {/* Search Bar */}
             <div className="iq-search-bar device-search">
-              <form action="#" className="searchbox">
-                <a className="search-link" href="#">
+              <form 
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  const searchInput = e.target.querySelector('.search-input');
+                  if (searchInput.value.trim()) {
+                    navigate(`/search?q=${encodeURIComponent(searchInput.value.trim())}`);
+                  }
+                }} 
+                className="searchbox"
+              >
+                <button type="submit" className="search-link">
                   <i className="ri-search-line"></i>
-                </a>
+                </button>
                 <input
                   type="text"
                   className="text search-input"
-                  placeholder="Search here..."
+                  placeholder="Tìm kiếm người dùng... (Thêm @ để tìm username)"
+                  onKeyPress={(e) => {
+                    if (e.key === 'Enter') {
+                      if (e.target.value.trim()) {
+                        navigate(`/search?q=${encodeURIComponent(e.target.value.trim())}`);
+                      }
+                    }
+                  }}
                 />
               </form>
             </div>

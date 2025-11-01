@@ -558,6 +558,9 @@ const userController = require("../controllers/userController");
 
 const router = express.Router();
 
+// Public routes (no auth) - useful for client-side debugging or public search
+router.get('/public', userController.getUsersPublic);
+
 // Tất cả routes đều cần auth
 router.use(auth);
 

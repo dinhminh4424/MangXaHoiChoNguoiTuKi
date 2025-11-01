@@ -452,6 +452,7 @@ import Chat from "./pages/chat/Chat";
 import Feed from "./pages/social/Feed";
 import Profile from "./pages/social/Profile";
 import Statistical from "./pages/social/statistical";
+import SearchPage from "./pages/search/SearchPage";
 import Journal from "./pages/journal/Journal";
 import JournalDetail from "./pages/journal/JournalDetail";
 import JournalHistory from "./pages/journal/JournalHistory";
@@ -519,7 +520,7 @@ const routeConfigs = [
   { path: "/chat/:chatUserId", component: Chat, layout: UserLayout },
 
   // Protected User Routes - Social
-
+  { path: "/search", component: SearchPage, layout: UserLayout },
   { path: "/profile", component: Profile, layout: UserLayout },
   { path: "/profile/:userId", component: Profile, layout: UserLayout },
   { path: "/profile/dashboard", component: Statistical, layout: UserLayout },
