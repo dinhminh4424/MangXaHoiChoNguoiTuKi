@@ -9,6 +9,10 @@ const EmergencyRequestSchema = new mongoose.Schema({
   type: { type: String, default: "panic" },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },
+  address: {
+    type: String, // ✅ địa chỉ cụ thể 
+    required: false,
+  },
   message: { type: String },
   isSilent: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now },
