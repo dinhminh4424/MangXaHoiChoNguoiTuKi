@@ -1,7 +1,11 @@
 const mongoose = require("mongoose");
 
 const EmergencyRequestSchema = new mongoose.Schema({
-  userId: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
+  userId: {
+  type: String, // 👈 cho phép string
+  required: false,
+},
+
   type: { type: String, default: "panic" },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },

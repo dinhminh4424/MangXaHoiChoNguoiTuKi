@@ -6,6 +6,7 @@ dotenvExpand.expand(myEnv);
 
 // Khai Báo các thư viện cần thiết
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const http = require("http");
 const path = require("path");
@@ -18,6 +19,9 @@ const connectDB = require("./config/database");
 const { configureSocket } = require("./config/socket"); // ← SỬA Ở ĐÂY
 const corsOptions = require("./config/cors");
 require("./config/passport");
+const emergencyRoutes = require("./routes/emergency");
+const guidelineRoutes = require("./routes/guideline");
+
 
 const app = express();
 const server = http.createServer(app);
@@ -31,6 +35,7 @@ app.use(passport.initialize());
 
 // Static files (cho file uploads) - BAO GỒM CẢ THƯ MỤC CON
 app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/emergency/guideline", guidelineRoutes);
 
 // --------------------------------------- [end Middleware]--------------------------------------------
 
@@ -120,6 +125,8 @@ app.get(
 
 const routes = require("./routes");
 app.use("/api", routes);
+app.use("/api/emergency", emergencyRoutes);
+
 
 // Route mặc định
 app.get("/", (req, res) => {
