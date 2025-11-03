@@ -3,6 +3,7 @@ import Guideline from "./Guideline"; // Nếu chưa có, em có thể bỏ dòng
 
 function SOSButton({ userId }) {
   const [showGuideline, setShowGuideline] = useState(false);
+  const [address, setAddress] = useState(""); // ✅ Thêm state để lưu địa chỉ cụ thể
 
   const sendSOS = () => {
     if (navigator.geolocation) {
@@ -17,13 +18,21 @@ function SOSButton({ userId }) {
         };
 
         try {
-          await fetch("http://localhost:5000/api/emergency/sos", {
+          const response = await fetch("http://localhost:5000/api/emergency/sos", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data),
           });
-          alert("🚨 Đã gửi tín hiệu SOS thành công!");
-          setShowGuideline(true);
+
+          const result = await response.json();
+
+          if (result.success) {
+            // ✅ Lưu địa chỉ cụ thể từ backend
+            setAddress(result.address || "Không xác định vị trí cụ thể");
+            setShowGuideline(true);
+          } else {
+            alert("❌ Gửi SOS thất bại: " + (result.message || ""));
+          }
         } catch (error) {
           console.error(error);
           alert("Không thể gửi tín hiệu SOS");
@@ -36,7 +45,7 @@ function SOSButton({ userId }) {
 
   return (
     <>
-      {/* Nút SOS cố định */}
+      {/* 🚨 Nút SOS cố định */}
       <button
         onClick={sendSOS}
         style={{
@@ -54,13 +63,16 @@ function SOSButton({ userId }) {
           boxShadow: "0px 4px 12px rgba(0,0,0,0.3)",
           cursor: "pointer",
           zIndex: 9999,
+          transition: "transform 0.2s ease-in-out",
         }}
+        onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
+        onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
         title="Gửi tín hiệu khẩn cấp"
       >
         🚨
       </button>
 
-      {/* Popup hướng dẫn (tuỳ chọn) */}
+      {/* 🩺 Popup hướng dẫn sơ cứu + địa chỉ */}
       {showGuideline && (
         <div
           style={{
@@ -71,17 +83,30 @@ function SOSButton({ userId }) {
             border: "2px solid #1976d2",
             borderRadius: "10px",
             padding: "15px",
-            width: "280px",
+            width: "300px",
             boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
             zIndex: 9999,
           }}
         >
           <h5>🩺 Hướng dẫn sơ cứu</h5>
+
+          {/* 📍 Hiển thị địa chỉ cụ thể */}
+          <p style={{ fontSize: "14px", marginBottom: "10px", color: "#444" }}>
+            <strong>📍 Vị trí hiện tại:</strong><br />
+            {address}
+          </p>
+
           <ul>
             <li>Ngồi xuống, hít thở sâu.</li>
             <li>Giữ bình tĩnh, đếm từ 1 đến 10.</li>
-            <li>Liên hệ người hỗ trợ qua ứng dụng.</li>
+            <li>Liên hệ người hỗ trợ qua các số điện thoại:</li>
+            <ul>
+              <li>Tổng đài Quốc gia Bảo vệ Trẻ em: 111</li>
+              <li>Đường dây nóng "Ngày mai": 1900 561 295</li>
+              <li>Viện Sức khỏe Tâm thần: 0984 104 115</li>
+            </ul>
           </ul>
+
           <button
             onClick={() => setShowGuideline(false)}
             style={{
