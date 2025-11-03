@@ -1,6 +1,6 @@
 import { useEffect } from "react";
-import TextReaderAdvanced from "../components/TextReaderAdvanced";
-import SpeechToText from "../components/SpeechToText";
+import TextReaderAdvanced from "../components/voice/TextReaderAdvanced";
+import SpeechToText from "../components/voice/SpeechToText";
 import { useState } from "react";
 import { useCallback } from "react";
 import api from "../services/api";

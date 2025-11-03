@@ -27,6 +27,8 @@ const notificationSchema = new mongoose.Schema(
         "REPORT_RESOLVED", // Báo cáo đã xử lý
         "REPORT_REJECTED", // Báo cáo bị từ chối
         "POST_BLOCKED", // Bài viết bị chặn
+        "POST_COMMENT_BLOCKED", // Bài viết bị khoá bình luận
+        "COMMENT_BLOCKED", //  Khoá bình luận
         "USER_BANNED", // User bị ban
         "USER_WARNED", // User bị cảnh báo
 

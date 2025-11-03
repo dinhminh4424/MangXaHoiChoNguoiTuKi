@@ -184,27 +184,51 @@ export const postService = {
 
   reportPost: async (reportData) => {
     try {
-
-
       const formData = new FormData();
       //
       // // thêm các giá trị từ form
-      Object.keys(reportData).forEach((key) => {
-        if (key === "files") {
-          if (reportData.files && reportData.files.length > 0) {
-            reportData.files.forEach((file) => {
+      Object.entries(reportData).forEach(([key, value]) => {
+        if (value === undefined || value === null) return;
+
+        // Nếu là file list
+        if (key === "files" && Array.isArray(value)) {
+          value.forEach((file) => {
+            // nếu file có dạng { fileObject: File, fileName, ... }
+            if (file instanceof File) {
               formData.append("files", file);
-            });
-          }
-        } else if (reportData[key] !== undefined && reportData[key] !== null) {
-          if (Array.isArray(reportData[key])) {
-            reportData[key].forEach((item) => formData.append(key, item));
-          } else {
-            formData.append(key, reportData[key]);
-          }
+            } else if (file.fileObject instanceof File) {
+              formData.append("files", file.fileObject);
+            }
+          });
+        }
+
+        // Nếu là mảng (tags, emotions,...)
+        else if (Array.isArray(value)) {
+          value.forEach((item) => {
+            // Nếu item là object => stringify
+            if (typeof item === "object" && !(item instanceof File)) {
+              formData.append(key, JSON.stringify(item));
+            } else {
+              formData.append(key, item);
+            }
+          });
+        }
+
+        // Nếu là object bình thường (vd: { lat: 10, lng: 20 })
+        else if (typeof value === "object" && !(value instanceof File)) {
+          formData.append(key, JSON.stringify(value));
+        }
+
+        // Nếu là kiểu primitive
+        else {
+          formData.append(key, value);
         }
       });
-      const response = await api.post(`/api/posts/${reportData.id}/report`, formData);
+
+      const response = await api.post(
+        `/api/posts/${reportData.id}/report`,
+        formData
+      );
       return response.data;
     } catch (error) {
       throw error.response?.data || error;

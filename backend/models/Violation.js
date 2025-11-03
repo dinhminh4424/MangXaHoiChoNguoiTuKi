@@ -35,13 +35,22 @@ const violationSchema = new mongoose.Schema(
     // trạng thái
     status: {
       type: String,
-      enum: ["pending", "reviewed", "approved", "rejected"], // ["đang chờ xử lý", "đã xem xét", "đã phê duyệt", "bị từ chối"],
+      enum: ["pending", "reviewed", "approved", "rejected", "auto"], // ["đang chờ xử lý", "đã xem xét", "đã phê duyệt", "bị từ chối"],
       default: "pending",
     },
     // hành động đã thực hiện
     actionTaken: {
       type: String,
-      enum: ["none", "warning", "block_post", "ban_user"], // ["không có", "cảnh báo", "chặn bài đăng", "cấm người dùng"],
+      enum: [
+        "none",
+        "warning",
+        "block_post",
+        "block_comment",
+        "ban_user",
+        "auto_blocked",
+        "auto_warned",
+        "auto_baned",
+      ], // ["không có", "cảnh báo", "chặn bài đăng","chặn bình luận", "cấm người dùng", "cấm tự động",],
       default: "none",
     },
     // ghi chú

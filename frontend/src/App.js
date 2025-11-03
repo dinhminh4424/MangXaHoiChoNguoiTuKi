@@ -473,6 +473,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import ReportContent from "./pages/admin/reports/ReportContent";
+import ReportComment from "./pages/admin/reports/ReportComment";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 import UserLayout from "./components/layouts/UserLayout";
@@ -577,6 +578,24 @@ const routeConfigs = [
   {
     path: "/admin/content/reports",
     component: ReportContent,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reports/:id",
+    component: ReportContent,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reportsComment",
+    component: ReportComment, // ReportComment
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reportsComment/:id",
+    component: ReportComment, // ReportComment
     layout: AdminLayout,
     isAdmin: true,
   },

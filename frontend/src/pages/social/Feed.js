@@ -173,6 +173,7 @@ const Feed = () => {
 
   const handleReportPost = async (reportData) => {
     try {
+      console.log("reportData ở cuối:", reportData);
       const finalReportData = {
         targetType: reportData.targetType,
         targetId: reportData.targetId,
@@ -180,7 +181,7 @@ const Feed = () => {
         notes: reportData.notes,
         files: reportData.files, // Các file object gốc
       };
-      console.log("reportData :", finalReportData);
+
       const res = await reportPost(finalReportData);
       if (res.success) {
         notificationService.success({

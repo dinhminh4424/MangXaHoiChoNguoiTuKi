@@ -366,7 +366,13 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
   }
 
   return (
-    <div className="post-card">
+    <div
+      className="post-card"
+      style={{
+        opacity: post.isBlocked ? 0.5 : 1, // Mờ đi nếu bị block
+        // pointerEvents: post.isBlocked ? "none" : "auto", // Không cho click khi bị block
+      }}
+    >
       {/* Header */}
       <PostHeader
         post={post}
@@ -378,9 +384,9 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
       />
 
       {/* Content */}
-      <div className="post-content">
+      <div className="post-content mt-3">
         {/* Privacy Badge */}
-        <div className="post-privacy">
+        {/* <div className="post-privacy">
           <span className={`privacy-badge ${post.privacy}`}>
             {post.privacy === "public"
               ? "🌍 Công khai"
@@ -391,7 +397,7 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
           {post.isAnonymous && (
             <span className="anonymous-badge">🕶️ Ẩn danh</span>
           )}
-        </div>
+        </div> */}
 
         {/* Text Content với tính năng Xem thêm */}
         {renderContent()}
@@ -469,6 +475,7 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
         showComments={showComments}
         likeCount={post.likeCount || post.likes?.length || 0}
         commentCount={post.commentCount || 0}
+        blockComment={post.isBlockedComment || false}
       />
 
       {/* Comments Section */}

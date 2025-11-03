@@ -885,6 +885,7 @@ const CreatePost = ({ idOfGroup = null }) => {
                           type="button"
                           className="btn btn-outline-secondary btn-action"
                           disabled={loading}
+                          onClick={handleFileClick}
                         >
                           <Paperclip size={18} className="me-2" /> File
                         </button>
@@ -975,17 +976,18 @@ const CreatePost = ({ idOfGroup = null }) => {
                         <Image size={18} className="me-2" /> Ảnh/Video
                       </button>
 
-                      <button
+                      {/* <button
                         type="button"
                         className="btn btn-outline-secondary btn-action"
                         disabled={loading}
                       >
                         <Smile size={18} className="me-2" /> Cảm xúc
-                      </button>
+                      </button> */}
 
                       <button
                         type="button"
                         className="btn btn-outline-secondary btn-action"
+                        onClick={handleFileClick}
                         disabled={loading}
                       >
                         <Paperclip size={18} className="me-2" /> File

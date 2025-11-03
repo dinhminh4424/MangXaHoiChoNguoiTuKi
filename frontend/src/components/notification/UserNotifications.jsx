@@ -416,11 +416,21 @@ const UserNotifications = () => {
 
   useEffect(() => {
     if (!user) return;
-
+    console.log(
+      "process.env.REACT_APP_BACKEND_URL(.env backend): ",
+      process.env.REACT_APP_BACKEND_URL
+    );
+    console.log(
+      "process.env.REACT_APP_API_URL(.env front): ",
+      process.env.REACT_APP_API_URL
+    );
     // Kết nối socket
-    const socket = io(process.env.REACT_APP_BACKEND_URL, {
-      withCredentials: true,
-    });
+    const socket = io(
+      process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL,
+      {
+        withCredentials: true,
+      }
+    );
     socketRef.current = socket;
 
     // Join user notification room

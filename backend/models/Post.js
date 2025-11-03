@@ -50,6 +50,10 @@ const postSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    warningCount: {
+      type: Number,
+      default: 0,
+    },
     editedAt: Date,
     content: {
       // nội dung bài viết
@@ -86,8 +90,19 @@ const postSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    isBlockedComment: {
+      // bài viết bị ẩn do vi phạm
+      type: Boolean,
+      default: false,
+    },
     emotions: [String], // Mảng cảm xúc, e.g., ['happy', 'anxious']
     tags: [String], // Mảng tags, e.g., ['#camxuc', '#tientrinh']
+
+    isDeletedByUser: {
+      // Bài viết bị xóa bởi người dùng
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );
@@ -98,6 +113,7 @@ postSchema.index({ userCreateID: 1, createdAt: -1, status: 1 }); // Cho truy v�
 postSchema.index({ emotions: 1 }); // Tối ưu truy vấn theo cảm xúc
 postSchema.index({ tags: 1 }); // Tối ưu truy vấn theo tags
 
+// Cập nhật lại likeCount khi có thay đổi trong mảng likes (MIDDLEWARE) => chạy trước khi lưu
 postSchema.pre("save", function (next) {
   if (this.isModified("likes")) {
     this.likeCount = this.likes.length;

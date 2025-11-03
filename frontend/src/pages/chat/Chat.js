@@ -3,8 +3,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useChat } from "../../contexts/ChatContext";
 import { Modal } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import TextReaderAdvanced from "../../components/TextReaderAdvanced";
-import SpeechToText from "../../components/SpeechToText";
+import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
+import SpeechToText from "../../components/voice/SpeechToText";
 
 const Chat = () => {
   const { user, logout } = useAuth();
@@ -467,13 +467,13 @@ const Chat = () => {
                               <img
                                 src={user.profile.avatar}
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle w-100"
+                                className="avatar-60 rounded-circle"
                               />
                             ) : (
                               <img
                                 src="/assets/images/default-avatar.png"
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle w-100"
+                                className="avatar-60 rounded-circle"
                               />
                             )}
                           </div>
@@ -669,7 +669,7 @@ const Chat = () => {
                                           "/assets/images/default-avatar.png"
                                         }
                                         alt="chatuserimage"
-                                        className="avatar-50 rounded-circle w-100"
+                                        className="avatar-50 rounded-circle "
                                       />
                                       <span className="avatar-status">
                                         <i className="ri-checkbox-blank-circle-fill text-success"></i>

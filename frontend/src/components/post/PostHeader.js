@@ -13,7 +13,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import "dayjs/locale/vi";
 import "./PostHeader.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 import TiptapEditor from "../journal/TiptapEditor";
 
@@ -31,6 +31,7 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
     files: [], // Chứa các file object chưa upload
   });
   const [uploading, setUploading] = useState(false);
+  const navigate = useNavigate();
 
   const toggleRef = useRef(null);
   const menuRef = useRef(null);
@@ -106,6 +107,9 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
           onDelete();
         }
         break;
+      case "detail":
+        navigate("/posts/" + post._id);
+        break;
       case "report":
         setShowReport(true);
         break;
@@ -130,16 +134,17 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
         targetId: reportData.targetId,
         reason: reportData.reason,
         notes: reportData.notes,
-        files: reportData.files.map((file) => ({
-          fileObject: file.fileObject, // File gốc
-          fileName: file.fileName,
-          fileSize: file.fileSize,
-          mimeType: file.mimeType,
-          type: file.type,
-        })),
+        files: reportData.files,
+        // files: reportData.files.map((file) => ({
+        //   fileObject: file.fileObject, // File gốc
+        //   fileName: file.fileName,
+        //   fileSize: file.fileSize,
+        //   mimeType: file.mimeType,
+        //   type: file.type,
+        // })),
       };
 
-      console.log("Report data to submit:", submitData);
+      console.log("Report data Khi nhấn submit:", submitData);
 
       // Gọi hàm onReport từ props để xử lý ở component cha
       if (onReport) {
@@ -197,7 +202,8 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
           <Link to={`/profile/${post.userCreateID._id}`}>
             <img
               src={
-                post.userCreateID.avatar || "/assets/images/default-avatar.png"
+                post.userCreateID.profile?.avatar ||
+                "/assets/images/default-avatar.png"
               }
               alt="Avatar"
               className="user-avatar rounded-circle"
@@ -206,7 +212,9 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
 
           <div className="user-details ms-2 ">
             <div className="user-name text-start">
-              {post.isAnonymous ? "🕶️ Ẩn danh" : post.userCreateID.fullName}
+              <h5>
+                {post.isAnonymous ? "🕶️ Ẩn danh" : post.userCreateID.fullName}
+              </h5>
             </div>
             <div className="post-meta small text-muted">
               <span className="post-time">
@@ -216,6 +224,15 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                 <span className="edited-badge"> • Đã chỉnh sửa</span>
               )}
             </div>
+            {post.isBlocked && (
+              <div className="user-details">
+                <div className="user-name text-start">
+                  <span class="badge text-bg-danger">
+                    Bài viết đã bị khoá do vi phạm
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 
@@ -264,9 +281,9 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                   </button>
                   <button
                     className="dropdown-item d-flex align-items-center"
-                    onClick={() => handleMenuAction("hide")}
+                    onClick={() => handleMenuAction("detail")}
                   >
-                    <Eye size={16} /> <span className="ms-2">Ẩn bài viết</span>
+                    <Eye size={16} /> <span className="ms-2">Xem chi tiết</span>
                   </button>
                 </>
               )}

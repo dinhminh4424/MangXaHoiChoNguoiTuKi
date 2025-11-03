@@ -30,6 +30,9 @@ router.post("/:id/like", commentController.likeComment);
 // Unlike bình luận
 router.post("/:id/unlike", commentController.unlikeComment);
 
+// Báo cáo comment
+router.post("/:commentId/reportComment", commentController.reportComment);
+
 // Lấy danh sách người đã like comment
 router.get("/:id/likes", commentController.getCommentLikes);
 

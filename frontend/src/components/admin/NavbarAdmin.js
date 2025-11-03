@@ -58,14 +58,14 @@ function NavbarAdmin() {
           label: "Bài Viết",
         },
         {
-          path: "/admin/content/comments",
+          path: "/admin/content/reportsComment",
           icon: "ri-chat-3-line",
-          label: "Bình Luận",
+          label: "Báo Cáo Bình Luận",
         },
         {
           path: "/admin/content/reports",
           icon: "ri-flag-line",
-          label: "Báo Cáo",
+          label: "Báo Cáo Bài Viết",
         },
       ],
     },
