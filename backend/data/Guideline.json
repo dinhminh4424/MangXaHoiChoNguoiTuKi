@@ -1,0 +1,29 @@
+[
+  {
+    "type": "panic",
+    "title": "Khi hoảng loạn",
+    "steps": [
+      "Ngồi xuống, hít thở sâu.",
+      "Nhắm mắt, đếm từ 1 đến 10.",
+      "Liên hệ người hỗ trợ qua ứng dụng."
+    ]
+  },
+  {
+    "type": "fall",
+    "title": "Khi bị té ngã",
+    "steps": [
+      "Kiểm tra vết thương.",
+      "Nếu chảy máu, ép nhẹ bằng khăn sạch.",
+      "Gọi cấp cứu hoặc người thân."
+    ]
+  },
+  {
+    "type": "burn",
+    "title": "Khi bị bỏng",
+    "steps": [
+      "Làm mát vùng bỏng bằng nước sạch trong 10 phút.",
+      "Không bôi kem hay chườm đá trực tiếp.",
+      "Nếu bỏng nặng, gọi cấp cứu ngay."
+    ]
+  }
+]

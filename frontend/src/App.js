@@ -439,6 +439,7 @@ import { ProfileProvider } from "./contexts/ProfileContext";
 import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
 import AuthCallback from "./components/AuthCallback";
+import SOSButton from "./components/SOSButton";
 
 // Style imports
 import "bootstrap/dist/css/bootstrap.min.css";
@@ -663,6 +664,8 @@ function AppContent() {
   return (
     <div className="App">
       <AppRoutes />
+      {/* ✅ Nút SOS hiển thị trên mọi trang */}
+      <SOSButton userId="currentUserId" />
     </div>
   );
 }

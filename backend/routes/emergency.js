@@ -15,6 +15,7 @@ const transporter = nodemailer.createTransport({
 
 // Gửi SOS
 router.post("/sos", async (req, res) => {
+  console.log("📩 Nhận tín hiệu SOS:", req.body);
   try {
     const { userId, latitude, longitude, message, type, isSilent } = req.body;
 
