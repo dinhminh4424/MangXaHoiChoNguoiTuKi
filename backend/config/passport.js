@@ -7,12 +7,13 @@ const { generateUniqueUsernameFrom } = require("../utils/username");
 
 // Chiến lược Google (chỉ đăng ký khi có đủ ENV để tránh crash trong dev)
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  const backendBaseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
   passport.use(
     new GoogleStrategy(
       {
         clientID: process.env.GOOGLE_CLIENT_ID,
         clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: "/api/auth/google/callback", // Phải khớp với Google Console
+        callbackURL: `${backendBaseUrl}/api/auth/google/callback`, // Phải khớp với Google Console
       },
       async (accessToken, refreshToken, profile, done) => {
       try {
@@ -78,12 +79,13 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
 }
 
 if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  const backendBaseUrl = process.env.BACKEND_URL || `http://localhost:${process.env.PORT || 5000}`;
   passport.use(
     new FacebookStrategy(
       {
         clientID: process.env.FACEBOOK_APP_ID,
         clientSecret: process.env.FACEBOOK_APP_SECRET,
-        callbackURL: "/api/auth/facebook/callback", // Phải khớp với Facebook App Dashboard
+        callbackURL: `${backendBaseUrl}/api/auth/facebook/callback`, // Phải khớp với Facebook App Dashboard
         profileFields: ["id", "displayName", "emails", "photos"], // Yêu cầu các trường cụ thể
       },
       async (accessToken, refreshToken, profile, done) => {
