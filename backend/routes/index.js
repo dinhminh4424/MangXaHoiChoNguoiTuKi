@@ -15,6 +15,7 @@ const groupRoutes = require("./groups");
 const moodRoutes = require("./mood");
 const adminRoutes = require("./admin");
 const notificationsRoutes = require("./notifications");
+const friendsRoutes = require("./friends");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -30,6 +31,7 @@ router.use("/comments", commentsRoutes);
 router.use("/groups", groupRoutes);
 router.use("/mood", moodRoutes);
 router.use("/admin", adminRoutes);
+router.use("/friends", friendsRoutes);
 
 // Health check endpoint
 router.get("/health", (req, res) => {

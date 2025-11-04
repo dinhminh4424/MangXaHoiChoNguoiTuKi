@@ -26,7 +26,7 @@ const auth = async (req, res, next) => {
     }
 
     req.user = {
-      userId: user._id,
+      userId: user._id.toString(), // Đảm bảo userId là string để so sánh đúng
       username: user.username,
       role: user.role,
     };

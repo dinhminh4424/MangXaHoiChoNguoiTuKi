@@ -1,135 +1,668 @@
-const Friend = require('../models/Friend');
-const FriendRequest = require('../models/FriendRequest');
-const User = require('../models/User');
+const FriendRequest = require("../models/FriendRequest");
+const Friend = require("../models/Friend");
+const User = require("../models/User");
+const NotificationService = require("../services/notificationService");
 
-// Send a friend request
-exports.sendFriendRequest = async (req, res) => {
+class FriendController {
+  // [POST] /api/friends/request - Gửi yêu cầu kết bạn
+  async sendFriendRequest(req, res) {
     try {
-        const { receiverId } = req.body;
-        const senderId = req.user.id;
-        if (senderId === receiverId) {
-            return res.status(400).json({ message: "You cannot send a friend request to yourself." });
-        }
+      const requesterId = req.user.userId;
+      const { recipientId } = req.body;
 
-        const existingRequest = await FriendRequest.findOne({
-            sender: senderId,
-            receiver: receiverId,
-            status: 'pending',
+      if (!recipientId) {
+        return res.status(400).json({
+          success: false,
+          message: "Vui lòng cung cấp ID người nhận",
         });
-        if (existingRequest) {
-            return res.status(400).json({ message: "Friend request already sent." });
-        }
-        const newRequest = new FriendRequest({
-            sender: senderId,
-            receiver: receiverId,
+      }
+
+      if (requesterId === recipientId) {
+        return res.status(400).json({
+          success: false,
+          message: "Bạn không thể gửi yêu cầu kết bạn cho chính mình",
         });
-        await newRequest.save();
-        res.status(201).json({ message: "Friend request sent.", request: newRequest });
-    } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
+      }
 
-// Accept a friend request
-exports.acceptFriendRequest = async (req, res) => {
-    try {
-        const { requestId } = req.params;
-        const userId = req.user.id;
-        const request = await FriendRequest.findById(requestId);
-        if (!request || request.receiver.toString() !== userId || request.status !== 'pending') {
-            return res.status(404).json({ message: "Friend request not found." });
-        }
-        request.status = 'accepted';
-        await request.save();
-        const friendship = new Friend({
-            userA: request.sender,
-            userB: request.receiver,
+      // Kiểm tra user có tồn tại không
+      const recipient = await User.findById(recipientId);
+      if (!recipient) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy người dùng",
         });
-        await friendship.save();
-        res.status(200).json({ message: "Friend request accepted.", request });
-    } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
+      }
 
-// Reject a friend request
-exports.rejectFriendRequest = async (req, res) => {
-    try {
-        const { requestId } = req.params;
-        const userId = req.user.id;
-        const request = await FriendRequest.findById(requestId);
-        if (!request || request.receiver.toString() !== userId || request.status !== 'pending') {
-            return res.status(404).json({ message: "Friend request not found." });
-        }
-        request.status = 'rejected';
-        await request.save();
-        res.status(200).json({ message: "Friend request rejected.", request });
-    } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
+      // Kiểm tra đã là bạn bè chưa
+      const existingFriend = await Friend.findOne({
+        $or: [
+          { userA: requesterId, userB: recipientId },
+          { userA: recipientId, userB: requesterId },
+        ],
+      });
 
-// Cancel a sent friend request
-exports.cancelFriendRequest = async (req, res) => {
-    try {
-        const { requestId } = req.params;
-        const userId = req.user.id;
-        const request = await FriendRequest.findById(requestId);
-        if (!request || request.sender.toString() !== userId || request.status !== 'pending') {
-            return res.status(404).json({ message: "Friend request not found." });
-        }
-        request.status = 'cancelled';
-        await request.save();
-        res.status(200).json({ message: "Friend request cancelled.", request });
-    } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
-
-// Get all friend requests for the logged-in user
-exports.getFriendRequests = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const requests = await FriendRequest.find({ receiver: userId, status: 'pending' })
-            .populate('sender', 'username email');
-        res.status(200).json({ requests });
-    } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
-// Get all friends for the logged-in user
-exports.getFriends = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const friendships = await Friend.find({
-            $or: [{ userA: userId }, { userB: userId }],
-            status: 'accepted',
-        }).populate('userA userB', 'username email');
-        const friends = friendships.map(f => (f.userA.id === userId ? f.userB : f.userA));
-        res.status(200).json({ friends });
-    }
-    catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
-
-// Remove a friend
-exports.removeFriend = async (req, res) => {
-    try {
-        const { friendId } = req.params;
-        const userId = req.user.id;
-        const friendship = await Friend.findOneAndDelete({
-            $or: [
-                { userA: userId, userB: friendId },
-                { userA: friendId, userB: userId }
-            ],
-            status: 'accepted',
+      if (existingFriend) {
+        return res.status(400).json({
+          success: false,
+          message: "Hai người đã là bạn bè",
         });
-        if (!friendship) {
-            return res.status(404).json({ message: "Friend not found." });
+      }
+
+      // Kiểm tra đã có yêu cầu pending chưa
+      const existingRequest = await FriendRequest.findOne({
+        $or: [
+          { requester: requesterId, recipient: recipientId, status: "pending" },
+          { requester: recipientId, recipient: requesterId, status: "pending" },
+        ],
+      });
+
+      if (existingRequest) {
+        if (existingRequest.requester.toString() === requesterId) {
+          return res.status(400).json({
+            success: false,
+            message: "Bạn đã gửi yêu cầu kết bạn cho người này",
+          });
+        } else {
+          return res.status(400).json({
+            success: false,
+            message: "Người này đã gửi yêu cầu kết bạn cho bạn",
+          });
         }
-        res.status(200).json({ message: "Friend removed." });
+      }
+
+      // Tạo yêu cầu mới
+      const friendRequest = new FriendRequest({
+        requester: requesterId,
+        recipient: recipientId,
+        status: "pending",
+      });
+
+      await friendRequest.save();
+
+      // Lấy thông tin người gửi
+      const requester = await User.findById(requesterId).select(
+        "username fullName profile.avatar"
+      );
+
+      // Tạo thông báo cho người nhận
+      await NotificationService.createAndEmitNotification({
+        recipient: recipientId,
+        sender: requesterId,
+        type: "FRIEND_REQUEST",
+        title: "Yêu cầu kết bạn mới",
+        message: `${requester.fullName || requester.username} muốn kết bạn với bạn`,
+        data: {
+          friendRequestId: friendRequest._id,
+          requesterId: requesterId,
+        },
+        priority: "medium",
+        url: `/profile/${requesterId}`,
+      });
+
+      // Populate để trả về thông tin đầy đủ
+      await friendRequest.populate([
+        { path: "requester", select: "username fullName profile.avatar" },
+        { path: "recipient", select: "username fullName profile.avatar" },
+      ]);
+
+      res.status(201).json({
+        success: true,
+        message: "Đã gửi yêu cầu kết bạn",
+        data: friendRequest,
+      });
     } catch (error) {
-        res.status(500).json({ message: "Server error.", error });
+      console.error("Error sending friend request:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi gửi yêu cầu kết bạn",
+        error: error.message,
+      });
     }
-};
+  }
+
+  // [POST] /api/friends/accept/:requestId - Chấp nhận yêu cầu kết bạn
+  async acceptFriendRequest(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { requestId } = req.params;
+
+      const friendRequest = await FriendRequest.findById(requestId);
+      
+      // Debug log để kiểm tra
+      console.log("Accept request - userId:", userId, "type:", typeof userId, "requestId:", requestId);
+      if (friendRequest) {
+        console.log("FriendRequest - requester:", friendRequest.requester.toString(), "recipient:", friendRequest.recipient.toString());
+      }
+
+      if (!friendRequest) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy yêu cầu kết bạn",
+        });
+      }
+
+      const recipientIdStr = friendRequest.recipient.toString();
+      const userIdStr = userId.toString();
+      
+      if (recipientIdStr !== userIdStr) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền chấp nhận yêu cầu này",
+        });
+      }
+
+      if (friendRequest.status !== "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "Yêu cầu này không còn ở trạng thái pending",
+        });
+      }
+
+      // Cập nhật trạng thái yêu cầu
+      friendRequest.status = "accepted";
+      friendRequest.respondedAt = new Date();
+      await friendRequest.save();
+
+      // Tạo mối quan hệ bạn bè
+      const friendship = new Friend({
+        userA: friendRequest.requester,
+        userB: friendRequest.recipient,
+      });
+      await friendship.save();
+
+      // Lấy thông tin người chấp nhận và người đã gửi yêu cầu
+      const acceptor = await User.findById(userId).select(
+        "username fullName profile.avatar"
+      );
+      const requesterUser = await User.findById(friendRequest.requester).select(
+        "username fullName profile.avatar"
+      );
+
+      // Tạo thông báo cho người gửi yêu cầu
+      await NotificationService.createAndEmitNotification({
+        recipient: friendRequest.requester,
+        sender: userId,
+        type: "FRIEND_REQUEST_ACCEPTED",
+        title: "Yêu cầu kết bạn được chấp nhận",
+        message: `${acceptor.fullName || acceptor.username} đã chấp nhận yêu cầu kết bạn của bạn`,
+        data: {
+          friendRequestId: friendRequest._id,
+          friendId: friendship._id,
+        },
+        priority: "medium",
+        url: `/profile/${userId}`,
+      });
+
+      // Cập nhật thông báo FRIEND_REQUEST cũ thành FRIEND_REQUEST_ACCEPTED cho người đã chấp nhận
+      const Notification = require("../models/Notification");
+      const { getIO } = require("../config/socket");
+      const io = getIO();
+      const oldNotification = await Notification.findOne({
+        recipient: userId,
+        sender: friendRequest.requester,
+        type: "FRIEND_REQUEST",
+      });
+
+      if (oldNotification) {
+        oldNotification.type = "FRIEND_REQUEST_ACCEPTED";
+        oldNotification.title = "Hai bạn đã trở thành bạn bè";
+        oldNotification.sender = userId; // người chấp nhận
+        // Với người nhận là chính người chấp nhận (userId), thông điệp cần là: "Bạn và <requester> đã trở thành bạn bè"
+        const requesterName = requesterUser?.fullName || requesterUser?.username || "bạn bè";
+        oldNotification.message = `Bạn và ${requesterName} đã trở thành bạn bè`;
+        oldNotification.data = {
+          ...(oldNotification.data || {}),
+          friendRequestId: friendRequest._id,
+          friendId: friendship._id,
+        };
+        await oldNotification.save();
+
+        await oldNotification.populate([
+          { path: "recipient", select: "username fullName profile.avatar" },
+          { path: "sender", select: "username fullName profile.avatar" },
+        ]);
+
+        // Emit cập nhật cho client của người đã chấp nhận
+        io.to(`user_${userId}`).emit("notification_updated", oldNotification);
+      }
+
+      // Populate để trả về thông tin đầy đủ
+      await friendRequest.populate([
+        { path: "requester", select: "username fullName profile.avatar" },
+        { path: "recipient", select: "username fullName profile.avatar" },
+      ]);
+
+      res.json({
+        success: true,
+        message: "Đã chấp nhận yêu cầu kết bạn",
+        data: {
+          friendRequest,
+          friendship,
+        },
+      });
+    } catch (error) {
+      console.error("Error accepting friend request:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi chấp nhận yêu cầu kết bạn",
+        error: error.message,
+      });
+    }
+  }
+
+  // [POST] /api/friends/reject/:requestId - Từ chối yêu cầu kết bạn
+  async rejectFriendRequest(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { requestId } = req.params;
+
+      const friendRequest = await FriendRequest.findById(requestId);
+      
+      // Debug log để kiểm tra
+      console.log("Reject request - userId:", userId, "type:", typeof userId, "requestId:", requestId);
+      if (friendRequest) {
+        console.log("FriendRequest - requester:", friendRequest.requester.toString(), "recipient:", friendRequest.recipient.toString());
+      }
+
+      if (!friendRequest) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy yêu cầu kết bạn",
+        });
+      }
+
+      const recipientIdStr = friendRequest.recipient.toString();
+      const userIdStr = userId.toString();
+      
+      if (recipientIdStr !== userIdStr) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền từ chối yêu cầu này",
+        });
+      }
+
+      if (friendRequest.status !== "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "Yêu cầu này không còn ở trạng thái pending",
+        });
+      }
+
+      // Cập nhật trạng thái yêu cầu
+      friendRequest.status = "rejected";
+      friendRequest.respondedAt = new Date();
+      await friendRequest.save();
+
+      // Lấy thông tin người từ chối và người gửi yêu cầu
+      const rejector = await User.findById(userId).select(
+        "username fullName profile.avatar"
+      );
+      const requesterUser = await User.findById(friendRequest.requester).select(
+        "username fullName profile.avatar"
+      );
+
+      // Tạo thông báo cho người gửi yêu cầu
+      await NotificationService.createAndEmitNotification({
+        recipient: friendRequest.requester,
+        sender: userId,
+        type: "FRIEND_REQUEST_REJECTED",
+        title: "Yêu cầu kết bạn bị từ chối",
+        message: `${rejector.fullName || rejector.username} đã từ chối yêu cầu kết bạn của bạn`,
+        data: {
+          friendRequestId: friendRequest._id,
+        },
+        priority: "low",
+        url: `/profile/${userId}`,
+      });
+
+      // Cập nhật thông báo FRIEND_REQUEST cũ thành FRIEND_REQUEST_REJECTED cho người đã từ chối
+      const Notification = require("../models/Notification");
+      const { getIO } = require("../config/socket");
+      const io = getIO();
+      const oldNotification = await Notification.findOne({
+        recipient: userId,
+        sender: friendRequest.requester,
+        type: "FRIEND_REQUEST",
+      });
+
+      if (oldNotification) {
+        oldNotification.type = "FRIEND_REQUEST_REJECTED";
+        oldNotification.title = "Bạn đã từ chối lời mời kết bạn";
+        oldNotification.sender = userId;
+        // Với người nhận là chính người từ chối (userId), thông điệp cần dùng tên của người đã gửi lời mời
+        const requesterName = requesterUser?.fullName || requesterUser?.username || "người này";
+        oldNotification.message = `Bạn đã từ chối lời mời kết bạn từ ${requesterName}`;
+        await oldNotification.save();
+
+        await oldNotification.populate([
+          { path: "recipient", select: "username fullName profile.avatar" },
+          { path: "sender", select: "username fullName profile.avatar" },
+        ]);
+
+        io.to(`user_${userId}`).emit("notification_updated", oldNotification);
+      }
+
+      // Populate để trả về thông tin đầy đủ
+      await friendRequest.populate([
+        { path: "requester", select: "username fullName profile.avatar" },
+        { path: "recipient", select: "username fullName profile.avatar" },
+      ]);
+
+      res.json({
+        success: true,
+        message: "Đã từ chối yêu cầu kết bạn",
+        data: friendRequest,
+      });
+    } catch (error) {
+      console.error("Error rejecting friend request:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi từ chối yêu cầu kết bạn",
+        error: error.message,
+      });
+    }
+  }
+
+  // [POST] /api/friends/cancel/:requestId - Hủy yêu cầu kết bạn
+  async cancelFriendRequest(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { requestId } = req.params;
+
+      const friendRequest = await FriendRequest.findById(requestId);
+      
+      // Debug log để kiểm tra
+      console.log("Cancel request - userId:", userId, "type:", typeof userId, "requestId:", requestId);
+      if (friendRequest) {
+        console.log("FriendRequest - requester:", friendRequest.requester.toString(), "recipient:", friendRequest.recipient.toString());
+      }
+
+      if (!friendRequest) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy yêu cầu kết bạn",
+        });
+      }
+
+      const requesterIdStr = friendRequest.requester.toString();
+      const userIdStr = userId.toString();
+      
+      if (requesterIdStr !== userIdStr) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền hủy yêu cầu này",
+        });
+      }
+
+      if (friendRequest.status !== "pending") {
+        return res.status(400).json({
+          success: false,
+          message: "Yêu cầu này không còn ở trạng thái pending",
+        });
+      }
+
+      // Cập nhật trạng thái yêu cầu
+      friendRequest.status = "cancelled";
+      friendRequest.respondedAt = new Date();
+      await friendRequest.save();
+
+      // Xóa thông báo FRIEND_REQUEST ở người nhận
+      const oldNotification = await require("../models/Notification").findOne({
+        recipient: friendRequest.recipient,
+        sender: userId,
+        type: "FRIEND_REQUEST",
+      });
+
+      if (oldNotification) {
+        await require("../models/Notification").deleteOne({
+          _id: oldNotification._id,
+        });
+
+        // Emit event để xóa thông báo real-time
+        const { getIO } = require("../config/socket");
+        const io = getIO();
+        io.to(`user_${friendRequest.recipient}`).emit(
+          "notification_deleted",
+          oldNotification._id
+        );
+      }
+
+      // Populate để trả về thông tin đầy đủ
+      await friendRequest.populate([
+        { path: "requester", select: "username fullName profile.avatar" },
+        { path: "recipient", select: "username fullName profile.avatar" },
+      ]);
+
+      res.json({
+        success: true,
+        message: "Đã hủy yêu cầu kết bạn",
+        data: friendRequest,
+      });
+    } catch (error) {
+      console.error("Error cancelling friend request:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi hủy yêu cầu kết bạn",
+        error: error.message,
+      });
+    }
+  }
+
+  // [GET] /api/friends/requests - Lấy danh sách yêu cầu kết bạn
+  async getFriendRequests(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { type = "received" } = req.query; // "received" hoặc "sent"
+
+      let query = {};
+      if (type === "received") {
+        query = { recipient: userId, status: "pending" };
+      } else if (type === "sent") {
+        query = { requester: userId, status: "pending" };
+      } else {
+        query = {
+          $or: [
+            { recipient: userId, status: "pending" },
+            { requester: userId, status: "pending" },
+          ],
+        };
+      }
+
+      const friendRequests = await FriendRequest.find(query)
+        .sort({ createdAt: -1 })
+        .populate("requester", "username fullName profile.avatar")
+        .populate("recipient", "username fullName profile.avatar");
+
+      res.json({
+        success: true,
+        data: friendRequests,
+        count: friendRequests.length,
+      });
+    } catch (error) {
+      console.error("Error getting friend requests:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách yêu cầu kết bạn",
+        error: error.message,
+      });
+    }
+  }
+
+  // [GET] /api/friends - Lấy danh sách bạn bè
+  async getFriends(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { page = 1, limit = 20 } = req.query;
+
+      const friendships = await Friend.find({
+        $or: [{ userA: userId }, { userB: userId }],
+      })
+        .populate("userA", "username fullName profile.avatar isOnline")
+        .populate("userB", "username fullName profile.avatar isOnline")
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit));
+
+      // Trả về thông tin bạn bè (người không phải user hiện tại)
+      const friends = friendships.map((friendship) => {
+        const friend =
+          friendship.userA._id.toString() === userId
+            ? friendship.userB
+            : friendship.userA;
+        return {
+          ...friend.toObject(),
+          friendshipId: friendship._id,
+          becameFriendsAt: friendship.createdAt,
+        };
+      });
+
+      const total = await Friend.countDocuments({
+        $or: [{ userA: userId }, { userB: userId }],
+      });
+
+      res.json({
+        success: true,
+        data: friends,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          results: friends.length,
+          totalFriends: total,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting friends:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách bạn bè",
+        error: error.message,
+      });
+    }
+  }
+
+  // [GET] /api/friends/status/:userId - Kiểm tra trạng thái với một user
+  async getFriendStatus(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { userId: targetUserId } = req.params;
+
+      if (userId === targetUserId) {
+        return res.json({
+          success: true,
+          data: {
+            status: "self",
+            isFriend: false,
+            friendRequest: null,
+          },
+        });
+      }
+
+      // Kiểm tra đã là bạn bè chưa
+      const friendship = await Friend.findOne({
+        $or: [
+          { userA: userId, userB: targetUserId },
+          { userA: targetUserId, userB: userId },
+        ],
+      });
+
+      if (friendship) {
+        return res.json({
+          success: true,
+          data: {
+            status: "friend",
+            isFriend: true,
+            friendRequest: null,
+            friendshipId: friendship._id,
+          },
+        });
+      }
+
+      // Kiểm tra yêu cầu kết bạn
+      const friendRequest = await FriendRequest.findOne({
+        $or: [
+          { requester: userId, recipient: targetUserId, status: "pending" },
+          { requester: targetUserId, recipient: userId, status: "pending" },
+        ],
+      });
+
+      if (friendRequest) {
+        const requesterIdStr = friendRequest.requester.toString();
+        const userIdStr = userId.toString();
+        const isRequester = requesterIdStr === userIdStr;
+        
+        return res.json({
+          success: true,
+          data: {
+            status: isRequester ? "sent" : "received",
+            isFriend: false,
+            friendRequest: {
+              id: friendRequest._id,
+              status: friendRequest.status,
+              isRequester,
+            },
+          },
+        });
+      }
+
+      res.json({
+        success: true,
+        data: {
+          status: "none",
+          isFriend: false,
+          friendRequest: null,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting friend status:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi kiểm tra trạng thái bạn bè",
+        error: error.message,
+      });
+    }
+  }
+
+  // [DELETE] /api/friends/:friendshipId - Xóa bạn bè
+  async removeFriend(req, res) {
+    try {
+      const userId = req.user.userId;
+      const { friendshipId } = req.params;
+
+      const friendship = await Friend.findById(friendshipId);
+
+      if (!friendship) {
+        return res.status(404).json({
+          success: false,
+          message: "Không tìm thấy mối quan hệ bạn bè",
+        });
+      }
+
+      if (
+        friendship.userA.toString() !== userId &&
+        friendship.userB.toString() !== userId
+      ) {
+        return res.status(403).json({
+          success: false,
+          message: "Bạn không có quyền xóa bạn bè này",
+        });
+      }
+
+      await Friend.deleteOne({ _id: friendshipId });
+
+      res.json({
+        success: true,
+        message: "Đã xóa bạn bè",
+      });
+    } catch (error) {
+      console.error("Error removing friend:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi xóa bạn bè",
+        error: error.message,
+      });
+    }
+  }
+}
+
+module.exports = new FriendController();
+

@@ -1,0 +1,15 @@
+.friend-btn {
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.friend-request-buttons {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.friend-request-buttons .btn {
+  white-space: nowrap;
+}
+

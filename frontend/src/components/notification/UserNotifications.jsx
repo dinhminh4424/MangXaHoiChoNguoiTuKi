@@ -278,13 +278,15 @@ import { Link } from "react-router-dom";
 import { io } from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
+import friendService from "../../services/friendService";
 import "./Notifications.css";
 
 const UserNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [activeTab, setActiveTab] = useState("all"); // "all", "posts", "system"
+  const [activeTab, setActiveTab] = useState("all"); // "all", "posts", "friends", "system"
   const socketRef = useRef(null);
+  const dropdownRef = useRef(null);
   const { user } = useAuth();
 
   // Định nghĩa các hàm helper trước khi sử dụng
@@ -321,6 +323,16 @@ const UserNotifications = () => {
     return systemTypes.includes(type);
   };
 
+  const isFriendNotification = (type) => {
+    const friendTypes = [
+      "FRIEND_REQUEST",
+      "FRIEND_REQUEST_ACCEPTED",
+      "FRIEND_REQUEST_REJECTED",
+      "FRIEND_REQUEST_CANCELLED",
+    ];
+    return friendTypes.includes(type);
+  };
+
   const getNotificationIcon = (type) => {
     switch (type) {
       case "POST_LIKED":
@@ -344,6 +356,14 @@ const UserNotifications = () => {
         return "ri-megaphone-fill text-info";
       case "FEATURE_UPDATE":
         return "ri-update-fill text-success";
+      case "FRIEND_REQUEST":
+        return "ri-user-add-fill text-primary";
+      case "FRIEND_REQUEST_ACCEPTED":
+        return "ri-user-check-fill text-success";
+      case "FRIEND_REQUEST_REJECTED":
+        return "ri-user-unfollow-fill text-danger";
+      case "FRIEND_REQUEST_CANCELLED":
+        return "ri-user-unfollow-fill text-secondary";
       default:
         return "ri-notification-fill text-secondary";
     }
@@ -370,6 +390,7 @@ const UserNotifications = () => {
 
   const getNotificationCategory = (type) => {
     if (isPostNotification(type)) return "Bài viết";
+    if (isFriendNotification(type)) return "Kết bạn";
     if (isSystemNotification(type)) return "Hệ thống";
     return "Khác";
   };
@@ -393,6 +414,9 @@ const UserNotifications = () => {
     if (activeTab === "posts") {
       return isPostNotification(notification.type);
     }
+    if (activeTab === "friends") {
+      return isFriendNotification(notification.type);
+    }
     if (activeTab === "system") {
       return isSystemNotification(notification.type);
     }
@@ -405,14 +429,20 @@ const UserNotifications = () => {
     const postsCount = notifications.filter((n) =>
       isPostNotification(n.type)
     ).length;
+    const friendsCount = notifications.filter((n) =>
+      isFriendNotification(n.type)
+    ).length;
     const systemCount = notifications.filter((n) =>
       isSystemNotification(n.type)
     ).length;
 
-    return { allCount, postsCount, systemCount };
+    return { allCount, postsCount, friendsCount, systemCount };
   };
 
-  const { allCount, postsCount, systemCount } = getTabCounts();
+  const { allCount, postsCount, friendsCount, systemCount } = getTabCounts();
+
+  // Tính lại số lượng chưa đọc từ danh sách hiện có (để không phụ thuộc API unread-only)
+  const computedUnreadCount = notifications.filter((n) => !n.read).length;
 
   useEffect(() => {
     if (!user) return;
@@ -433,20 +463,67 @@ const UserNotifications = () => {
       showToast(notification);
     });
 
-    // Lấy danh sách thông báo chưa đọc
-    fetchUnreadNotifications();
+    // Lắng nghe khi thông báo bị xóa
+    socket.on("notification_deleted", (notificationId) => {
+      setNotifications((prev) => {
+        const deletedNotif = prev.find((n) => n._id === notificationId);
+        if (deletedNotif && !deletedNotif.read) {
+          setUnreadCount((prevCount) => Math.max(0, prevCount - 1));
+        }
+        return prev.filter((n) => n._id !== notificationId);
+      });
+    });
+
+    // Lắng nghe khi thông báo được cập nhật (ví dụ FRIEND_REQUEST -> FRIEND_REQUEST_ACCEPTED)
+    socket.on("notification_updated", (updatedNotification) => {
+      setNotifications((prev) => {
+        const exists = prev.some((n) => n._id === updatedNotification._id);
+        if (!exists) return [updatedNotification, ...prev];
+        return prev.map((n) => (n._id === updatedNotification._id ? updatedNotification : n));
+      });
+    });
+
+    // Lấy danh sách thông báo (bao gồm cả đã đọc)
+    fetchAllNotifications();
 
     return () => {
       socket.disconnect();
     };
   }, [user]);
 
-  const fetchUnreadNotifications = async () => {
+  // Đảm bảo click bên ngoài sẽ đóng dropdown (fallback nếu Bootstrap không xử lý)
+  useEffect(() => {
+    const handleDocumentClick = (event) => {
+      const container = dropdownRef.current;
+      if (!container) return;
+      if (!container.contains(event.target)) {
+        const toggleEl = document.getElementById("notification-drop");
+        // Ưu tiên API của Bootstrap nếu có
+        const bs = window.bootstrap;
+        if (bs && bs.Dropdown && toggleEl) {
+          const instance = bs.Dropdown.getOrCreateInstance(toggleEl);
+          instance.hide();
+        } else {
+          // Fallback thủ công: gỡ class 'show'
+          toggleEl && toggleEl.classList.remove('show');
+          const menu = container.querySelector('.dropdown-menu');
+          menu && menu.classList.remove('show');
+        }
+      }
+    };
+
+    // Dùng capture để ưu tiên bắt sự kiện sớm
+    document.addEventListener('click', handleDocumentClick, true);
+    return () => document.removeEventListener('click', handleDocumentClick, true);
+  }, []);
+
+  const fetchAllNotifications = async () => {
     try {
-      const response = await api.get("/api/notifications?read=false&limit=20");
+      const response = await api.get("/api/notifications", { params: { limit: 50 } });
       if (response.data.success) {
         setNotifications(response.data.notifications);
-        setUnreadCount(response.data.total);
+        // Đếm chưa đọc ở client để không làm mất thông báo đã đọc
+        setUnreadCount(response.data.notifications.filter((n) => !n.read).length);
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -485,6 +562,36 @@ const UserNotifications = () => {
       setUnreadCount(0);
     } catch (error) {
       console.error("Error marking all as read:", error);
+    }
+  };
+
+  const handleAcceptFriendRequest = async (notification) => {
+    try {
+      const requestId = notification.data?.friendRequestId;
+      if (!requestId) {
+        alert("Không tìm thấy ID yêu cầu kết bạn");
+        return;
+      }
+      await friendService.acceptFriendRequest(requestId);
+      // Refresh notifications
+      await fetchAllNotifications();
+    } catch (error) {
+      alert(error.message || "Lỗi khi chấp nhận yêu cầu kết bạn");
+    }
+  };
+
+  const handleRejectFriendRequest = async (notification) => {
+    try {
+      const requestId = notification.data?.friendRequestId;
+      if (!requestId) {
+        alert("Không tìm thấy ID yêu cầu kết bạn");
+        return;
+      }
+      await friendService.rejectFriendRequest(requestId);
+      // Refresh notifications
+      await fetchAllNotifications();
+    } catch (error) {
+      alert(error.message || "Lỗi khi từ chối yêu cầu kết bạn");
     }
   };
 
@@ -565,23 +672,25 @@ const UserNotifications = () => {
   return (
     <>
       {/* Notifications Dropdown */}
-      <li className="nav-item dropdown">
+      <li className="nav-item dropdown" data-bs-auto-close="outside" ref={dropdownRef}>
         <a
           href="#"
           className="search-toggle dropdown-toggle position-relative"
           id="notification-drop"
           data-bs-toggle="dropdown"
+          data-bs-auto-close="outside"
         >
           <i className="ri-notification-4-line"></i>
-          {unreadCount > 0 && (
+          {(computedUnreadCount > 0) && (
             <span className="badge bg-danger notification-badge">
-              {unreadCount > 99 ? "99+" : unreadCount}
+              {computedUnreadCount > 99 ? "99+" : computedUnreadCount}
             </span>
           )}
         </a>
         <div
           className="sub-drop sub-drop-large dropdown-menu dropdown-menu-end"
           aria-labelledby="notification-drop"
+          data-bs-auto-close="outside"
         >
           <div className="card shadow-none m-0" style={{ minWidth: "380px" }}>
             <div className="card-header d-flex justify-content-between bg-primary">
@@ -590,9 +699,9 @@ const UserNotifications = () => {
               </div>
               <div className="d-flex align-items-center">
                 <small className="badge bg-light text-dark me-2">
-                  {unreadCount}
+                  {computedUnreadCount}
                 </small>
-                {unreadCount > 0 && (
+                {computedUnreadCount > 0 && (
                   <button
                     className="btn btn-sm btn-light"
                     onClick={markAllAsRead}
@@ -648,6 +757,25 @@ const UserNotifications = () => {
                 <li className="nav-item">
                   <button
                     className={`nav-link ${
+                      activeTab === "friends" ? "active" : ""
+                    } py-2`}
+                    onClick={() => setActiveTab("friends")}
+                  >
+                    <i className="ri-user-add-line me-1"></i>
+                    Kết bạn
+                    {friendsCount > 0 && (
+                      <span
+                        className="badge bg-primary ms-1"
+                        style={{ fontSize: "0.6rem" }}
+                      >
+                        {friendsCount}
+                      </span>
+                    )}
+                  </button>
+                </li>
+                <li className="nav-item">
+                  <button
+                    className={`nav-link ${
                       activeTab === "system" ? "active" : ""
                     } py-2`}
                     onClick={() => setActiveTab("system")}
@@ -695,44 +823,71 @@ const UserNotifications = () => {
                           ? "alert-info"
                           : "alert-light"
                       } ${!notification.read ? "unread-notification" : ""}`}
-                      onClick={() => markAsRead(notification._id)}
+                      onClick={(e) => {
+                        // Chỉ mark as read nếu không click vào button
+                        if (!e.target.closest('button')) {
+                          markAsRead(notification._id);
+                        }
+                        // Ngăn dropdown auto-close
+                        e.stopPropagation();
+                      }}
                       style={{ cursor: "pointer" }}
                     >
-                      <div className="d-flex align-items-start">
-                        <i
-                          className={`${getNotificationIcon(
-                            notification.type
-                          )} me-2 mt-1`}
-                        ></i>
-                        <div className="flex-grow-1">
-                          <div className="d-flex justify-content-between align-items-start">
-                            <h6
-                              className="mb-1"
-                              style={{ fontSize: "0.875rem" }}
-                            >
-                              {notification.title}
-                            </h6>
-                            <small className="text-muted ms-2">
-                              {formatTime(notification.createdAt)}
-                            </small>
-                          </div>
-                          <p className="mb-1" style={{ fontSize: "0.75rem" }}>
-                            {notification.message}
-                          </p>
-                          <small className="text-muted">
+                      <div className="notif-item">
+                        <div className="notif-header d-flex justify-content-between">
+                          <div className="d-flex align-items-start">
                             <i
                               className={`${getNotificationIcon(
                                 notification.type
-                              )} me-1`}
+                              )} me-2 mt-1`}
                             ></i>
-                            {getNotificationCategory(notification.type)}
+                            <h6 className="notif-title mb-0">
+                              {notification.title}
+                            </h6>
+                          </div>
+                          <small className="notif-time text-muted">
+                            {formatTime(notification.createdAt)}
                           </small>
                         </div>
-                        {!notification.read && (
+                        <p className="notif-message mb-1">
+                          {notification.message}
+                        </p>
+                        <small className="notif-meta text-muted d-inline-flex align-items-center">
+                          <i
+                            className={`${getNotificationIcon(
+                              notification.type
+                            )} me-1`}
+                          ></i>
+                          {getNotificationCategory(notification.type)}
+                        </small>
+                        {/* Action buttons cho friend request */}
+                          {notification.type === "FRIEND_REQUEST" && 
+                           notification.data?.friendRequestId && (
+                            <div 
+                              className="mt-2 d-flex gap-2"
+                              onClick={(e) => e.stopPropagation()}
+                            >
+                              <button
+                                className="btn btn-success btn-sm"
+                                onClick={() => handleAcceptFriendRequest(notification)}
+                              >
+                                <i className="ri-check-line me-1"></i>
+                                Chấp nhận
+                              </button>
+                              <button
+                                className="btn btn-outline-danger btn-sm"
+                                onClick={() => handleRejectFriendRequest(notification)}
+                              >
+                                <i className="ri-close-line me-1"></i>
+                                Từ chối
+                              </button>
+                            </div>
+                          )}
+                      </div>
+                      {!notification.read && (
                           <span className="badge bg-primary ms-2">Mới</span>
                         )}
                       </div>
-                    </div>
                   ))}
                 </div>
               ) : (

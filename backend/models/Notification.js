@@ -41,6 +41,12 @@ const notificationSchema = new mongoose.Schema(
         "GROUP_INVITE", // Lời mời vào nhóm
         "CHAT_REQUEST", // Yêu cầu chat
 
+        // Kết bạn
+        "FRIEND_REQUEST", // Yêu cầu kết bạn
+        "FRIEND_REQUEST_ACCEPTED", // Yêu cầu kết bạn được chấp nhận
+        "FRIEND_REQUEST_REJECTED", // Yêu cầu kết bạn bị từ chối
+        "FRIEND_REQUEST_CANCELLED", // Yêu cầu kết bạn bị hủy
+
         // Hệ thống và admin
         "SYSTEM_ANNOUNCEMENT", // Thông báo hệ thống
         "ADMIN_ALERT", // Cảnh báo admin

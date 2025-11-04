@@ -1,14 +1,33 @@
-// send, accept, reject, cancel, list requests, list friends, remove friend
-exports.getFriends = async (req, res) => {
-    try {
-        const userId = req.user.id;
-        const friendships = await Friend.find({
-            $or: [{ userA: userId }, { userB: userId }]
-        }).populate('userA userB', 'username email');
-        const friends = friendships.map(f => { (f.userA.id === userId ? f.userB : f.userA) });
-        res.status(200).json({ friends });
-    }
-    catch (error) {
-        res.status(500).json({ message: "Server error.", error });
-    }
-};
+const express = require("express");
+const router = express.Router();
+const friendController = require("../controllers/friendController");
+const auth = require("../middleware/auth");
+
+// Tất cả các routes đều yêu cầu authentication
+router.use(auth);
+
+// Gửi yêu cầu kết bạn
+router.post("/request", friendController.sendFriendRequest);
+
+// Chấp nhận yêu cầu kết bạn
+router.post("/accept/:requestId", friendController.acceptFriendRequest);
+
+// Từ chối yêu cầu kết bạn
+router.post("/reject/:requestId", friendController.rejectFriendRequest);
+
+// Hủy yêu cầu kết bạn
+router.post("/cancel/:requestId", friendController.cancelFriendRequest);
+
+// Lấy danh sách yêu cầu kết bạn (received hoặc sent)
+router.get("/requests", friendController.getFriendRequests);
+
+// Lấy danh sách bạn bè
+router.get("/", friendController.getFriends);
+
+// Kiểm tra trạng thái với một user cụ thể
+router.get("/status/:userId", friendController.getFriendStatus);
+
+// Xóa bạn bè
+router.delete("/:friendshipId", friendController.removeFriend);
+
+module.exports = router;

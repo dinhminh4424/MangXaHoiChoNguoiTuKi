@@ -3,6 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../../services/api';
 import debounce from 'lodash/debounce';
 import EmptyState from '../../components/UI/EmptyState';
+import FriendButton from '../../components/friend/FriendButton';
 import './SearchPage.css';
 
 const SearchPage = () => {
@@ -164,9 +165,12 @@ const SearchPage = () => {
                 <div
                   key={item._id}
                   className="search-result-item"
-                  onClick={() => navigate(`/profile/${item._id}`)}
                 >
-                  <div className="d-flex align-items-center">
+                  <div 
+                    className="d-flex align-items-center flex-grow-1"
+                    onClick={() => navigate(`/profile/${item._id}`)}
+                    style={{ cursor: 'pointer' }}
+                  >
                     <img
                       src={item.profile?.avatar || '/assets/images/user/1.jpg'}
                       className="rounded-circle"
@@ -181,6 +185,12 @@ const SearchPage = () => {
                     {item.isOnline && (
                       <span className="badge bg-success ms-auto">Online</span>
                     )}
+                  </div>
+                  <div 
+                    onClick={(e) => e.stopPropagation()}
+                    className="ms-2"
+                  >
+                    <FriendButton userId={item._id} />
                   </div>
                 </div>
               );
