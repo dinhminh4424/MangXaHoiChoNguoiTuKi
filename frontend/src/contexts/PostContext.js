@@ -59,13 +59,22 @@ export const PostProvider = ({ children }) => {
   }, []);
 
   // Lấy Danh Sách Bài Viết
-  const fetchPosts = useCallback(async (params = {}) => {
+  // contexts/PostContext.js
+  const fetchPosts = useCallback(async (params = {}, append = false) => {
     try {
       setLoading(true);
       setError(null);
 
       const response = await postService.getPosts(params);
-      setPosts(response.posts || []);
+
+      if (append) {
+        // Nối thêm bài viết mới vào danh sách hiện tại
+        setPosts((prevPosts) => [...prevPosts, ...(response.posts || [])]);
+      } else {
+        // Thay thế hoàn toàn danh sách bài viết
+        setPosts(response.posts || []);
+      }
+
       return response;
     } catch (err) {
       setError(err.message || "Có lỗi xảy ra khi lấy danh sách bài viết");
