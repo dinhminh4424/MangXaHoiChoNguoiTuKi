@@ -5,15 +5,16 @@ const FacebookStrategy = require("passport-facebook").Strategy;
 const User = require("../models/User"); // Đường dẫn tới User model của bạn
 const { generateUniqueUsernameFrom } = require("../utils/username");
 
-// Chiến lược Google
-passport.use(
-  new GoogleStrategy(
-    {
-      clientID: process.env.GOOGLE_CLIENT_ID,
-      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      callbackURL: "/api/auth/google/callback", // Phải khớp với Google Console
-    },
-    async (accessToken, refreshToken, profile, done) => {
+// Chiến lược Google (chỉ đăng ký khi có đủ ENV để tránh crash trong dev)
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  passport.use(
+    new GoogleStrategy(
+      {
+        clientID: process.env.GOOGLE_CLIENT_ID,
+        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        callbackURL: "/api/auth/google/callback", // Phải khớp với Google Console
+      },
+      async (accessToken, refreshToken, profile, done) => {
       try {
         const email = profile.emails[0].value;
         const displayName = profile.displayName;
@@ -67,19 +68,25 @@ passport.use(
       } catch (err) {
         return done(err, false);
       }
-    }
-  )
-);
+      }
+    )
+  );
+} else {
+  console.warn(
+    "[passport] GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET chưa được cấu hình. Bỏ qua GoogleStrategy."
+  );
+}
 
-passport.use(
-  new FacebookStrategy(
-    {
-      clientID: process.env.FACEBOOK_APP_ID,
-      clientSecret: process.env.FACEBOOK_APP_SECRET,
-      callbackURL: "/api/auth/facebook/callback", // Phải khớp với Facebook App Dashboard
-      profileFields: ["id", "displayName", "emails", "photos"], // Yêu cầu các trường cụ thể
-    },
-    async (accessToken, refreshToken, profile, done) => {
+if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  passport.use(
+    new FacebookStrategy(
+      {
+        clientID: process.env.FACEBOOK_APP_ID,
+        clientSecret: process.env.FACEBOOK_APP_SECRET,
+        callbackURL: "/api/auth/facebook/callback", // Phải khớp với Facebook App Dashboard
+        profileFields: ["id", "displayName", "emails", "photos"], // Yêu cầu các trường cụ thể
+      },
+      async (accessToken, refreshToken, profile, done) => {
       try {
         // Facebook trả về email trong mảng 'emails'
         const email =
@@ -129,6 +136,11 @@ passport.use(
       } catch (err) {
         return done(err, false);
       }
-    }
-  )
-);
+      }
+    )
+  );
+} else {
+  console.warn(
+    "[passport] FACEBOOK_APP_ID/FACEBOOK_APP_SECRET chưa được cấu hình. Bỏ qua FacebookStrategy."
+  );
+}
