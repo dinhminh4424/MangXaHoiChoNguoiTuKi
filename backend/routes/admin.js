@@ -14,6 +14,7 @@ router.get("/dashboard", adminController.getDashboardStats);
 // Quản lý người dùng
 router.get("/users", adminController.getAllUsers);
 router.get("/users/:userId", adminController.getUserById);
+router.put("/users/:id/active", adminController.updateActiveUser);
 router.put("/users/:userId", adminController.updateUser);
 router.delete("/users/:userId", adminController.deleteUser);
 router.put("/users/:userId/role", adminController.updateUserRole);

@@ -3,8 +3,10 @@ import {
   getAllUsers,
   updateUserRole,
   deleteUser,
-} from "../../services/adminService";
+  updateActiveUser,
+} from "../../../services/adminService";
 import "./AdminUserManagement.css";
+import NotificationService from "../../../services/notificationService";
 
 const AdminUserManagement = () => {
   const [users, setUsers] = useState([]);
@@ -83,6 +85,56 @@ const AdminUserManagement = () => {
         console.error("Delete user error:", err);
       }
     }
+  };
+
+  const handleActiveUser = async (userId, active) => {
+    try {
+      let check = await NotificationService.confirm({
+        title: `Bạn có chắc muốn ${active ? "Khoá" : "Mở Khoá"} (${
+          active ? "Dừng" : "Cho Phép"
+        } Hoạt Động) tài khoản này?`,
+        confirmText: `Chắc chắn ${active ? "Khoá" : "Mở Khoá"}`,
+        cancelText: "Huỷ",
+      });
+      if (check.isConfirmed) {
+        try {
+          const res = await updateActiveUser(userId);
+          console.log("res: ", res);
+          if (res.success) {
+            NotificationService.success({
+              title: "Cập nhật thành công!",
+              text: `Đã ${active ? "Khoá" : "Mở Khoá"} Tài khoản thành công!  `,
+              timer: 3000,
+              showConfirmButton: false,
+            });
+
+            setUsers((prev) =>
+              prev.map((user) =>
+                user._id === userId ? { ...user, active: !active } : user
+              )
+            );
+          } else {
+            NotificationService.error({
+              title: "Cập nhật thất bại!",
+              text: `Đã ${active ? "Khoá" : "Mở Khoá"} Tài khoản thất bại!  `,
+              timer: 3000,
+              showConfirmButton: false,
+            });
+          }
+        } catch (error) {
+          console.error("error:", error.response);
+          setError(error?.toString() || "Có lỗi xảy ra khi cập nhật");
+          NotificationService.error({
+            title: "Cập nhật thất bại!",
+            text: `Đã ${
+              active ? "Khoá" : "Mở Khoá"
+            } Tài khoản thất bại! : ${error.toString()} `,
+            timer: 3000,
+            showConfirmButton: false,
+          });
+        }
+      }
+    } catch (error) {}
   };
 
   const getRoleBadgeClass = (role) => {
@@ -201,7 +253,7 @@ const AdminUserManagement = () => {
                       )}`}
                     >
                       <option value="user">Người dùng</option>
-                      <option value="supporter">Hỗ trợ</option>
+                      {/* <option value="supporter">Hỗ trợ</option> */}
                       <option value="doctor">Bác sĩ</option>
                       <option value="admin">Quản trị viên</option>
                     </select>
@@ -225,6 +277,7 @@ const AdminUserManagement = () => {
                         onClick={() =>
                           window.open(`/profile/${user._id}`, "_blank")
                         }
+                        title="Xem Profile"
                       >
                         <i className="ri-eye-line"></i>
                       </button>
@@ -233,8 +286,22 @@ const AdminUserManagement = () => {
                         onClick={() =>
                           handleDeleteUser(user._id, user.username)
                         }
+                        title="Xoá Tài Khoản Vĩnh Viễn"
                       >
                         <i className="ri-delete-bin-line"></i>
+                      </button>
+                      <button
+                        className="btn btn-sm btn-outline-warning"
+                        onClick={() => handleActiveUser(user._id, user.active)}
+                        title={
+                          user.active ? "Đang Hoạt Động" : "Đang Dừng Hoạt Động"
+                        }
+                      >
+                        <i
+                          className={
+                            user.active ? "ri-lock-unlock-line" : "ri-lock-line"
+                          }
+                        ></i>
                       </button>
                     </div>
                   </td>

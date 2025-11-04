@@ -472,7 +472,7 @@ import GroupDetailPage from "./pages/social/GroupDetailPage";
 import CreateGroupPage from "./pages/social/CreateGroupPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUserManagement from "./pages/admin/AdminUserManagement";
+import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";

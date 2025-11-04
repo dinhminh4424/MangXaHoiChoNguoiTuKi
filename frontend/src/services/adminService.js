@@ -24,6 +24,11 @@ export const updateUser = (userId, data) => {
   return api.put(`/api/admin/users/${userId}`, data);
 };
 
+export const updateActiveUser = async (id) => {
+  const res = await api.put(`/api/admin/users/${id}/active`);
+  return res.data;
+};
+
 export const deleteUser = (userId) => {
   return api.delete(`/api/admin/users/${userId}`);
 };

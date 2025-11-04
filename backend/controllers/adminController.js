@@ -216,6 +216,47 @@ const updateUser = async (req, res) => {
   }
 };
 
+const updateActiveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      console.error("Ko có id:", id);
+      return res.status(404).json({
+        success: false,
+        message: "Lỗi khi cập nhật Trạng thái hoạt động người dùng",
+      });
+    }
+    const user = await User.findById(id);
+
+    if (!user) {
+      console.error("Ko có id:", id);
+      return res.status(403).json({
+        success: false,
+        message: "Không tìm thấy người dùng với id: " + id,
+      });
+    }
+
+    const active = user.active || true;
+
+    user.active = !active;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: active,
+      user,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật Trạng thái hoạt động người dùng : " + error,
+    });
+  }
+};
+
 const deleteUser = async (req, res) => {
   try {
     const { userId } = req.params;
@@ -1776,4 +1817,5 @@ module.exports = {
   updateViolationCommentStatus,
   block_un_Post,
   block_un_PostComment,
+  updateActiveUser,
 };
