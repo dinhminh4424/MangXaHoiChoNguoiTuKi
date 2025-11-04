@@ -2,10 +2,13 @@ const mongoose = require("mongoose");
 
 const EmergencyRequestSchema = new mongoose.Schema({
   userId: {
-  type: String, // 👈 cho phép string
-  required: false,
-},
-
+    type: String,
+    required: false,
+  },
+  phoneNumber: { 
+    type: String, 
+    required: false,
+  },
   type: { type: String, default: "panic" },
   latitude: { type: Number, required: true },
   longitude: { type: Number, required: true },

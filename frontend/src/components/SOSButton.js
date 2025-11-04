@@ -1,12 +1,19 @@
 import React, { useState } from "react";
-import Guideline from "./Guideline"; // Nếu chưa có, em có thể bỏ dòng này
 
 function SOSButton({ userId }) {
-  const [showGuideline, setShowGuideline] = useState(false);
-  const [address, setAddress] = useState(""); // ✅ Thêm state để lưu địa chỉ cụ thể
+  const [showPopup, setShowPopup] = useState(false);
+  const [address, setAddress] = useState("");
+  const [phoneNumber, setPhoneNumber] = useState("");
+  const [loading, setLoading] = useState(false);
 
   const sendSOS = () => {
+    if (!phoneNumber) {
+      alert("⚠️ Vui lòng nhập số điện thoại khẩn trước khi gửi SOS!");
+      return;
+    }
+
     if (navigator.geolocation) {
+      setLoading(true);
       navigator.geolocation.getCurrentPosition(async (pos) => {
         const data = {
           userId,
@@ -15,6 +22,7 @@ function SOSButton({ userId }) {
           message: "Tôi đang gặp sự cố, cần hỗ trợ gấp!",
           type: "panic",
           isSilent: false,
+          phoneNumber,
         };
 
         try {
@@ -27,15 +35,17 @@ function SOSButton({ userId }) {
           const result = await response.json();
 
           if (result.success) {
-            // ✅ Lưu địa chỉ cụ thể từ backend
             setAddress(result.address || "Không xác định vị trí cụ thể");
-            setShowGuideline(true);
+            alert("🚨 Đã gửi tín hiệu SOS thành công!");
           } else {
             alert("❌ Gửi SOS thất bại: " + (result.message || ""));
           }
         } catch (error) {
           console.error(error);
           alert("Không thể gửi tín hiệu SOS");
+        } finally {
+          setLoading(false);
+          setShowPopup(false);
         }
       });
     } else {
@@ -45,9 +55,9 @@ function SOSButton({ userId }) {
 
   return (
     <>
-      {/* 🚨 Nút SOS cố định */}
+      {/* 🚨 Nút SOS cố định góc phải */}
       <button
-        onClick={sendSOS}
+        onClick={() => setShowPopup(true)}
         style={{
           position: "fixed",
           bottom: "20px",
@@ -72,8 +82,8 @@ function SOSButton({ userId }) {
         🚨
       </button>
 
-      {/* 🩺 Popup hướng dẫn sơ cứu + địa chỉ */}
-      {showGuideline && (
+      {/* 🧭 Popup SOS */}
+      {showPopup && (
         <div
           style={{
             position: "fixed",
@@ -83,32 +93,94 @@ function SOSButton({ userId }) {
             border: "2px solid #1976d2",
             borderRadius: "10px",
             padding: "15px",
-            width: "300px",
+            width: "320px",
             boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
             zIndex: 9999,
+            overflowY: "auto",
+            maxHeight: "80vh",
           }}
         >
+          <h5 style={{ marginBottom: "10px" }}>📞 Gửi tín hiệu khẩn cấp</h5>
+
+          <label style={{ fontSize: "14px", display: "block", marginBottom: "6px" }}>
+            Nhập số điện thoại liên hệ:
+          </label>
+          <input
+            type="tel"
+            value={phoneNumber}
+            onChange={(e) => setPhoneNumber(e.target.value)}
+            placeholder="Ví dụ: 0901234567"
+            style={{
+              width: "100%",
+              padding: "6px",
+              marginBottom: "10px",
+              borderRadius: "6px",
+              border: "1px solid #ccc",
+              outline: "none",
+            }}
+          />
+
+          <button
+            onClick={sendSOS}
+            disabled={loading}
+            style={{
+              width: "100%",
+              padding: "8px",
+              backgroundColor: loading ? "#888" : "#d32f2f",
+              color: "white",
+              border: "none",
+              borderRadius: "6px",
+              cursor: "pointer",
+              fontWeight: "bold",
+              marginBottom: "10px",
+            }}
+          >
+            {loading ? "Đang gửi..." : "🚨 Gửi SOS"}
+          </button>
+
+          {/* 🩺 Hướng dẫn sơ cứu */}
           <h5>🩺 Hướng dẫn sơ cứu</h5>
-
-          {/* 📍 Hiển thị địa chỉ cụ thể */}
-          <p style={{ fontSize: "14px", marginBottom: "10px", color: "#444" }}>
-            <strong>📍 Vị trí hiện tại:</strong><br />
-            {address}
-          </p>
-
-          <ul>
+          <ul style={{ fontSize: "14px", lineHeight: "1.6", paddingLeft: "18px" }}>
             <li>Ngồi xuống, hít thở sâu.</li>
             <li>Giữ bình tĩnh, đếm từ 1 đến 10.</li>
             <li>Liên hệ người hỗ trợ qua các số điện thoại:</li>
-            <ul>
-              <li>Tổng đài Quốc gia Bảo vệ Trẻ em: 111</li>
-              <li>Đường dây nóng "Ngày mai": 1900 561 295</li>
-              <li>Viện Sức khỏe Tâm thần: 0984 104 115</li>
+            <ul style={{ marginTop: "6px", marginBottom: "10px" }}>
+              <li>Tổng đài Quốc gia Bảo vệ Trẻ em: <strong>111</strong></li>
+              <li>Đường dây nóng "Ngày mai": <strong>1900 561 295</strong></li>
+              <li>Viện Sức khỏe Tâm thần: <strong>0984 104 115</strong></li>
             </ul>
           </ul>
 
+          {/* 📍 Hiển thị địa chỉ nếu có */}
+          {address && (
+            <p style={{ fontSize: "13px", marginTop: "10px", color: "#444" }}>
+              <strong>📍 Vị trí hiện tại:</strong><br />
+              {address}
+              <br />
+              <button
+                onClick={() =>
+                  window.open(
+                    `https://www.google.com/maps?q=${encodeURIComponent(address)}`,
+                    "_blank"
+                  )
+                }
+                style={{
+                  marginTop: "6px",
+                  padding: "5px 8px",
+                  borderRadius: "5px",
+                  border: "none",
+                  backgroundColor: "#1976d2",
+                  color: "white",
+                  cursor: "pointer",
+                }}
+              >
+                🗺️ Xem trên bản đồ
+              </button>
+            </p>
+          )}
+
           <button
-            onClick={() => setShowGuideline(false)}
+            onClick={() => setShowPopup(false)}
             style={{
               marginTop: "10px",
               width: "100%",
