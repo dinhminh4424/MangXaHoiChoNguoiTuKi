@@ -1,10 +1,33 @@
-import React, { useState } from "react";
+import { useState } from "react";
 
-function SOSButton({ userId }) {
+function SOSButton({ userId: propUserId }) {
   const [showPopup, setShowPopup] = useState(false);
   const [address, setAddress] = useState("");
   const [phoneNumber, setPhoneNumber] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const getTokenFromStorage = () => {
+    return (
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken") ||
+      sessionStorage.getItem("token") ||
+      sessionStorage.getItem("authToken") ||
+      null
+    );
+  };
+
+  // decode nhanh payload JWT (không verify) để lấy userId cho UI checks
+  const getUserIdFromToken = (token) => {
+    if (!token) return null;
+    try {
+      const parts = token.split(".");
+      if (parts.length !== 3) return null;
+      const payload = JSON.parse(atob(parts[1]));
+      return payload.userId || payload.id || payload._id || payload.uid || null;
+    } catch (e) {
+      return null;
+    }
+  };
 
   const sendSOS = () => {
     if (!phoneNumber) {
@@ -12,42 +35,64 @@ function SOSButton({ userId }) {
       return;
     }
 
+    const token = getTokenFromStorage();
+
+    // Lấy userId ưu tiên từ prop (nếu là placeholder coi như không có), fallback decode token
+    let userId = propUserId;
+    const badPlaceholders = new Set(["currentUserId", "undefined", "null", "", null]);
+    if (badPlaceholders.has(userId)) userId = null;
+    if (!userId && token) {
+      userId = getUserIdFromToken(token);
+    }
+
+    if (!userId) {
+      alert("Bạn cần đăng nhập để gửi tín hiệu SOS. Vui lòng đăng nhập rồi thử lại.");
+      setShowPopup(false);
+      return;
+    }
+
     if (navigator.geolocation) {
       setLoading(true);
-      navigator.geolocation.getCurrentPosition(async (pos) => {
-        const data = {
-          userId,
-          latitude: pos.coords.latitude,
-          longitude: pos.coords.longitude,
-          message: "Tôi đang gặp sự cố, cần hỗ trợ gấp!",
-          type: "panic",
-          isSilent: false,
-          phoneNumber,
-        };
+      navigator.geolocation.getCurrentPosition(
+        async (pos) => {
+          // Nếu server verify token, bạn có thể omit userId; ở đây ta không gửi placeholder.
+          const data = {
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude,
+            message: "Tôi đang gặp sự cố, cần hỗ trợ gấp!",
+            type: "panic",
+            isSilent: false,
+            phoneNumber,
+          };
 
-        try {
-          const response = await fetch("http://localhost:5000/api/emergency/sos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+          try {
+            const headers = { "Content-Type": "application/json" };
+            if (token) headers["Authorization"] = `Bearer ${token}`;
 
-          const result = await response.json();
+            const response = await fetch("http://localhost:5000/api/emergency/sos", {
+              method: "POST",
+              headers,
+              body: JSON.stringify(data),
+            });
 
-          if (result.success) {
-            setAddress(result.address || "Không xác định vị trí cụ thể");
-            alert("🚨 Đã gửi tín hiệu SOS thành công!");
-          } else {
-            alert("❌ Gửi SOS thất bại: " + (result.message || ""));
+            const result = await response.json();
+
+            if (result.success) {
+              setAddress(result.address || "Không xác định vị trí cụ thể");
+              alert("🚨 Đã gửi tín hiệu SOS thành công!");
+            } else {
+              alert("❌ Gửi SOS thất bại: " + (result.message || ""));
+            }
+          } catch (error) {
+            console.error(error);
+            alert("Không thể gửi tín hiệu SOS");
+          } finally {
+            setLoading(false);
+            setShowPopup(false);
           }
-        } catch (error) {
-          console.error(error);
-          alert("Không thể gửi tín hiệu SOS");
-        } finally {
-          setLoading(false);
-          setShowPopup(false);
-        }
-      });
+        },
+        
+      );
     } else {
       alert("Trình duyệt không hỗ trợ định vị GPS.");
     }
@@ -75,8 +120,8 @@ function SOSButton({ userId }) {
           zIndex: 9999,
           transition: "transform 0.2s ease-in-out",
         }}
-        onMouseEnter={(e) => (e.target.style.transform = "scale(1.1)")}
-        onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
+        onMouseEnter={(e) => (e.currentTarget.style.transform = "scale(1.1)")}
+        onMouseLeave={(e) => (e.currentTarget.style.transform = "scale(1)")}
         title="Gửi tín hiệu khẩn cấp"
       >
         🚨
