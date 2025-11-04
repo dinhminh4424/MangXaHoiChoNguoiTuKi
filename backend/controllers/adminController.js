@@ -1466,6 +1466,14 @@ const updateViolationStatus = async (req, res) => {
       }
     }
 
+    if (status == "rejected") {
+      const post = await Post.findById(violation.targetId);
+      let reportCount = post.reportCount || 1;
+      post.reportCount = reportCount - 1;
+
+      await post.save();
+    }
+
     // Thông báo cho admin về việc xử lý hoàn tất
     await NotificationService.emitNotificationToAdmins({
       recipient: null,
@@ -1685,6 +1693,12 @@ const updateViolationCommentStatus = async (req, res) => {
         );
       }
 
+      if (status == "rejected") {
+        let reportCount = comment.reportCount || 1;
+        comment.reportCount = reportCount - 1;
+
+        await comment.save();
+      }
       await NotificationService.createAndEmitNotification({
         recipient: updatedComment.userID,
         sender: req.user._id,
@@ -1708,6 +1722,265 @@ const updateViolationCommentStatus = async (req, res) => {
           newWarningCount >= 5 ? `/support` : `/posts/${updatedComment.postID}`,
       });
     }
+
+    if (status == "rejected") {
+      let reportCount = comment.reportCount || 1;
+      comment.reportCount = reportCount - 1;
+
+      await comment.save();
+    }
+    // Thông báo cho admin về việc xử lý hoàn tất
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null,
+      sender: req.user._id,
+      type: "REPORT_RESOLVED",
+      title: "Báo cáo đã được xử lý",
+      message: `Báo cáo #${violation._id} đã được ${
+        req.user.fullName || req.user.username
+      } xử lý.`,
+      data: {
+        violationId: violation._id,
+        actionTaken: actionTaken,
+        resolvedBy: req.user._id,
+      },
+      priority: "medium",
+      url: `/admin/reports/${violation._id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: updatedViolation,
+      message: "Cập nhật trạng thái thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật báo cáo",
+    });
+  }
+
+  async function AddViolationUserByID(
+    userId,
+    violation,
+    userAdminId,
+    banUser = false
+  ) {
+    try {
+      if (!userId) return;
+      const user = await User.findById(userId);
+      if (!user) {
+        console.warn("AddViolationUserByID: user not found", userId);
+        return;
+      }
+      const newCount = (user.violationCount || 0) + 1;
+      let isActive = newCount <= 5;
+      if (banUser) {
+        isActive = false;
+      }
+
+      await User.findByIdAndUpdate(userId, {
+        active: isActive,
+        violationCount: newCount,
+        lastViolationAt: new Date(),
+      });
+
+      // Thông báo khi bị ban/tạm khoá
+      if (!isActive) {
+        await NotificationService.createAndEmitNotification({
+          recipient: userId,
+          sender: userAdminId,
+          type: "USER_BANNED",
+          title: "Tài khoản bị tạm ngưng",
+          message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+          data: {
+            violationId: violation._id,
+            reason: violation.reason,
+            action: "banned",
+          },
+          priority: "urgent",
+          url: `/support`,
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật violation user:", err);
+    }
+  }
+};
+
+const getUserViolation = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = "all",
+      dateFrom = "",
+      dateTo = "",
+      search = "",
+      reportId = "",
+      id = "",
+    } = req.query;
+    const skip = limit * (page - 1);
+
+    console.log("req.params: ", req.params);
+
+    const filter = { targetType: "User" };
+
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    // Xử lý search và reportId
+    const searchConditions = [];
+    if (search) {
+      searchConditions.push(
+        { reason: { $regex: search, $options: "i" } },
+        { notes: { $regex: search, $options: "i" } }
+      );
+    }
+
+    // if (reportId) {
+    //   filter.$or = [{ _id: { $regex: reportId, $options: "i" } }];
+    // }
+
+    // Tìm kiếm theo reportId - chuyển _id thành string
+    if (reportId) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: reportId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    if (id) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$targetId" },
+            regex: id,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Kết hợp điều kiện tìm kiếm
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
+    }
+
+    const [reportsPost, total] = await Promise.all([
+      Violation.find(filter)
+        .populate("reportedBy", "username email profile.avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Violation.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reportsPost,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo bài viết",
+    });
+  }
+};
+
+const updateViolationUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, actionTaken = "warning", reviewedAt } = req.body;
+
+    const violation = await Violation.findById(id)
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email fullName");
+
+    if (!violation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo",
+      });
+    }
+
+    const updatedViolation = await Violation.findByIdAndUpdate(
+      id,
+      {
+        status,
+        actionTaken,
+        reviewedAt,
+        reviewedBy: req.user.userId,
+      },
+      { new: true }
+    ).populate("reportedBy", "username email profile.avatar");
+
+    // Thông báo real-time dựa trên action
+    if (actionTaken === "ban_user") {
+      // Cập nhật số lần vi phạm và khoá tài khoản người dùng
+      await AddViolationUserByID(
+        violation.userId,
+        violation,
+        req.user._id,
+        true
+      );
+    } else if (actionTaken === "warning") {
+      // tăng warning bằng $inc để tránh race condition và trả về giá trị mới
+      const updatedUser = await User.findByIdAndUpdate(
+        violation.targetId,
+        { $inc: { warningCount: 1 } },
+        { new: true }
+      );
+
+      if (!updatedUser) throw new Error("Không tìm thấy người dùng");
+
+      const newWarningCount = updatedUser.warningCount || 0;
+
+      if (newWarningCount >= 5) {
+        // Cập nhật số lần vi phạm của người dùng
+        await AddViolationUserByID(
+          updatedUser._id,
+          violation,
+          req.user._id,
+          false
+        );
+      }
+    }
+    if (status === "rejected") {
+      // Nếu báo cáo bị từ chối, gửi thông báo cho người bị báo cáo
+      const user = await User.findById(violation.targetId);
+      if (!user) {
+        console.warn("Ko tìm thấy user bị báo cáo", violation.targetId);
+        return;
+      }
+      user.violationCount = Math.max((user.violationCount || 1) - 1, 0);
+      await user.save();
+    }
+
     // Thông báo cho admin về việc xử lý hoàn tất
     await NotificationService.emitNotificationToAdmins({
       recipient: null,
@@ -1818,4 +2091,6 @@ module.exports = {
   block_un_Post,
   block_un_PostComment,
   updateActiveUser,
+  getUserViolation,
+  updateViolationUser,
 };

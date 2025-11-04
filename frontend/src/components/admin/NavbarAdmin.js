@@ -45,6 +45,11 @@ function NavbarAdmin() {
           icon: "ri-shield-keyhole-line",
           label: "Quản Lý Phân Quyền",
         },
+        {
+          path: "/admin/users/reports",
+          icon: "ri-alarm-warning-line",
+          label: "Báo Cáo Người Dùng",
+        },
       ],
     },
     {

@@ -87,6 +87,8 @@ const userSchema = new mongoose.Schema(
     lastViolationAt: { type: Date, default: null }, //
     active: { type: Boolean, default: true }, // Hoạt dộng
 
+    warningCount: { type: Number, default: 0, index: true },
+
     // CÁC TRƯỜNG CHO RESET PASSWORD
     resetPasswordOTP: String,
     resetPasswordExpire: Date,

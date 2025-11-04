@@ -66,7 +66,9 @@ router.put(
   "/violation/comments/:id",
   adminController.updateViolationCommentStatus
 );
+router.put("/violation/users/:id", adminController.updateViolationUser);
 router.get("/violation/posts", adminController.getPostViolation);
 router.get("/violation/comments", adminController.getCommentViolation);
+router.get("/violation/users", adminController.getUserViolation);
 
 module.exports = router;

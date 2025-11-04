@@ -173,3 +173,28 @@ export const updateCommentViolationStatus = async (violationId, updateData) => {
   );
   return res.data;
 };
+
+// report user
+export const getUsersViolation = async (
+  params = {
+    page: 1,
+    limit: 10,
+    status: "all",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+    reportId: "",
+  }
+) => {
+  console.log("params: ", params);
+  const res = await api.get("/api/admin/violation/users", { params });
+  return res.data;
+};
+
+export const updateUsersViolationStatus = async (violationId, updateData) => {
+  const res = await api.put(
+    `/api/admin/violation/users/${violationId}`,
+    updateData
+  );
+  return res.data;
+};
