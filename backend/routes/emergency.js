@@ -34,7 +34,7 @@ async function getAddressFromCoordinates(lat, lon) {
 router.post("/sos", async (req, res) => {
   console.log("📩 Nhận tín hiệu SOS:", req.body);
   try {
-    const { userId, latitude, longitude, message, type, isSilent } = req.body;
+    const { userId, phoneNumber, latitude, longitude, message, type, isSilent } = req.body;
 
     if (!userId || !latitude || !longitude)
       return res.status(400).json({ success: false, message: "Thiếu dữ liệu bắt buộc!" });
@@ -46,6 +46,7 @@ router.post("/sos", async (req, res) => {
     // 1️⃣ Lưu yêu cầu khẩn cấp
     const newRequest = new EmergencyRequest({
         userId,
+        phoneNumber,
         latitude,     
         longitude,   
         address,     
