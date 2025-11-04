@@ -1035,12 +1035,12 @@ const Report = () => {
             <i className="bi bi-x-lg me-2"></i>Đóng
           </button>
           <a
-            href={`/posts/${selectedReport?.targetId}`}
+            href={`/profile/${selectedReport?.targetId}`}
             className="btn btn-primary"
             target="_blank"
             rel="noopener noreferrer"
           >
-            <i className="bi bi-link-45deg me-2"></i>Xem bài viết
+            <i className="bi bi-link-45deg me-2"></i>Xem profile
           </a>
         </Modal.Footer>
       </Modal>

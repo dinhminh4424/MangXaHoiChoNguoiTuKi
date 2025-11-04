@@ -18,7 +18,7 @@ router.put("/users/:id/active", adminController.updateActiveUser);
 router.put("/users/:userId", adminController.updateUser);
 router.delete("/users/:userId", adminController.deleteUser);
 router.put("/users/:userId/role", adminController.updateUserRole);
-// router.put("/users/:userId/status", adminController.updateUserStatus);
+router.post("/users", adminController.createUser);
 
 // Quản lý bài viết
 
@@ -29,7 +29,6 @@ router.get("/posts/:postId", adminController.getPostById);
 router.get("/posts", adminController.getAllPosts);
 
 router.delete("/posts/:postId", adminController.deletePost);
-// router.put("/posts/:postId/status", adminController.updatePostStatus);
 
 // Quản lý nhật ký
 router.get("/journals", adminController.getAllJournals);
@@ -40,7 +39,6 @@ router.delete("/journals/:journalId", adminController.deleteJournal);
 router.get("/groups", adminController.getAllGroups);
 router.get("/groups/:groupId", adminController.getGroupById);
 router.delete("/groups/:groupId", adminController.deleteGroup);
-// router.put("/groups/:groupId/status", adminController.updateGroupStatus);
 
 // Quản lý bình luận
 router.get("/comments", adminController.getAllComments);

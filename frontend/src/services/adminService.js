@@ -12,16 +12,20 @@ export const getDashboardStats = async () => {
 };
 
 // Quản lý người dùng
-export const getAllUsers = (params = {}) => {
-  return api.get("/api/admin/users", { params });
+export const getAllUsers = async (params = {}) => {
+  return await api.get("/api/admin/users", { params });
+};
+
+export const createUser = async (userData) => {
+  return await api.post("/api/admin/users", userData);
 };
 
 export const getUserById = (userId) => {
   return api.get(`/api/admin/users/${userId}`);
 };
 
-export const updateUser = (userId, data) => {
-  return api.put(`/api/admin/users/${userId}`, data);
+export const updateUser = async (userId, data) => {
+  return await api.put(`/api/admin/users/${userId}`, data);
 };
 
 export const updateActiveUser = async (id) => {

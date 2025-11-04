@@ -487,6 +487,8 @@ import ErrorPage from "./components/error/pages-error";
 
 import Test from "./pages/test";
 
+import AIChat from "./components/ai/AIChat";
+
 /**
  * COMPONENT: ProtectedRoute
  */
@@ -524,6 +526,7 @@ const routeConfigs = [
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
 
   { path: "/test", component: Test, layout: UserLayout },
+  { path: "/aiChat", component: AIChat, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },

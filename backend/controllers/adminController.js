@@ -98,13 +98,73 @@ const getDashboardStats = async (req, res) => {
 };
 
 // Quản lý người dùng
+// const getAllUsers = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, search = "", role = "" } = req.query;
+//     const skip = (page - 1) * limit;
+
+//     // Tạo filter
+//     const filter = {};
+//     if (search) {
+//       filter.$or = [
+//         { username: { $regex: search, $options: "i" } },
+//         { email: { $regex: search, $options: "i" } },
+//         { fullName: { $regex: search, $options: "i" } },
+//       ];
+//     }
+//     if (role) {
+//       filter.role = role;
+//     }
+
+//     const [users, total] = await Promise.all([
+//       User.find(filter)
+//         .select("-password")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(parseInt(limit)),
+//       User.countDocuments(filter),
+//     ]);
+
+//     res.json({
+//       success: true,
+//       data: {
+//         users,
+//         pagination: {
+//           current: parseInt(page),
+//           pages: Math.ceil(total / limit),
+//           total,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Get all users error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi lấy danh sách người dùng",
+//     });
+//   }
+// };
+
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "", role = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      role = "",
+      status = "",
+      dateFrom = "",
+      dateTo = "",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
     const skip = (page - 1) * limit;
 
     // Tạo filter
     const filter = {};
+
+    // Tìm kiếm
     if (search) {
       filter.$or = [
         { username: { $regex: search, $options: "i" } },
@@ -112,14 +172,42 @@ const getAllUsers = async (req, res) => {
         { fullName: { $regex: search, $options: "i" } },
       ];
     }
+
+    // Lọc theo role
     if (role) {
       filter.role = role;
     }
 
+    // Lọc theo trạng thái
+    if (status === "active") {
+      filter.active = true;
+    } else if (status === "banned") {
+      filter.active = false;
+    } else if (status === "online") {
+      filter.isOnline = true;
+    } else if (status === "offline") {
+      filter.isOnline = false;
+    }
+
+    // Lọc theo ngày
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) {
+        filter.createdAt.$gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        filter.createdAt.$lte = new Date(dateTo);
+      }
+    }
+
+    // Sắp xếp
+    const sort = {};
+    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
     const [users, total] = await Promise.all([
       User.find(filter)
         .select("-password")
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(parseInt(limit)),
       User.countDocuments(filter),
@@ -141,6 +229,47 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách người dùng",
+    });
+  }
+};
+
+const createUser = async (req, res) => {
+  try {
+    const { username, email, password, fullName, role, profile } = req.body;
+
+    // Kiểm tra user đã tồn tại
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc username đã tồn tại",
+      });
+    }
+
+    const user = new User({
+      username,
+      email,
+      password,
+      fullName,
+      role: role || "user",
+      profile: profile || {},
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      data: { user },
+      message: "Tạo người dùng thành công",
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo người dùng",
     });
   }
 };
@@ -186,15 +315,10 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { fullName, email, profile, role } = req.body;
+    const { id } = req.params;
+    const { username, email, fullName, role, profile, active } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { fullName, email, profile, role },
-      { new: true, runValidators: true }
-    ).select("-password");
-
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -202,16 +326,51 @@ const updateUser = async (req, res) => {
       });
     }
 
+    // Kiểm tra trùng email/username
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email đã tồn tại",
+        });
+      }
+    }
+
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Username đã tồn tại",
+        });
+      }
+    }
+
+    // Cập nhật thông tin
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (role) updateData.role = role;
+    if (active !== undefined) updateData.active = active;
+    if (profile) updateData.profile = { ...user.profile, ...profile };
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
     res.json({
       success: true,
-      message: "Cập nhật thông tin người dùng thành công",
-      data: user,
+      data: { user: updatedUser },
+      message: "Cập nhật người dùng thành công",
     });
   } catch (error) {
     console.error("Update user error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi cập nhật thông tin người dùng",
+      message: "Lỗi khi cập nhật người dùng",
     });
   }
 };
@@ -339,92 +498,8 @@ const updateUserRole = async (req, res) => {
 };
 
 // Quản lý bài viết
-// const getAllPosts = async (req, res) => {
-//   try {
-//     // const { page = 1, limit = 10, postsSearch = [] } = req.query;
-//     const { page = 1, limit = 10, email, fromDate, toDate } = req.query;
 
-//     const skip = (page - 1) * limit;
-
-//     let postsSearch = {
-//       email,
-//       fromDate,
-//       toDate,
-//     };
-//     console.log("================= postsSearch: ", postsSearch);
-
-//     const filter = {};
-//     if (postsSearch) {
-//       if (postsSearch.email) {
-//         filter.$or = [
-//           {
-//             "userCreateID.username": {
-//               $regex: postsSearch.email,
-//               $options: "i",
-//             },
-//           },
-//           {
-//             "userCreateID.email": { $regex: postsSearch.email, $options: "i" },
-//           },
-//         ];
-//       }
-//       if (postsSearch.fromDate && postsSearch.toDate) {
-//         const toDateObj = new Date(toDate);
-//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
-//         const fromDateObj = new Date(toDateObj);
-//         fromDateObj.setHours(0, 0, 0, 0);
-//         filter.createdAt = [
-//           {
-//             $gte: new Date(postsSearch.fromDateObj),
-//             $lte: new Date(postsSearch.toDateObj),
-//           },
-//         ];
-//       } else if (postsSearch.fromDate) {
-//         const fromDateObj = new Date(toDateObj);
-//         fromDateObj.setHours(0, 0, 0, 0);
-//         filter.createdAt = {
-//           $gte: new Date(postsSearch.fromDateObj),
-//         };
-//       } else if (postsSearch.toDate) {
-//         const toDateObj = new Date(toDate);
-//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
-//         filter.createdAt = {
-//           $lte: new Date(postsSearch.toDateObj),
-//         };
-//       }
-//     }
-
-//     const [posts, total] = await Promise.all([
-//       Post.find(filter)
-//         .populate("userCreateID", "username email profile.avatar")
-//         .sort({ createdAt: -1 })
-//         .skip(skip)
-//         .limit(parseInt(limit)),
-
-//       Post.countDocuments(filter),
-//     ]);
-
-//     res.json({
-//       success: true,
-//       data: {
-//         posts,
-//         pagination: {
-//           current: parseInt(page),
-//           pages: Math.ceil(total / limit),
-//           total,
-//         },
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Get all posts error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Lỗi khi lấy danh sách bài viết",
-//     });
-//   }
-// };
-
-// Trong adminController.js - cập nhật hàm getAllPosts
+//  cập nhật hàm getAllPosts
 const getAllPosts = async (req, res) => {
   try {
     const {
@@ -2065,6 +2140,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
+  createUser,
   deleteUser,
   updateUserRole,
   getAllPosts,

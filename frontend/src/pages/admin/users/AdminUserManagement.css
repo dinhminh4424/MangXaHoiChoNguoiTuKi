@@ -299,3 +299,92 @@
     font-size: 10px;
   }
 }
+
+/* AdminUserManagement.css */
+.admin-user-management {
+  padding: 20px;
+}
+
+.loading-container {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Role badge classes */
+.role-admin {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+
+.role-supporter {
+  background-color: #ffc107;
+  color: black;
+  border-color: #ffc107;
+}
+
+.role-doctor {
+  background-color: #0d6efd;
+  color: white;
+  border-color: #0d6efd;
+}
+
+.role-user {
+  background-color: #6c757d;
+  color: white;
+  border-color: #6c757d;
+}
+
+/* Status badge classes */
+.status-online {
+  background-color: #198754;
+}
+
+.status-offline {
+  background-color: #6c757d;
+}
+
+.status-banned {
+  background-color: #dc3545;
+}
+
+/* Avatar styles */
+.avatar img {
+  object-fit: cover;
+}
+
+/* Action buttons */
+.btn-group-sm > .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Table styles */
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+}
+
+/* Modal backdrop */
+/* .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+} */
+
+/* Responsive */
+@media (max-width: 768px) {
+  .admin-user-management {
+    padding: 10px;
+  }
+
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+  }
+
+  .btn-group .btn {
+    margin-bottom: 0.25rem;
+  }
+}
