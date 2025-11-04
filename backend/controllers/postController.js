@@ -102,7 +102,17 @@ exports.getPosts = async (req, res) => {
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
 
-    let query = { isBlocked: false }; // lấy những cái ko bị vi phạm
+    // let query = { isBlocked: false }; // lấy những cái ko bị vi phạm
+
+    const query = {
+      $or: [
+        { isDeletedByUser: false },
+        { isDeletedByUser: { $exists: false } },
+      ],
+      isBlocked: false,
+    }; // lấy những cái ko bị vi phạm
+
+    // query.isDeletedByUser = false;
 
     if (userCreateID) {
       query.userCreateID = userCreateID; // lấy theo user id
@@ -125,7 +135,7 @@ exports.getPosts = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      .populate("userCreateID", "username _id avatar fullName");
+      .populate("userCreateID", "username _id profile.avatar fullName");
 
     const total = await Post.countDocuments(query);
     const totalPages = Math.ceil(total / limit);
@@ -153,6 +163,30 @@ exports.getPostDetails = async (req, res) => {
       "userCreateID",
       "username avatar fullName"
     );
+
+    const userId = req.user.userId;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    if (post.isDeletedByUser === true) {
+      if (["admin", "supporter"].includes(user.role)) {
+        return res.status(200).json({
+          success: true,
+          post,
+        });
+      } else {
+        return res.status(404).json({
+          success: false,
+          message: "Bài viết đã bị xoá",
+        });
+      }
+    }
 
     if (!post) {
       return res.status(404).json({
@@ -406,6 +440,74 @@ exports.updatePost = async (req, res) => {
 
 // xóa bài viết
 // Controller (Express)
+// này là xoá luôn
+// exports.deletePost = async (req, res) => {
+//   const { id } = req.params;
+
+//   // đảm bảo req.user có
+//   if (!req.user || !req.user.userId) {
+//     return res.status(401).json({ success: false, message: "Không xác thực" });
+//   }
+
+//   try {
+//     const post = await Post.findById(id);
+//     if (!post) {
+//       return res
+//         .status(404)
+//         .json({ success: false, message: "Bài viết không tồn tại" });
+//     }
+
+//     // kiểm tra quyền sở hữu
+//     if (
+//       post.userCreateID.toString() !== req.user.userId &&
+//       req.user.role !== "admin"
+//     ) {
+//       return res.status(403).json({
+//         success: false,
+//         message: "Bạn không có quyền xóa bài viết này",
+//       });
+//     }
+//     const postFiles = Array.isArray(post.files)
+//       ? post.files.map((f) => f.fileUrl)
+//       : [];
+
+//     // xóa comment (trong transaction)
+//     await Comment.deleteMany({ postID: id });
+
+//     // xóa post (trong transaction)
+//     await Post.findByIdAndDelete(id);
+
+//     // --- XÓA FILES NGOÀI DB (sau khi DB đã commit)
+//     // Nếu xóa file thất bại, không rollback DB (không có cách hoàn hảo) — ta log và có thể enqueue retry
+//     if (postFiles.length > 0) {
+//       try {
+//         // FileManager.deleteMultipleFiles có thể nhận mảng và trả Promise
+//         await FileManager.deleteMultipleFiles(postFiles);
+//       } catch (fileErr) {
+//         // Log lỗi để xử lý sau (ví dụ: push vào queue retry)
+//         console.error("Lỗi khi xóa file sau khi xóa post:", fileErr);
+//         // Tuỳ nhu cầu: bạn có thể trả trạng thái thành công nhưng kèm cảnh báo
+//         return res.status(200).json({
+//           success: true,
+//           message:
+//             "Xóa bài viết thành công. Tuy nhiên một số tệp không được xóa, sẽ thử lại sau.",
+//         });
+//       }
+//     }
+
+//     return res
+//       .status(200)
+//       .json({ success: true, message: "Xóa bài viết thành công" });
+//   } catch (err) {
+//     // nếu transaction đang mở — abort
+//     console.error(err);
+//     return res
+//       .status(500)
+//       .json({ success: false, message: err.message || "Lỗi server" });
+//   }
+// };
+
+// xoá mềm
 exports.deletePost = async (req, res) => {
   const { id } = req.params;
 
@@ -422,43 +524,19 @@ exports.deletePost = async (req, res) => {
         .json({ success: false, message: "Bài viết không tồn tại" });
     }
 
+    console.log("post.userCreateID.toString(): ", post.userCreateID.toString());
+    console.log("req.user.userId.toString(): ", req.user.userId.toString());
     // kiểm tra quyền sở hữu
-    if (
-      post.userCreateID.toString() !== req.user.userId &&
-      req.user.role !== "admin"
-    ) {
+    if (post.userCreateID.toString() !== req.user.userId.toString()) {
       return res.status(403).json({
         success: false,
         message: "Bạn không có quyền xóa bài viết này",
       });
     }
-    const postFiles = Array.isArray(post.files)
-      ? post.files.map((f) => f.fileUrl)
-      : [];
 
-    // xóa comment (trong transaction)
-    await Comment.deleteMany({ postID: id });
+    post.isDeletedByUser = true;
 
-    // xóa post (trong transaction)
-    await Post.findByIdAndDelete(id);
-
-    // --- XÓA FILES NGOÀI DB (sau khi DB đã commit)
-    // Nếu xóa file thất bại, không rollback DB (không có cách hoàn hảo) — ta log và có thể enqueue retry
-    if (postFiles.length > 0) {
-      try {
-        // FileManager.deleteMultipleFiles có thể nhận mảng và trả Promise
-        await FileManager.deleteMultipleFiles(postFiles);
-      } catch (fileErr) {
-        // Log lỗi để xử lý sau (ví dụ: push vào queue retry)
-        console.error("Lỗi khi xóa file sau khi xóa post:", fileErr);
-        // Tuỳ nhu cầu: bạn có thể trả trạng thái thành công nhưng kèm cảnh báo
-        return res.status(200).json({
-          success: true,
-          message:
-            "Xóa bài viết thành công. Tuy nhiên một số tệp không được xóa, sẽ thử lại sau.",
-        });
-      }
-    }
+    await post.save();
 
     return res
       .status(200)
@@ -697,7 +775,51 @@ exports.reportPost = async (req, res) => {
       });
 
       // lưu
-      newViolation.save();
+      await newViolation.save();
+
+      // post.violationCount = post.violationCount ? post.violationCount + 1 : 1;
+      post.reportCount = post.reportCount ? post.reportCount + 1 : 1;
+
+      if (post.reportCount >= 10) {
+        post.isBlocked = true;
+
+        newViolation.status = "auto";
+        newViolation.actionTaken = "auto_blocked";
+        await newViolation.save();
+
+        // cập nhật các vio trước đó cho bài viết thành xử lý nhanh
+        await Violation.updateMany(
+          { targetId: post._id, targetType: "Post", status: "pending" },
+          { $set: { status: "auto", actionTaken: "auto_blocked" } }
+        );
+
+        // gửi thông báo cho người dùng
+        await NotificationService.createAndEmitNotification({
+          recipient: newViolation.userId,
+          sender: req.user._id,
+          type: "POST_BLOCKED",
+          title: "Bài viết đã bị ẩn",
+          message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${newViolation.reason}`,
+          data: {
+            violationId: newViolation._id,
+            postId: newViolation.targetId,
+            reason: newViolation.reason,
+            action: "blocked",
+          },
+          priority: "high",
+          url: `/posts/${newViolation.targetId}`,
+        });
+
+        // thêm vi phạm cho user
+        await AddViolationUserByID(
+          post.userCreateID,
+          newViolation,
+          req.user.userId,
+          false
+        );
+      }
+
+      await post.save();
 
       const reporter = await User.findById(userId);
 
@@ -735,10 +857,10 @@ exports.reportPost = async (req, res) => {
         url: `/posts/${targetId}`,
       });
 
-      if (post && reporter) {
-        // GỬI EMAIL THÔNG BÁO
-        await sendViolationEmails(newViolation, reporter, post);
-      }
+      // if (post && reporter) {
+      //   // GỬI EMAIL THÔNG BÁO
+      //   await sendViolationEmails(newViolation, reporter, post);
+      // }
 
       return res.status(200).json({
         success: true,
@@ -751,6 +873,74 @@ exports.reportPost = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Thêm vi phạm cho user theo ID
+async function AddViolationUserByID(
+  userId,
+  violation,
+  userAdminId,
+  banUser = false
+) {
+  try {
+    if (!userId) return;
+    const user = await User.findById(userId);
+    if (!user) {
+      console.warn("AddViolationUserByID: user not found", userId);
+      return;
+    }
+    const newCount = (user.violationCount || 0) + 1;
+    let isActive = newCount <= 5;
+    if (banUser) {
+      isActive = false;
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      active: isActive,
+      violationCount: newCount,
+      lastViolationAt: new Date(),
+    });
+
+    // Thông báo khi bị ban/tạm khoá
+    if (!isActive) {
+      await NotificationService.createAndEmitNotification({
+        recipient: userId,
+        sender: userAdminId,
+        type: "USER_BANNED",
+        title: "Tài khoản bị tạm ngưng",
+        message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+        data: {
+          violationId: violation._id,
+          reason: violation.reason,
+          action: "banned",
+        },
+        priority: "urgent",
+        url: `/support`,
+      });
+    }
+
+    // Gửi email khi bị ban/tạm khoá
+    const admin = await User.findById(userAdminId);
+    if (!admin) {
+      console.warn("AddViolationUserByID: admin not found", userAdminId);
+      return;
+    }
+    await mailService.sendEmail({
+      to: user.email,
+      subject: "🚫 Tài Khoản Của Bạn Đã Bị Khoá - Autism Support",
+      templateName: "USER_BANNED",
+      templateData: {
+        userName: user.fullName || user.username,
+        violationReason: violation.reason,
+        severityLevel: "Nghiêm trọng",
+        actionTime: new Date().toLocaleString("vi-VN"),
+        adminName: admin.fullName || admin.username,
+        details: "Tài khoản vi phạm nguyên tắc cộng đồng và đã bị khoá",
+      },
+    });
+  } catch (err) {
+    console.error("Lỗi khi cập nhật violation user:", err);
+  }
+}
 
 /**
  * Gửi email thông báo khi bài viết bị báo cáo

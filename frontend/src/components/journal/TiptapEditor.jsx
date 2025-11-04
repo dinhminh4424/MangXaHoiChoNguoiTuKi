@@ -11,6 +11,7 @@ import FontSize from "tiptap-extension-font-size";
 import Link from "@tiptap/extension-link";
 import Youtube from "@tiptap/extension-youtube";
 import { CustomImage } from "../../extensions/CustomImage.js";
+import { TextSelection } from "prosemirror-state";
 import "../../styles/tiptap.css";
 
 import {
@@ -109,6 +110,32 @@ const TiptapEditor = ({
           placeholder || "Hôm nay của bạn thế nào? Viết cảm xúc của bạn...",
       },
     },
+
+    // editorProps: {
+    //   attributes: {
+    //     class: "prose focus:outline-none min-h-300 max-w-none cursor-text",
+    //     placeholder:
+    //       placeholder || "Hôm nay của bạn thế nào? Viết cảm xúc của bạn...",
+    //   },
+
+    //   // CLICK BẤT KỲ ĐÂU → FOCUS ĐÚNG CHỖ (NHƯ WORD)
+    //   handleClickOn: (view, pos, node, nodePos, event, direct) => {
+    //     // Nếu click vào ảnh → để CustomImage xử lý
+    //     if (event.target.tagName === "IMG") return false;
+
+    //     // Tạo selection mới tại vị trí click
+    //     const selection = TextSelection.create(view.state.doc, pos);
+    //     view.dispatch(view.state.tr.setSelection(selection));
+    //     view.focus();
+    //     return true;
+    //   },
+
+    //   // Click khoảng trống → focus
+    //   handleClick: (view, pos, event) => {
+    //     view.focus();
+    //     return true;
+    //   },
+    // },
   });
 
   const addImage = useCallback(() => {

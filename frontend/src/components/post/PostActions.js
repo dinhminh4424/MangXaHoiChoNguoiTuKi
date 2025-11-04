@@ -21,6 +21,7 @@ const PostActions = ({
   onEmotionSelect,
   likeCount = 0,
   commentCount = 0,
+  blockComment = false,
 }) => {
   const {
     showEmotionPicker,
@@ -162,16 +163,25 @@ const PostActions = ({
           className={`action-btn comment-btn ${showComments ? "active" : ""}`}
           onClick={onComment}
           title="Bình luận"
+          disabled={blockComment}
         >
-          <MessageCircle size={18} />
-          <span className="action-text">
-            Bình luận
-            {commentCount > 0 && (
-              <span className="action-count">
-                {formatLikeCount(commentCount)}
+          {!blockComment ? (
+            <>
+              <MessageCircle size={18} />
+              <span className="action-text">
+                Bình luận
+                {commentCount > 0 && (
+                  <span className="action-count">
+                    {formatLikeCount(commentCount)}
+                  </span>
+                )}
               </span>
-            )}
-          </span>
+            </>
+          ) : (
+            <>
+              <strong>bình luận đã bị khoá</strong>
+            </>
+          )}
         </button>
 
         <button className="action-btn share-btn" title="Chia sẻ">

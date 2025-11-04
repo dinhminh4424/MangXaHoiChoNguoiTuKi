@@ -231,7 +231,7 @@ export const PostProvider = ({ children }) => {
   const reportPost = useCallback(
     async (reportData) => {
       try {
-        const res = postService.reportPost(reportData);
+        const res = await postService.reportPost(reportData);
         return res;
       } catch (error) {
         setError(error.message || "Có lỗi xảy ra khi báo cáo bài viết");

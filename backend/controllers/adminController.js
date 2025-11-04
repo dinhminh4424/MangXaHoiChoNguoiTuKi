@@ -534,6 +534,62 @@ const getPostById = async (req, res) => {
   }
 };
 
+const block_un_Post = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bài viết: " + postId,
+      });
+    }
+
+    const active = post.isBlocked || true;
+    post.isBlocked = !active;
+    await post.save();
+
+    res.json({
+      success: true,
+      message: active ? "Bài viết đã bị chặn" : "Bài viết đã được mở lại",
+      data: post,
+    });
+  } catch (error) {
+    console.error("Block post error (Lỗi khi chặn/mở bài viết):", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi chặn/mở bài viết",
+    });
+  }
+};
+
+const block_un_PostComment = async (req, res) => {
+  const { postId } = req.params;
+  try {
+    const post = await Post.findById(postId);
+    if (!post) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bài viết: " + postId,
+      });
+    }
+    const active = post.isBlockedComment || true;
+    post.isBlockedComment = !active;
+    await post.save();
+    res.json({
+      success: true,
+      message: active ? "Bình luận đã bị chặn" : "Bình luận đã được mở lại",
+      data: post,
+    });
+  } catch (error) {
+    console.error("Block comment error (Lỗi khi chặn/mở bình luận):", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi chặn/mở bình luận",
+    });
+  }
+};
+
 const deletePost = async (req, res) => {
   try {
     const { postId } = req.params;
@@ -1022,45 +1078,6 @@ const getActivityReports = async (req, res) => {
 };
 
 // lấy các repot báo cáo
-// const getPostViolation = async (req, res) => {
-//   try {
-//     const { page = 1, limit = 10, status = "all" } = req.query;
-//     const skip = limit * (page - 1);
-//     const filter = {};
-//     if (status != "all") {
-//       filter.status = status;
-//     }
-//     filter.targetType = "Post";
-
-//     const [reportsPost, total] = await Promise.all([
-//       Violation.find(filter)
-//         .populate("reportedBy", "username email profile.avatar")
-//         .sort({ createdAt: -1 })
-//         .skip(skip)
-//         .limit(parseInt(limit)),
-//       Violation.countDocuments(filter),
-//     ]);
-
-//     return res.status(200).json({
-//       success: true,
-//       data: {
-//         reportsPost,
-//         pagination: {
-//           current: parseInt(page),
-//           pages: Math.ceil(total / limit),
-//           total,
-//         },
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Lỗi khi lấy báo cáo:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Lỗi khi lấy báo cáo bài viết ",
-//     });
-//   }
-// };
-
 const getPostViolation = async (req, res) => {
   try {
     const {
@@ -1071,8 +1088,11 @@ const getPostViolation = async (req, res) => {
       dateTo = "",
       search = "",
       reportId = "",
+      id = "",
     } = req.query;
     const skip = limit * (page - 1);
+
+    console.log("req.params: ", req.params);
 
     const filter = { targetType: "Post" };
 
@@ -1090,15 +1110,47 @@ const getPostViolation = async (req, res) => {
       }
     }
 
+    // Xử lý search và reportId
+    const searchConditions = [];
     if (search) {
-      filter.$or = [
+      searchConditions.push(
         { reason: { $regex: search, $options: "i" } },
-        { notes: { $regex: search, $options: "i" } },
-      ];
+        { notes: { $regex: search, $options: "i" } }
+      );
     }
 
+    // if (reportId) {
+    //   filter.$or = [{ _id: { $regex: reportId, $options: "i" } }];
+    // }
+
+    // Tìm kiếm theo reportId - chuyển _id thành string
     if (reportId) {
-      filter.$or = [{ _id: { $regex: reportId, $options: "i" } }];
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: reportId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    if (id) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$targetId" },
+            regex: id,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Kết hợp điều kiện tìm kiếm
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
     }
 
     const [reportsPost, total] = await Promise.all([
@@ -1130,54 +1182,107 @@ const getPostViolation = async (req, res) => {
   }
 };
 
+// lấy các report Bình Luận
+const getCommentViolation = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = "all",
+      dateFrom = "",
+      dateTo = "",
+      search = "",
+      reportId = "",
+      id = "",
+    } = req.query;
+
+    const skip = limit * (page - 1);
+
+    const filter = { targetType: "Comment" };
+
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    // Xử lý search và reportId
+    const searchConditions = [];
+    if (search) {
+      searchConditions.push(
+        { reason: { $regex: search, $options: "i" } },
+        { notes: { $regex: search, $options: "i" } }
+      );
+    }
+
+    // Tìm kiếm theo reportId - chuyển _id thành string
+    if (reportId) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: reportId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    if (id) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$targetId" },
+            regex: id,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Kết hợp điều kiện tìm kiếm
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
+    }
+
+    const [reportsComment, total] = await Promise.all([
+      Violation.find(filter)
+        .populate("reportedBy", "username email profile.avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Violation.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reportsComment,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo bài viết",
+    });
+  }
+};
+
 // Thêm API cập nhật violation
-// const updateViolationStatus = async (req, res) => {
-//   try {
-//     const { id } = req.params;
-//     const { status, actionTaken, reviewedAt } = req.body;
-
-//     const violation = await Violation.findByIdAndUpdate(
-//       id,
-//       {
-//         status,
-//         actionTaken,
-//         reviewedAt,
-//         reviewedBy: req.user.userId, // Giả sử có thông tin user từ auth middleware
-//       },
-//       { new: true }
-//     ).populate("reportedBy", "username email profile.avatar");
-
-//     if (!violation) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Không tìm thấy báo cáo",
-//       });
-//     }
-
-//     // Nếu action là block_post hoặc ban_user, cập nhật bài viết hoặc user
-//     if (actionTaken === "block_post") {
-//       await Post.findByIdAndUpdate(violation.targetId, { isBlocked: true });
-//     } else if (actionTaken === "ban_user") {
-//       await User.findByIdAndUpdate(violation.userId, {
-//         active: false,
-//         violationCount: { $inc: 1 },
-//         lastViolationAt: new Date(),
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       data: violation,
-//       message: "Cập nhật trạng thái thành công",
-//     });
-//   } catch (error) {
-//     console.error("Lỗi khi cập nhật báo cáo:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Lỗi khi cập nhật báo cáo",
-//     });
-//   }
-// };
 const updateViolationStatus = async (req, res) => {
   try {
     const { id } = req.params;
@@ -1207,15 +1312,53 @@ const updateViolationStatus = async (req, res) => {
 
     // Thông báo real-time dựa trên action
     if (actionTaken === "block_post") {
-      await Post.findByIdAndUpdate(violation.targetId, { isBlocked: true });
+      const post = await Post.findByIdAndUpdate(violation.targetId, {
+        isBlocked: true,
+      });
 
-      // Thông báo cho người đăng bài
+      if (post) {
+        // Thông báo cho người đăng bài
+        await NotificationService.createAndEmitNotification({
+          recipient: violation.userId,
+          sender: req.user._id,
+          type: "POST_BLOCKED",
+          title: "Bài viết đã bị ẩn",
+          message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`,
+          data: {
+            violationId: violation._id,
+            postId: violation.targetId,
+            reason: violation.reason,
+            action: "blocked",
+          },
+          priority: "high",
+          url: `/posts/${violation.targetId}`,
+        });
+        // Cập nhật số lần vi phạm của người dùng
+        await AddViolationUserByID(
+          violation.userId,
+          violation,
+          req.user._id,
+          false
+        );
+      }
+    } else if (actionTaken === "ban_user") {
+      // Cập nhật số lần vi phạm và khoá tài khoản người dùng
+      await AddViolationUserByID(
+        violation.userId,
+        violation,
+        req.user._id,
+        true
+      );
+    } else if (actionTaken === "block_comment") {
+      await Post.findByIdAndUpdate(violation.targetId, {
+        isBlockedComment: true,
+      });
       await NotificationService.createAndEmitNotification({
         recipient: violation.userId,
         sender: req.user._id,
-        type: "POST_BLOCKED",
-        title: "Bài viết đã bị ẩn",
-        message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`,
+        type: "POST_COMMENT_BLOCKED",
+        title: "Bài viết đã bị ẩn Bình Luận/ không tương tác với Bình Luận",
+        message: `Comment của bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`,
         data: {
           violationId: violation._id,
           postId: violation.targetId,
@@ -1225,28 +1368,61 @@ const updateViolationStatus = async (req, res) => {
         priority: "high",
         url: `/posts/${violation.targetId}`,
       });
-    } else if (actionTaken === "ban_user") {
-      await User.findByIdAndUpdate(violation.userId, {
-        active: false,
-        $inc: { violationCount: 1 },
-        lastViolationAt: new Date(),
-      });
+    } else if (actionTaken === "warning") {
+      // tăng warning bằng $inc để tránh race condition và trả về giá trị mới
+      const updatedPost = await Post.findByIdAndUpdate(
+        violation.targetId,
+        { $inc: { warningCount: 1 } },
+        { new: true }
+      );
 
-      // Thông báo cho người bị ban
+      if (!updatedPost) throw new Error("Không tìm thấy bình luận");
+
+      const newWarningCount = updatedPost.warningCount || 0;
+
+      // nếu đạt >5 thì block comment và tăng vi phạm user
+      if (newWarningCount > 5) {
+        await Post.findByIdAndUpdate(violation.targetId, {
+          isBlocked: true,
+        });
+        await AddViolationUserByID(
+          updatedPost.userCreateID,
+          violation,
+          req.user.userId,
+          false
+        );
+      }
       await NotificationService.createAndEmitNotification({
-        recipient: violation.userId,
+        recipient: updatedPost.userCreateID,
         sender: req.user._id,
-        type: "USER_BANNED",
-        title: "Tài khoản bị tạm ngưng",
-        message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+        type: newWarningCount >= 5 ? "POST_BLOCKED" : "USER_WARNED",
+        title:
+          newWarningCount >= 5
+            ? "Bạn có 1 bài viết vi phạm tiêu chuẩn cộng đồng và đã bị ẩn"
+            : "Cảnh báo bài viết vi phạm",
+        message:
+          newWarningCount >= 5
+            ? `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`
+            : `Bạn có cảnh báo về bài viết vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}. Số cảnh báo hiện tại: ${newWarningCount}`,
         data: {
           violationId: violation._id,
+          postId: updatedPost.postID,
           reason: violation.reason,
-          action: "banned",
+          action: newWarningCount >= 5 ? "banned" : "warning",
         },
-        priority: "urgent",
-        url: `/support`,
+        priority: newWarningCount >= 5 ? "high" : "medium",
+        url: `/posts/${updatedPost.postID}`,
       });
+
+      if (newWarningCount >= 5) {
+        // Cập nhật số lần vi phạm của người dùng
+        await AddViolationUserByID(
+          updatedPost.userCreateID,
+          violation,
+          req.user._id,
+          false
+        );
+      }
     }
 
     // Thông báo cho admin về việc xử lý hoàn tất
@@ -1279,6 +1455,295 @@ const updateViolationStatus = async (req, res) => {
       message: "Lỗi khi cập nhật báo cáo",
     });
   }
+
+  async function AddViolationUserByID(
+    userId,
+    violation,
+    userAdminId,
+    banUser = false
+  ) {
+    try {
+      if (!userId) return;
+      const user = await User.findById(userId);
+      if (!user) {
+        console.warn("AddViolationUserByID: user not found", userId);
+        return;
+      }
+      const newCount = (user.violationCount || 0) + 1;
+      let isActive = newCount <= 5;
+      if (banUser) {
+        isActive = false;
+      }
+
+      await User.findByIdAndUpdate(userId, {
+        active: isActive,
+        violationCount: newCount,
+        lastViolationAt: new Date(),
+      });
+
+      // Thông báo khi bị ban/tạm khoá
+      if (!isActive) {
+        await NotificationService.createAndEmitNotification({
+          recipient: userId,
+          sender: userAdminId,
+          type: "USER_BANNED",
+          title: "Tài khoản bị tạm ngưng",
+          message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+          data: {
+            violationId: violation._id,
+            reason: violation.reason,
+            action: "banned",
+          },
+          priority: "urgent",
+          url: `/support`,
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật violation user:", err);
+    }
+  }
+};
+
+// Cập nhật violation comment
+const updateViolationCommentStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, actionTaken = "block_post", reviewedAt } = req.body;
+
+    const violation = await Violation.findById(id)
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email fullName");
+
+    if (!violation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo",
+      });
+    }
+
+    const updatedViolation = await Violation.findByIdAndUpdate(
+      id,
+      {
+        status,
+        actionTaken,
+        reviewedAt,
+        reviewedBy: req.user.userId,
+      },
+      { new: true }
+    )
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email fullName");
+
+    const comment = await Comment.findById(violation.targetId);
+
+    if (!comment && violation.targetType === "Comment") {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy bình luận liên quan",
+      });
+    }
+
+    // Thông báo real-time dựa trên action
+    if (actionTaken === "block_post") {
+      //1
+      // khoá bài viết, + lỗi cho người dùng ( nếu quá nhiều lỗi khoá user)
+
+      // khoá bài viết liên quan tới comment
+      const post = await Post.findByIdAndUpdate(
+        comment.postID,
+        { isBlocked: true },
+        { new: true }
+      );
+      // thông báo cho chủ bài (post.userCreateID), không dùng violation.userId
+      if (post) {
+        await NotificationService.createAndEmitNotification({
+          recipient: post.userCreateID,
+          sender: req.user._id,
+          type: "POST_BLOCKED",
+          title: "Bài viết đã bị ẩn",
+          message: `Bài viết của bạn đã bị ẩn do có các bình luận ảnh hưởng xấu. Lý do: ${violation.reason}`,
+          data: {
+            violationId: violation._id,
+            postId: post._id,
+            reason: violation.reason,
+            action: "blocked",
+          },
+          priority: "high",
+          url: `/posts/${post._id}`,
+        });
+
+        // tăng lỗi cho người tạo bài
+        await AddViolationUserByID(
+          post.userCreateID,
+          violation,
+          req.user.userId,
+          false
+        );
+      }
+    } else if (actionTaken === "ban_user") {
+      // 2
+      await AddViolationUserByID(
+        comment.userID,
+        violation,
+        req.user.userId,
+        true
+      );
+    } else if (actionTaken === "block_comment") {
+      console.log("Blocking comment ID:", violation.targetId);
+      // ẩn comment
+      await Comment.findByIdAndUpdate(violation.targetId, {
+        isBlocked: true,
+      });
+
+      // Thông báo cho người viết comment
+      await NotificationService.createAndEmitNotification({
+        recipient: comment.userID,
+        sender: req.user._id,
+        type: "POST_COMMENT_BLOCKED",
+        title: "Bình luận đã bị ẩn",
+        message: `Comment của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`,
+        data: {
+          violationId: violation._id,
+          postId: comment.postID,
+          reason: violation.reason,
+          action: "blocked",
+        },
+        priority: "high",
+        url: `/posts/${comment.postID}`,
+      });
+
+      // tăng lỗi cho user comment
+      await AddViolationUserByID(
+        comment.userID,
+        violation,
+        req.user.userId,
+        false
+      );
+    } else if (actionTaken === "warning") {
+      // tăng warning bằng $inc để tránh race condition và trả về giá trị mới
+      const updatedComment = await Comment.findByIdAndUpdate(
+        violation.targetId,
+        { $inc: { warningCount: 1 } },
+        { new: true }
+      );
+
+      if (!updatedComment) throw new Error("Không tìm thấy bình luận");
+
+      const newWarningCount = updatedComment.warningCount || 0;
+
+      // nếu đạt >5 thì block comment và tăng vi phạm user
+      if (newWarningCount > 5) {
+        await Comment.findByIdAndUpdate(violation.targetId, {
+          isBlocked: true,
+        });
+        await AddViolationUserByID(
+          updatedComment.userID,
+          violation,
+          req.user.userId,
+          false
+        );
+      }
+
+      await NotificationService.createAndEmitNotification({
+        recipient: updatedComment.userID,
+        sender: req.user._id,
+        type: newWarningCount >= 5 ? "COMMENT_BLOCKED" : "USER_WARNED",
+        title:
+          newWarningCount >= 5
+            ? "Bạn có 1 bình luận vi phạm tiêu chuẩn cộng đồng và đã bị ẩn"
+            : "Cảnh báo bình luận vi phạm",
+        message:
+          newWarningCount >= 5
+            ? `Comment của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}`
+            : `Bạn có cảnh báo về bình luận vi phạm nguyên tắc cộng đồng. Lý do: ${violation.reason}. Số cảnh báo hiện tại: ${newWarningCount}`,
+        data: {
+          violationId: violation._id,
+          postId: updatedComment.postID,
+          reason: violation.reason,
+          action: newWarningCount >= 5 ? "banned" : "warning",
+        },
+        priority: newWarningCount >= 5 ? "high" : "medium",
+        url:
+          newWarningCount >= 5 ? `/support` : `/posts/${updatedComment.postID}`,
+      });
+    }
+    // Thông báo cho admin về việc xử lý hoàn tất
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null,
+      sender: req.user._id,
+      type: "REPORT_RESOLVED",
+      title: "Báo cáo đã được xử lý",
+      message: `Báo cáo #${violation._id} đã được ${
+        req.user.fullName || req.user.username
+      } xử lý.`,
+      data: {
+        violationId: violation._id,
+        actionTaken: actionTaken,
+        resolvedBy: req.user._id,
+      },
+      priority: "medium",
+      url: `/admin/reports/${violation._id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: updatedViolation,
+      message: "Cập nhật trạng thái thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật báo cáo",
+    });
+  }
+
+  async function AddViolationUserByID(
+    userId,
+    violation,
+    userAdminId,
+    banUser = false
+  ) {
+    try {
+      if (!userId) return;
+      const user = await User.findById(userId);
+      if (!user) {
+        console.warn("AddViolationUserByID: user not found", userId);
+        return;
+      }
+      const newCount = (user.violationCount || 0) + 1;
+      let isActive = newCount <= 5;
+      if (banUser) {
+        isActive = false;
+      }
+
+      await User.findByIdAndUpdate(userId, {
+        active: isActive,
+        violationCount: newCount,
+        lastViolationAt: new Date(),
+      });
+
+      // Thông báo khi bị ban/tạm khoá
+      if (!isActive) {
+        await NotificationService.createAndEmitNotification({
+          recipient: userId,
+          sender: userAdminId,
+          type: "USER_BANNED",
+          title: "Tài khoản bị tạm ngưng",
+          message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+          data: {
+            violationId: violation._id,
+            reason: violation.reason,
+            action: "banned",
+          },
+          priority: "urgent",
+          url: `/support`,
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật violation user:", err);
+    }
+  }
 };
 
 module.exports = {
@@ -1304,7 +1769,11 @@ module.exports = {
   deleteNotification,
   getUserReports,
   getPostReports,
+  getCommentViolation,
   getActivityReports,
   getPostViolation,
   updateViolationStatus,
+  updateViolationCommentStatus,
+  block_un_Post,
+  block_un_PostComment,
 };

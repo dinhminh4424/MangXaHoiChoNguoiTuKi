@@ -1,12 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Modal, Dropdown } from "react-bootstrap";
 import {
-  getPostViolation,
-  updateViolationStatus,
+  getCommentViolation,
+  updateCommentViolationStatus,
 } from "../../../services/adminService";
-import { useParams } from "react-router-dom";
 
 import "./ReportContent.css";
+import { useParams } from "react-router-dom";
 
 const Report = () => {
   const [postReports, setPostReports] = useState([]);
@@ -20,7 +20,6 @@ const Report = () => {
   const [actionLoading, setActionLoading] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
 
-  // Param từ URL
   const { id } = useParams();
 
   // State cho bộ lọc
@@ -45,17 +44,17 @@ const Report = () => {
       status: "approved",
     },
     {
-      value: "block_post",
-      label: "Chặn bài đăng",
-      description: "Chặn bài viết này",
-      icon: "bi-file-earmark-x",
-      status: "approved",
-    },
-    {
       value: "block_comment",
       label: "Chặn bình luận",
       description: "Chặn bình luận vi phạm",
       icon: "bi-chat-square-dots",
+      status: "approved",
+    },
+    {
+      value: "block_post",
+      label: "Chặn bài đăng",
+      description: "Chặn bài viết này",
+      icon: "bi-file-earmark-x",
       status: "approved",
     },
     {
@@ -67,7 +66,7 @@ const Report = () => {
     },
   ];
 
-  const fetchPostViolations = useCallback(
+  const fetchCommentViolations = useCallback(
     async (pageToFetch = 1, filterParams = filters) => {
       if (isFetchingRef.current) return;
 
@@ -92,11 +91,11 @@ const Report = () => {
           id: id || "",
         };
 
-        const res = await getPostViolation(params);
-        console.log("getPostViolation: ", res);
+        const res = await getCommentViolation(params);
+        console.log("getCommentViolations: ", res);
 
         if (res?.success) {
-          const newReports = res.data?.reportsPost || [];
+          const newReports = res.data?.reportsComment || [];
           if (pageToFetch === 1) {
             setPostReports(newReports);
           } else {
@@ -123,9 +122,9 @@ const Report = () => {
 
   // Effect cho phân trang
   useEffect(() => {
-    fetchPostViolations(1, filters);
+    fetchCommentViolations(1, filters);
     setPage(1);
-  }, [fetchPostViolations, filters]);
+  }, [fetchCommentViolations, filters]);
 
   // Intersection Observer
   const observer = useRef(null);
@@ -141,7 +140,7 @@ const Report = () => {
         if (entries[0].isIntersecting && hasMore && !loadingMore && !loading) {
           setPage((prev) => {
             const next = prev + 1;
-            fetchPostViolations(next, filters);
+            fetchCommentViolations(next, filters);
             return next;
           });
         }
@@ -154,7 +153,7 @@ const Report = () => {
     return () => {
       if (observer.current) observer.current.disconnect();
     };
-  }, [fetchPostViolations, hasMore, loadingMore, loading, filters]);
+  }, [fetchCommentViolations, hasMore, loadingMore, loading, filters]);
 
   // Xử lý thay đổi bộ lọc
   const handleFilterChange = (key, value) => {
@@ -166,7 +165,7 @@ const Report = () => {
 
   const handleApplyFilters = () => {
     setPage(1);
-    fetchPostViolations(1, filters);
+    fetchCommentViolations(1, filters);
   };
 
   const handleResetFilters = () => {
@@ -179,7 +178,7 @@ const Report = () => {
     };
     setFilters(resetFilters);
     setPage(1);
-    fetchPostViolations(1, resetFilters);
+    fetchCommentViolations(1, resetFilters);
   };
 
   // Xử lý mở modal chi tiết
@@ -205,7 +204,7 @@ const Report = () => {
       setError("");
       setSuccessMessage("");
 
-      const res = await updateViolationStatus(reportId, {
+      const res = await updateCommentViolationStatus(reportId, {
         status: newStatus,
         actionTaken: actionTaken,
         reviewedAt: new Date(),
@@ -305,7 +304,6 @@ const Report = () => {
       reviewed: "Đã xem xét",
       approved: "Đã phê duyệt",
       rejected: "Đã từ chối",
-      auto: "Xử lý tự động",
     };
     return statusMap[status] || status;
   };
@@ -318,7 +316,6 @@ const Report = () => {
       block_post: "Chặn bài đăng",
       block_comment: "Chặn bình luận",
       ban_user: "Cấm người dùng",
-      auto_blocked: "Chặn tự động",
     };
     return actionMap[action] || action;
   };
@@ -447,7 +444,7 @@ const Report = () => {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="h4 mb-0">
-          <i className="bi bi-flag me-2"></i>Quản lý báo cáo bài viết
+          <i className="bi bi-flag me-2"></i>Quản lý báo cáo bình luận
         </h2>
         <div className="text-muted small">
           <i className="bi bi-list-ul me-1"></i>Tổng số: {postReports.length}{" "}
@@ -605,7 +602,7 @@ const Report = () => {
               <th scope="col" width="120">
                 Mã báo cáo
               </th>
-              <th scope="col">Bài viết</th>
+              <th scope="col">Bình luận</th>
               <th scope="col">Lý do</th>
               <th scope="col" width="110">
                 Ngày báo cáo
@@ -628,7 +625,7 @@ const Report = () => {
                   <tr
                     key={report._id}
                     className="align-middle cursor-pointer"
-                    onClick={() => handleShowDetails(report)}
+                    // onClick={() => handleShowDetails(report)}
                     style={{ cursor: "pointer" }}
                   >
                     {/* <th scope="row">{(page - 1) * limit + index + 1}</th> */}

@@ -44,7 +44,7 @@ const Login = () => {
 
         notificationService.success({
           title: "Đăng nhập thành công!",
-          text: "Chào mừng bạn trở lại! : ",
+          text: "Chào mừng bạn trở lại!  ",
           timer: 3000,
           showConfirmButton: false,
         });
@@ -78,7 +78,8 @@ const Login = () => {
     }
   };
 
-  const BACKEND_URL = "http://localhost:5000";
+  // const BACKEND_URL = "http://localhost:5000"; // process.env.REACT_APP_API_URL
+  const BACKEND_URL = process.env.REACT_APP_API_URL; // process.env.REACT_APP_API_URL
 
   return (
     <section className="sign-in-page">

@@ -1101,3 +1101,508 @@
 .comments-list::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* PostComments.css - Additional Styles */
+
+/* File Input and Preview */
+.file-input {
+  display: none;
+}
+
+.file-upload-btn {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 6px 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.2s;
+}
+
+.file-upload-btn:hover {
+  background: #e9ecef;
+}
+
+.file-preview {
+  position: relative;
+  margin-bottom: 8px;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+}
+
+.file-preview.small {
+  padding: 6px;
+  margin-bottom: 6px;
+}
+
+.file-preview-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 4px;
+}
+
+.file-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+}
+
+.file-name {
+  font-weight: 500;
+}
+
+.file-size {
+  color: #6c757d;
+  font-size: 11px;
+}
+
+.remove-file-btn {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  background: #dc3545;
+  color: white;
+  border: none;
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+/* Comment File Styles */
+.comment-file {
+  margin-top: 8px;
+}
+
+.file-image-container {
+  position: relative;
+  display: inline-block;
+}
+
+.file-image-container .download-link {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.file-image-container:hover .download-link {
+  opacity: 1;
+}
+
+.file-image {
+  max-width: 200px;
+  max-height: 150px;
+  border-radius: 8px;
+}
+
+.file-document {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.file-document .download-link {
+  margin-left: auto;
+  color: #007bff;
+  cursor: pointer;
+}
+
+/* Like Button Improvements */
+.comment-footer-actions .like {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 8px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.comment-footer-actions .like:hover {
+  background: #f8f9fa;
+}
+
+.comment-footer-actions .like.liked {
+  font-weight: 500;
+}
+
+.like-text {
+  font-size: 12px;
+}
+
+.like-count {
+  font-size: 11px;
+  color: #6c757d;
+  margin-left: 2px;
+}
+
+/* Report Dialog */
+.report-dialog {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #dee2e6;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 300px;
+}
+
+.report-dialog-content h4 {
+  margin: 0 0 12px 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+
+.report-textarea {
+  width: 100%;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 8px;
+  font-size: 12px;
+  resize: vertical;
+  margin-bottom: 12px;
+}
+
+.report-actions {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.cancel-btn,
+.submit-report-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 12px;
+}
+
+.cancel-btn {
+  background: #6c757d;
+  color: white;
+}
+
+.submit-report-btn {
+  background: #dc3545;
+  color: white;
+}
+
+.submit-report-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Reply File Actions */
+.reply-file-actions {
+  display: flex;
+}
+
+.file-action-btn {
+  display: flex;
+  align-items: center;
+  padding: 6px;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #6c757d;
+  border-radius: 4px;
+}
+
+.file-action-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+}
+
+.reply-buttons {
+  display: flex;
+  gap: 4px;
+}
+
+/* Menu Item with Icons */
+.menu-item.report {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: #dc3545;
+}
+
+/* Loading States */
+.loading-spinner.small {
+  width: 12px;
+  height: 12px;
+  border-width: 1px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  .file-preview-image {
+    max-width: 150px;
+    max-height: 100px;
+  }
+
+  .file-upload-btn {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
+
+  .report-dialog {
+    min-width: 250px;
+    left: 0;
+    right: auto;
+  }
+}
+
+/* PostComments.css - Thêm các style sau */
+
+.file-image-container {
+  position: relative;
+  display: inline-block;
+  max-width: 300px;
+}
+
+.file-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  transition: transform 0.2s;
+}
+
+.file-image:hover {
+  transform: scale(1.02);
+}
+
+.file-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.file-image-container:hover .file-actions {
+  opacity: 1;
+}
+
+.download-link {
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 6px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.download-link:hover {
+  background: rgba(0, 0, 0, 0.9);
+  color: white;
+}
+
+.file-video-container {
+  position: relative;
+  max-width: 300px;
+}
+
+.file-video {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+}
+
+/* Edit Comment Styles */
+.edit-comment-container {
+  margin-top: 8px;
+}
+
+.edit-comment-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.edit-comment-textarea:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.edit-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  justify-content: flex-end;
+}
+
+.cancel-edit-btn {
+  padding: 6px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #666;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.cancel-edit-btn:hover {
+  background: #f8f9fa;
+}
+
+.submit-edit-btn {
+  padding: 6px 12px;
+  border: none;
+  border-radius: 6px;
+  background: #007bff;
+  color: white;
+  cursor: pointer;
+  font-size: 13px;
+}
+
+.submit-edit-btn:disabled {
+  background: #6c757d;
+  cursor: not-allowed;
+}
+
+.submit-edit-btn:not(:disabled):hover {
+  background: #0056b3;
+}
+
+/* Report Modal Styles */
+.reported-comment-preview {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 16px;
+  border-left: 4px solid #dc3545;
+}
+
+.comment-preview-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.comment-preview-avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.comment-preview-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-name {
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.comment-time {
+  font-size: 11px;
+  color: #666;
+}
+
+.comment-preview-content {
+  font-size: 13px;
+  line-height: 1.4;
+  color: #333;
+}
+
+.report-reason-section {
+  margin-top: 16px;
+}
+
+.report-reason-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: #333;
+}
+
+.report-reason-textarea {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  resize: vertical;
+  font-family: inherit;
+  font-size: 14px;
+}
+
+.report-reason-textarea:focus {
+  outline: none;
+  border-color: #dc3545;
+}
+
+/* Menu Actions */
+.custom-dropdown-menu {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background: white;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  min-width: 160px;
+}
+
+.menu-item {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.menu-item:hover {
+  background: #f8f9fa;
+}
+
+.menu-item.delete {
+  color: #dc3545;
+}
+
+.menu-item.report {
+  color: #dc3545;
+}

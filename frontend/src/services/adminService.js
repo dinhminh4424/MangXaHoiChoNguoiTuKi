@@ -33,12 +33,22 @@ export const updateUserRole = (userId, role) => {
 };
 
 // Quản lý bài viết
-export const getAllPosts = (params = {}) => {
-  return api.get("/api/admin/posts", { params });
+export const getAllPosts = async (params = {}) => {
+  return await api.get("/api/admin/posts", { params });
 };
 
 export const getPostById = (postId) => {
   return api.get(`/api/admin/posts/${postId}`);
+};
+
+export const updatePostBlock = async (postId) => {
+  const res = await api.put(`/api/admin/posts/${postId}/blockPost`);
+  return res.data;
+};
+
+export const updatePostCommentBlock = async (postId) => {
+  const res = await api.put(`/api/admin/posts/${postId}/blockComment`);
+  return res.data;
 };
 
 export const deletePost = (postId) => {
@@ -118,6 +128,7 @@ export const getPostViolation = async (
     dateFrom: "",
     dateTo: "",
     search: "",
+    id: "",
   }
 ) => {
   const res = await api.get("/api/admin/violation/posts", { params });
@@ -125,6 +136,35 @@ export const getPostViolation = async (
 };
 
 export const updateViolationStatus = async (violationId, updateData) => {
-  const res = await api.put(`/api/admin/violation/${violationId}`, updateData);
+  const res = await api.put(
+    `/api/admin/violation/posts/${violationId}`,
+    updateData
+  );
+  return res.data;
+};
+
+// Report Comment
+
+export const getCommentViolation = async (
+  params = {
+    page: 1,
+    limit: 10,
+    status: "all",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+    reportId: "",
+  }
+) => {
+  console.log("params: ", params);
+  const res = await api.get("/api/admin/violation/comments", { params });
+  return res.data;
+};
+
+export const updateCommentViolationStatus = async (violationId, updateData) => {
+  const res = await api.put(
+    `/api/admin/violation/comments/${violationId}`,
+    updateData
+  );
   return res.data;
 };

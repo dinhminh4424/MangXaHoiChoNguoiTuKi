@@ -66,6 +66,14 @@ const commentSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    reportCount: {
+      type: Number,
+      default: 0,
+    },
+    warningCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
