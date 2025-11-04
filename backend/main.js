@@ -48,23 +48,24 @@ connectDB();
 // --------------------------------------- [Routes]--------------------------------------------
 
 // --- NEW: Social Login Routes (Đặt TRƯỚC các route API chính) ---
-// Google
-app.get(
-  "/api/auth/google",
-  passport.authenticate("google", {
-    scope: ["profile", "email"],
-    session: false,
-  })
-);
+// Chỉ cấu hình khi có đủ ENV, tránh lỗi "Unknown authentication strategy"
+if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+  // Google
+  app.get(
+    "/api/auth/google",
+    passport.authenticate("google", {
+      scope: ["profile", "email"],
+      session: false,
+    })
+  );
 
-app.get(
-  "/api/auth/google/callback",
-  passport.authenticate("google", {
-    // Dùng URL từ config của bạn
-    failureRedirect: `${config.cors.origin}/login?error=true`,
-    session: false,
-  }),
-  async (req, res) => {
+  app.get(
+    "/api/auth/google/callback",
+    passport.authenticate("google", {
+      failureRedirect: `${config.cors.origin}/login?error=true`,
+      session: false,
+    }),
+    async (req, res) => {
     // Cập nhật trạng thái online khi đăng nhập bằng Google
     try {
       await User.findByIdAndUpdate(
@@ -89,24 +90,29 @@ app.get(
 
     // Redirect về frontend, gửi kèm token
     res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
-  }
-);
-//facebook
-app.get(
-  "/api/auth/facebook",
-  passport.authenticate("facebook", {
-    scope: ["email", "public_profile"], // Scope của Facebook
-    session: false,
-  })
-);
+    }
+  );
+} else {
+  console.warn("[auth] GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET thiếu. Bỏ qua route Google.");
+}
 
-app.get(
-  "/api/auth/facebook/callback",
-  passport.authenticate("facebook", {
-    failureRedirect: `${config.cors.origin}/login?error=true`,
-    session: false,
-  }),
-  (req, res) => {
+//facebook
+if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  app.get(
+    "/api/auth/facebook",
+    passport.authenticate("facebook", {
+      scope: ["email", "public_profile"],
+      session: false,
+    })
+  );
+
+  app.get(
+    "/api/auth/facebook/callback",
+    passport.authenticate("facebook", {
+      failureRedirect: `${config.cors.origin}/login?error=true`,
+      session: false,
+    }),
+    (req, res) => {
     // Logic này Y HỆT như Google
     // Tạo JWT
     const token = jwt.sign(
@@ -120,8 +126,11 @@ app.get(
     );
     // Redirect về frontend, gửi kèm token
     res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
-  }
-);
+    }
+  );
+} else {
+  console.warn("[auth] FACEBOOK_APP_ID/FACEBOOK_APP_SECRET thiếu. Bỏ qua route Facebook.");
+}
 
 const routes = require("./routes");
 app.use("/api", routes);

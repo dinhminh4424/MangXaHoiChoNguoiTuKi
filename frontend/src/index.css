@@ -29,3 +29,26 @@ a:hover {
 .btn-link:hover {
   text-decoration: none !important;
 }
+
+/* Remove the small framed box around the navbar search icon/button */
+.iq-search-bar .searchbox .search-link,
+.iq-search-bar .searchbox .search-link:focus,
+.iq-search-bar .searchbox .search-link:hover {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  line-height: inherit !important;
+  color: inherit !important;
+  border-radius: 0 !important;
+  outline: none !important;
+  text-decoration: none !important;
+}
+
+/* Ensure the icon itself isn't wrapped by unexpected spacing */
+.iq-search-bar .searchbox .search-link i {
+  display: inline-block;
+  vertical-align: middle;
+}

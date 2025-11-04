@@ -3,6 +3,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
+import FriendButton from "../friend/FriendButton";
 
 import "./profileView.css";
 
@@ -449,15 +450,7 @@ const ProfileView = ({ userId }) => {
                       <i className="fas fa-comment me-2"></i>
                       Nhắn tin
                     </button>
-                    <button
-                      className="btn btn-outline-primary px-4 py-2 d-flex align-items-center"
-                      onClick={() => {
-                        console.log("Nhắn tin");
-                      }}
-                    >
-                      <i className="fas fa-user-plus me-2"></i>
-                      Kết bạn
-                    </button>
+                    <FriendButton userId={userId} />
                     <button className="btn btn-outline-secondary px-4 py-2 d-flex align-items-center">
                       <i className="fas fa-bell me-2"></i>
                       Theo dõi

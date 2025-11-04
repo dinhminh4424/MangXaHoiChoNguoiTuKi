@@ -455,12 +455,19 @@ class UserController {
 
       let query = { _id: { $ne: currentUserId } };
 
-      // Tìm kiếm theo tên hoặc username
+      // Tìm kiếm theo @ username hoặc fullname
       if (search) {
-        query.$or = [
-          { fullName: { $regex: search, $options: "i" } },
-          { username: { $regex: search, $options: "i" } },
-        ];
+        if (search.startsWith('@')) {
+          // Nếu bắt đầu bằng @, chỉ tìm theo username
+          const usernameSearch = search.slice(1); // Bỏ ký tự @ ở đầu
+          query.username = { $regex: usernameSearch, $options: "i" };
+        } else {
+          // Không có @, tìm cả username và fullname
+          query.$or = [
+            { fullName: { $regex: search, $options: "i" } },
+            { username: { $regex: search, $options: "i" } },
+          ];
+        }
       }
 
       // Lọc theo role
@@ -490,6 +497,57 @@ class UserController {
       res.status(500).json({
         success: false,
         message: "Lỗi khi lấy danh sách users",
+        error: error.message,
+      });
+    }
+  }
+
+  // [GET] /api/users/public - Public search for users (no auth required)
+  async getUsersPublic(req, res) {
+    try {
+      const { search, role, page = 1, limit = 20 } = req.query;
+
+      let query = {};
+
+      // Tìm kiếm theo @ username hoặc fullname
+      if (search) {
+        if (search.startsWith("@")) {
+          const usernameSearch = search.slice(1);
+          query.username = { $regex: usernameSearch, $options: "i" };
+        } else {
+          query.$or = [
+            { fullName: { $regex: search, $options: "i" } },
+            { username: { $regex: search, $options: "i" } },
+          ];
+        }
+      }
+
+      if (role) {
+        query.role = role;
+      }
+
+      const users = await User.find(query)
+        .select('-password')
+        .sort({ isOnline: -1, fullName: 1 })
+        .limit(limit * 1)
+        .skip((page - 1) * limit);
+
+      const total = await User.countDocuments(query);
+
+      res.json({
+        success: true,
+        data: users,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          results: users.length,
+          totalUsers: total,
+        },
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi tìm kiếm users (public)",
         error: error.message,
       });
     }
