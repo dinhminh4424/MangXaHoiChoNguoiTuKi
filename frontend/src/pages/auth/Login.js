@@ -44,7 +44,7 @@ const Login = () => {
 
         notificationService.success({
           title: "Đăng nhập thành công!",
-          text: "Chào mừng bạn trở lại! : ",
+          text: "Chào mừng bạn trở lại!  ",
           timer: 3000,
           showConfirmButton: false,
         });
@@ -77,6 +77,9 @@ const Login = () => {
       setLoading(false);
     }
   };
+
+  // const BACKEND_URL = "http://localhost:5000"; // process.env.REACT_APP_API_URL
+  const BACKEND_URL = process.env.REACT_APP_API_URL; // process.env.REACT_APP_API_URL
 
   return (
     <section className="sign-in-page">
@@ -163,7 +166,22 @@ const Login = () => {
                 </div>
               )}
 
-              <form className="mt-4" onSubmit={handleSubmit}>
+              <form className="mt-4" onSubmit={handleSubmit} autoComplete="off">
+                {/* hidden dummy fields to reduce browser autofill */}
+                <input
+                  type="text"
+                  name="fakeusernameremembered"
+                  id="fakeuser"
+                  autoComplete="off"
+                  style={{ display: "none" }}
+                />
+                <input
+                  type="password"
+                  name="fakepasswordremembered"
+                  id="fakepass"
+                  autoComplete="off"
+                  style={{ display: "none" }}
+                />
                 <div className="form-group">
                   <label className="form-label" htmlFor="email">
                     Email
@@ -228,9 +246,50 @@ const Login = () => {
                     )}
                   </button>
                 </div>
-                <div className="sign-info">
+
+                {/* --- NEW: Social Login Section --- */}
+                <div className="mt-4 mb-3 text-center">
+                  <div
+                    className="d-flex align-items-center justify-content-center"
+                    style={{
+                      height: "1px",
+                      backgroundColor: "#e0e0e0",
+                      width: "100%",
+                    }}
+                  >
+                    <span
+                      className="bg-white px-3 text-muted"
+                      style={{ marginTop: "-2px" }}
+                    >
+                      Hoặc đăng nhập bằng
+                    </span>
+                  </div>
+                </div>
+
+                <div className="d-flex flex-column gap-2">
+                  <a
+                    href={`${BACKEND_URL}/api/auth/google`}
+                    className="btn btn-danger d-flex align-items-center justify-content-center py-2"
+                    style={{ textDecoration: "none" }}
+                  >
+                    {/* Bạn có thể cần thư viện icon (ví dụ: 'ri-google-fill') */}
+                    {/* <i className="ri-google-fill me-2"></i> */}
+                    Đăng nhập với Google
+                  </a>
+                  <a
+                    href={`${BACKEND_URL}/api/auth/facebook`}
+                    className="btn btn-primary d-flex align-items-center justify-content-center py-2"
+                    style={{ textDecoration: "none" }}
+                  >
+                    {/* <i className="ri-facebook-box-fill me-2"></i> */}
+                    Đăng nhập với Facebook
+                  </a>
+                </div>
+                {/* --- END: Social Login Section --- */}
+
+                <div className="sign-info mt-4">
                   <span className="dark-color d-inline-block line-height-2">
-                    Bạn chưa có tài khoản?
+                    Bạn chưa có tài khoản?{" "}
                     <Link to="/register" className="text-decoration-none">
                       Đăng ký
                     </Link>
@@ -252,6 +311,14 @@ const Login = () => {
                       </a>
                     </li>
                   </ul>
+                </div>
+                <div className="sign-info">
+                  <span className="dark-color d-inline-block line-height-2">
+                    Bạn chưa muốn đăng nhập bằng khuôn mặt
+                    <Link to="/faceLogin" className="text-decoration-none">
+                      Đăng nhập
+                    </Link>
+                  </span>
                 </div>
               </form>
             </div>

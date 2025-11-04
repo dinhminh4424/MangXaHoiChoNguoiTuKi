@@ -78,6 +78,7 @@ function showImageToolbar(target, view) {
   toolbar.className =
     "image-toolbar fixed bg-white shadow-md rounded-lg border border-gray-300 flex flex-wrap gap-2 p-1 items-center z-[9999]";
   toolbar.style.position = "absolute";
+  toolbar.style.zIndex = "10000000000 !importance";
 
   const rect = target.getBoundingClientRect();
   toolbar.style.top = `${window.scrollY + rect.top - 50}px`;

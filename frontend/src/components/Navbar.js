@@ -3,7 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
-function Navbar() {
+function Navbar({ isCollapsed = false, onToggleSidebar }) {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -82,7 +82,11 @@ function Navbar() {
   return (
     <>
       {/* Sidebar Navigation bên trái */}
-      <div className="iq-sidebar sidebar-default">
+      <div
+        className={`iq-sidebar sidebar-default ${
+          isCollapsed ? "sidebar-mini" : ""
+        }`}
+      >
         <div id="sidebar-scrollbar">
           <nav className="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" className="iq-menu">
@@ -171,10 +175,10 @@ function Navbar() {
                   className="img-fluid"
                   alt="SocialV Logo"
                 />
-                <span>SocialV</span>
+                <span>Connect</span>
               </Link>
               <div className="iq-menu-bt align-self-center">
-                <div className="wrapper-menu">
+                <div className="wrapper-menu" onClick={onToggleSidebar}>
                   <div className="main-circle">
                     <i className="ri-menu-line"></i>
                   </div>

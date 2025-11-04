@@ -274,6 +274,112 @@ class EmailTemplates {
         </body>
         </html>
       `,
+      // Template thông báo người dùng bị cấm
+      USER_BANNED: (data) => `
+  <!DOCTYPE html>
+  <html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #222; }
+      .header { background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); padding: 30px; text-align: center; color: white; border-top-left-radius: 8px; border-top-right-radius: 8px; }
+      .content { padding: 28px; background: #ffffff; }
+      .footer { padding: 18px; text-align: center; background: #f5f5f5; color: #666; border-bottom-left-radius: 8px; border-bottom-right-radius: 8px; }
+      .ban-box { background: #fff0f0; border: 1px solid #ffd6d6; padding: 18px; border-radius: 6px; margin: 16px 0; }
+      .info-box { background: #ffffff; padding: 16px; border-radius: 6px; margin: 12px 0; border-left: 4px solid #dc3545; }
+      .muted { color: #777; font-size: 14px; }
+      .big-count { font-size: 22px; font-weight: 700; color: #b02a37; margin: 6px 0; }
+      .button { background: #007bff; color: white; padding: 10px 18px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 6px 8px; }
+      .button-green { background: #28a745; }
+      .small { font-size: 13px; color: #555; }
+      a { color: inherit; }
+      ul { padding-left: 18px; }
+      @media (max-width: 480px) {
+        .container { padding: 0 12px; }
+        .header { padding: 20px; }
+      }
+    </style>
+  </head>
+  <body style="background:#f0f2f5; padding: 20px 0;">
+    <div class="container" role="article" aria-label="Thông báo cấm tài khoản">
+      <div class="header">
+        <h1>🚫 Tài khoản bị cấm</h1>
+      </div>
+
+      <div class="content" role="main">
+        <h2>Xin chào ${data.userName || "Người dùng"},</h2>
+
+        <div class="ban-box" role="note" aria-label="Thông tin cấm">
+          <p style="margin:0 0 6px 0;"><strong>Lý do:</strong> ${
+            data.banReason || "Vi phạm quy tắc cộng đồng"
+          }</p>
+          <p style="margin:0;"><strong>Thời gian:</strong> ${
+            data.banDuration || "Bị cấm vĩnh viễn"
+          }</p>
+        </div>
+
+        <div class="info-box" aria-live="polite">
+          <p class="muted">Thông tin chi tiết:</p>
+          <p class="small"><strong>Bắt đầu cấm:</strong> ${
+            data.bannedAt || new Date().toISOString().slice(0, 10)
+          }</p>
+          ${
+            data.violationSummary
+              ? `<p class="small"><strong>Tóm tắt vi phạm:</strong> ${data.violationSummary}</p>`
+              : ""
+          }
+          ${
+            data.relatedPost
+              ? `<p class="small"><strong>Bài viết/bình luận liên quan:</strong> ${data.relatedPost}</p>`
+              : ""
+          }
+        </div>
+
+        <div class="info-box">
+          <h3 style="margin-top:0;">Bạn có thể làm gì tiếp theo</h3>
+          <ul>
+            ${
+              data.canAppeal
+                ? `<li>Nộp đơn kháng cáo: nhấn "Nộp kháng cáo" bên dưới để gửi yêu cầu xem xét lại.</li>`
+                : `<li>Quyết định cấm này không thể kháng cáo.</li>`
+            }
+            <li>Xem lại nguyên tắc cộng đồng để tránh vi phạm trong tương lai.</li>
+            <li>Nếu cần trợ giúp, liên hệ đội ngũ hỗ trợ.</li>
+          </ul>
+        </div>
+
+        <div style="text-align:center; margin: 18px 0;">
+          ${
+            data.canAppeal
+              ? `<a href="${
+                  data.appealLink || "#"
+                }" class="button">Nộp kháng cáo</a>`
+              : ""
+          }
+          <a href="${
+            data.contactLink || "#"
+          }" class="button button-green">Liên hệ hỗ trợ</a>
+          <a href="${
+            data.guidelinesLink || "#"
+          }" class="button" style="background:#6c757d;">Nguyên tắc cộng đồng</a>
+        </div>
+
+        <p class="small muted">Ghi chú: Nếu tài khoản bị tạm dừng do nhiều lần vi phạm, bạn có thể cần khôi phục thông tin từ hệ thống theo chính sách lưu trữ của nền tảng.</p>
+
+        <p style="margin-top:18px;"><em>Trân trọng,</em><br><strong>${
+          data.adminName || "Đội ngũ Autism Support"
+        }</strong></p>
+      </div>
+
+      <div class="footer">
+        <p class="small">Autism Support Platform — Hỗ trợ & Thấu hiểu</p>
+        <p class="small">© ${new Date().getFullYear()}</p>
+      </div>
+    </div>
+  </body>
+  </html>
+`,
 
       // Template thông báo bài viết bị báo cáo
       POST_REPORTED: (data) => `
@@ -399,6 +505,87 @@ class EmailTemplates {
 
               <div class="info-box">
                 <h3>📝 Nội dung bài viết đã bị ẩn:</h3>
+                <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
+                  <p><em>${data.postContent || "Nội dung đã bị ẩn"}</em></p>
+                </div>
+              </div>
+
+              <div class="guidelines">
+                <h3>📚 Nguyên tắc cộng đồng:</h3>
+                <ul>
+                  <li>Tôn trọng các thành viên khác</li>
+                  <li>Không đăng nội dung thù ghét, phân biệt đối xử</li>
+                  <li>Không chia sẻ thông tin sai lệch về tự kỷ</li>
+                  <li>Bảo vệ quyền riêng tư của mọi người</li>
+                  <li>Hỗ trợ và thấu hiểu lẫn nhau</li>
+                </ul>
+              </div>
+
+              <div style="text-align: center; margin: 25px 0;">
+                <a href="${
+                  data.guidelinesLink
+                }" class="button">Xem nguyên tắc cộng đồng</a>
+                <a href="${
+                  data.appealLink
+                }" class="button" style="background: #28a745;">Khiếu nại quyết định</a>
+              </div>
+
+              <p><strong>Lưu ý:</strong> Việc tiếp tục vi phạm có thể dẫn đến hạn chế quyền sử dụng tài khoản.</p>
+            </div>
+            <div class="footer">
+              <p><strong>Autism Support Platform</strong></p>
+              <p>Hỗ trợ: ${data.supportEmail} | Đường dây nóng: 1800-XXXX</p>
+              <p>© ${new Date().getFullYear()} - Vì một cộng đồng an toàn và thấu hiểu</p>
+            </div>
+          </div>
+        </body>
+        </html>
+      `,
+      // Template thông báo bài viết bị ẩn comment
+      POST_COMMENT_BLOCKED: (data) => `
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <meta charset="utf-8">
+          <style>
+            .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+            .header { background: linear-gradient(135deg, #dc3545 0%, #c82333 100%); padding: 30px; text-align: center; color: white; }
+            .content { padding: 30px; background: #f9f9f9; }
+            .footer { padding: 20px; text-align: center; background: #333; color: white; }
+            .alert-box { background: #f8d7da; border: 1px solid #f5c6cb; padding: 20px; border-radius: 5px; margin: 20px 0; }
+            .info-box { background: white; padding: 20px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #dc3545; }
+            .guidelines { background: #e7f3ff; padding: 15px; border-radius: 5px; margin: 15px 0; }
+            .button { background: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }
+          </style>
+        </head>
+        <body>
+          <div class="container">
+            <div class="header">
+              <h1>🚫 Bài Viết Đã Bị Ẩn Comment</h1>
+            </div>
+            <div class="content">
+              <h2>Xin chào ${data.userName},</h2>
+              
+              <div class="alert-box">
+                <h3>⚠️ Thông báo quan trọng</h3>
+                <p>Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng Autism Support.</p>
+              </div>
+
+              <div class="info-box">
+                <h3>📋 Chi tiết vi phạm:</h3>
+                <p><strong>Lý do:</strong> ${data.violationReason}</p>
+                <p><strong>Mức độ vi phạm:</strong> ${data.severityLevel}</p>
+                <p><strong>Thời gian xử lý:</strong> ${data.actionTime}</p>
+                <p><strong>Người xử lý:</strong> ${data.adminName}</p>
+                ${
+                  data.details
+                    ? `<p><strong>Chi tiết:</strong> ${data.details}</p>`
+                    : ""
+                }
+              </div>
+
+              <div class="info-box">
+                <h3>📝 Nội dung bài viết đã bị ẩn Comment:</h3>
                 <div style="background: #f8f9fa; padding: 15px; border-radius: 5px; margin: 10px 0;">
                   <p><em>${data.postContent || "Nội dung đã bị ẩn"}</em></p>
                 </div>

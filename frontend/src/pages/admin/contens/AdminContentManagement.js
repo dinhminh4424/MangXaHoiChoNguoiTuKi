@@ -1,6 +1,13 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
-import { getAllPosts, deletePost } from "../../../services/adminService";
+import {
+  getAllPosts,
+  deletePost,
+  updatePostBlock,
+  updatePostCommentBlock,
+} from "../../../services/adminService";
 // import "./AdminContentManagement.css";
+
+import NotificationService from "../../../services/notificationService";
 
 const DEFAULT_LIMIT = 12;
 
@@ -29,6 +36,7 @@ const AdminContentManagement = () => {
   const [loading, setLoading] = useState(false);
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
+  const [loadUpdate, setLoadUpdate] = useState(false);
 
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);
@@ -167,6 +175,82 @@ const AdminContentManagement = () => {
       privacy: "",
       hasFiles: "",
     });
+  };
+
+  const HandlerBlockPost = async (postId, isBlock) => {
+    try {
+      setLoadUpdate(true);
+      const res = await updatePostBlock(postId);
+      if (res.success) {
+        // Cập nhật trạng thái bài viết trong danh sách
+        setPosts((prev) => {
+          return prev.map((post) => {
+            return post._id == postId
+              ? { ...post, isBlocked: !post.isBlocked }
+              : post;
+          });
+        });
+
+        NotificationService.success({
+          title: "Cập nhật thành công!",
+          text: `Đã ${isBlock ? "Mở Khoá " : "Khoá"} bài viết thành công!  `,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (err) {
+      console.error(err);
+      setError(err?.toString() || "Có lỗi xảy ra khi cập nhật");
+
+      NotificationService.error({
+        title: "Cập nhật Thất Bại!",
+        text: `Đã ${isBlock ? "Mở Khoá " : "Khoá"} bài viết thất bại!  `,
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } finally {
+      setLoadUpdate(false);
+    }
+  };
+
+  const handleBlockComment = async (postId, isBlock) => {
+    try {
+      setLoadUpdate(true);
+
+      const res = await updatePostCommentBlock(postId);
+      if (res.success) {
+        // Cập nhật trạng thái bài viết trong danh sách
+        setPosts((prev) => {
+          return prev.map((post) => {
+            return post._id == postId
+              ? { ...post, isBlockedComment: !post.isBlockedComment }
+              : post;
+          });
+        });
+
+        NotificationService.success({
+          title: "Cập nhật thành công!",
+          text: `Đã ${
+            isBlock ? "Mở Khoá " : "Khoá"
+          } bình luận bài viết thành công!  `,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      console.error(error);
+      setError(error?.toString() || "Có lỗi xảy ra khi cập nhật");
+      NotificationService.error({
+        title: "Cập nhật Thất Bại!",
+        text: `Đã ${
+          isBlock ? "Mở Khoá " : "Khoá"
+        } bình luận bài viết thất bại!  `,
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    } finally {
+      setLoadUpdate(false);
+    }
   };
 
   // Render search và filters
@@ -382,6 +466,12 @@ const AdminContentManagement = () => {
                     </div>
                   </div>
                 </div>
+                {/* Nội dung */}
+                <p className="">
+                  #ID:
+                  {post._id?.substring(0, 150)}
+                  {post._id?.length > 150 && "..."}
+                </p>
 
                 {/* Nội dung */}
                 <p className="card-text post-content">
@@ -402,7 +492,7 @@ const AdminContentManagement = () => {
                     </div>
                     <div className="col-6">
                       <i className="ri-alert-line me-1"></i>
-                      {post.violationCount || 0} lỗi
+                      {post.reportCount || 0} lỗi
                     </div>
                     <div className="col-6">
                       <i className="ri-file-line me-1"></i>
@@ -414,6 +504,20 @@ const AdminContentManagement = () => {
                     </div>
                   </div>
                 </div>
+                {/* trạng thái xoá bởi user */}
+                {post.isDeletedByUser === true && (
+                  <div className="">
+                    <i className="fa-solid fa-trash-can me-1"></i>
+                    <p className="badge bg-danger">Người Dùng Đã Xoá</p>
+                  </div>
+                )}
+                {/* trạng thái ẩn comment */}
+                {post.isBlockedComment === true && (
+                  <div className="">
+                    <i className="fa-regular fa-comment me-1"></i>
+                    <p className="badge bg-secondary">Bình Luận đã ẩn</p>
+                  </div>
+                )}
 
                 {/* Tags và emotions */}
                 {(post.tags?.length > 0 || post.emotions?.length > 0) && (
@@ -448,25 +552,58 @@ const AdminContentManagement = () => {
                   <button
                     className="btn btn-sm btn-outline-warning"
                     onClick={() => {
-                      /* Xử lý chặn/bỏ chặn */
+                      HandlerBlockPost(post._id, post.isBlocked);
                     }}
                     title={post.isBlocked ? "Bỏ chặn" : "Chặn bài viết"}
                   >
-                    <i
-                      className={
-                        post.isBlocked ? "ri-lock-unlock-line" : "ri-lock-line"
-                      }
-                    ></i>
+                    {loadUpdate ? (
+                      <div
+                        className="spinner-border text-warning"
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    ) : (
+                      <i
+                        className={
+                          post.isBlocked
+                            ? "ri-lock-unlock-line"
+                            : "ri-lock-line"
+                        }
+                      ></i>
+                    )}
                   </button>
                   <button
-                    className="btn btn-sm btn-outline-info"
+                    className="btn btn-sm btn-outline-secondary"
                     onClick={() => {
-                      /* Xử lý xem báo cáo */
+                      handleBlockComment(post._id, post.isBlockedComment);
                     }}
+                    title={
+                      post.isBlockedComment
+                        ? "Bỏ chặn bình luận"
+                        : "Chặn bình luận"
+                    }
+                  >
+                    {loadUpdate ? (
+                      <div
+                        className="spinner-border text-secondary"
+                        role="status"
+                      >
+                        <span className="visually-hidden">Loading...</span>
+                      </div>
+                    ) : post.isBlockedComment ? (
+                      <i className="fa-regular fa-comment"></i>
+                    ) : (
+                      <i className="fa-solid fa-comment-slash"></i>
+                    )}
+                  </button>
+                  <a
+                    className="btn btn-sm btn-outline-info"
+                    href={`/admin/content/reports/${post._id}`}
                     title="Xem báo cáo"
                   >
                     <i className="ri-flag-line"></i>
-                  </button>
+                  </a>
                   <button
                     className="btn btn-sm btn-outline-danger"
                     onClick={() => handleDelete(post._id)}

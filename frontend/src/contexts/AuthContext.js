@@ -72,32 +72,6 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []); // ✅ GIỮ NGUYÊN empty dependencies
 
-  // Hàm đăng nhập
-  // const login = async (email, password) => {
-  //   try {
-  //     // Gọi API đăng nhập
-  //     const response = await api.post("/api/auth/login", {
-  //       email,
-  //       password,
-  //     });
-
-  //     // Lưu thông tin user và token
-  //     const { user, token } = response.data.data;
-  //     localStorage.setItem("token", token);
-  //     api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
-
-  //     setUser(user);
-  //     setToken(token);
-
-  //     return { success: true, data: token };
-  //   } catch (error) {
-  //     return {
-  //       success: false,
-  //       message: error.response?.data?.message || "Đăng nhập thất bại",
-  //     };
-  //   }
-  // };
-
   // Hàm đăng nhập trong AuthContext
   const login = async (email, password) => {
     try {
@@ -137,6 +111,34 @@ export const AuthProvider = ({ children }) => {
         success: false,
         message: errorMessage,
       };
+    }
+  };
+
+  // --- NEW FUNCTION ---
+  // Hàm xử lý đăng nhập từ Social (Google, Facebook)
+  const handleSocialLogin = async (newToken) => {
+    console.log("🔄 handleSocialLogin started...");
+    try {
+      // 1. Lưu token mới
+      localStorage.setItem("token", newToken);
+      setToken(newToken);
+      api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
+
+      // 2. Lấy thông tin user ngay lập tức (giống checkAuth)
+      const response = await api.get("/api/users/me");
+
+      if (response.data && response.data.data && response.data.data.user) {
+        setUser(response.data.data.user);
+        console.log("✅ Social login successful, user set");
+        return { success: true };
+      } else {
+        throw new Error("Invalid user data structure");
+      }
+    } catch (error) {
+      console.error("❌ handleSocialLogin failed:", error);
+      // Nếu thất bại, đăng xuất
+      logout();
+      return { success: false };
     }
   };
 
@@ -228,6 +230,7 @@ export const AuthProvider = ({ children }) => {
     loading,
     login,
     register,
+    handleSocialLogin,
     logout,
     loadUserChats,
     resetPassword,

@@ -20,8 +20,13 @@ router.put("/users/:userId/role", adminController.updateUserRole);
 // router.put("/users/:userId/status", adminController.updateUserStatus);
 
 // Quản lý bài viết
-router.get("/posts", adminController.getAllPosts);
+
+router.put("/posts/:postId/blockPost", adminController.block_un_Post);
+router.put("/posts/:postId/blockComment", adminController.block_un_PostComment);
+
 router.get("/posts/:postId", adminController.getPostById);
+router.get("/posts", adminController.getAllPosts);
+
 router.delete("/posts/:postId", adminController.deletePost);
 // router.put("/posts/:postId/status", adminController.updatePostStatus);
 
@@ -55,7 +60,12 @@ router.get("/reports/activity", adminController.getActivityReports);
 
 // Quản lý báo cáo
 
-router.put("/violation/:id", adminController.updateViolationStatus);
+router.put("/violation/posts/:id", adminController.updateViolationStatus);
+router.put(
+  "/violation/comments/:id",
+  adminController.updateViolationCommentStatus
+);
 router.get("/violation/posts", adminController.getPostViolation);
+router.get("/violation/comments", adminController.getCommentViolation);
 
 module.exports = router;

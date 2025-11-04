@@ -8,7 +8,7 @@ class CommentService {
       const formData = new FormData();
 
       formData.append("postID", commentData.postID);
-      formData.append("content", commentData.content);
+      formData.append("content", commentData.content || "");
       if (commentData.parentCommentID) {
         formData.append("parentCommentID", commentData.parentCommentID);
       }
@@ -18,7 +18,11 @@ class CommentService {
         formData.append("file", commentData.file);
       }
 
-      const response = await api.post("/api/comments/create", formData);
+      const response = await api.post("/api/comments/create", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
 
       return response.data;
     } catch (error) {
@@ -35,6 +39,7 @@ class CommentService {
 
       return response.data;
     } catch (error) {
+      console.log(error);
       throw error.response?.data || error;
     }
   }
@@ -99,6 +104,21 @@ class CommentService {
       throw error.response?.data || error;
     }
   }
+
+  // Lấy danh sách người đã like
+  async reportComment(id, reportData) {
+    try {
+      const response = await api.post(
+        `/api/comments/${id}/reportComment`,
+        reportData
+      );
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  }
+
+  //
 }
 
 export default new CommentService();

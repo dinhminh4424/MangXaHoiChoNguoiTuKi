@@ -11,13 +11,13 @@ const userSchema = new mongoose.Schema(
     },
     email: {
       type: String,
-      required: true,
+      required: false,
       unique: true,
       trim: true,
     },
     password: {
       type: String,
-      required: true,
+      required: false,
     },
     fullName: {
       type: String,
@@ -35,6 +35,45 @@ const userSchema = new mongoose.Schema(
       location: String,
       skills: [String],
       coverPhoto: { type: String, default: "" }, // Thêm field coverPhoto
+
+      // cccd
+      idCard: {
+        number: String,
+        fullName: String,
+        dob: String,
+        address: String,
+        issueDate: String,
+        expiryDate: String,
+        frontImage: String, // URL ảnh mặt trước
+        selfieImage: String, // ảnh selfie dùng để đăng nhập
+        verified: { type: Boolean, default: false },
+        verifiedAt: Date,
+      },
+
+      // LƯU DESCRIPTOR KHUÔN MẶT (128 số)
+      faceDescriptor: {
+        type: [Number],
+        default: null,
+        validate: {
+          validator: function (v) {
+            // Cho phép null hoặc undefined
+            if (!Array.isArray(v)) return !v;
+            return v.length === 128;
+          },
+          message: "Face descriptor phải có đúng 128 giá trị",
+        },
+      },
+    },
+
+    googleId: {
+      type: String,
+      unique: true,
+      sparse: true, // Cho phép nhiều document có giá trị null/undefined, nhưng phải unique nếu có giá trị
+    },
+    facebookId: {
+      type: String,
+      unique: true,
+      sparse: true, // Tương tự googleId
     },
     isOnline: {
       type: Boolean,
@@ -59,13 +98,25 @@ const userSchema = new mongoose.Schema(
 
 // Hash password trước khi lưu
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) return next();
-  this.password = await bcrypt.hash(this.password, 12);
+  // UPDATED: Chỉ hash nếu password tồn tại và bị thay đổi
+  // (Ngăn lỗi khi user social login (không có pass) được lưu)
+  if (!this.password || !this.isModified("password")) {
+    return next();
+  }
+
+  // Kiểm tra xem password có phải là chuỗi rỗng không (phòng trường hợp)
+  if (this.password && this.password.length > 0) {
+    this.password = await bcrypt.hash(this.password, 12);
+  }
   next();
 });
 
 // So sánh password
 userSchema.methods.comparePassword = async function (candidatePassword) {
+  // UPDATED: Nếu user không có password (vd: social login), luôn trả về false
+  if (!this.password) {
+    return false;
+  }
   return await bcrypt.compare(candidatePassword, this.password);
 };
 

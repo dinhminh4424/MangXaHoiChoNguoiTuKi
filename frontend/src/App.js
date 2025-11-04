@@ -438,12 +438,15 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
+import AuthCallback from "./components/AuthCallback";
+import SOSButton from "./components/SOSButton";
 
 // Style imports
 import "bootstrap/dist/css/bootstrap.min.css";
 
 // Page imports
 import Login from "./pages/auth/Login";
+import FaceLogin from "./pages/auth/FaceLogin";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
@@ -472,6 +475,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import ReportContent from "./pages/admin/reports/ReportContent";
+import ReportComment from "./pages/admin/reports/ReportComment";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 import UserLayout from "./components/layouts/UserLayout";
@@ -479,6 +483,8 @@ import AdminLayout from "./components/layouts/AdminLayout";
 
 import Navbar from "./components/Navbar";
 import ErrorPage from "./components/error/pages-error";
+
+import Test from "./pages/test";
 
 /**
  * COMPONENT: ProtectedRoute
@@ -512,8 +518,11 @@ function PublicRoute({ children }) {
 const routeConfigs = [
   // Public Routes
   { path: "/login", component: Login, isPublic: true },
+  { path: "/faceLogin", component: FaceLogin, isPublic: true },
   { path: "/register", component: Register, isPublic: true },
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
+
+  { path: "/test", component: Test, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },
@@ -574,6 +583,24 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   },
+  {
+    path: "/admin/content/reports/:id",
+    component: ReportContent,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reportsComment",
+    component: ReportComment, // ReportComment
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/content/reportsComment/:id",
+    component: ReportComment, // ReportComment
+    layout: AdminLayout,
+    isAdmin: true,
+  },
 ];
 
 /**
@@ -584,6 +611,9 @@ function AppRoutes() {
   const { isAuthenticated } = useAuth();
   return (
     <Routes>
+      {/* --- NEW: Route xử lý callback từ Social Login --- */}
+      <Route path="/auth/callback" element={<AuthCallback />} />
+
       {/* Render tất cả routes từ config */}
       {routeConfigs.map((route) => {
         const {
@@ -654,6 +684,8 @@ function AppContent() {
   return (
     <div className="App">
       <AppRoutes />
+      {/* ✅ Nút SOS hiển thị trên mọi trang */}
+      <SOSButton userId="currentUserId" />
     </div>
   );
 }

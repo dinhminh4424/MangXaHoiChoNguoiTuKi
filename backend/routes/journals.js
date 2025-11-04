@@ -40,7 +40,7 @@ router.get("/user/:userId", async (req, res) => {
     let query = { userId };
 
     // Nếu không phải chủ nhật ký, chỉ hiển thị public
-    if (userId !== req.user.id) {
+    if (userId !== req.user.userId.toString()) {
       query.isPrivate = false;
     }
 

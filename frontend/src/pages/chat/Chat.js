@@ -3,6 +3,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import { useChat } from "../../contexts/ChatContext";
 import { Modal } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
+import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
+import SpeechToText from "../../components/voice/SpeechToText";
 
 const Chat = () => {
   const { user, logout } = useAuth();
@@ -407,6 +409,12 @@ const Chat = () => {
     setShowUserDetails(!showUserDetails);
   };
 
+  const setVoiceNewMessage = (newData) => {
+    setNewMessage((prev) => {
+      return prev + " " + newData;
+    });
+  };
+
   // Đóng menu khi click ra ngoài
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -459,13 +467,13 @@ const Chat = () => {
                               <img
                                 src={user.profile.avatar}
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle w-100"
+                                className="avatar-60 rounded-circle"
                               />
                             ) : (
                               <img
                                 src="/assets/images/default-avatar.png"
                                 alt="chat-user"
-                                className="avatar-60 rounded-circle w-100"
+                                className="avatar-60 rounded-circle"
                               />
                             )}
                           </div>
@@ -661,7 +669,7 @@ const Chat = () => {
                                           "/assets/images/default-avatar.png"
                                         }
                                         alt="chatuserimage"
-                                        className="avatar-50 rounded-circle w-100"
+                                        className="avatar-50 rounded-circle "
                                       />
                                       <span className="avatar-status">
                                         <i className="ri-checkbox-blank-circle-fill text-success"></i>
@@ -1065,6 +1073,10 @@ const Chat = () => {
                                             <i className="ri-delete-bin-line"></i>{" "}
                                             Xoá
                                           </button>
+                                          <TextReaderAdvanced
+                                            text={message.content || "Khác"}
+                                            height={25}
+                                          />
 
                                           {/* Chỉ người gửi mới được thu hồi */}
                                           {message.sender?._id === user.id && (
@@ -1427,6 +1439,9 @@ const Chat = () => {
                                     setNewMessage(e.target.value)
                                   }
                                   disabled={isUploading}
+                                />
+                                <SpeechToText
+                                  onTextChange={setVoiceNewMessage}
                                 />
                                 <button
                                   type="submit"
