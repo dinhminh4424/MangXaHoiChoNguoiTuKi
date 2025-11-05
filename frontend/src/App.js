@@ -691,11 +691,14 @@ function AppRoutes() {
  * COMPONENT: AppContent
  */
 function AppContent() {
+  const { user } = useAuth();
+  const userId = user?._id || user?.id || null;
+  
   return (
     <div className="App">
       <AppRoutes />
       {/* ✅ Nút SOS hiển thị trên mọi trang */}
-      <SOSButton userId="currentUserId" />
+      {userId && <SOSButton userId={userId} />}
     </div>
   );
 }
