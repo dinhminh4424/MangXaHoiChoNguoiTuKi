@@ -7,6 +7,9 @@ const GroupMember = require("../models/GroupMember");
 const Comment = require("../models/Comment");
 const Message = require("../models/Message");
 const MoodLog = require("../models/MoodLog");
+const Violation = require("../models/Violation");
+const NotificationService = require("../services/notificationService");
+const mailService = require("../services/mailService");
 
 class UserController {
   // [GET] /api/users/me - Lấy thông tin user hiện tại
@@ -720,6 +723,204 @@ class UserController {
         error: error.message,
       });
     }
+  }
+
+  async reportUser(req, res) {
+    try {
+      const {
+        targetType = "User",
+        targetId,
+        reason,
+        notes,
+        status = "pending",
+      } = req.body;
+
+      const userCurrentId = req.user.userId;
+
+      let files = [];
+      if (req.files) {
+        files = req.files.map((file) => {
+          let fileFolder = "documents";
+          if (file.mimetype.startsWith("image/")) {
+            fileFolder = "images";
+          } else if (file.mimetype.startsWith("video/")) {
+            fileFolder = "videos";
+          } else if (file.mimetype.startsWith("audio/")) {
+            fileFolder = "audio";
+          }
+
+          const fileUrl = `/api/uploads/${fileFolder}/${file.filename}`;
+
+          let messageType = "file";
+          if (file.mimetype.startsWith("image/")) {
+            messageType = "image";
+          } else if (file.mimetype.startsWith("video/")) {
+            messageType = "video";
+          } else if (file.mimetype.startsWith("audio/")) {
+            messageType = "audio";
+          }
+
+          return {
+            type: messageType,
+            fileUrl: fileUrl,
+            fileName: file.originalname,
+            fileSize: file.size,
+          };
+        });
+      }
+
+      if (!targetId || !reason) {
+        return res.status(400).json({
+          success: false,
+          message:
+            "Thiếu thông tin bắt buộc để báo cáo targetId: " +
+            targetId +
+            " - reason: " +
+            reason,
+        });
+      }
+
+      const user = await User.findById(targetId);
+      if (!user) {
+        return res.status(401).json({
+          success: false,
+          message: "Không tìm thấy user với  targetId: " + targetId,
+        });
+      }
+
+      // tạo bản ghi mới
+      const newViolation = new Violation({
+        targetType: targetType,
+        targetId: targetId, // id đối tượng
+        reason: reason,
+        notes: notes,
+        status: status,
+        files: files,
+        userId: targetId, // người bị báo cáo của bài viết
+        reportedBy: userCurrentId, // ngừời báo cáo
+      });
+
+      await newViolation.save();
+
+      await AddViolationUserByID(user._id, newViolation, userCurrentId, false);
+
+      const reporter = await User.findById(userCurrentId);
+
+      // 1. Gửi thông báo real-time cho admin
+      await NotificationService.emitNotificationToAdmins({
+        recipient: null, // Gửi cho tất cả admin
+        sender: userCurrentId,
+        type: "REPORT_CREATED",
+        title: "Báo cáo mới cần xử lý",
+        message: `Người Dùng đã được báo cáo với lý do: ${reason}`,
+        data: {
+          violationId: newViolation._id,
+          postId: targetId,
+          reporterId: userCurrentId,
+          reporterName: reporter.fullName || reporter.username,
+          reason: reason,
+        },
+        priority: "high",
+        url: `/admin/reports/users/${newViolation._id}`,
+      });
+
+      // 2. Gửi thông báo cho TÀI KHOẢN (nếu cần)
+      await NotificationService.createAndEmitNotification({
+        recipient: newViolation.userId,
+        sender: userCurrentId,
+        type: "USER_WARNED",
+        title: "Bạn đã bị báo cáo",
+        message: `Bạn đã được báo cáo vì: ${reason}. Chúng tôi sẽ xem xét và thông báo kết quả.`,
+        data: {
+          violationId: newViolation._id,
+          postId: targetId,
+          reason: reason,
+        },
+        priority: "medium",
+        url: `/profile/${targetId}`,
+      });
+
+      return res.json({
+        success: true,
+        message: "Báo cáo đã được gửi thành công",
+        data: newViolation,
+      });
+    } catch (error) {
+      console.log("Lỗi khi báo cáo user: ", error);
+      return res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy thống kê",
+        error: error.message,
+      });
+    }
+  }
+}
+
+// Thêm vi phạm cho user theo ID
+async function AddViolationUserByID(
+  userId,
+  violation,
+  userAdminId,
+  banUser = false
+) {
+  try {
+    if (!userId) return;
+    const user = await User.findById(userId);
+    if (!user) {
+      console.warn("AddViolationUserByID: user not found", userId);
+      return;
+    }
+    const newCount = (user.violationCount || 0) + 1;
+    let isActive = newCount <= 5;
+    if (banUser) {
+      isActive = false;
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      active: isActive,
+      violationCount: newCount,
+      lastViolationAt: new Date(),
+    });
+
+    // Thông báo khi bị ban/tạm khoá
+    if (!isActive) {
+      await NotificationService.createAndEmitNotification({
+        recipient: userId,
+        sender: userAdminId,
+        type: "USER_BANNED",
+        title: "Tài khoản bị tạm ngưng",
+        message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+        data: {
+          violationId: violation._id,
+          reason: violation.reason,
+          action: "banned",
+        },
+        priority: "urgent",
+        url: `/support`,
+      });
+    }
+
+    // Gửi email khi bị ban/tạm khoá
+    const admin = await User.findById(userAdminId);
+    if (!admin) {
+      console.warn("AddViolationUserByID: admin not found", userAdminId);
+      return;
+    }
+    await mailService.sendEmail({
+      to: user.email,
+      subject: "🚫 Tài Khoản Của Bạn Đã Bị Khoá - Autism Support",
+      templateName: "USER_BANNED",
+      templateData: {
+        userName: user.fullName || user.username,
+        violationReason: violation.reason,
+        severityLevel: "Nghiêm trọng",
+        actionTime: new Date().toLocaleString("vi-VN"),
+        adminName: admin.fullName || admin.username,
+        details: "Tài khoản vi phạm nguyên tắc cộng đồng và đã bị khoá",
+      },
+    });
+  } catch (err) {
+    console.error("Lỗi khi cập nhật violation user:", err);
   }
 }
 

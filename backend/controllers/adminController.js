@@ -98,13 +98,73 @@ const getDashboardStats = async (req, res) => {
 };
 
 // Quản lý người dùng
+// const getAllUsers = async (req, res) => {
+//   try {
+//     const { page = 1, limit = 10, search = "", role = "" } = req.query;
+//     const skip = (page - 1) * limit;
+
+//     // Tạo filter
+//     const filter = {};
+//     if (search) {
+//       filter.$or = [
+//         { username: { $regex: search, $options: "i" } },
+//         { email: { $regex: search, $options: "i" } },
+//         { fullName: { $regex: search, $options: "i" } },
+//       ];
+//     }
+//     if (role) {
+//       filter.role = role;
+//     }
+
+//     const [users, total] = await Promise.all([
+//       User.find(filter)
+//         .select("-password")
+//         .sort({ createdAt: -1 })
+//         .skip(skip)
+//         .limit(parseInt(limit)),
+//       User.countDocuments(filter),
+//     ]);
+
+//     res.json({
+//       success: true,
+//       data: {
+//         users,
+//         pagination: {
+//           current: parseInt(page),
+//           pages: Math.ceil(total / limit),
+//           total,
+//         },
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Get all users error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi lấy danh sách người dùng",
+//     });
+//   }
+// };
+
 const getAllUsers = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "", role = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      role = "",
+      status = "",
+      dateFrom = "",
+      dateTo = "",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
     const skip = (page - 1) * limit;
 
     // Tạo filter
     const filter = {};
+
+    // Tìm kiếm
     if (search) {
       filter.$or = [
         { username: { $regex: search, $options: "i" } },
@@ -112,14 +172,42 @@ const getAllUsers = async (req, res) => {
         { fullName: { $regex: search, $options: "i" } },
       ];
     }
+
+    // Lọc theo role
     if (role) {
       filter.role = role;
     }
 
+    // Lọc theo trạng thái
+    if (status === "active") {
+      filter.active = true;
+    } else if (status === "banned") {
+      filter.active = false;
+    } else if (status === "online") {
+      filter.isOnline = true;
+    } else if (status === "offline") {
+      filter.isOnline = false;
+    }
+
+    // Lọc theo ngày
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) {
+        filter.createdAt.$gte = new Date(dateFrom);
+      }
+      if (dateTo) {
+        filter.createdAt.$lte = new Date(dateTo);
+      }
+    }
+
+    // Sắp xếp
+    const sort = {};
+    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
     const [users, total] = await Promise.all([
       User.find(filter)
         .select("-password")
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(parseInt(limit)),
       User.countDocuments(filter),
@@ -141,6 +229,47 @@ const getAllUsers = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách người dùng",
+    });
+  }
+};
+
+const createUser = async (req, res) => {
+  try {
+    const { username, email, password, fullName, role, profile } = req.body;
+
+    // Kiểm tra user đã tồn tại
+    const existingUser = await User.findOne({
+      $or: [{ email }, { username }],
+    });
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Email hoặc username đã tồn tại",
+      });
+    }
+
+    const user = new User({
+      username,
+      email,
+      password,
+      fullName,
+      role: role || "user",
+      profile: profile || {},
+    });
+
+    await user.save();
+
+    res.status(201).json({
+      success: true,
+      data: { user },
+      message: "Tạo người dùng thành công",
+    });
+  } catch (error) {
+    console.error("Create user error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi tạo người dùng",
     });
   }
 };
@@ -186,15 +315,10 @@ const getUserById = async (req, res) => {
 
 const updateUser = async (req, res) => {
   try {
-    const { userId } = req.params;
-    const { fullName, email, profile, role } = req.body;
+    const { id } = req.params;
+    const { username, email, fullName, role, profile, active } = req.body;
 
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { fullName, email, profile, role },
-      { new: true, runValidators: true }
-    ).select("-password");
-
+    const user = await User.findById(id);
     if (!user) {
       return res.status(404).json({
         success: false,
@@ -202,16 +326,92 @@ const updateUser = async (req, res) => {
       });
     }
 
+    // Kiểm tra trùng email/username
+    if (email && email !== user.email) {
+      const existingUser = await User.findOne({ email });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Email đã tồn tại",
+        });
+      }
+    }
+
+    if (username && username !== user.username) {
+      const existingUser = await User.findOne({ username });
+      if (existingUser) {
+        return res.status(400).json({
+          success: false,
+          message: "Username đã tồn tại",
+        });
+      }
+    }
+
+    // Cập nhật thông tin
+    const updateData = {};
+    if (username) updateData.username = username;
+    if (email) updateData.email = email;
+    if (fullName !== undefined) updateData.fullName = fullName;
+    if (role) updateData.role = role;
+    if (active !== undefined) updateData.active = active;
+    if (profile) updateData.profile = { ...user.profile, ...profile };
+
+    const updatedUser = await User.findByIdAndUpdate(id, updateData, {
+      new: true,
+      runValidators: true,
+    }).select("-password");
+
     res.json({
       success: true,
-      message: "Cập nhật thông tin người dùng thành công",
-      data: user,
+      data: { user: updatedUser },
+      message: "Cập nhật người dùng thành công",
     });
   } catch (error) {
     console.error("Update user error:", error);
     res.status(500).json({
       success: false,
-      message: "Lỗi khi cập nhật thông tin người dùng",
+      message: "Lỗi khi cập nhật người dùng",
+    });
+  }
+};
+
+const updateActiveUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+
+    if (!id) {
+      console.error("Ko có id:", id);
+      return res.status(404).json({
+        success: false,
+        message: "Lỗi khi cập nhật Trạng thái hoạt động người dùng",
+      });
+    }
+    const user = await User.findById(id);
+
+    if (!user) {
+      console.error("Ko có id:", id);
+      return res.status(403).json({
+        success: false,
+        message: "Không tìm thấy người dùng với id: " + id,
+      });
+    }
+
+    const active = user.active || true;
+
+    user.active = !active;
+
+    await user.save();
+
+    return res.status(200).json({
+      success: true,
+      message: active,
+      user,
+    });
+  } catch (error) {
+    console.error("Update user error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật Trạng thái hoạt động người dùng : " + error,
     });
   }
 };
@@ -298,92 +498,8 @@ const updateUserRole = async (req, res) => {
 };
 
 // Quản lý bài viết
-// const getAllPosts = async (req, res) => {
-//   try {
-//     // const { page = 1, limit = 10, postsSearch = [] } = req.query;
-//     const { page = 1, limit = 10, email, fromDate, toDate } = req.query;
 
-//     const skip = (page - 1) * limit;
-
-//     let postsSearch = {
-//       email,
-//       fromDate,
-//       toDate,
-//     };
-//     console.log("================= postsSearch: ", postsSearch);
-
-//     const filter = {};
-//     if (postsSearch) {
-//       if (postsSearch.email) {
-//         filter.$or = [
-//           {
-//             "userCreateID.username": {
-//               $regex: postsSearch.email,
-//               $options: "i",
-//             },
-//           },
-//           {
-//             "userCreateID.email": { $regex: postsSearch.email, $options: "i" },
-//           },
-//         ];
-//       }
-//       if (postsSearch.fromDate && postsSearch.toDate) {
-//         const toDateObj = new Date(toDate);
-//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
-//         const fromDateObj = new Date(toDateObj);
-//         fromDateObj.setHours(0, 0, 0, 0);
-//         filter.createdAt = [
-//           {
-//             $gte: new Date(postsSearch.fromDateObj),
-//             $lte: new Date(postsSearch.toDateObj),
-//           },
-//         ];
-//       } else if (postsSearch.fromDate) {
-//         const fromDateObj = new Date(toDateObj);
-//         fromDateObj.setHours(0, 0, 0, 0);
-//         filter.createdAt = {
-//           $gte: new Date(postsSearch.fromDateObj),
-//         };
-//       } else if (postsSearch.toDate) {
-//         const toDateObj = new Date(toDate);
-//         toDateObj.setHours(23, 59, 59, 999); // để lấy hết ngày toDate
-//         filter.createdAt = {
-//           $lte: new Date(postsSearch.toDateObj),
-//         };
-//       }
-//     }
-
-//     const [posts, total] = await Promise.all([
-//       Post.find(filter)
-//         .populate("userCreateID", "username email profile.avatar")
-//         .sort({ createdAt: -1 })
-//         .skip(skip)
-//         .limit(parseInt(limit)),
-
-//       Post.countDocuments(filter),
-//     ]);
-
-//     res.json({
-//       success: true,
-//       data: {
-//         posts,
-//         pagination: {
-//           current: parseInt(page),
-//           pages: Math.ceil(total / limit),
-//           total,
-//         },
-//       },
-//     });
-//   } catch (error) {
-//     console.error("Get all posts error:", error);
-//     res.status(500).json({
-//       success: false,
-//       message: "Lỗi khi lấy danh sách bài viết",
-//     });
-//   }
-// };
-
-// Trong adminController.js - cập nhật hàm getAllPosts
+//  cập nhật hàm getAllPosts
 const getAllPosts = async (req, res) => {
   try {
     const {
@@ -1425,6 +1541,14 @@ const updateViolationStatus = async (req, res) => {
       }
     }
 
+    if (status == "rejected") {
+      const post = await Post.findById(violation.targetId);
+      let reportCount = post.reportCount || 1;
+      post.reportCount = reportCount - 1;
+
+      await post.save();
+    }
+
     // Thông báo cho admin về việc xử lý hoàn tất
     await NotificationService.emitNotificationToAdmins({
       recipient: null,
@@ -1644,6 +1768,12 @@ const updateViolationCommentStatus = async (req, res) => {
         );
       }
 
+      if (status == "rejected") {
+        let reportCount = comment.reportCount || 1;
+        comment.reportCount = reportCount - 1;
+
+        await comment.save();
+      }
       await NotificationService.createAndEmitNotification({
         recipient: updatedComment.userID,
         sender: req.user._id,
@@ -1667,6 +1797,265 @@ const updateViolationCommentStatus = async (req, res) => {
           newWarningCount >= 5 ? `/support` : `/posts/${updatedComment.postID}`,
       });
     }
+
+    if (status == "rejected") {
+      let reportCount = comment.reportCount || 1;
+      comment.reportCount = reportCount - 1;
+
+      await comment.save();
+    }
+    // Thông báo cho admin về việc xử lý hoàn tất
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null,
+      sender: req.user._id,
+      type: "REPORT_RESOLVED",
+      title: "Báo cáo đã được xử lý",
+      message: `Báo cáo #${violation._id} đã được ${
+        req.user.fullName || req.user.username
+      } xử lý.`,
+      data: {
+        violationId: violation._id,
+        actionTaken: actionTaken,
+        resolvedBy: req.user._id,
+      },
+      priority: "medium",
+      url: `/admin/reports/${violation._id}`,
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: updatedViolation,
+      message: "Cập nhật trạng thái thành công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi cập nhật báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật báo cáo",
+    });
+  }
+
+  async function AddViolationUserByID(
+    userId,
+    violation,
+    userAdminId,
+    banUser = false
+  ) {
+    try {
+      if (!userId) return;
+      const user = await User.findById(userId);
+      if (!user) {
+        console.warn("AddViolationUserByID: user not found", userId);
+        return;
+      }
+      const newCount = (user.violationCount || 0) + 1;
+      let isActive = newCount <= 5;
+      if (banUser) {
+        isActive = false;
+      }
+
+      await User.findByIdAndUpdate(userId, {
+        active: isActive,
+        violationCount: newCount,
+        lastViolationAt: new Date(),
+      });
+
+      // Thông báo khi bị ban/tạm khoá
+      if (!isActive) {
+        await NotificationService.createAndEmitNotification({
+          recipient: userId,
+          sender: userAdminId,
+          type: "USER_BANNED",
+          title: "Tài khoản bị tạm ngưng",
+          message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+          data: {
+            violationId: violation._id,
+            reason: violation.reason,
+            action: "banned",
+          },
+          priority: "urgent",
+          url: `/support`,
+        });
+      }
+    } catch (err) {
+      console.error("Lỗi khi cập nhật violation user:", err);
+    }
+  }
+};
+
+const getUserViolation = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = "all",
+      dateFrom = "",
+      dateTo = "",
+      search = "",
+      reportId = "",
+      id = "",
+    } = req.query;
+    const skip = limit * (page - 1);
+
+    console.log("req.params: ", req.params);
+
+    const filter = { targetType: "User" };
+
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    if (dateFrom || dateTo) {
+      filter.createdAt = {};
+      if (dateFrom) filter.createdAt.$gte = new Date(dateFrom);
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    // Xử lý search và reportId
+    const searchConditions = [];
+    if (search) {
+      searchConditions.push(
+        { reason: { $regex: search, $options: "i" } },
+        { notes: { $regex: search, $options: "i" } }
+      );
+    }
+
+    // if (reportId) {
+    //   filter.$or = [{ _id: { $regex: reportId, $options: "i" } }];
+    // }
+
+    // Tìm kiếm theo reportId - chuyển _id thành string
+    if (reportId) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: reportId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    if (id) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$targetId" },
+            regex: id,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Kết hợp điều kiện tìm kiếm
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
+    }
+
+    const [reportsPost, total] = await Promise.all([
+      Violation.find(filter)
+        .populate("reportedBy", "username email profile.avatar")
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Violation.countDocuments(filter),
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      data: {
+        reportsPost,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy báo cáo:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy báo cáo bài viết",
+    });
+  }
+};
+
+const updateViolationUser = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, actionTaken = "warning", reviewedAt } = req.body;
+
+    const violation = await Violation.findById(id)
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email fullName");
+
+    if (!violation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy báo cáo",
+      });
+    }
+
+    const updatedViolation = await Violation.findByIdAndUpdate(
+      id,
+      {
+        status,
+        actionTaken,
+        reviewedAt,
+        reviewedBy: req.user.userId,
+      },
+      { new: true }
+    ).populate("reportedBy", "username email profile.avatar");
+
+    // Thông báo real-time dựa trên action
+    if (actionTaken === "ban_user") {
+      // Cập nhật số lần vi phạm và khoá tài khoản người dùng
+      await AddViolationUserByID(
+        violation.userId,
+        violation,
+        req.user._id,
+        true
+      );
+    } else if (actionTaken === "warning") {
+      // tăng warning bằng $inc để tránh race condition và trả về giá trị mới
+      const updatedUser = await User.findByIdAndUpdate(
+        violation.targetId,
+        { $inc: { warningCount: 1 } },
+        { new: true }
+      );
+
+      if (!updatedUser) throw new Error("Không tìm thấy người dùng");
+
+      const newWarningCount = updatedUser.warningCount || 0;
+
+      if (newWarningCount >= 5) {
+        // Cập nhật số lần vi phạm của người dùng
+        await AddViolationUserByID(
+          updatedUser._id,
+          violation,
+          req.user._id,
+          false
+        );
+      }
+    }
+    if (status === "rejected") {
+      // Nếu báo cáo bị từ chối, gửi thông báo cho người bị báo cáo
+      const user = await User.findById(violation.targetId);
+      if (!user) {
+        console.warn("Ko tìm thấy user bị báo cáo", violation.targetId);
+        return;
+      }
+      user.violationCount = Math.max((user.violationCount || 1) - 1, 0);
+      await user.save();
+    }
+
     // Thông báo cho admin về việc xử lý hoàn tất
     await NotificationService.emitNotificationToAdmins({
       recipient: null,
@@ -1751,6 +2140,7 @@ module.exports = {
   getAllUsers,
   getUserById,
   updateUser,
+  createUser,
   deleteUser,
   updateUserRole,
   getAllPosts,
@@ -1776,4 +2166,7 @@ module.exports = {
   updateViolationCommentStatus,
   block_un_Post,
   block_un_PostComment,
+  updateActiveUser,
+  getUserViolation,
+  updateViolationUser,
 };

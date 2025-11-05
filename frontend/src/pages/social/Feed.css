@@ -363,3 +363,38 @@
 .posts-container::-webkit-scrollbar-thumb:hover {
   background: #a8a8a8;
 }
+
+/* Thêm vào Feed.css */
+
+.loading-more-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  color: #6c757d;
+}
+
+.spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Cải thiện scroll experience */
+.posts-container {
+  min-height: 400px;
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .feed-sidebar {
+    margin-bottom: 20px;
+  }
+}

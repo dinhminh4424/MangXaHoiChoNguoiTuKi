@@ -12,16 +12,25 @@ export const getDashboardStats = async () => {
 };
 
 // Quản lý người dùng
-export const getAllUsers = (params = {}) => {
-  return api.get("/api/admin/users", { params });
+export const getAllUsers = async (params = {}) => {
+  return await api.get("/api/admin/users", { params });
+};
+
+export const createUser = async (userData) => {
+  return await api.post("/api/admin/users", userData);
 };
 
 export const getUserById = (userId) => {
   return api.get(`/api/admin/users/${userId}`);
 };
 
-export const updateUser = (userId, data) => {
-  return api.put(`/api/admin/users/${userId}`, data);
+export const updateUser = async (userId, data) => {
+  return await api.put(`/api/admin/users/${userId}`, data);
+};
+
+export const updateActiveUser = async (id) => {
+  const res = await api.put(`/api/admin/users/${id}/active`);
+  return res.data;
 };
 
 export const deleteUser = (userId) => {
@@ -164,6 +173,31 @@ export const getCommentViolation = async (
 export const updateCommentViolationStatus = async (violationId, updateData) => {
   const res = await api.put(
     `/api/admin/violation/comments/${violationId}`,
+    updateData
+  );
+  return res.data;
+};
+
+// report user
+export const getUsersViolation = async (
+  params = {
+    page: 1,
+    limit: 10,
+    status: "all",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+    reportId: "",
+  }
+) => {
+  console.log("params: ", params);
+  const res = await api.get("/api/admin/violation/users", { params });
+  return res.data;
+};
+
+export const updateUsersViolationStatus = async (violationId, updateData) => {
+  const res = await api.put(
+    `/api/admin/violation/users/${violationId}`,
     updateData
   );
   return res.data;

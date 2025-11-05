@@ -35,7 +35,7 @@ const violationSchema = new mongoose.Schema(
     // trạng thái
     status: {
       type: String,
-      enum: ["pending", "reviewed", "approved", "rejected", "auto"], // ["đang chờ xử lý", "đã xem xét", "đã phê duyệt", "bị từ chối"],
+      enum: ["pending", "reviewed", "approved", "rejected", "auto"], // ["đang chờ xử lý", "đã xem xét", "đã phê duyệt", "bị từ chối", "tự động"],
       default: "pending",
     },
     // hành động đã thực hiện

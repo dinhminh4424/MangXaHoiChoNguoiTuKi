@@ -188,14 +188,18 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
 
             {/* Search Bar */}
             <div className="iq-search-bar device-search">
-              <form 
+              <form
                 onSubmit={(e) => {
                   e.preventDefault();
-                  const searchInput = e.target.querySelector('.search-input');
+                  const searchInput = e.target.querySelector(".search-input");
                   if (searchInput.value.trim()) {
-                    navigate(`/search?q=${encodeURIComponent(searchInput.value.trim())}`);
+                    navigate(
+                      `/search?q=${encodeURIComponent(
+                        searchInput.value.trim()
+                      )}`
+                    );
                   }
-                }} 
+                }}
                 className="searchbox"
               >
                 <button type="submit" className="search-link">
@@ -206,9 +210,13 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                   className="text search-input"
                   placeholder="Tìm kiếm người dùng... (Thêm @ để tìm username)"
                   onKeyPress={(e) => {
-                    if (e.key === 'Enter') {
+                    if (e.key === "Enter") {
                       if (e.target.value.trim()) {
-                        navigate(`/search?q=${encodeURIComponent(e.target.value.trim())}`);
+                        navigate(
+                          `/search?q=${encodeURIComponent(
+                            e.target.value.trim()
+                          )}`
+                        );
                       }
                     }
                   }}
@@ -234,7 +242,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
               <ul className="navbar-nav ms-auto navbar-list">
                 {/* Home */}
                 <li>
-                  <Link to="/feed" className="d-flex align-items-center">
+                  <Link to="/aiChat" className="d-flex align-items-center">
                     <i className="ri-home-line"></i>
                   </Link>
                 </li>

@@ -472,10 +472,11 @@ import GroupDetailPage from "./pages/social/GroupDetailPage";
 import CreateGroupPage from "./pages/social/CreateGroupPage";
 
 import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUserManagement from "./pages/admin/AdminUserManagement";
+import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
+import ReportUser from "./pages/admin/reports/ReportUser";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 import UserLayout from "./components/layouts/UserLayout";
@@ -485,6 +486,8 @@ import Navbar from "./components/Navbar";
 import ErrorPage from "./components/error/pages-error";
 
 import Test from "./pages/test";
+
+import AIChat from "./components/ai/AIChat";
 
 /**
  * COMPONENT: ProtectedRoute
@@ -523,6 +526,7 @@ const routeConfigs = [
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
 
   { path: "/test", component: Test, layout: UserLayout },
+  { path: "/aiChat", component: AIChat, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },
@@ -568,6 +572,12 @@ const routeConfigs = [
   {
     path: "/admin/users",
     component: AdminUserManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/users/reports",
+    component: ReportUser,
     layout: AdminLayout,
     isAdmin: true,
   },

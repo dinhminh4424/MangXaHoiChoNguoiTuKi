@@ -164,6 +164,15 @@ export const ProfileProvider = ({ children }) => {
     }
   };
 
+  const reportUser = async (userId, reportData) => {
+    try {
+      const res = await userService.reportUser(userId, reportData);
+      return res;
+    } catch (error) {
+      console.log("Lỗi khi báo cáo: ", error);
+    }
+  };
+
   // Cập nhật profile
   const updateProfile = async (profileData) => {
     setLoading(true);
@@ -286,6 +295,7 @@ export const ProfileProvider = ({ children }) => {
     updateImageCover,
     dashboardUserStats,
     setError,
+    reportUser,
   };
 
   return (

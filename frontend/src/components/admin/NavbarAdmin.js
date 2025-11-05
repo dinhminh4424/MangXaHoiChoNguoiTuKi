@@ -36,14 +36,9 @@ function NavbarAdmin() {
           label: "Các Người Dùng",
         },
         {
-          path: "/admin/users/create",
-          icon: "ri-user-add-line",
-          label: "Thêm Người Dùng",
-        },
-        {
-          path: "/admin/users/roles",
-          icon: "ri-shield-keyhole-line",
-          label: "Quản Lý Phân Quyền",
+          path: "/admin/users/reports",
+          icon: "ri-alarm-warning-line",
+          label: "Báo Cáo Người Dùng",
         },
       ],
     },

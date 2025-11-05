@@ -585,8 +585,10 @@ router.put(
   userController.updateProfile,
   upload.errorHandler
 );
+
 router.put("/online-status", userController.updateOnlineStatus);
 
+router.post("/report/:id", upload.array("files"), userController.reportUser);
 // POST /api/users/me/verify-id
 router.post(
   "/verify-id",
@@ -614,5 +616,64 @@ router.post(
     res.json({ success: true, user });
   }
 );
+
+router.put("/imageCover", auth, upload.single("file"), async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const currentUser = await User.findById(userId);
+    if (!currentUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Ko có user cần thay đổi " + error,
+        error: error,
+      });
+    }
+
+    const file = req.file;
+    if (file) {
+      // Lấy user hiện tại để xóa avatar cũ
+
+      // Xóa avatar cũ nếu tồn tại và không phải avatar mặc định
+      if (currentUser.profile?.coverPhoto) {
+        try {
+          const imageCoverUrl = currentUser.profile.coverPhoto;
+
+          FileManager.deleteSingleFile(imageCoverUrl);
+        } catch (deleteError) {
+          console.error("Lỗi khi xóa avatar cũ:", deleteError);
+          return;
+        }
+      }
+
+      // Tạo URL cho avatar mới - SỬA LỖI Ở ĐÂY
+      const fileUrl = `/api/uploads/images/${file.filename}`;
+      console.log("coverPhoto: ", fileUrl);
+      currentUser.profile.coverPhoto = fileUrl;
+
+      await currentUser.save();
+
+      res.status(200).json({
+        success: true,
+        message: "Cập nhật Image Cover thành cồng",
+        user: currentUser,
+      });
+    } else {
+      console.log("===================== Ko ảnh =====================");
+      res.status(400).json({
+        success: false,
+        message: "Lỗi ko ảnh: ",
+        error,
+        error: error,
+      });
+    }
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server: ",
+      error,
+      error: error,
+    });
+  }
+});
 
 module.exports = router;
