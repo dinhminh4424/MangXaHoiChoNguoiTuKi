@@ -69,11 +69,22 @@ class NotificationService {
       }
 
       // Gửi broadcast đến admin notifications room
-      io.to("admin_notifications").emit("admin_notification", {
-        ...notificationData,
-        recipients: admins.map((admin) => admin._id),
-        notificationCount: notifications.length,
-      });
+      // Gửi notification đầu tiên làm mẫu (tất cả notifications có cùng nội dung)
+      const firstNotification = notifications[0];
+      if (firstNotification) {
+        io.to("admin_notifications").emit("admin_notification", {
+          _id: firstNotification._id.toString(),
+          type: notificationData.type,
+          title: notificationData.title,
+          message: notificationData.message,
+          priority: notificationData.priority || "urgent",
+          data: notificationData.data,
+          url: notificationData.url,
+          createdAt: firstNotification.createdAt,
+          recipients: admins.map((admin) => admin._id),
+          notificationCount: notifications.length,
+        });
+      }
 
       console.log(`✅ Sent notification to ${admins.length} admins`);
       return notifications;
