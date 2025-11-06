@@ -191,10 +191,45 @@ const FriendButton = ({ userId, onStatusChange }) => {
   const { status, isFriend, friendRequest } = friendStatus;
 
   if (isFriend) {
+    const handleRemoveFriend = async () => {
+      try {
+        if (!friendStatus.friendshipId) return;
+        const confirmRemove = window.confirm("Bạn có chắc muốn xóa bạn bè?");
+        if (!confirmRemove) return;
+        setActionLoading(true);
+        await friendService.removeFriend(friendStatus.friendshipId);
+        // Thông báo cục bộ để đồng bộ các nút khác
+        window.dispatchEvent(
+          new CustomEvent("friend:status-changed", {
+            detail: { otherUserId: String(userId), status: "none" },
+          })
+        );
+        await loadFriendStatus();
+        if (onStatusChange) onStatusChange();
+      } catch (error) {
+        alert(error.message || "Lỗi khi xóa bạn bè");
+      } finally {
+        setActionLoading(false);
+      }
+    };
     return (
-      <button className="btn btn-success btn-sm friend-btn" disabled>
-        <i className="ri-user-check-line me-1"></i>
-        Bạn bè
+      <button
+        className="btn btn-success btn-sm friend-btn"
+        onClick={handleRemoveFriend}
+        disabled={actionLoading}
+        title="Bấm để xóa bạn bè"
+      >
+        {actionLoading ? (
+          <>
+            <span className="spinner-border spinner-border-sm me-2" />
+            Đang xử lý...
+          </>
+        ) : (
+          <>
+            <i className="bi bi-person-check-fill me-1"></i>
+            Bạn bè
+          </>
+        )}
       </button>
     );
   }

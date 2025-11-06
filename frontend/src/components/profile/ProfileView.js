@@ -44,6 +44,8 @@ const ProfileView = ({ userId }) => {
 
   const [uploading, setUploading] = React.useState(false);
   const [showReport, setShowReport] = React.useState(false);
+  const [friendCount, setFriendCount] = React.useState(0);
+  const [followerCount, setFollowerCount] = React.useState(0);
 
   const handleFileChangeReport = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -227,6 +229,51 @@ const ProfileView = ({ userId }) => {
       setPreviewImage(URL.createObjectURL(file));
     }
   }, [file]);
+
+  // Cập nhật số bạn bè và số người theo dõi từ viewedUser
+  React.useEffect(() => {
+    if (viewedUser) {
+      setFriendCount(viewedUser.countFriends || 0);
+      setFollowerCount(viewedUser.countFollowers || 0);
+    }
+  }, [viewedUser]);
+
+  // Lắng nghe sự kiện thay đổi trạng thái bạn bè để cập nhật real-time
+  React.useEffect(() => {
+    const handleFriendStatusChanged = (event) => {
+      const { otherUserId, status } = event.detail;
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const currentUserId = String(currentUser?.id || currentUser?._id);
+      const otherUserIdStr = String(otherUserId);
+
+      // Nếu đang xem profile của chính mình, cập nhật khi có bất kỳ thay đổi nào
+      // (vì khi bạn kết bạn/hủy bạn bè với ai đó, số bạn bè của bạn thay đổi)
+      if (isOwnProfile && viewedUserId === currentUserId) {
+        if (status === 'friend') {
+          // Kết bạn thành công - tăng số bạn bè
+          setFriendCount((prev) => prev + 1);
+        } else if (status === 'none') {
+          // Hủy bạn bè - giảm số bạn bè
+          setFriendCount((prev) => Math.max(0, prev - 1));
+        }
+      } 
+      // Nếu đang xem profile của người khác, chỉ cập nhật khi sự kiện liên quan đến user đó
+      else if (viewedUserId === otherUserIdStr) {
+        if (status === 'friend') {
+          // Kết bạn thành công - tăng số bạn bè
+          setFriendCount((prev) => prev + 1);
+        } else if (status === 'none') {
+          // Hủy bạn bè - giảm số bạn bè
+          setFriendCount((prev) => Math.max(0, prev - 1));
+        }
+      }
+    };
+
+    window.addEventListener('friend:status-changed', handleFriendStatusChanged);
+    return () => {
+      window.removeEventListener('friend:status-changed', handleFriendStatusChanged);
+    };
+  }, [viewedUser, currentUser, isOwnProfile]);
 
   const removeFile = (index) => {
     // Revoke object URL to prevent memory leaks
@@ -868,7 +915,7 @@ const ProfileView = ({ userId }) => {
               <div className="col-md-4">
                 <div className="card border-0 bg-gradient-success text-white text-center">
                   <div className="card-body py-3">
-                    <h5 className="mb-1">456</h5>
+                    <h5 className="mb-1">{friendCount}</h5>
                     <small>Bạn bè</small>
                   </div>
                 </div>
@@ -876,7 +923,7 @@ const ProfileView = ({ userId }) => {
               <div className="col-md-4">
                 <div className="card border-0 bg-gradient-info text-white text-center">
                   <div className="card-body py-3">
-                    <h5 className="mb-1">789</h5>
+                    <h5 className="mb-1">{followerCount}</h5>
                     <small>Theo dõi</small>
                   </div>
                 </div>

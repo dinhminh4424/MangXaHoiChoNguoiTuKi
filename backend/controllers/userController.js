@@ -9,6 +9,7 @@ const Message = require("../models/Message");
 const MoodLog = require("../models/MoodLog");
 const Violation = require("../models/Violation");
 const NotificationService = require("../services/notificationService");
+const Friend = require("../models/Friend");
 const mailService = require("../services/mailService");
 
 class UserController {
@@ -24,10 +25,17 @@ class UserController {
         });
       }
 
-      const countPost = await Post.countDocuments({
-        userCreateID: user._id,
-        isBlocked: false,
-      });
+      const [countPost, countFriends, countFollowers] = await Promise.all([
+        Post.countDocuments({
+          userCreateID: user._id,
+          isBlocked: false,
+        }),
+        Friend.countDocuments({
+          $or: [{ userA: user._id }, { userB: user._id }],
+        }),
+        // Tạm thời để 0 vì chưa có chức năng follow
+        Promise.resolve(0),
+      ]);
 
       res.json({
         success: true,
@@ -43,6 +51,8 @@ class UserController {
             lastSeen: user.lastSeen,
             createdAt: user.createdAt,
             countPost: countPost,
+            countFriends: countFriends,
+            countFollowers: countFollowers,
           },
         },
       });
@@ -397,18 +407,26 @@ class UserController {
         });
       }
 
-      const countPost = await Post.countDocuments({
-        userCreateID: user._id,
-        isBlocked: false,
-      });
-
-      const countChat = await Chat.countDocuments({
-        members: user._id,
-      });
+      const [countPost, countChat, countFriends, countFollowers] = await Promise.all([
+        Post.countDocuments({
+          userCreateID: user._id,
+          isBlocked: false,
+        }),
+        Chat.countDocuments({
+          members: user._id,
+        }),
+        Friend.countDocuments({
+          $or: [{ userA: user._id }, { userB: user._id }],
+        }),
+        // Tạm thời để 0 vì chưa có chức năng follow
+        Promise.resolve(0),
+      ]);
 
       const userDoc = user.toObject();
       userDoc.countPost = countPost;
       userDoc.countChat = countChat;
+      userDoc.countFriends = countFriends;
+      userDoc.countFollowers = countFollowers;
 
       res.json({
         success: true,
