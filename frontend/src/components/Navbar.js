@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
+import FriendRequestsDropdown from "./friend/FriendRequestsDropdown";
 function Navbar({ isCollapsed = false, onToggleSidebar }) {
   const { isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
@@ -246,46 +247,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                   </Link>
                 </li>
                 {/* Friend Requests Dropdown */}
-                <li className="nav-item dropdown">
-                  <a
-                    href="#"
-                    className="dropdown-toggle"
-                    id="group-drop"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <i className="ri-group-line"></i>
-                  </a>
-                  <div
-                    className="sub-drop sub-drop-large dropdown-menu dropdown-menu-end"
-                    aria-labelledby="group-drop"
-                  >
-                    <div className="card shadow-none m-0">
-                      <div className="card-header d-flex justify-content-between bg-primary">
-                        <div className="header-title">
-                          <h5 className="mb-0 text-white">Friend Request</h5>
-                        </div>
-                        <small className="badge bg-light text-dark">
-                          99999
-                        </small>
-                      </div>
-                      <div className="card-body p-0">
-                        <div className="text-center p-3">
-                          <p className="mb-2">
-                            Friend requests will appear here
-                          </p>
-                          <Link
-                            to="/friends/requests"
-                            className="btn text-primary"
-                          >
-                            View Friend Requests
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li>
+                <FriendRequestsDropdown />
 
                 <UserNotifications />
 

@@ -215,6 +215,9 @@ class FriendController {
           friendRequestId: friendRequest._id,
           friendId: friendship._id,
         };
+        // Đánh dấu đã đọc ngay để không làm tăng badge ở dropdown "Yêu cầu kết bạn"
+        oldNotification.read = true;
+        oldNotification.readAt = new Date();
         await oldNotification.save();
 
         await oldNotification.populate([
@@ -332,6 +335,9 @@ class FriendController {
         // Với người nhận là chính người từ chối (userId), thông điệp cần dùng tên của người đã gửi lời mời
         const requesterName = requesterUser?.fullName || requesterUser?.username || "người này";
         oldNotification.message = `Bạn đã từ chối lời mời kết bạn từ ${requesterName}`;
+        // Đánh dấu đã đọc ngay để không hiển thị là chưa đọc ở dropdown yêu cầu kết bạn
+        oldNotification.read = true;
+        oldNotification.readAt = new Date();
         await oldNotification.save();
 
         await oldNotification.populate([
