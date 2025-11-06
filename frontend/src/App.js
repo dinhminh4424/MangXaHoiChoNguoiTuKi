@@ -474,9 +474,11 @@ import CreateGroupPage from "./pages/social/CreateGroupPage";
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
+import AdminGroupManagement from "./pages/admin/groups/AdminGroupManagement";
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
 import ReportUser from "./pages/admin/reports/ReportUser";
+import ReportGroup from "./pages/admin/reports/ReportGroup";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 import UserLayout from "./components/layouts/UserLayout";
@@ -548,6 +550,11 @@ const routeConfigs = [
   { path: "/group", component: Group, layout: UserLayout },
   { path: "/group/:groupId", component: GroupDetailPage, layout: UserLayout },
   { path: "/create-group", component: CreateGroupPage, layout: UserLayout },
+  {
+    path: "/group/createPost/:groupId",
+    component: CreatePost,
+    layout: UserLayout,
+  },
 
   // Protected User Routes - Journal
   { path: "/journal", component: Journal, layout: UserLayout },
@@ -608,6 +615,24 @@ const routeConfigs = [
   {
     path: "/admin/content/reportsComment/:id",
     component: ReportComment, // ReportComment
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/groups",
+    component: AdminGroupManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/groups/reports",
+    component: ReportGroup, // ReportGroup
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/groups/reports/:id",
+    component: ReportGroup, // ReportGroup
     layout: AdminLayout,
     isAdmin: true,
   },

@@ -1,6 +1,11 @@
 const Group = require("../models/Group");
 const GroupMember = require("../models/GroupMember");
 const Post = require("../models/Post");
+const User = require("../models/User");
+const FileManager = require("../utils/fileManager");
+const Violation = require("../models/Violation");
+const mailService = require("../services/mailService");
+const NotificationService = require("../services/notificationService");
 
 class GroupController {
   async createGroup(req, res) {
@@ -9,43 +14,56 @@ class GroupController {
         req.body;
       const owner = req.user.userId;
 
-      // Xử lý tags và emotionTags
-      const tagsArray = tags
-        ? tags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter((tag) => tag)
-        : [];
-      const emotionTagsArray = emotionTags
-        ? emotionTags
-            .split(",")
-            .map((tag) => tag.trim())
-            .filter((tag) => tag)
-        : [];
+      const checkUser = await User.findById(owner);
+      if (!checkUser.profile.idCard.verified) {
+        res.status(400).json({
+          success: false,
+          message: "Bạn chưa Xác Minh Danh tính" + err.message,
+        });
+      }
 
-      // Xử lý upload ảnh - SỬA LẠI PHẦN NÀY
+      // === XỬ LÝ TAGS & EMOTIONTAGS - HỖ TRỢ CẢ CHUỖI VÀ MẢNG ===
+      const parseTags = (input) => {
+        if (!input) return [];
+        if (Array.isArray(input)) {
+          return input.map((tag) => tag.trim()).filter((tag) => tag);
+        }
+        if (typeof input === "string") {
+          return input
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag);
+        }
+        return [];
+      };
+
+      const tagsArray = parseTags(tags);
+      const emotionTagsArray = parseTags(emotionTags);
+
+      // === XỬ LÝ UPLOAD ẢNH ===
       let avatarUrl = "";
       let coverPhotoUrl = "";
 
       if (req.files) {
-        // Xử lý avatar
+        // Multer lưu file theo tên field → req.files['fieldName'] là mảng
         if (req.files.avatar && req.files.avatar[0]) {
-          const avatarFile = req.files.avatar[0];
-          avatarUrl = `/api/uploads/images/${avatarFile.filename}`;
+          avatarUrl = `/api/uploads/images/${req.files.avatar[0].filename}`;
         }
-
-        // Xử lý coverPhoto
         if (req.files.coverPhoto && req.files.coverPhoto[0]) {
-          const coverFile = req.files.coverPhoto[0];
-          coverPhotoUrl = `/api/uploads/images/${coverFile.filename}`;
+          coverPhotoUrl = `/api/uploads/images/${req.files.coverPhoto[0].filename}`;
         }
       }
 
+      // === TẠO SLUG ===
       const slug =
-        name.toLowerCase().replace(/\s+/g, "-") +
+        name
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, "-")
+          .replace(/^-|-$/g, "") +
         "-" +
         Date.now().toString().slice(-4);
 
+      // === TẠO NHÓM ===
       const group = await Group.create({
         name,
         description,
@@ -59,6 +77,7 @@ class GroupController {
         slug,
       });
 
+      // === THÊM CHỦ NHÓM ===
       await GroupMember.create({
         groupId: group._id,
         userId: owner,
@@ -69,14 +88,13 @@ class GroupController {
       res.json({
         success: true,
         message: "Tạo nhóm thành công",
-        group: group,
+        group,
       });
     } catch (err) {
-      console.error(err);
+      console.error("Lỗi tạo nhóm:", err);
       res.status(500).json({
         success: false,
-        message: "Lỗi tạo group: " + err.message,
-        error: err.message,
+        message: "Lỗi tạo nhóm: " + err.message,
       });
     }
   }
@@ -337,12 +355,6 @@ class GroupController {
           query.privacy = privacy;
         }
       }
-
-      console.log("========================================");
-
-      console.log(query);
-
-      console.log("========================================");
 
       const posts = await Post.find(query)
         .sort({ createdAt: -1 })
@@ -1058,6 +1070,182 @@ class GroupController {
         error: err.message,
       });
     }
+  }
+
+  async reportGroup(req, res) {
+    try {
+      const {
+        targetType,
+        targetId,
+        reason,
+        notes,
+        status = "pending",
+      } = req.body;
+
+      const { groupId } = req.params;
+
+      const group = await Group.findById(groupId);
+
+      const userId = req.user.userId;
+
+      let files = [];
+      if (req.files) {
+        files = req.files.map((file) => {
+          let fileFolder = "documents";
+          if (file.mimetype.startsWith("image/")) {
+            fileFolder = "images";
+          } else if (file.mimetype.startsWith("video/")) {
+            fileFolder = "videos";
+          } else if (file.mimetype.startsWith("audio/")) {
+            fileFolder = "audio";
+          }
+
+          const fileUrl = `/api/uploads/${fileFolder}/${file.filename}`;
+
+          let messageType = "file";
+          if (file.mimetype.startsWith("image/")) {
+            messageType = "image";
+          } else if (file.mimetype.startsWith("video/")) {
+            messageType = "video";
+          } else if (file.mimetype.startsWith("audio/")) {
+            messageType = "audio";
+          }
+
+          return {
+            type: messageType,
+            fileUrl: fileUrl,
+            fileName: file.originalname,
+            fileSize: file.size,
+          };
+        });
+      }
+
+      const newViolation = new Violation({
+        targetType: targetType,
+        targetId: targetId,
+        reason: reason,
+        notes: notes,
+        status: status,
+        userId: group.owner,
+        reportedBy: userId,
+        files: files || [],
+      });
+
+      await newViolation.save();
+
+      let reportCount = group.reportCount || 0 + 1;
+      group.reportCount = reportCount;
+      if (reportCount >= 10) {
+        group.active = false;
+
+        await Violation.updateMany(
+          { targetId: group._id, targetType: "Group", status: "pending" },
+          { $set: { status: "auto", actionTaken: "auto_blocked" } }
+        );
+
+        // gửi thông báo cho người dùng
+        await NotificationService.createAndEmitNotification({
+          recipient: newViolation.userId,
+          sender: req.user._id,
+          type: "GROUP_BLOCKED",
+          title: "Hội Nhóm đã bị ẩn",
+          message: `Hội Nhóm của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${newViolation.reason}`,
+          data: {
+            violationId: newViolation._id,
+            postId: newViolation.targetId,
+            reason: newViolation.reason,
+            action: "blocked",
+          },
+          priority: "high",
+          url: `/group/${newViolation.targetId}`,
+        });
+
+        await AddViolationUserByID();
+      }
+
+      await group.save();
+
+      return res.status(200).json({
+        success: true,
+        message: "Báo Cáo Hội Nhóm: " + group.name,
+        group,
+        violation: newViolation,
+      });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi báo cáo Hội Nhóm: " + error.message,
+        error: error.message,
+      });
+    }
+  }
+}
+
+async function AddViolationUserByID(
+  userId,
+  violation,
+  userAdminId,
+  banUser = false
+) {
+  try {
+    if (!userId) return;
+    const user = await User.findById(userId);
+    if (!user) {
+      console.warn("AddViolationUserByID: user not found", userId);
+      return;
+    }
+    const newCount = (user.violationCount || 0) + 1;
+    let isActive = newCount <= 5;
+    if (banUser) {
+      isActive = false;
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      active: isActive,
+      violationCount: newCount,
+      lastViolationAt: new Date(),
+    });
+
+    // Thông báo khi bị ban/tạm khoá
+    if (!isActive) {
+      await NotificationService.createAndEmitNotification({
+        recipient: userId,
+        sender: userAdminId,
+        type: "USER_BANNED",
+        title: "Tài khoản bị tạm ngưng",
+        message: `Tài khoản của bạn đã bị tạm ngưng do vi phạm nguyên tắc cộng đồng.`,
+        data: {
+          violationId: violation._id,
+          reason: violation.reason,
+          action: "banned",
+        },
+        priority: "urgent",
+        url: `/support`,
+      });
+    }
+
+    // Gửi email khi bị ban/tạm khoá
+    const admin = await User.findById(userAdminId);
+    if (!admin) {
+      console.warn("AddViolationUserByID: admin not found", userAdminId);
+      return;
+    }
+    await mailService.sendEmail({
+      to: user.email,
+      subject: "🚫 Tài Khoản Của Bạn Đã Bị Khoá - Autism Support",
+      templateName: "USER_BANNED",
+      templateData: {
+        userName: user.fullName || user.username,
+        violationReason: violation.reason,
+        severityLevel: "Nghiêm trọng",
+        actionTime: new Date().toLocaleString("vi-VN"),
+        adminName: admin.fullName || admin.username,
+        details: "Tài khoản vi phạm nguyên tắc cộng đồng và đã bị khoá",
+      },
+    });
+  } catch (err) {
+    console.error("Lỗi khi cập nhật violation user:", err);
   }
 }
 

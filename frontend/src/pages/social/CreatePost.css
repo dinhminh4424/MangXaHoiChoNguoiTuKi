@@ -483,3 +483,44 @@
   align-items: center;
   color: white;
 }
+
+.group-info-card {
+  border-radius: 12px;
+  overflow: hidden;
+  background-size: cover;
+  background-position: center;
+  color: white;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+  min-height: 140px;
+}
+
+.group-info-card:hover {
+  transform: scale(1.01);
+}
+
+.group-info-content {
+  backdrop-filter: blur(4px);
+  background: rgba(0, 0, 0, 0.4);
+  border-radius: 8px;
+}
+
+.group-avatar-create {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid #fff;
+}
+
+.group-name {
+  font-size: 1.2rem;
+}
+
+.group-description {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.group-meta {
+  color: rgba(255, 255, 255, 0.75);
+}

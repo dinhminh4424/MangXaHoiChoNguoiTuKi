@@ -47,9 +47,13 @@ const Group = () => {
         limit: 100,
       });
 
+      console.log("response: ", response);
+
       const currentUserMember = response.members.find(
-        (member) => member.userId._id === user.userId
+        (member) => member.userId._id === (user.userId || user.id)
       );
+
+      console.log("currentUserMember: ", currentUserMember);
 
       if (currentUserMember) {
         setIsMember(true);
@@ -146,13 +150,13 @@ const Group = () => {
         <div className="group-main">
           {activeTab === "feed" && (
             <>
-              {canPost && user && (
+              {/* {canPost && user && (
                 <CreatePost
                   idOfGroup={groupId}
                   onPostCreated={loadGroup}
                   placeholder={`Bạn đang nghĩ gì, ${user.fullName}?`}
                 />
-              )}
+              )} */}
 
               <GroupFeed groupId={groupId} canPost={canPost} />
             </>

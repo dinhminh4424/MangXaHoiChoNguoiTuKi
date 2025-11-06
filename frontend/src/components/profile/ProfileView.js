@@ -229,7 +229,6 @@ const ProfileView = ({ userId }) => {
   }, [file]);
 
   const removeFile = (index) => {
-    console.log("=====Removing file at index:", index);
     // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(dataReport.files[index].fileUrl);
 

@@ -37,7 +37,7 @@ exports.ensureMemberOrPublic = async (req, res, next) => {
     const group = req.group;
     if (group.visibility === "public") return next();
 
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId)
       return res.status(401).json({
         success: false,
@@ -76,7 +76,7 @@ exports.ensureCanPost = async (req, res, next) => {
     const group = req.group;
     if (group.visibility === "public") return next();
 
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
     if (!userId)
       return res.status(401).json({
         success: false,
@@ -111,7 +111,7 @@ exports.ensureCanPost = async (req, res, next) => {
 exports.ensureGroupAdmin = async (req, res, next) => {
   try {
     const group = req.group;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId)
       return res.status(401).json({
@@ -149,7 +149,7 @@ exports.ensureGroupAdmin = async (req, res, next) => {
 exports.ensureGroupOwner = async (req, res, next) => {
   try {
     const group = req.group;
-    const userId = req.user?.id;
+    const userId = req.user?.userId;
 
     if (!userId)
       return res.status(401).json({
