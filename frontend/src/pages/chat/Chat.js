@@ -114,12 +114,45 @@ const Chat = () => {
     }
   };
 
+  const hasStartedConversation = useRef(false);
+
+  // useEffect(() => {
+  //   let userIdChat = chatUserId;
+  //   if (userIdChat) {
+  //     startConversation(userIdChat);
+  //   }
+  // }, [chatUserId]);
+
   useEffect(() => {
-    let userIdChat = chatUserId;
-    if (userIdChat) {
-      startConversation(userIdChat);
-    }
-  }, [chatUserId]);
+    if (hasStartedConversation.current || !chatUserId) return;
+
+    console.log("🎯 Bắt đầu chat với user:", chatUserId);
+    hasStartedConversation.current = true;
+
+    const startChat = async () => {
+      try {
+        // KIỂM TRA: Conversation đã tồn tại chưa?
+        const existingConv = conversations.find(
+          (conv) =>
+            !conv.isGroup &&
+            conv.members.some((member) => member._id === chatUserId)
+        );
+
+        if (existingConv) {
+          console.log("✅ Dùng conversation có sẵn:", existingConv._id);
+          await selectChat(existingConv);
+        } else {
+          console.log("🆕 Tạo conversation mới");
+          await startConversation(chatUserId);
+        }
+      } catch (error) {
+        console.error("Lỗi khi bắt đầu chat:", error);
+        hasStartedConversation.current = false;
+      }
+    };
+
+    startChat();
+  }, [chatUserId, conversations, startConversation, selectChat]);
 
   useEffect(() => {
     if (user) {
@@ -1482,14 +1515,14 @@ const Chat = () => {
           style={{ zIndex: 1050 }}
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-xl"
+            className="modal-dialog  modal-dialog-centered modal-lg"
             role="document"
           >
             <div className="modal-content border-0 bg-transparent">
               <div className="modal-header border-0 justify-content-end p-2">
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close btn-close-dark"
                   onClick={closeImageModal}
                   aria-label="Đóng"
                 ></button>
