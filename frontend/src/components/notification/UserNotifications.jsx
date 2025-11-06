@@ -308,6 +308,8 @@ const UserNotifications = () => {
       "POST_BLOCKED",
       "USER_BANNED",
       "USER_WARNED",
+      "GROUP_BLOCKED",
+      "GROUP_WARNED",
       "SYSTEM_ANNOUNCEMENT",
       "ADMIN_ALERT",
       "MAINTENANCE_NOTICE",
@@ -527,7 +529,9 @@ const UserNotifications = () => {
       setNotifications((prev) => {
         const exists = prev.some((n) => n._id === updatedNotification._id);
         if (!exists) return [updatedNotification, ...prev];
-        return prev.map((n) => (n._id === updatedNotification._id ? updatedNotification : n));
+        return prev.map((n) =>
+          n._id === updatedNotification._id ? updatedNotification : n
+        );
       });
     });
 
@@ -553,25 +557,30 @@ const UserNotifications = () => {
           instance.hide();
         } else {
           // Fallback thủ công: gỡ class 'show'
-          toggleEl && toggleEl.classList.remove('show');
-          const menu = container.querySelector('.dropdown-menu');
-          menu && menu.classList.remove('show');
+          toggleEl && toggleEl.classList.remove("show");
+          const menu = container.querySelector(".dropdown-menu");
+          menu && menu.classList.remove("show");
         }
       }
     };
 
     // Dùng capture để ưu tiên bắt sự kiện sớm
-    document.addEventListener('click', handleDocumentClick, true);
-    return () => document.removeEventListener('click', handleDocumentClick, true);
+    document.addEventListener("click", handleDocumentClick, true);
+    return () =>
+      document.removeEventListener("click", handleDocumentClick, true);
   }, []);
 
   const fetchAllNotifications = async () => {
     try {
-      const response = await api.get("/api/notifications", { params: { limit: 50 } });
+      const response = await api.get("/api/notifications", {
+        params: { limit: 50 },
+      });
       if (response.data.success) {
         setNotifications(response.data.notifications);
         // Đếm chưa đọc ở client để không làm mất thông báo đã đọc
-        setUnreadCount(response.data.notifications.filter((n) => !n.read).length);
+        setUnreadCount(
+          response.data.notifications.filter((n) => !n.read).length
+        );
       }
     } catch (error) {
       console.error("Error fetching notifications:", error);
@@ -720,7 +729,11 @@ const UserNotifications = () => {
   return (
     <>
       {/* Notifications Dropdown */}
-      <li className="nav-item dropdown" data-bs-auto-close="outside" ref={dropdownRef}>
+      <li
+        className="nav-item dropdown"
+        data-bs-auto-close="outside"
+        ref={dropdownRef}
+      >
         <a
           href="#"
           className="search-toggle dropdown-toggle position-relative"
@@ -729,7 +742,7 @@ const UserNotifications = () => {
           data-bs-auto-close="outside"
         >
           <i className="ri-notification-4-line"></i>
-          {(computedUnreadCount > 0) && (
+          {computedUnreadCount > 0 && (
             <span className="badge bg-danger notification-badge">
               {computedUnreadCount > 99 ? "99+" : computedUnreadCount}
             </span>
@@ -873,7 +886,7 @@ const UserNotifications = () => {
                       } ${!notification.read ? "unread-notification" : ""}`}
                       onClick={(e) => {
                         // Chỉ mark as read nếu không click vào button
-                        if (!e.target.closest('button')) {
+                        if (!e.target.closest("button")) {
                           markAsRead(notification._id);
                         }
                         // Ngăn dropdown auto-close
@@ -909,22 +922,26 @@ const UserNotifications = () => {
                           {getNotificationCategory(notification.type)}
                         </small>
                         {/* Action buttons cho friend request */}
-                          {notification.type === "FRIEND_REQUEST" && 
-                           notification.data?.friendRequestId && (
-                            <div 
+                        {notification.type === "FRIEND_REQUEST" &&
+                          notification.data?.friendRequestId && (
+                            <div
                               className="mt-2 d-flex gap-2"
                               onClick={(e) => e.stopPropagation()}
                             >
                               <button
                                 className="btn btn-success btn-sm"
-                                onClick={() => handleAcceptFriendRequest(notification)}
+                                onClick={() =>
+                                  handleAcceptFriendRequest(notification)
+                                }
                               >
                                 <i className="ri-check-line me-1"></i>
                                 Chấp nhận
                               </button>
                               <button
                                 className="btn btn-outline-danger btn-sm"
-                                onClick={() => handleRejectFriendRequest(notification)}
+                                onClick={() =>
+                                  handleRejectFriendRequest(notification)
+                                }
                               >
                                 <i className="ri-close-line me-1"></i>
                                 Từ chối
@@ -933,9 +950,9 @@ const UserNotifications = () => {
                           )}
                       </div>
                       {!notification.read && (
-                          <span className="badge bg-primary ms-2">Mới</span>
-                        )}
-                      </div>
+                        <span className="badge bg-primary ms-2">Mới</span>
+                      )}
+                    </div>
                   ))}
                 </div>
               ) : (

@@ -10,8 +10,8 @@ import TiptapEditor from "../journal/TiptapEditor";
 import { X, Image } from "lucide-react";
 import NotificationService from "../../services/notificationService";
 
-
 import "./profileView.css";
+import { useEffect } from "react";
 
 const ProfileView = ({ userId }) => {
   const navigate = useNavigate();
@@ -87,12 +87,48 @@ const ProfileView = ({ userId }) => {
     fileInputReportRef.current?.click();
   };
 
+  const handleFileClickCover = (e) => {
+    fileInputRef.current?.click();
+  };
+
   const handleFileChange = (e) => {
     const selectFile = e.target.files[0];
 
     setFile(selectFile);
   };
 
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+
+  //   if (!file) {
+  //     alert("Bạn chưa chọn ảnh!!!!!");
+  //     return;
+  //   }
+
+  //   try {
+  //     const res = await updateImageCover(file);
+  //     if (res.success) {
+  //       setShowModalUpdateCoverPhoto(false);
+  //       setFile(null);
+  //       setPreviewImage(null);
+  //       NotificationService.success({
+  //         title: "Thành công! 🎉",
+  //         text: "Cập nhật ảnh bìa thành công!",
+  //         timer: 3000,
+  //         showConfirmButton: false,
+  //       });
+  //     }
+  //   } catch (error) {
+  //     NotificationService.error({
+  //       title: "Lỗi! 😞",
+  //       text: error.message || "Có lỗi xảy ra khi cập nhật ảnh bìa",
+  //       timer: 5000,
+  //       showConfirmButton: true,
+  //     });
+  //   }
+
+  //   return;
+  // };
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -102,12 +138,41 @@ const ProfileView = ({ userId }) => {
     }
 
     try {
-      const res = await updateImageCover(file);
-    } catch (error) {
-      alert("Lỗi: ", error);
-    }
+      setUploading(true); // ✅ THÊM: Loading state
+      const result = await updateImageCover(file);
 
-    return;
+      console.log("🔄 Update result:", result);
+
+      if (result && result.success) {
+        // ✅ FIX: Đóng modal và reset
+        setShowModalUpdateCoverPhoto(false);
+        setFile(null);
+        setPreviewImage(null);
+
+        // ✅ THÊM: Thông báo thành công
+        NotificationService.success({
+          title: "Thành công! 🎉",
+          text: "Cập nhật ảnh bìa thành công!",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+
+        console.log("✅ Cover updated successfully!");
+      } else {
+        throw new Error(result?.message || "Cập nhật thất bại");
+      }
+    } catch (error) {
+      console.error("❌ Error in handleSubmit:", error);
+      // ✅ FIX: Hiển thị lỗi cho user
+      NotificationService.error({
+        title: "Lỗi! 😞",
+        text: error.message || "Có lỗi xảy ra khi cập nhật ảnh bìa",
+        timer: 5000,
+        showConfirmButton: true,
+      });
+    } finally {
+      setUploading(false); // ✅ FIX: Tắt loading
+    }
   };
 
   const handleSubmitReport = async () => {
@@ -164,7 +229,6 @@ const ProfileView = ({ userId }) => {
   }, [file]);
 
   const removeFile = (index) => {
-    console.log("=====Removing file at index:", index);
     // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(dataReport.files[index].fileUrl);
 
@@ -339,7 +403,7 @@ const ProfileView = ({ userId }) => {
               <button
                 type="button"
                 className="btn btn-outline-primary d-flex align-items-center gap-2 px-3 py-2"
-                onClick={handleFileClick}
+                onClick={handleFileClickCover}
               >
                 <i className="fas fa-camera"></i>
                 <span>Chọn ảnh bìa</span>
@@ -795,7 +859,6 @@ const ProfileView = ({ userId }) => {
                 <div className="card border-0 bg-gradient-primary text-white text-center">
                   <div className="card-body py-3">
                     <h5 className="mb-1">
-                      {console.log(viewedUser?.countPost)}
                       {viewedUser?.countPost || "Chưa cập nhật"}
                     </h5>
                     <small>Bài viết</small>

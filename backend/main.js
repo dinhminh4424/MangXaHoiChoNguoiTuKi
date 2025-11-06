@@ -1,10 +1,212 @@
+// const dotenv = require("dotenv");
+// const dotenvExpand = require("dotenv-expand");
+
+// const myEnv = dotenv.config();
+// dotenvExpand.expand(myEnv);
+
+// // Khai Báo các thư viện cần thiết
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const cors = require("cors");
+// const http = require("http");
+// const path = require("path");
+// const passport = require("passport");
+// const jwt = require("jsonwebtoken");
+// const User = require("./models/User");
+// // Config
+// const config = require("./config");
+// const connectDB = require("./config/database");
+// const { configureSocket } = require("./config/socket");
+// const corsOptions = require("./config/cors");
+// require("./config/passport");
+// const emergencyRoutes = require("./routes/emergency");
+// const guidelineRoutes = require("./routes/guideline");
+
+// const app = express();
+// const server = http.createServer(app);
+
+// // --------------------------------------- [Middleware]--------------------------------------------
+// app.use(cors(corsOptions));
+// app.use(express.json());
+// app.use(express.urlencoded({ extended: true }));
+
+// app.use(passport.initialize());
+
+// // Static files (cho file uploads) - BAO GỒM CẢ THƯ MỤC CON
+// app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
+// app.use("/api/emergency/guideline", guidelineRoutes);
+
+// // --------------------------------------- [end Middleware]--------------------------------------------
+
+// // --------------------------------------- [MongoDB]--------------------------------------------
+// // Kết nối MongoDB
+// connectDB();
+
+// // --------------------------------------- [end MongoDB]--------------------------------------------
+
+// // --------------------------------------- [Routes]--------------------------------------------
+
+// // --- NEW: Social Login Routes (Đặt TRƯỚC các route API chính) ---
+// // Chỉ cấu hình khi có đủ ENV, tránh lỗi "Unknown authentication strategy"
+// if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
+//   // Google
+//   app.get(
+//     "/api/auth/google",
+//     passport.authenticate("google", {
+//       scope: ["profile", "email"],
+//       session: false,
+//     })
+//   );
+
+//   app.get(
+//     "/api/auth/google/callback",
+//     passport.authenticate("google", {
+//       failureRedirect: `${config.cors.origin}/login?error=true`,
+//       session: false,
+//     }),
+//     async (req, res) => {
+//     // Cập nhật trạng thái online khi đăng nhập bằng Google
+//     try {
+//       await User.findByIdAndUpdate(
+//         req.user._id,
+//         { $set: { isOnline: true, lastSeen: new Date() } },
+//         { new: true }
+//       );
+//     } catch (e) {
+//       // Không chặn luồng nếu cập nhật trạng thái thất bại
+//     }
+
+//     // Tạo JWT
+//     const token = jwt.sign(
+//       {
+//         userId: req.user._id,
+//         username: req.user.username,
+//         role: req.user.role,
+//       },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
+//     );
+
+//     // Redirect về frontend, gửi kèm token
+//     res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+//     }
+//   );
+// } else {
+//   console.warn("[auth] GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET thiếu. Bỏ qua route Google.");
+// }
+
+// //facebook
+// if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+//   app.get(
+//     "/api/auth/facebook",
+//     passport.authenticate("facebook", {
+//       scope: ["email", "public_profile"],
+//       session: false,
+//     })
+//   );
+
+//   app.get(
+//     "/api/auth/facebook/callback",
+//     passport.authenticate("facebook", {
+//       failureRedirect: `${config.cors.origin}/login?error=true`,
+//       session: false,
+//     }),
+//     (req, res) => {
+//     // Logic này Y HỆT như Google
+//     // Tạo JWT
+//     const token = jwt.sign(
+//       {
+//         userId: req.user._id,
+//         username: req.user.username,
+//         role: req.user.role,
+//       },
+//       process.env.JWT_SECRET,
+//       { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
+//     );
+//     // Redirect về frontend, gửi kèm token
+//     res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+//     }
+//   );
+// } else {
+//   console.warn("[auth] FACEBOOK_APP_ID/FACEBOOK_APP_SECRET thiếu. Bỏ qua route Facebook.");
+// }
+
+// const routes = require("./routes");
+// app.use("/api", routes);
+// app.use("/api/emergency", emergencyRoutes);
+
+// // Route mặc định
+// app.get("/", (req, res) => {
+//   res.json({
+//     success: true,
+//     message: "Autism Support Network API",
+//     version: "1.0.0",
+//     timestamp: new Date().toISOString(),
+//   });
+// });
+
+// // Handle 404
+// app.use((req, res) => {
+//   res.status(404).json({
+//     success: false,
+//     message: "Route not found",
+//   });
+// });
+
+// // Error handling middleware
+// app.use((error, req, res, next) => {
+//   console.error("Error:", error);
+
+//   if (error.name === "ValidationError") {
+//     return res.status(400).json({
+//       success: false,
+//       message: "Dữ liệu không hợp lệ",
+//       errors: error.errors,
+//     });
+//   }
+
+//   if (error.name === "JsonWebTokenError") {
+//     return res.status(401).json({
+//       success: false,
+//       message: "Token không hợp lệ",
+//     });
+//   }
+
+//   res.status(500).json({
+//     success: false,
+//     message: "Lỗi server",
+//     error:
+//       config.nodeEnv === "development"
+//         ? error.message
+//         : "Internal server error",
+//   });
+// });
+
+// // --------------------------------------- [ Socket.io]---------------------------------------
+// configureSocket(server);
+
+// // --------------------------------------- [ End Socket.io]---------------------------------------
+
+// // Khởi động server
+// const PORT = config.port;
+// server.listen(PORT, "0.0.0.0", () => {
+//   console.log(`🚀 Server running on port ${PORT}`);
+//   console.log(`📱 Frontend: ${config.cors.origin}`);
+//   console.log(`🔗 Backend API: http://localhost:${PORT}/api`);
+//   console.log(`🌍 Environment: ${config.nodeEnv}`);
+// });
+
+// main.js
+// Entry point của backend — đã tích hợp logging -> MongoDB, client-logs route, auth, socket, và graceful shutdown.
+// Chú thích tiếng Việt được đặt ở mọi phần quan trọng để bạn dễ theo dõi.
+
+// 1) Load environment variables (dotenv + dotenv-expand để hỗ trợ biến có reference)
 const dotenv = require("dotenv");
 const dotenvExpand = require("dotenv-expand");
-
 const myEnv = dotenv.config();
 dotenvExpand.expand(myEnv);
 
-// Khai Báo các thư viện cần thiết
+// 2) Thư viện cơ bản
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
@@ -12,45 +214,61 @@ const http = require("http");
 const path = require("path");
 const passport = require("passport");
 const jwt = require("jsonwebtoken");
-const User = require("./models/User");
-// Config
+
+// 3) Các module config / connect / socket (giữ tên file như project của bạn)
 const config = require("./config");
 const connectDB = require("./config/database");
-const { configureSocket } = require("./config/socket"); // ← SỬA Ở ĐÂY
+const { configureSocket } = require("./config/socket");
 const corsOptions = require("./config/cors");
-require("./config/passport");
+require("./config/passport"); // passport strategies
+
+// 4) Optional: import User model nếu bạn cần cập nhật trạng thái online (bạn đã dùng trong Google login)
+const User = require("./models/User");
+
+// 5) --- IMPORTS CHO LOGGING ---
+// middleware ghi access logs (ghi batch vào Mongo)
+const mongoLogger = require("./logging/mongoLogger");
+// helper ghi audit (ghi trực tiếp)
+const { createAudit } = require("./logging/audit");
+const attachUserFromToken = require("./middleware/attachUserFromToken");
+
+// 6) Routes độc lập bạn đã định nghĩa
 const emergencyRoutes = require("./routes/emergency");
 const guidelineRoutes = require("./routes/guideline");
 
-
+// 7) Tạo app + server
 const app = express();
 const server = http.createServer(app);
 
-// --------------------------------------- [Middleware]--------------------------------------------
+// --------------------------------------- [MIDDLEWARE CHUNG] ------------------------------------
+// CORS, body parser, passport
 app.use(cors(corsOptions));
-app.use(express.json());
+app.use(express.json({ limit: "2mb" })); // tăng/giảm tùy payload của bạn
 app.use(express.urlencoded({ extended: true }));
-
 app.use(passport.initialize());
 
-// Static files (cho file uploads) - BAO GỒM CẢ THƯ MỤC CON
+// --------------------------------------- [LOGGING MIDDLEWARE] ------------------------------------
+// Gắn middleware logging TRƯỚC khi mount các route API để bắt đầy đủ request/response.
+// mongoLogger lập buffer + batch insert vào collection access_logs (xem logging/mongoLogger.js)
+app.use(express.json());
+app.use(attachUserFromToken); // <-- thêm dòng này
+app.use(mongoLogger);
+
+// --------------------------------------- [STATIC FILES] ------------------------------------
+// Serve uploads (nếu bạn có thư mục uploads)
 app.use("/api/uploads", express.static(path.join(__dirname, "uploads")));
+
+// Mount guideline route (ví dụ static/dedicated route)
 app.use("/api/emergency/guideline", guidelineRoutes);
 
-// --------------------------------------- [end Middleware]--------------------------------------------
-
-// --------------------------------------- [MongoDB]--------------------------------------------
-// Kết nối MongoDB
+// --------------------------------------- [MONGODB CONNECT] ------------------------------------
+// Kết nối MongoDB (connectDB phải được export từ ./config/database)
 connectDB();
 
-// --------------------------------------- [end MongoDB]--------------------------------------------
-
-// --------------------------------------- [Routes]--------------------------------------------
-
-// --- NEW: Social Login Routes (Đặt TRƯỚC các route API chính) ---
-// Chỉ cấu hình khi có đủ ENV, tránh lỗi "Unknown authentication strategy"
+// --------------------------------------- [SOCIAL LOGIN: GOOGLE / FACEBOOK] ------------------------------------
+// Những route này phải đặt trước mount router chính nếu cần
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
-  // Google
+  // Google OAuth
   app.get(
     "/api/auth/google",
     passport.authenticate("google", {
@@ -66,38 +284,43 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
       session: false,
     }),
     async (req, res) => {
-    // Cập nhật trạng thái online khi đăng nhập bằng Google
-    try {
-      await User.findByIdAndUpdate(
-        req.user._id,
-        { $set: { isOnline: true, lastSeen: new Date() } },
-        { new: true }
+      // Khi user đăng nhập bằng Google, cập nhật trạng thái online (nếu bạn muốn)
+      try {
+        if (req.user && req.user._id) {
+          await User.findByIdAndUpdate(
+            req.user._id,
+            { $set: { isOnline: true, lastSeen: new Date() } },
+            { new: true }
+          );
+        }
+      } catch (e) {
+        // Không block luồng nếu cập nhật trạng thái thất bại
+        console.warn("[auth] could not update user online status:", e.message);
+      }
+
+      // Tạo JWT
+      const token = jwt.sign(
+        {
+          userId: req.user._id,
+          username: req.user.username,
+          role: req.user.role,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
       );
-    } catch (e) {
-      // Không chặn luồng nếu cập nhật trạng thái thất bại
-    }
 
-    // Tạo JWT
-    const token = jwt.sign(
-      {
-        userId: req.user._id,
-        username: req.user.username,
-        role: req.user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-    );
-
-    // Redirect về frontend, gửi kèm token
-    res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+      // Redirect về frontend, gắn token trong query
+      res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
     }
   );
 } else {
-  console.warn("[auth] GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET thiếu. Bỏ qua route Google.");
+  console.warn(
+    "[auth] GOOGLE_CLIENT_ID/GOOGLE_CLIENT_SECRET thiếu. Bỏ qua route Google."
+  );
 }
 
-//facebook
 if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
+  // Facebook OAuth
   app.get(
     "/api/auth/facebook",
     passport.authenticate("facebook", {
@@ -113,31 +336,34 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
       session: false,
     }),
     (req, res) => {
-    // Logic này Y HỆT như Google
-    // Tạo JWT
-    const token = jwt.sign(
-      {
-        userId: req.user._id,
-        username: req.user.username,
-        role: req.user.role,
-      },
-      process.env.JWT_SECRET,
-      { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
-    );
-    // Redirect về frontend, gửi kèm token
-    res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+      // Tạo JWT giống Google flow
+      const token = jwt.sign(
+        {
+          userId: req.user._id,
+          username: req.user.username,
+          role: req.user.role,
+        },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
+      );
+      res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
     }
   );
 } else {
-  console.warn("[auth] FACEBOOK_APP_ID/FACEBOOK_APP_SECRET thiếu. Bỏ qua route Facebook.");
+  console.warn(
+    "[auth] FACEBOOK_APP_ID/FACEBOOK_APP_SECRET thiếu. Bỏ qua route Facebook."
+  );
 }
 
+// --------------------------------------- [MOUNT MAIN ROUTES] ------------------------------------
+// Mount file routes/index.js tại /api (routes/index.js nên mount client-logs route ở đó)
 const routes = require("./routes");
-app.use("/api", routes);
+app.use("/api", routes); // => tất cả endpoint /api/*
+
+// Nếu bạn có route emergency riêng (đặt sau), giữ như cũ
 app.use("/api/emergency", emergencyRoutes);
 
-
-// Route mặc định
+// --------------------------------------- [HEALTH & ROOT] ------------------------------------
 app.get("/", (req, res) => {
   res.json({
     success: true,
@@ -147,7 +373,7 @@ app.get("/", (req, res) => {
   });
 });
 
-// Handle 404
+// 404 handler (đặt sau tất cả route)
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -155,11 +381,14 @@ app.use((req, res) => {
   });
 });
 
-// Error handling middleware
+// --------------------------------------- [ERROR HANDLER] ------------------------------------
+// Middleware xử lý lỗi toàn cục; đặt ở cuối
 app.use((error, req, res, next) => {
+  // 1) Log ra console (dev)
   console.error("Error:", error);
 
-  if (error.name === "ValidationError") {
+  // 2) Nếu là ValidationError (mongoose)
+  if (error && error.name === "ValidationError") {
     return res.status(400).json({
       success: false,
       message: "Dữ liệu không hợp lệ",
@@ -167,30 +396,64 @@ app.use((error, req, res, next) => {
     });
   }
 
-  if (error.name === "JsonWebTokenError") {
+  // 3) JWT error
+  if (error && error.name === "JsonWebTokenError") {
     return res.status(401).json({
       success: false,
       message: "Token không hợp lệ",
     });
   }
 
+  // 4) Default 500
   res.status(500).json({
     success: false,
     message: "Lỗi server",
     error:
       config.nodeEnv === "development"
-        ? error.message
+        ? error && error.message
         : "Internal server error",
   });
 });
 
-// --------------------------------------- [ Socket.io]---------------------------------------
-configureSocket(server);
+// --------------------------------------- [SOCKET.IO] ------------------------------------
+configureSocket(server); // hàm do bạn tự định nghĩa trong ./config/socket
 
-// --------------------------------------- [ End Socket.io]---------------------------------------
+// --------------------------------------- [GRACEFUL SHUTDOWN] ------------------------------------
+// Khi container/VM tắt hoặc bạn ctrl+c, mình sẽ đóng server và mongoose nối an toàn.
+async function shutdown(signal) {
+  try {
+    console.log(`\nReceived ${signal}. Shutting down gracefully...`);
+    // 1. Stop accepting new connections
+    server.close((err) => {
+      if (err) {
+        console.error("Error closing server:", err);
+      } else {
+        console.log("HTTP server closed.");
+      }
+    });
 
-// Khởi động server
-const PORT = config.port;
+    // 2. Close mongoose connection
+    if (mongoose.connection.readyState === 1) {
+      await mongoose.disconnect();
+      console.log("MongoDB disconnected.");
+    }
+
+    // 3. Give a short delay trước khi process exit (để buffer logs flush nếu cần)
+    setTimeout(() => {
+      console.log("Exiting process.");
+      process.exit(0);
+    }, 500);
+  } catch (err) {
+    console.error("Error during shutdown:", err);
+    process.exit(1);
+  }
+}
+
+process.on("SIGINT", () => shutdown("SIGINT"));
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+
+// --------------------------------------- [START SERVER] ------------------------------------
+const PORT = config.port || process.env.PORT || 5000;
 server.listen(PORT, "0.0.0.0", () => {
   console.log(`🚀 Server running on port ${PORT}`);
   console.log(`📱 Frontend: ${config.cors.origin}`);

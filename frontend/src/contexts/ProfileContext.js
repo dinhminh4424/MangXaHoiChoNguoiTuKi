@@ -211,15 +211,28 @@ export const ProfileProvider = ({ children }) => {
       formData.append("file", file);
 
       const res = await userService.updateImageCover(formData);
+      console.log("res:", res);
+      // setViewedUser((prev) => ({
+      //   ...prev,
+      //   ...res.user,
+      //   profile: {
+      //     ...prev.profile,
+      //     ...res.user.profile,
+      //   },
+      // }));
+      if (res.user && res.success) {
+        const url = res.user.profile?.coverPhoto;
+        console.log("url:  ", url);
+        setViewedUser((prev) => ({
+          ...prev,
+          profile: {
+            ...(prev.profile || {}),
+            coverPhoto: url || "/assets/images/default-avatar.png",
+          },
+        }));
+      }
 
-      setViewedUser((prev) => ({
-        ...prev,
-        ...res.user,
-        profile: {
-          ...prev.profile,
-          ...res.user.profile,
-        },
-      }));
+      return res;
     } catch (error) {
       setError("LỖI: ", error);
     } finally {

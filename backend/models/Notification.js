@@ -31,6 +31,8 @@ const notificationSchema = new mongoose.Schema(
         "COMMENT_BLOCKED", //  Khoá bình luận
         "USER_BANNED", // User bị ban
         "USER_WARNED", // User bị cảnh báo
+        "GROUP_BLOCKED", // Group bị chặn
+        "GROUP_WARNED", //  Group bị cảnh báo
 
         // Bài viết và tương tác
         "POST_LIKED", // Bài viết được like
@@ -65,6 +67,9 @@ const notificationSchema = new mongoose.Schema(
         "SUPPORT_TICKET_CREATED", // Ticket hỗ trợ được tạo
         "SUPPORT_TICKET_UPDATED", // Ticket hỗ trợ được cập nhật
         "SUPPORT_TICKET_RESOLVED", // Ticket hỗ trợ đã giải quyết
+
+        // Khẩn cấp
+        "SOS_EMERGENCY", // Tín hiệu SOS khẩn cấp
       ],
     },
 
