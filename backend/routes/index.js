@@ -16,6 +16,7 @@ const moodRoutes = require("./mood");
 const adminRoutes = require("./admin");
 const notificationsRoutes = require("./notifications");
 const friendsRoutes = require("./friends");
+const followRoutes = require("./follow");
 const clientLogsRouter = require("./clientLogs");
 
 // Sử dụng các routes
@@ -33,6 +34,7 @@ router.use("/groups", groupRoutes);
 router.use("/mood", moodRoutes);
 router.use("/admin", adminRoutes);
 router.use("/friends", friendsRoutes);
+router.use("/follow", followRoutes);
 
 router.use("/client-logs", clientLogsRouter);
 

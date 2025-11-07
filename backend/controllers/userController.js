@@ -10,6 +10,7 @@ const MoodLog = require("../models/MoodLog");
 const Violation = require("../models/Violation");
 const NotificationService = require("../services/notificationService");
 const Friend = require("../models/Friend");
+const Follow = require("../models/Follow");
 const mailService = require("../services/mailService");
 
 class UserController {
@@ -25,7 +26,7 @@ class UserController {
         });
       }
 
-      const [countPost, countFriends, countFollowers] = await Promise.all([
+      const [countPost, countFriends, countFollowers, countFollowing] = await Promise.all([
         Post.countDocuments({
           userCreateID: user._id,
           isBlocked: false,
@@ -33,8 +34,12 @@ class UserController {
         Friend.countDocuments({
           $or: [{ userA: user._id }, { userB: user._id }],
         }),
-        // Tạm thời để 0 vì chưa có chức năng follow
-        Promise.resolve(0),
+        Follow.countDocuments({
+          following: user._id,
+        }),
+        Follow.countDocuments({
+          follower: user._id,
+        }),
       ]);
 
       res.json({
@@ -53,6 +58,7 @@ class UserController {
             countPost: countPost,
             countFriends: countFriends,
             countFollowers: countFollowers,
+            countFollowing: countFollowing,
           },
         },
       });
@@ -407,7 +413,7 @@ class UserController {
         });
       }
 
-      const [countPost, countChat, countFriends, countFollowers] = await Promise.all([
+      const [countPost, countChat, countFriends, countFollowers, countFollowing] = await Promise.all([
         Post.countDocuments({
           userCreateID: user._id,
           isBlocked: false,
@@ -418,8 +424,12 @@ class UserController {
         Friend.countDocuments({
           $or: [{ userA: user._id }, { userB: user._id }],
         }),
-        // Tạm thời để 0 vì chưa có chức năng follow
-        Promise.resolve(0),
+        Follow.countDocuments({
+          following: user._id,
+        }),
+        Follow.countDocuments({
+          follower: user._id,
+        }),
       ]);
 
       const userDoc = user.toObject();
@@ -427,6 +437,7 @@ class UserController {
       userDoc.countChat = countChat;
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
+      userDoc.countFollowing = countFollowing;
 
       res.json({
         success: true,

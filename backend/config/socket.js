@@ -310,7 +310,7 @@ const configureSocket = (server) => {
   });
 
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id, "userId:", socket.userId || null);
+    console.log("User connected:", socket.id || null);
 
     // optional: log connect event to AccessLog
     AccessLog?.create?.({
@@ -582,8 +582,9 @@ const configureSocket = (server) => {
     socket.on("join_notifications", (userId) => {
       const uid = socket.userId || userId;
       if (!uid) return;
-      socket.join(`user_${uid}`);
-      console.log(`User ${uid} joined notification room`);
+      const uidStr = String(uid);
+      socket.join(`user_${uidStr}`);
+      console.log(`User ${uidStr} joined notification room`);
     });
 
     socket.on("join_admin_notifications", () => {

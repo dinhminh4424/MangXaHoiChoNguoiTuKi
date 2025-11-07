@@ -5,13 +5,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 
 import FriendButton from "../friend/FriendButton";
+import followService from "../../services/followService";
+import { io } from "socket.io-client";
 
 import TiptapEditor from "../journal/TiptapEditor";
 import { X, Image } from "lucide-react";
 import NotificationService from "../../services/notificationService";
 
 import "./profileView.css";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const ProfileView = ({ userId }) => {
   const navigate = useNavigate();
@@ -46,6 +48,10 @@ const ProfileView = ({ userId }) => {
   const [showReport, setShowReport] = React.useState(false);
   const [friendCount, setFriendCount] = React.useState(0);
   const [followerCount, setFollowerCount] = React.useState(0);
+  const [isFollowing, setIsFollowing] = React.useState(false);
+  const [followLoading, setFollowLoading] = React.useState(false);
+  const socketRef = React.useRef(null);
+  const followActionInProgress = React.useRef(false);
 
   const handleFileChangeReport = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -238,42 +244,144 @@ const ProfileView = ({ userId }) => {
     }
   }, [viewedUser]);
 
-  // Lắng nghe sự kiện thay đổi trạng thái bạn bè để cập nhật real-time
+  // Kiểm tra trạng thái follow khi userId thay đổi
   React.useEffect(() => {
-    const handleFriendStatusChanged = (event) => {
-      const { otherUserId, status } = event.detail;
-      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
-      const currentUserId = String(currentUser?.id || currentUser?._id);
-      const otherUserIdStr = String(otherUserId);
+    const checkFollowStatus = async () => {
+      if (!userId || isOwnProfile || !currentUser) return;
+      try {
+        const response = await followService.getFollowStatus(userId);
+        setIsFollowing(response.data?.isFollowing || false);
+      } catch (error) {
+        console.error("Error checking follow status:", error);
+      }
+    };
+    checkFollowStatus();
+  }, [userId, isOwnProfile, currentUser]);
 
-      // Nếu đang xem profile của chính mình, cập nhật khi có bất kỳ thay đổi nào
-      // (vì khi bạn kết bạn/hủy bạn bè với ai đó, số bạn bè của bạn thay đổi)
-      if (isOwnProfile && viewedUserId === currentUserId) {
-        if (status === 'friend') {
-          // Kết bạn thành công - tăng số bạn bè
-          setFriendCount((prev) => prev + 1);
-        } else if (status === 'none') {
-          // Hủy bạn bè - giảm số bạn bè
-          setFriendCount((prev) => Math.max(0, prev - 1));
-        }
-      } 
-      // Nếu đang xem profile của người khác, chỉ cập nhật khi sự kiện liên quan đến user đó
-      else if (viewedUserId === otherUserIdStr) {
-        if (status === 'friend') {
-          // Kết bạn thành công - tăng số bạn bè
-          setFriendCount((prev) => prev + 1);
-        } else if (status === 'none') {
-          // Hủy bạn bè - giảm số bạn bè
-          setFriendCount((prev) => Math.max(0, prev - 1));
+  // Lắng nghe socket events cho follow status changes
+  React.useEffect(() => {
+    if (!currentUser) return;
+
+    const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const socket = io(API_BASE_URL, {
+      withCredentials: true,
+    });
+    socketRef.current = socket;
+
+    // Join user room để nhận events
+    socket.emit("join_notifications", currentUser.id || currentUser._id);
+
+    // Lắng nghe follow_status_changed từ server (cho người thực hiện follow/unfollow)
+    const handleFollowStatusChanged = (data) => {
+      const { followerId, followingId, action } = data;
+      const currentUserId = String(currentUser.id || currentUser._id);
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const followingIdStr = String(followingId);
+      const followerIdStr = String(followerId);
+
+      // Nếu đang xem profile của người được follow/unfollow
+      // Và current user là người thực hiện follow/unfollow
+      if (viewedUserId === followingIdStr && followerIdStr === currentUserId) {
+        // Chỉ cập nhật nếu không có action đang được thực hiện (tránh duplicate)
+        if (!followActionInProgress.current) {
+          if (action === "followed") {
+            setIsFollowing(true);
+            setFollowerCount((prev) => prev + 1);
+          } else if (action === "unfollowed") {
+            setIsFollowing(false);
+            setFollowerCount((prev) => Math.max(0, prev - 1));
+          }
+        } else {
+          // Nếu có action đang được thực hiện, chỉ cập nhật followerCount (isFollowing đã được cập nhật trong handleFollowToggle)
+          if (action === "followed") {
+            setFollowerCount((prev) => prev + 1);
+          } else if (action === "unfollowed") {
+            setFollowerCount((prev) => Math.max(0, prev - 1));
+          }
         }
       }
     };
 
-    window.addEventListener('friend:status-changed', handleFriendStatusChanged);
-    return () => {
-      window.removeEventListener('friend:status-changed', handleFriendStatusChanged);
+    // Lắng nghe follower_count_changed từ server (cho người được follow/unfollow)
+    const handleFollowerCountChanged = (data) => {
+      const { followingId, change } = data;
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const followingIdStr = String(followingId);
+
+      // Nếu đang xem profile của người được follow/unfollow
+      if (viewedUserId === followingIdStr) {
+        // Cập nhật số lượng followers (bất kỳ ai follow/unfollow user đó)
+        setFollowerCount((prev) => Math.max(0, prev + change));
+      }
     };
-  }, [viewedUser, currentUser, isOwnProfile]);
+
+    // Lắng nghe friend_count_changed từ server (cho người có số lượng bạn bè thay đổi)
+    const handleFriendCountChanged = (data) => {
+      const { userId, otherUserId, change } = data;
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const userIdStr = String(userId);
+      const otherUserIdStr = otherUserId ? String(otherUserId) : null;
+
+      // Cập nhật số lượng bạn bè nếu:
+      // 1. Đang xem profile của người có số lượng bạn bè thay đổi (userId)
+      // 2. Hoặc đang xem profile của người kia trong mối quan hệ bạn bè (otherUserId)
+      if (viewedUserId === userIdStr || (otherUserIdStr && viewedUserId === otherUserIdStr)) {
+        // Cập nhật số lượng bạn bè (bất kỳ ai kết bạn/hủy bạn bè với user đó)
+        setFriendCount((prev) => Math.max(0, prev + change));
+      }
+    };
+
+    socket.on("follow_status_changed", handleFollowStatusChanged);
+    socket.on("follower_count_changed", handleFollowerCountChanged);
+    socket.on("friend_count_changed", handleFriendCountChanged);
+
+    return () => {
+      socket.off("follow_status_changed", handleFollowStatusChanged);
+      socket.off("follower_count_changed", handleFollowerCountChanged);
+      socket.off("friend_count_changed", handleFriendCountChanged);
+      socket.disconnect();
+    };
+  }, [currentUser, viewedUser, isOwnProfile]);
+
+  // Lắng nghe window event friend:status-changed (chỉ dùng cho các trường hợp không có socket event)
+  // Socket event đã được xử lý trong useEffect trên, không cần xử lý lại ở đây
+  // Chỉ giữ lại để tương thích với các component khác dispatch window event
+  // Nhưng không cập nhật friendCount vì socket event đã xử lý rồi
+
+  // Xử lý follow/unfollow
+  const handleFollowToggle = async () => {
+    if (!userId || isOwnProfile || followLoading || followActionInProgress.current) return;
+    
+    setFollowLoading(true);
+    followActionInProgress.current = true;
+    try {
+      if (isFollowing) {
+        await followService.unfollowUser(userId);
+        // Chỉ cập nhật isFollowing, để socket event cập nhật followerCount
+        setIsFollowing(false);
+      } else {
+        await followService.followUser(userId);
+        // Chỉ cập nhật isFollowing, để socket event cập nhật followerCount
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      alert(error.response?.data?.message || "Có lỗi xảy ra");
+      // Nếu có lỗi, reload lại trạng thái
+      try {
+        const response = await followService.getFollowStatus(userId);
+        setIsFollowing(response.data?.isFollowing || false);
+      } catch (e) {
+        console.error("Error reloading follow status:", e);
+      }
+    } finally {
+      setFollowLoading(false);
+      // Reset flag sau một khoảng thời gian ngắn để socket event có thể xử lý
+      setTimeout(() => {
+        followActionInProgress.current = false;
+      }, 1000);
+    }
+  };
 
   const removeFile = (index) => {
     // Revoke object URL to prevent memory leaks
@@ -884,9 +992,22 @@ const ProfileView = ({ userId }) => {
                       Nhắn tin
                     </button>
                     <FriendButton userId={userId} />
-                    <button className="btn btn-outline-secondary px-4 py-2 d-flex align-items-center">
-                      <i className="fas fa-bell me-2"></i>
-                      Theo dõi
+                    <button
+                      className={`btn ${isFollowing ? 'btn-secondary' : 'btn-outline-secondary'} px-4 py-2 d-flex align-items-center`}
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                    >
+                      {followLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <i className={`fas ${isFollowing ? 'fa-bell-slash' : 'fa-bell'} me-2`}></i>
+                          {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                        </>
+                      )}
                     </button>
                     <button
                       className="btn btn-outline-danger px-4 py-2 d-flex align-items-center"

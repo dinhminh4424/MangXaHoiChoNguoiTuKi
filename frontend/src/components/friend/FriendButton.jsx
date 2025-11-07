@@ -71,12 +71,31 @@ const FriendButton = ({ userId, onStatusChange }) => {
 
     const handleUpdated = (notification) => handleNew(notification);
 
+    // Lắng nghe friend_status_changed để cập nhật nút bạn bè real-time
+    const handleFriendStatusChanged = (data) => {
+      const { userId: eventUserId, otherUserId, status } = data;
+      const otherId = String(userId);
+      const eventUserIdStr = String(eventUserId);
+      const otherUserIdStr = String(otherUserId);
+
+      // Nếu sự kiện liên quan đến user này
+      if (eventUserIdStr === otherId || otherUserIdStr === otherId) {
+        if (status === "none") {
+          // Xóa bạn bè - reload status
+          loadFriendStatus();
+          if (onStatusChange) onStatusChange();
+        }
+      }
+    };
+
     socket.on("new_notification", handleNew);
     socket.on("notification_updated", handleUpdated);
+    socket.on("friend_status_changed", handleFriendStatusChanged);
 
     return () => {
       socket.off("new_notification", handleNew);
       socket.off("notification_updated", handleUpdated);
+      socket.off("friend_status_changed", handleFriendStatusChanged);
       socket.disconnect();
     };
   }, [user, userId]);
