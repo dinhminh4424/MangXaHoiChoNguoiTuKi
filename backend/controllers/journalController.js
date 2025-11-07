@@ -2,6 +2,7 @@
 const Journal = require("../models/Journal");
 const Notification = require("../models/Notification");
 const FileManager = require("../utils/fileManager");
+const { logUserActivity } = require("../logging/userActivityLogger");
 
 // Tạo nhật ký mới và gửi thông báo
 exports.createJournal = async (req, res) => {
@@ -71,14 +72,35 @@ exports.createJournal = async (req, res) => {
 
     // await notification.save();
 
-    res.status(201).json({
+    const responsePayload = {
       success: true,
       message: "Ghi nhật ký thành công!",
       data: {
         journal: newJournal,
-        // notification: notification,
+      },
+    };
+
+    const actorId = req.user?.userId || userId;
+
+    res.status(201);
+    logUserActivity({
+      action: "journal.create",
+      req,
+      res,
+      userId: actorId,
+      role: req.user?.role,
+      target: { type: "journal", id: newJournal._id.toString() },
+      description: "Người dùng tạo nhật ký",
+      payload: {
+        journalId: newJournal._id.toString(),
+        isPrivate: newJournal.isPrivate,
+        hasMedia: Array.isArray(newJournal.media)
+          ? newJournal.media.length > 0
+          : false,
       },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("Error creating journal:", error);
     res.status(500).json({
@@ -149,14 +171,30 @@ exports.updateTodayJournal = async (req, res) => {
 
     // await notification.save();
 
-    res.json({
+    const responsePayload = {
       success: true,
       message: "Cập nhật nhật ký thành công!",
       data: {
         journal: updatedJournal,
-        // notification: notification,
+      },
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "journal.update_today",
+      req,
+      res,
+      userId: req.user?.userId || userId,
+      role: req.user?.role,
+      target: { type: "journal", id: updatedJournal._id.toString() },
+      description: "Người dùng cập nhật nhật ký trong ngày",
+      payload: {
+        journalId: updatedJournal._id.toString(),
+        isPrivate: updatedJournal.isPrivate,
       },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("Error updating journal:", error);
     res.status(500).json({
@@ -273,13 +311,30 @@ exports.updateJournal = async (req, res) => {
     //   // Không throw error - journal đã update thành công
     // }
 
-    res.json({
+    const responsePayload = {
       success: true,
       message: "Cập nhật nhật ký thành công!",
       data: {
         journal: updatedJournal,
       },
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "journal.update",
+      req,
+      res,
+      userId: req.user?.userId,
+      role: req.user?.role,
+      target: { type: "journal", id: updatedJournal._id.toString() },
+      description: "Người dùng chỉnh sửa nhật ký",
+      payload: {
+        journalId: updatedJournal._id.toString(),
+        updatedFields: Object.keys(normalizedData || {}),
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("❌ Error updating journal:", error);
 
@@ -398,11 +453,30 @@ exports.deleteJournal = async (req, res) => {
         await FileManager.deleteMultipleFiles(journalDelete.media);
       }
     }
-    res.status(200).json({
+    const responsePayload = {
       success: true,
       message: `Đã xoá thành công nhật kí ngày [${journalDelete.createdAt}]  này`,
       journalDelete: journalDelete,
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "journal.delete",
+      req,
+      res,
+      userId,
+      role: req.user?.role,
+      target: { type: "journal", id: journalId.toString() },
+      description: "Người dùng xoá nhật ký",
+      payload: {
+        journalId: journalId.toString(),
+        hadMedia: Array.isArray(journalDelete.media)
+          ? journalDelete.media.length > 0
+          : false,
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("Error getting journal by ID:", error);
     res.status(500).json({

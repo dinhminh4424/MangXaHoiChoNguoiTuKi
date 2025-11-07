@@ -6,8 +6,8 @@ import api from "./api";
  */
 
 // Dashboard
-export const getDashboardStats = async () => {
-  const res = await api.get("/api/admin/dashboard");
+export const getDashboardStats = async (params = {}) => {
+  const res = await api.get("/api/admin/dashboard", { params });
   return res.data;
 };
 

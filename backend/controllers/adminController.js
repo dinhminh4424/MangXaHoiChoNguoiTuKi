@@ -18,31 +18,377 @@ const NotificationService = require("../services/notificationService");
 // Dashboard - Thống kê tổng quan
 const getDashboardStats = async (req, res) => {
   try {
+    const {
+      range = "30d",
+      startDate: startParam,
+      endDate: endParam,
+      groupBy: groupByParam = "auto",
+    } = req.query;
+
+    const timezone = "Asia/Ho_Chi_Minh";
+
+    const now = new Date();
+    now.setHours(23, 59, 59, 999);
+
+    let rangeEnd = endParam ? new Date(endParam) : now;
+    if (Number.isNaN(rangeEnd.getTime())) {
+      rangeEnd = now;
+    }
+    rangeEnd = new Date(rangeEnd.getTime());
+    rangeEnd.setHours(23, 59, 59, 999);
+
+    const createStartFromDays = (days) => {
+      const start = new Date(rangeEnd.getTime());
+      start.setDate(start.getDate() - (Number(days) - 1));
+      start.setHours(0, 0, 0, 0);
+      return start;
+    };
+
+    let rangeStart;
+
+    switch (range) {
+      case "7d":
+        rangeStart = createStartFromDays(7);
+        break;
+      case "30d":
+        rangeStart = createStartFromDays(30);
+        break;
+      case "90d":
+        rangeStart = createStartFromDays(90);
+        break;
+      case "180d":
+        rangeStart = createStartFromDays(180);
+        break;
+      case "365d":
+        rangeStart = createStartFromDays(365);
+        break;
+      case "mtd": {
+        rangeStart = new Date(rangeEnd.getFullYear(), rangeEnd.getMonth(), 1);
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      }
+      case "ytd": {
+        rangeStart = new Date(rangeEnd.getFullYear(), 0, 1);
+        rangeStart.setHours(0, 0, 0, 0);
+        break;
+      }
+      case "custom":
+        if (startParam) {
+          const parsed = new Date(startParam);
+          if (!Number.isNaN(parsed.getTime())) {
+            rangeStart = new Date(parsed.getTime());
+            rangeStart.setHours(0, 0, 0, 0);
+          }
+        }
+        break;
+      default:
+        rangeStart = createStartFromDays(30);
+        break;
+    }
+
+    if (!rangeStart) {
+      rangeStart = createStartFromDays(30);
+    }
+
+    if (rangeStart > rangeEnd) {
+      rangeStart = createStartFromDays(30);
+    }
+
+    const diffMs = Math.max(1, rangeEnd.getTime() - rangeStart.getTime());
+    const prevEnd = new Date(rangeStart.getTime() - 1);
+    prevEnd.setHours(23, 59, 59, 999);
+    const prevStart = new Date(prevEnd.getTime() - diffMs);
+    prevStart.setHours(0, 0, 0, 0);
+
+    const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
+
+    let effectiveGroupBy = groupByParam;
+    if (!effectiveGroupBy || effectiveGroupBy === "auto") {
+      if (diffDays > 365) {
+        effectiveGroupBy = "year";
+      } else if (diffDays > 90) {
+        effectiveGroupBy = "month";
+      } else {
+        effectiveGroupBy = "day";
+      }
+    }
+
+    if (!["day", "month", "year"].includes(effectiveGroupBy)) {
+      effectiveGroupBy = "day";
+    }
+
+    const groupFormatMap = {
+      day: "%Y-%m-%d",
+      month: "%Y-%m",
+      year: "%Y",
+    };
+
+    const makeDateGroupExpression = (field) => ({
+      $dateToString: {
+        format: groupFormatMap[effectiveGroupBy] || "%Y-%m-%d",
+        date: field,
+        timezone,
+      },
+    });
+
+    const countDocumentsInRange = (Model, start, end) =>
+      Model.countDocuments({
+        createdAt: {
+          $gte: start,
+          $lte: end,
+        },
+      });
+
+    const buildTimeSeries = (Model) =>
+      Model.aggregate([
+        {
+          $match: {
+            createdAt: {
+              $gte: rangeStart,
+              $lte: rangeEnd,
+            },
+          },
+        },
+        {
+          $group: {
+            _id: makeDateGroupExpression("$createdAt"),
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]);
+
+    const calcGrowth = (current, previous) => {
+      const delta = current - previous;
+      const growthRate =
+        previous === 0 ? (current > 0 ? 100 : 0) : (delta / previous) * 100;
+      return {
+        current,
+        previous,
+        delta,
+        growthRate: Math.round(growthRate * 100) / 100,
+      };
+    };
+
     const [
       totalUsers,
+      activeUsers,
       totalPosts,
-      totalJournals,
-      totalGroups,
       totalComments,
       totalMessages,
-      recentUsers,
-      recentPosts,
-      moodStats,
+      totalJournals,
+      totalGroups,
+      totalMoodLogs,
+      totalViolations,
+      likesTotalAgg,
     ] = await Promise.all([
       User.countDocuments(),
+      User.countDocuments({ active: true }),
       Post.countDocuments(),
-      Journal.countDocuments(),
-      Group.countDocuments(),
       Comment.countDocuments(),
       Message.countDocuments(),
-      User.find()
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .select("username email role createdAt"),
-      Post.find()
-        .sort({ createdAt: -1 })
-        .limit(5)
-        .populate("userCreateID", "username"),
+      Journal.countDocuments(),
+      Group.countDocuments(),
+      MoodLog.countDocuments(),
+      Violation.countDocuments(),
+      Post.aggregate([
+        { $unwind: "$likes" },
+        { $group: { _id: null, total: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const totalLikes = likesTotalAgg[0]?.total || 0;
+
+    const [
+      usersCurrent,
+      usersPrevious,
+      postsCurrent,
+      postsPrevious,
+      commentsCurrent,
+      commentsPrevious,
+      messagesCurrent,
+      messagesPrevious,
+      journalsCurrent,
+      journalsPrevious,
+      violationsCurrent,
+      violationsPrevious,
+      groupsCurrent,
+      groupsPrevious,
+      moodLogsCurrent,
+      moodLogsPrevious,
+      likesCurrentAgg,
+      likesPreviousAgg,
+    ] = await Promise.all([
+      countDocumentsInRange(User, rangeStart, rangeEnd),
+      countDocumentsInRange(User, prevStart, prevEnd),
+      countDocumentsInRange(Post, rangeStart, rangeEnd),
+      countDocumentsInRange(Post, prevStart, prevEnd),
+      countDocumentsInRange(Comment, rangeStart, rangeEnd),
+      countDocumentsInRange(Comment, prevStart, prevEnd),
+      countDocumentsInRange(Message, rangeStart, rangeEnd),
+      countDocumentsInRange(Message, prevStart, prevEnd),
+      countDocumentsInRange(Journal, rangeStart, rangeEnd),
+      countDocumentsInRange(Journal, prevStart, prevEnd),
+      countDocumentsInRange(Violation, rangeStart, rangeEnd),
+      countDocumentsInRange(Violation, prevStart, prevEnd),
+      countDocumentsInRange(Group, rangeStart, rangeEnd),
+      countDocumentsInRange(Group, prevStart, prevEnd),
+      countDocumentsInRange(MoodLog, rangeStart, rangeEnd),
+      countDocumentsInRange(MoodLog, prevStart, prevEnd),
+      Post.aggregate([
+        { $unwind: "$likes" },
+        {
+          $match: {
+            "likes.createdAt": { $gte: rangeStart, $lte: rangeEnd },
+          },
+        },
+        { $group: { _id: null, total: { $sum: 1 } } },
+      ]),
+      Post.aggregate([
+        { $unwind: "$likes" },
+        {
+          $match: {
+            "likes.createdAt": { $gte: prevStart, $lte: prevEnd },
+          },
+        },
+        { $group: { _id: null, total: { $sum: 1 } } },
+      ]),
+    ]);
+
+    const likesCurrent = likesCurrentAgg[0]?.total || 0;
+    const likesPrevious = likesPreviousAgg[0]?.total || 0;
+
+    const [
+      usersSeries,
+      postsSeries,
+      commentsSeries,
+      messagesSeries,
+      journalsSeries,
+      violationsSeries,
+      moodSeries,
+      likesSeries,
+    ] = await Promise.all([
+      buildTimeSeries(User),
+      buildTimeSeries(Post),
+      buildTimeSeries(Comment),
+      buildTimeSeries(Message),
+      buildTimeSeries(Journal),
+      buildTimeSeries(Violation),
+      buildTimeSeries(MoodLog),
+      Post.aggregate([
+        { $unwind: "$likes" },
+        {
+          $match: {
+            "likes.createdAt": { $gte: rangeStart, $lte: rangeEnd },
+          },
+        },
+        {
+          $group: {
+            _id: makeDateGroupExpression("$likes.createdAt"),
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { _id: 1 } },
+      ]),
+    ]);
+
+    const mergeSeries = (series, key, map) => {
+      series.forEach((item) => {
+        const dateKey = item._id;
+        if (!map.has(dateKey)) {
+          map.set(dateKey, { date: dateKey });
+        }
+        map.get(dateKey)[key] = item.count;
+      });
+    };
+
+    const seriesMap = new Map();
+    mergeSeries(usersSeries, "users", seriesMap);
+    mergeSeries(postsSeries, "posts", seriesMap);
+    mergeSeries(commentsSeries, "comments", seriesMap);
+    mergeSeries(messagesSeries, "messages", seriesMap);
+    mergeSeries(journalsSeries, "journals", seriesMap);
+    mergeSeries(violationsSeries, "violations", seriesMap);
+    mergeSeries(moodSeries, "moodLogs", seriesMap);
+    mergeSeries(likesSeries, "likes", seriesMap);
+
+    const trendSeries = Array.from(seriesMap.values())
+      .sort((a, b) => new Date(a.date) - new Date(b.date))
+      .map((entry) => {
+        const posts = entry.posts || 0;
+        const comments = entry.comments || 0;
+        const messages = entry.messages || 0;
+        const journals = entry.journals || 0;
+        const violations = entry.violations || 0;
+        const moodLogs = entry.moodLogs || 0;
+        const likes = entry.likes || 0;
+        const users = entry.users || 0;
+        const interactions = comments + messages + likes;
+        return {
+          date: entry.date,
+          users,
+          posts,
+          comments,
+          messages,
+          journals,
+          violations,
+          moodLogs,
+          likes,
+          interactions,
+        };
+      });
+
+    const [
+      violationStatusAgg,
+      violationTargetAgg,
+      moodStatsCurrent,
+      moodStatsOverall,
+      recentUsers,
+      recentPosts,
+      topPosts,
+    ] = await Promise.all([
+      Violation.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: rangeStart, $lte: rangeEnd },
+          },
+        },
+        {
+          $group: {
+            _id: "$status",
+            count: { $sum: 1 },
+          },
+        },
+      ]),
+      Violation.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: rangeStart, $lte: rangeEnd },
+          },
+        },
+        {
+          $group: {
+            _id: "$targetType",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+      ]),
+      MoodLog.aggregate([
+        {
+          $match: {
+            createdAt: { $gte: rangeStart, $lte: rangeEnd },
+          },
+        },
+        {
+          $group: {
+            _id: "$emotion",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 8 },
+      ]),
       MoodLog.aggregate([
         {
           $group: {
@@ -51,49 +397,143 @@ const getDashboardStats = async (req, res) => {
           },
         },
         { $sort: { count: -1 } },
-        { $limit: 5 },
       ]),
+      User.find({ createdAt: { $gte: rangeStart } })
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .select("username email role createdAt"),
+      Post.find({ createdAt: { $gte: rangeStart } })
+        .sort({ createdAt: -1 })
+        .limit(8)
+        .populate("userCreateID", "username"),
+      Post.find({ createdAt: { $gte: rangeStart, $lte: rangeEnd } })
+        .sort({ likeCount: -1, commentCount: -1 })
+        .limit(5)
+        .select("content likeCount commentCount warningCount createdAt")
+        .populate("userCreateID", "username"),
     ]);
 
-    // Thống kê theo thời gian (7 ngày gần nhất)
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const violationStatus = violationStatusAgg.reduce(
+      (acc, item) => ({
+        ...acc,
+        [item._id || "unknown"]: item.count,
+      }),
+      {
+        pending: 0,
+        reviewed: 0,
+        approved: 0,
+        rejected: 0,
+        auto: 0,
+      }
+    );
 
-    const [newUsersThisWeek, newPostsThisWeek, newJournalsThisWeek] =
-      await Promise.all([
-        User.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
-        Post.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
-        Journal.countDocuments({ createdAt: { $gte: sevenDaysAgo } }),
-      ]);
+    const periodInteractions = commentsCurrent + messagesCurrent + likesCurrent;
+    const previousInteractions =
+      commentsPrevious + messagesPrevious + likesPrevious;
 
-    res.json({
-      success: true,
-      data: {
-        overview: {
-          totalUsers,
-          totalPosts,
-          totalJournals,
-          totalGroups,
-          totalComments,
-          totalMessages,
-        },
-        weeklyStats: {
-          newUsers: newUsersThisWeek,
-          newPosts: newPostsThisWeek,
-          newJournals: newJournalsThisWeek,
-        },
-        recentActivity: {
-          users: recentUsers,
-          posts: recentPosts,
-        },
-        moodStats,
+    const overview = {
+      totalUsers,
+      activeUsers,
+      totalPosts,
+      totalComments,
+      totalMessages,
+      totalJournals,
+      totalGroups,
+      totalMoodLogs,
+      totalViolations,
+      totalLikes,
+    };
+
+    const periodOverview = {
+      users: usersCurrent,
+      posts: postsCurrent,
+      comments: commentsCurrent,
+      messages: messagesCurrent,
+      journals: journalsCurrent,
+      violations: violationsCurrent,
+      groups: groupsCurrent,
+      moodLogs: moodLogsCurrent,
+      likes: likesCurrent,
+      interactions: periodInteractions,
+    };
+
+    const growth = {
+      users: calcGrowth(usersCurrent, usersPrevious),
+      posts: calcGrowth(postsCurrent, postsPrevious),
+      comments: calcGrowth(commentsCurrent, commentsPrevious),
+      messages: calcGrowth(messagesCurrent, messagesPrevious),
+      journals: calcGrowth(journalsCurrent, journalsPrevious),
+      violations: calcGrowth(violationsCurrent, violationsPrevious),
+      groups: calcGrowth(groupsCurrent, groupsPrevious),
+      moodLogs: calcGrowth(moodLogsCurrent, moodLogsPrevious),
+      likes: calcGrowth(likesCurrent, likesPrevious),
+      interactions: calcGrowth(periodInteractions, previousInteractions),
+    };
+
+    const activityBreakdown = {
+      content: [
+        { key: "posts", label: "Bài viết", count: postsCurrent },
+        { key: "journals", label: "Nhật ký", count: journalsCurrent },
+        { key: "groups", label: "Nhóm mới", count: groupsCurrent },
+      ],
+      interaction: [
+        { key: "comments", label: "Bình luận", count: commentsCurrent },
+        { key: "messages", label: "Tin nhắn", count: messagesCurrent },
+        { key: "likes", label: "Lượt thích", count: likesCurrent },
+      ],
+      moderation: [
+        { key: "violations", label: "Vi phạm mới", count: violationsCurrent },
+      ],
+    };
+
+    const requestedRange = {
+      range,
+      groupBy: effectiveGroupBy,
+      startDate: rangeStart,
+      endDate: rangeEnd,
+      previousStart: prevStart,
+      previousEnd: prevEnd,
+      periodDays: diffDays,
+    };
+
+    const responsePayload = {
+      requestedRange,
+      overview,
+      periodOverview,
+      growth,
+      trendSeries,
+      activityBreakdown,
+      violationSummary: {
+        status: violationStatus,
+        byTarget: violationTargetAgg.map((item) => ({
+          targetType: item._id,
+          count: item.count,
+        })),
       },
+      moodStats: moodStatsCurrent.map((item) => ({
+        emotion: item._id,
+        count: item.count,
+      })),
+      overallMoodStats: moodStatsOverall.map((item) => ({
+        emotion: item._id,
+        count: item.count,
+      })),
+      recentActivity: {
+        users: recentUsers,
+        posts: recentPosts,
+      },
+      topPosts,
+    };
+
+    return res.json({
+      success: true,
+      data: responsePayload,
     });
   } catch (error) {
     console.error("Dashboard stats error:", error);
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
-      message: "Lỗi khi lấy thống kê dashboard2",
+      message: "Lỗi khi lấy thống kê dashboard",
     });
   }
 };
