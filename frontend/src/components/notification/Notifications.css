@@ -244,49 +244,27 @@
 
 /* New layout refinements */
 .notif-item {
-  padding: 0;
-  position: relative;
+  padding: 6px 6px 4px 2px;
 }
-
 .notif-header {
-  margin-bottom: 8px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 6px;
 }
-
 .notif-title {
-  font-size: 0.9375rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #111827;
-  line-height: 1.4;
-  margin: 0;
-  flex: 1;
 }
-
 .notif-time {
-  font-size: 0.75rem;
-  color: #6b7280;
-  white-space: nowrap;
-  font-weight: 500;
+  font-size: 0.72rem;
 }
-
 .notif-message {
-  font-size: 0.875rem;
-  color: #4b5563;
-  line-height: 1.6;
-  margin: 0 0 8px 0;
-  padding-left: 0;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-left: 38px;
 }
-
 .notif-meta {
-  font-size: 0.75rem;
-  color: #6b7280;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
+  margin-left: 38px;
+  font-size: 0.72rem;
 }
 
 .alert .d-flex i.text-danger {
@@ -499,9 +477,9 @@
 }
 
 .notification-badge {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 25%;
   flex-shrink: 0;
   margin-top: 4px;
 }
@@ -960,6 +938,7 @@
   .notification-title {
     font-size: 0.875rem;
   }
+
 
   .notification-message {
     font-size: 0.75rem;

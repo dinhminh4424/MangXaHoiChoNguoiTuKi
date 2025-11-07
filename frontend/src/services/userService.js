@@ -106,6 +106,7 @@ class UserService {
       const response = await api.put("/api/users/imageCover", formData);
       return response.data;
     } catch (error) {
+      console.log(error);
       throw new Error(
         error.response?.data?.message || "Lỗi khi cập nhật trạng thái"
       );

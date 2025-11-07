@@ -9,6 +9,8 @@ const Message = require("../models/Message");
 const MoodLog = require("../models/MoodLog");
 const Violation = require("../models/Violation");
 const NotificationService = require("../services/notificationService");
+const Friend = require("../models/Friend");
+const Follow = require("../models/Follow");
 const mailService = require("../services/mailService");
 
 class UserController {
@@ -24,10 +26,21 @@ class UserController {
         });
       }
 
-      const countPost = await Post.countDocuments({
-        userCreateID: user._id,
-        isBlocked: false,
-      });
+      const [countPost, countFriends, countFollowers, countFollowing] = await Promise.all([
+        Post.countDocuments({
+          userCreateID: user._id,
+          isBlocked: false,
+        }),
+        Friend.countDocuments({
+          $or: [{ userA: user._id }, { userB: user._id }],
+        }),
+        Follow.countDocuments({
+          following: user._id,
+        }),
+        Follow.countDocuments({
+          follower: user._id,
+        }),
+      ]);
 
       res.json({
         success: true,
@@ -43,6 +56,9 @@ class UserController {
             lastSeen: user.lastSeen,
             createdAt: user.createdAt,
             countPost: countPost,
+            countFriends: countFriends,
+            countFollowers: countFollowers,
+            countFollowing: countFollowing,
           },
         },
       });
@@ -397,18 +413,31 @@ class UserController {
         });
       }
 
-      const countPost = await Post.countDocuments({
-        userCreateID: user._id,
-        isBlocked: false,
-      });
-
-      const countChat = await Chat.countDocuments({
-        members: user._id,
-      });
+      const [countPost, countChat, countFriends, countFollowers, countFollowing] = await Promise.all([
+        Post.countDocuments({
+          userCreateID: user._id,
+          isBlocked: false,
+        }),
+        Chat.countDocuments({
+          members: user._id,
+        }),
+        Friend.countDocuments({
+          $or: [{ userA: user._id }, { userB: user._id }],
+        }),
+        Follow.countDocuments({
+          following: user._id,
+        }),
+        Follow.countDocuments({
+          follower: user._id,
+        }),
+      ]);
 
       const userDoc = user.toObject();
       userDoc.countPost = countPost;
       userDoc.countChat = countChat;
+      userDoc.countFriends = countFriends;
+      userDoc.countFollowers = countFollowers;
+      userDoc.countFollowing = countFollowing;
 
       res.json({
         success: true,

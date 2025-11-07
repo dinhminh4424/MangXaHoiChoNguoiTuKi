@@ -102,6 +102,13 @@ router.post(
   groupController.manageMember
 );
 
+router.post(
+  "/:groupId/report",
+  ensureGroupExists,
+  upload.array("files"),
+  groupController.reportGroup
+);
+
 // Chuyển quyền owner
 router.post(
   "/:groupId/transfer-ownership",

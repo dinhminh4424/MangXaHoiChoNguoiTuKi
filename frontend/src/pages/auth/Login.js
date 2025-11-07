@@ -314,8 +314,14 @@ const Login = () => {
                 </div>
                 <div className="sign-info">
                   <span className="dark-color d-inline-block line-height-2">
-                    Bạn chưa muốn đăng nhập bằng khuôn mặt
+                    Bạn chưa muốn đăng nhập bằng khuôn mặt (Camera)
                     <Link to="/faceLogin" className="text-decoration-none">
+                      Đăng nhập
+                    </Link>
+                  </span>
+                  <span className="dark-color d-inline-block line-height-2">
+                    Bạn chưa muốn đăng nhập bằng khuôn mặt (Hình ảnh)
+                    <Link to="/faceLoginImage" className="text-decoration-none">
                       Đăng nhập
                     </Link>
                   </span>

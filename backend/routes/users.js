@@ -555,11 +555,12 @@ const express = require("express");
 const upload = require("../middleware/upload");
 const auth = require("../middleware/auth");
 const userController = require("../controllers/userController");
-
+const User = require("../models/User");
 const router = express.Router();
+const FileManager = require("../utils/fileManager");
 
 // Public routes (no auth) - useful for client-side debugging or public search
-router.get('/public', userController.getUsersPublic);
+router.get("/public", userController.getUsersPublic);
 
 // Tất cả routes đều cần auth
 router.use(auth);
@@ -635,10 +636,11 @@ router.put("/imageCover", auth, upload.single("file"), async (req, res) => {
 
       // Xóa avatar cũ nếu tồn tại và không phải avatar mặc định
       if (currentUser.profile?.coverPhoto) {
+        console.log(currentUser.profile?.coverPhoto);
         try {
           const imageCoverUrl = currentUser.profile.coverPhoto;
 
-          FileManager.deleteSingleFile(imageCoverUrl);
+          await FileManager.deleteSingleFile(imageCoverUrl);
         } catch (deleteError) {
           console.error("Lỗi khi xóa avatar cũ:", deleteError);
           return;
@@ -667,6 +669,7 @@ router.put("/imageCover", auth, upload.single("file"), async (req, res) => {
       });
     }
   } catch (error) {
+    console.log(error);
     res.status(500).json({
       success: false,
       message: "Lỗi server: ",
