@@ -250,7 +250,9 @@ app.use(passport.initialize());
 // --------------------------------------- [LOGGING MIDDLEWARE] ------------------------------------
 // Gắn middleware logging TRƯỚC khi mount các route API để bắt đầy đủ request/response.
 // mongoLogger lập buffer + batch insert vào collection access_logs (xem logging/mongoLogger.js)
-app.use(express.json());
+
+// app.use(express.json());
+
 app.use(attachUserFromToken); // <-- thêm dòng này
 app.use(mongoLogger);
 

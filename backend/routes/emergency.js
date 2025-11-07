@@ -36,7 +36,13 @@ async function getAddressFromCoordinates(lat, lon) {
 router.post("/sos", async (req, res) => {
   console.log("📩 Nhận tín hiệu SOS:", req.body);
   try {
-    const { userId, phoneNumber, latitude, longitude, message, type, isSilent } = req.body;
+    // ✅ Ưu tiên lấy userId từ token (nếu có middleware auth), nếu không thì lấy từ body
+    const userId = req.user?.userId || req.body.userId;
+    const { phoneNumber, latitude, longitude, message, type, isSilent } = req.body;
+
+    console.log("🔍 UserId từ token:", req.user?.userId);
+    console.log("🔍 UserId từ body:", req.body.userId);
+    console.log("✅ UserId được sử dụng:", userId);
 
     if (!userId || !latitude || !longitude)
       return res.status(400).json({ success: false, message: "Thiếu dữ liệu bắt buộc!" });
