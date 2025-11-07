@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
 const Friend = require("../models/Friend");
+const mongoose = require("mongoose");
 // const { param } = require("../routes/posts");
 const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
@@ -103,7 +104,7 @@ exports.getPosts = async (req, res) => {
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
 
-    const query = {
+    let query = {
       $or: [
         { isDeletedByUser: false },
         { isDeletedByUser: { $exists: false } },
@@ -176,8 +177,52 @@ exports.getPosts = async (req, res) => {
         }
       }
     } else {
-      // Nếu không có userCreateID (tìm kiếm hoặc feed), chỉ hiển thị public
-      if (!privacy || privacy !== "all") {
+      // Nếu không có userCreateID (tìm kiếm hoặc feed)
+      if (currentUserId) {
+        // Nếu có currentUser (feed), hiển thị:
+        // - Posts của chính mình (bất kỳ privacy nào)
+        // - Posts public của người khác
+        // - Posts friends của những người là bạn bè
+        
+        // Lấy danh sách bạn bè
+        const friendships = await Friend.find({
+          $or: [
+            { userA: currentUserId },
+            { userB: currentUserId },
+          ],
+        });
+        
+        const friendIds = friendships.map((f) => {
+          return f.userA.toString() === currentUserId.toString()
+            ? f.userB.toString()
+            : f.userA.toString();
+        });
+        
+        // Tạo query phức tạp hơn với $and để kết hợp các điều kiện
+        const privacyConditions = {
+          $or: [
+            // Posts của chính mình (bất kỳ privacy nào)
+            { userCreateID: currentUserId },
+            // Posts public của người khác
+            { privacy: "public", userCreateID: { $ne: currentUserId } },
+            // Posts friends của những người là bạn bè
+            friendIds.length > 0
+              ? {
+                  privacy: "friends",
+                  userCreateID: {
+                    $in: friendIds.map((id) => new mongoose.Types.ObjectId(id)),
+                  },
+                }
+              : { _id: null }, // Nếu không có bạn bè, điều kiện này không match
+          ],
+        };
+        
+        // Sử dụng $and để kết hợp query gốc với privacy conditions
+        query = {
+          $and: [query, privacyConditions],
+        };
+      } else {
+        // Nếu không có currentUser (tìm kiếm không đăng nhập), chỉ hiển thị public
         query.privacy = "public";
       }
     }
