@@ -695,8 +695,258 @@
   border-top: 1px solid #e5e7eb;
 }
 
+/* SOS Emergency Popup */
+.sos-emergency-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+  padding: 20px;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.sos-emergency-popup {
+  background: #ffffff;
+  border-radius: 20px;
+  box-shadow: 0 20px 60px rgba(239, 68, 68, 0.4);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow: hidden;
+  animation: sosPopupSlideIn 0.3s ease-out;
+  border: 3px solid #ef4444;
+}
+
+@keyframes sosPopupSlideIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.sos-popup-header {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #ffffff;
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  position: relative;
+}
+
+.sos-popup-icon-container {
+  width: 56px;
+  height: 56px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.sos-popup-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0;
+  flex: 1;
+  line-height: 1.3;
+}
+
+.sos-popup-close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.sos-popup-close:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.sos-popup-body {
+  padding: 24px;
+  max-height: calc(90vh - 200px);
+  overflow-y: auto;
+}
+
+.sos-info-section {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sos-info-item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.sos-info-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.sos-info-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #6b7280;
+  margin-bottom: 8px;
+}
+
+.sos-info-label i {
+  font-size: 1.1rem;
+  color: #ef4444;
+}
+
+.sos-info-value {
+  font-size: 1rem;
+  color: #111827;
+  font-weight: 500;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.sos-phone-link {
+  color: #16a34a;
+  text-decoration: none;
+  font-weight: 600;
+  transition: color 0.2s ease;
+}
+
+.sos-phone-link:hover {
+  color: #15803d;
+  text-decoration: underline;
+}
+
+.sos-map-link {
+  display: inline-flex;
+  align-items: center;
+  margin-top: 8px;
+  color: rgb(28, 140, 238);
+  text-decoration: none;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.sos-map-link:hover {
+  color: rgb(20, 100, 200);
+  text-decoration: underline;
+}
+
+.sos-popup-footer {
+  padding: 20px 24px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+}
+
+.sos-popup-action-btn {
+  padding: 10px 20px;
+  font-weight: 600;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  border: none;
+  cursor: pointer;
+}
+
+.sos-popup-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.sos-popup-action-btn.btn-primary {
+  background: rgb(28, 140, 238);
+  color: #ffffff;
+}
+
+.sos-popup-action-btn.btn-primary:hover {
+  background: rgb(20, 100, 200);
+}
+
+.sos-popup-action-btn.btn-success {
+  background: #16a34a;
+  color: #ffffff;
+}
+
+.sos-popup-action-btn.btn-success:hover {
+  background: #15803d;
+}
+
+.sos-popup-action-btn.btn-outline-primary {
+  background: transparent;
+  color: rgb(28, 140, 238);
+  border: 2px solid rgb(28, 140, 238);
+}
+
+.sos-popup-action-btn.btn-outline-primary:hover {
+  background: rgba(28, 140, 238, 0.1);
+}
+
 /* Responsive adjustments */
 @media (max-width: 768px) {
+  .sos-emergency-popup {
+    max-width: 95%;
+    border-radius: 16px;
+  }
+
+  .sos-popup-header {
+    padding: 20px;
+  }
+
+  .sos-popup-title {
+    font-size: 1.25rem;
+  }
+
+  .sos-popup-icon-container {
+    width: 48px;
+    height: 48px;
+    font-size: 1.75rem;
+  }
+
+  .sos-popup-body {
+    padding: 20px;
+  }
+
+  .sos-popup-footer {
+    padding: 16px;
+    flex-direction: column;
+  }
+
+  .sos-popup-action-btn {
+    width: 100%;
+    justify-content: center;
+  }
   .notification-item-admin {
     padding: 10px 12px;
   }
