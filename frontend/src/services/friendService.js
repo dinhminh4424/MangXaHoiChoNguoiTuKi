@@ -100,6 +100,18 @@ class FriendService {
       );
     }
   }
+
+  // Lấy danh sách bạn bè của một user cụ thể
+  async getFriendsByUserId(userId, params = {}) {
+    try {
+      const response = await api.get(`/api/friends/${userId}`, { params });
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message || "Lỗi khi lấy danh sách bạn bè"
+      );
+    }
+  }
 }
 
 export default new FriendService();

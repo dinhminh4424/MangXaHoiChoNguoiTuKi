@@ -6,6 +6,7 @@ import ProfileView from "../../components/profile/ProfileView";
 import ProfileEdit from "../../components/profile/ProfileEdit";
 import VerificationTab from "../../components/profile/VerificationTab";
 import ProfileJournal from "../../components/profile/profileJournal";
+import ProfileFriends from "../../components/profile/profileFriends";
 import ProfilePosts from "../../components/profile/profilePost";
 import api from "../../services/api";
 
@@ -142,15 +143,7 @@ const Profile = () => {
             {/* Bạn bè */}
             {activeTab === "friends" && (
               <div className="tab-pane fade show active">
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body text-center text-muted py-5">
-                    <i className="fas fa-users fa-3x mb-3 text-light"></i>
-                    <h5>Chưa có bạn bè</h5>
-                    <p className="mb-0">
-                      Kết nối với mọi người để xem danh sách bạn bè
-                    </p>
-                  </div>
-                </div>
+                <ProfileFriends userId={userId} />
               </div>
             )}
 

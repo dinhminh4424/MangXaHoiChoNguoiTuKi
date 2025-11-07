@@ -639,6 +639,58 @@ class FriendController {
     }
   }
 
+  // [GET] /api/friends/:userId - Lấy danh sách bạn bè của một user cụ thể
+  async getFriendsByUserId(req, res) {
+    try {
+      const { userId: targetUserId } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      const friendships = await Friend.find({
+        $or: [{ userA: targetUserId }, { userB: targetUserId }],
+      })
+        .populate("userA", "username fullName profile.avatar isOnline")
+        .populate("userB", "username fullName profile.avatar isOnline")
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit));
+
+      // Trả về thông tin bạn bè (người không phải target user)
+      const friends = friendships.map((friendship) => {
+        const friend =
+          friendship.userA._id.toString() === targetUserId
+            ? friendship.userB
+            : friendship.userA;
+        return {
+          ...friend.toObject(),
+          friendshipId: friendship._id,
+          becameFriendsAt: friendship.createdAt,
+        };
+      });
+
+      const total = await Friend.countDocuments({
+        $or: [{ userA: targetUserId }, { userB: targetUserId }],
+      });
+
+      res.json({
+        success: true,
+        data: friends,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          results: friends.length,
+          totalFriends: total,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting friends by userId:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách bạn bè",
+        error: error.message,
+      });
+    }
+  }
+
   // [GET] /api/friends/status/:userId - Kiểm tra trạng thái với một user
   async getFriendStatus(req, res) {
     try {
