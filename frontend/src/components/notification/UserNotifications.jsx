@@ -410,41 +410,60 @@ const UserNotifications = () => {
     return date.toLocaleDateString("vi-VN");
   };
 
-  // Lọc notifications theo tab
-  const filteredNotifications = notifications.filter((notification) => {
-    if (activeTab === "all") return true;
-    if (activeTab === "posts") {
-      return isPostNotification(notification.type);
-    }
-    if (activeTab === "friends") {
-      return isFriendNotification(notification.type);
-    }
-    if (activeTab === "system") {
-      return isSystemNotification(notification.type);
+  // Quy tắc ẩn/hiển cho dropdown thông báo chính
+  const isVisibleForUser = (notification) => {
+    if (!notification) return false;
+    const currentUserId = user?.id || user?._id;
+    // Ẩn yêu cầu kết bạn mới
+    if (notification.type === "FRIEND_REQUEST") return false;
+    // Ẩn accepted/rejected đối với người nhận (recipient===current && sender===current)
+    if (
+      (notification.type === "FRIEND_REQUEST_ACCEPTED" ||
+        notification.type === "FRIEND_REQUEST_REJECTED") &&
+      ((notification.recipient?._id || notification.recipient) === currentUserId) &&
+      ((notification.sender?._id || notification.sender) === currentUserId)
+    ) {
+      return false;
     }
     return true;
-  });
+  };
+
+  // Lọc notifications theo tab
+  // Ẩn FRIEND_REQUEST (yêu cầu mới) khỏi dropdown thông báo chính
+  // Ẩn FRIEND_REQUEST_ACCEPTED/REJECTED nếu người dùng là người nhận và sender (trường hợp người nhận vừa chấp nhận/từ chối)
+  // VẪN hiển thị FRIEND_REQUEST_ACCEPTED/REJECTED cho người gửi yêu cầu
+  const filteredNotifications = notifications
+    .filter(isVisibleForUser)
+    .filter((notification) => {
+      if (activeTab === "all") return true;
+      if (activeTab === "posts") {
+        return isPostNotification(notification.type);
+      }
+      if (activeTab === "friends") {
+        return isFriendNotification(notification.type);
+      }
+      if (activeTab === "system") {
+        return isSystemNotification(notification.type);
+      }
+      return true;
+    });
 
   // Đếm số lượng theo từng tab
   const getTabCounts = () => {
-    const allCount = notifications.length;
-    const postsCount = notifications.filter((n) =>
-      isPostNotification(n.type)
-    ).length;
-    const friendsCount = notifications.filter((n) =>
-      isFriendNotification(n.type)
-    ).length;
-    const systemCount = notifications.filter((n) =>
-      isSystemNotification(n.type)
-    ).length;
-
+    // Chỉ tính trên các notification được phép hiển thị
+    const visible = notifications.filter(isVisibleForUser);
+    const allCount = visible.length;
+    const postsCount = visible.filter((n) => isPostNotification(n.type)).length;
+    const friendsCount = visible.filter((n) => isFriendNotification(n.type)).length;
+    const systemCount = visible.filter((n) => isSystemNotification(n.type)).length;
     return { allCount, postsCount, friendsCount, systemCount };
   };
 
   const { allCount, postsCount, friendsCount, systemCount } = getTabCounts();
 
-  // Tính lại số lượng chưa đọc từ danh sách hiện có (để không phụ thuộc API unread-only)
-  const computedUnreadCount = notifications.filter((n) => !n.read).length;
+  // Tính lại số lượng chưa đọc từ danh sách hiện có
+  // Loại bỏ FRIEND_REQUEST và FRIEND_REQUEST_ACCEPTED/REJECTED mà người dùng là người nhận và sender (đã chấp nhận/từ chối)
+  const computedUnreadCount = notifications.filter((n) => !n.read && isVisibleForUser(n)).length;
 
   useEffect(() => {
     if (!user) return;
@@ -470,6 +489,25 @@ const UserNotifications = () => {
 
     // Lắng nghe thông báo mới
     socket.on("new_notification", (notification) => {
+      const currentUserId = user.id || user._id;
+      const recipientId = notification.recipient?._id || notification.recipient;
+      const senderId = notification.sender?._id || notification.sender;
+
+      // Bỏ qua các thông báo friend request không cần hiển thị ở dropdown này
+      // 1) FRIEND_REQUEST (yêu cầu mới)
+      if (notification.type === "FRIEND_REQUEST") {
+        return;
+      }
+      // 2) FRIEND_REQUEST_ACCEPTED/REJECTED dành cho người nhận (recipient===current && sender===current)
+      if (
+        (notification.type === "FRIEND_REQUEST_ACCEPTED" ||
+          notification.type === "FRIEND_REQUEST_REJECTED") &&
+        recipientId === currentUserId &&
+        senderId === currentUserId
+      ) {
+        return;
+      }
+
       setNotifications((prev) => [notification, ...prev.slice(0, 19)]); // Tăng limit để có đủ data cho tabs
       setUnreadCount((prev) => prev + 1);
       showToast(notification);

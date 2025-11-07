@@ -5,13 +5,15 @@ import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 
 import FriendButton from "../friend/FriendButton";
+import followService from "../../services/followService";
+import { io } from "socket.io-client";
 
 import TiptapEditor from "../journal/TiptapEditor";
 import { X, Image } from "lucide-react";
 import NotificationService from "../../services/notificationService";
 
 import "./profileView.css";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 
 const ProfileView = ({ userId }) => {
   const navigate = useNavigate();
@@ -44,6 +46,12 @@ const ProfileView = ({ userId }) => {
 
   const [uploading, setUploading] = React.useState(false);
   const [showReport, setShowReport] = React.useState(false);
+  const [friendCount, setFriendCount] = React.useState(0);
+  const [followerCount, setFollowerCount] = React.useState(0);
+  const [isFollowing, setIsFollowing] = React.useState(false);
+  const [followLoading, setFollowLoading] = React.useState(false);
+  const socketRef = React.useRef(null);
+  const followActionInProgress = React.useRef(false);
 
   const handleFileChangeReport = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -227,6 +235,165 @@ const ProfileView = ({ userId }) => {
       setPreviewImage(URL.createObjectURL(file));
     }
   }, [file]);
+
+  // Cập nhật số bạn bè và số người theo dõi từ viewedUser
+  React.useEffect(() => {
+    if (viewedUser) {
+      setFriendCount(viewedUser.countFriends || 0);
+      setFollowerCount(viewedUser.countFollowers || 0);
+    }
+  }, [viewedUser]);
+
+  // Kiểm tra trạng thái follow khi userId thay đổi
+  React.useEffect(() => {
+    const checkFollowStatus = async () => {
+      if (!userId || isOwnProfile || !currentUser) return;
+      try {
+        const response = await followService.getFollowStatus(userId);
+        setIsFollowing(response.data?.isFollowing || false);
+      } catch (error) {
+        console.error("Error checking follow status:", error);
+      }
+    };
+    checkFollowStatus();
+  }, [userId, isOwnProfile, currentUser]);
+
+  // Lắng nghe socket events cho follow status changes
+  React.useEffect(() => {
+    if (!currentUser) return;
+
+    const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const socket = io(API_BASE_URL, {
+      withCredentials: true,
+    });
+    socketRef.current = socket;
+
+    // Join user room để nhận events
+    socket.emit("join_notifications", currentUser.id || currentUser._id);
+
+    // Lắng nghe follow_status_changed từ server (cho người thực hiện follow/unfollow)
+    const handleFollowStatusChanged = (data) => {
+      const { followerId, followingId, action } = data;
+      const currentUserId = String(currentUser.id || currentUser._id);
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const followingIdStr = String(followingId);
+      const followerIdStr = String(followerId);
+
+      // Nếu đang xem profile của người được follow/unfollow
+      // Và current user là người thực hiện follow/unfollow
+      if (viewedUserId === followingIdStr && followerIdStr === currentUserId) {
+        // Chỉ cập nhật nếu không có action đang được thực hiện (tránh duplicate)
+        if (!followActionInProgress.current) {
+          if (action === "followed") {
+            setIsFollowing(true);
+            setFollowerCount((prev) => prev + 1);
+          } else if (action === "unfollowed") {
+            setIsFollowing(false);
+            setFollowerCount((prev) => Math.max(0, prev - 1));
+          }
+        } else {
+          // Nếu có action đang được thực hiện, chỉ cập nhật followerCount (isFollowing đã được cập nhật trong handleFollowToggle)
+          if (action === "followed") {
+            setFollowerCount((prev) => prev + 1);
+          } else if (action === "unfollowed") {
+            setFollowerCount((prev) => Math.max(0, prev - 1));
+          }
+        }
+      }
+    };
+
+    // Lắng nghe follower_count_changed từ server (cho người được follow/unfollow)
+    const handleFollowerCountChanged = (data) => {
+      const { followingId, change } = data;
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const currentUserId = String(currentUser?.id || currentUser._id);
+      const followingIdStr = String(followingId);
+
+      // Cập nhật số lượng followers nếu:
+      // 1. Đang xem profile của người được follow/unfollow (viewedUserId === followingIdStr)
+      // 2. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === followingIdStr)
+      if (viewedUserId === followingIdStr || (isOwnProfile && currentUserId === followingIdStr)) {
+        // Cập nhật số lượng followers (bất kỳ ai follow/unfollow user đó)
+        setFollowerCount((prev) => Math.max(0, prev + change));
+      }
+    };
+
+    // Lắng nghe friend_count_changed từ server (cho người có số lượng bạn bè thay đổi)
+    const handleFriendCountChanged = (data) => {
+      const { userId, otherUserId, change } = data;
+      const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const currentUserId = String(currentUser?.id || currentUser._id);
+      const userIdStr = String(userId);
+      const otherUserIdStr = otherUserId ? String(otherUserId) : null;
+
+      // Cập nhật số lượng bạn bè nếu:
+      // 1. Đang xem profile của người có số lượng bạn bè thay đổi (userId)
+      // 2. Hoặc đang xem profile của người kia trong mối quan hệ bạn bè (otherUserId)
+      // 3. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === userIdStr)
+      // 4. Hoặc đang xem profile của chính mình và event liên quan đến mình (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr)
+      const shouldUpdate = 
+        viewedUserId === userIdStr || 
+        (otherUserIdStr && viewedUserId === otherUserIdStr) ||
+        (isOwnProfile && currentUserId === userIdStr) ||
+        (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr);
+
+      if (shouldUpdate) {
+        // Cập nhật số lượng bạn bè (bất kỳ ai kết bạn/hủy bạn bè với user đó)
+        setFriendCount((prev) => Math.max(0, prev + change));
+      }
+    };
+
+    socket.on("follow_status_changed", handleFollowStatusChanged);
+    socket.on("follower_count_changed", handleFollowerCountChanged);
+    socket.on("friend_count_changed", handleFriendCountChanged);
+
+    return () => {
+      socket.off("follow_status_changed", handleFollowStatusChanged);
+      socket.off("follower_count_changed", handleFollowerCountChanged);
+      socket.off("friend_count_changed", handleFriendCountChanged);
+      socket.disconnect();
+    };
+  }, [currentUser, viewedUser, isOwnProfile]);
+
+  // Lắng nghe window event friend:status-changed (chỉ dùng cho các trường hợp không có socket event)
+  // Socket event đã được xử lý trong useEffect trên, không cần xử lý lại ở đây
+  // Chỉ giữ lại để tương thích với các component khác dispatch window event
+  // Nhưng không cập nhật friendCount vì socket event đã xử lý rồi
+
+  // Xử lý follow/unfollow
+  const handleFollowToggle = async () => {
+    if (!userId || isOwnProfile || followLoading || followActionInProgress.current) return;
+    
+    setFollowLoading(true);
+    followActionInProgress.current = true;
+    try {
+      if (isFollowing) {
+        await followService.unfollowUser(userId);
+        // Chỉ cập nhật isFollowing, để socket event cập nhật followerCount
+        setIsFollowing(false);
+      } else {
+        await followService.followUser(userId);
+        // Chỉ cập nhật isFollowing, để socket event cập nhật followerCount
+        setIsFollowing(true);
+      }
+    } catch (error) {
+      console.error("Error toggling follow:", error);
+      alert(error.response?.data?.message || "Có lỗi xảy ra");
+      // Nếu có lỗi, reload lại trạng thái
+      try {
+        const response = await followService.getFollowStatus(userId);
+        setIsFollowing(response.data?.isFollowing || false);
+      } catch (e) {
+        console.error("Error reloading follow status:", e);
+      }
+    } finally {
+      setFollowLoading(false);
+      // Reset flag sau một khoảng thời gian ngắn để socket event có thể xử lý
+      setTimeout(() => {
+        followActionInProgress.current = false;
+      }, 1000);
+    }
+  };
 
   const removeFile = (index) => {
     // Revoke object URL to prevent memory leaks
@@ -837,9 +1004,22 @@ const ProfileView = ({ userId }) => {
                       Nhắn tin
                     </button>
                     <FriendButton userId={userId} />
-                    <button className="btn btn-outline-secondary px-4 py-2 d-flex align-items-center">
-                      <i className="fas fa-bell me-2"></i>
-                      Theo dõi
+                    <button
+                      className={`btn ${isFollowing ? 'btn-secondary' : 'btn-outline-secondary'} px-4 py-2 d-flex align-items-center`}
+                      onClick={handleFollowToggle}
+                      disabled={followLoading}
+                    >
+                      {followLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2" />
+                          Đang xử lý...
+                        </>
+                      ) : (
+                        <>
+                          <i className={`fas ${isFollowing ? 'fa-bell-slash' : 'fa-bell'} me-2`}></i>
+                          {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                        </>
+                      )}
                     </button>
                     <button
                       className="btn btn-outline-danger px-4 py-2 d-flex align-items-center"
@@ -868,7 +1048,7 @@ const ProfileView = ({ userId }) => {
               <div className="col-md-4">
                 <div className="card border-0 bg-gradient-success text-white text-center">
                   <div className="card-body py-3">
-                    <h5 className="mb-1">456</h5>
+                    <h5 className="mb-1">{friendCount}</h5>
                     <small>Bạn bè</small>
                   </div>
                 </div>
@@ -876,7 +1056,7 @@ const ProfileView = ({ userId }) => {
               <div className="col-md-4">
                 <div className="card border-0 bg-gradient-info text-white text-center">
                   <div className="card-body py-3">
-                    <h5 className="mb-1">789</h5>
+                    <h5 className="mb-1">{followerCount}</h5>
                     <small>Theo dõi</small>
                   </div>
                 </div>
