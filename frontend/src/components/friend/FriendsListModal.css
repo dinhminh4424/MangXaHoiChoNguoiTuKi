@@ -1,0 +1,81 @@
+/* Modal specific styles - prefix with modal- to avoid conflicts */
+.friends-list-modal-body {
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.modal-friends-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.modal-friend-item {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-decoration: none;
+  color: inherit;
+  transition: background-color 0.2s;
+}
+
+.modal-friend-item:hover {
+  background-color: #f8f9fa;
+  text-decoration: none;
+  color: inherit;
+}
+
+.modal-friend-avatar {
+  position: relative;
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  margin-right: 1rem;
+  flex-shrink: 0;
+  overflow: hidden;
+}
+
+.modal-friend-avatar img {
+  width: 50px;
+  height: 50px;
+  min-width: 50px;
+  max-width: 50px;
+  border-radius: 50%;
+  object-fit: cover;
+  display: block;
+}
+
+.modal-online-indicator {
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 12px;
+  height: 12px;
+  background-color: #28a745;
+  border: 2px solid white;
+  border-radius: 50%;
+}
+
+.modal-friend-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.modal-friend-name {
+  font-weight: 500;
+  font-size: 1rem;
+  margin-bottom: 0.25rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.modal-friend-username {
+  font-size: 0.875rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
