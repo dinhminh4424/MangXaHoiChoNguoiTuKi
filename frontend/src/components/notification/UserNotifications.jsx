@@ -1199,7 +1199,7 @@ const UserNotifications = () => {
                   Gọi ngay
                 </a>
               )}
-              {sosNotification.data?.mapUrl && (
+              {/* {sosNotification.data?.mapUrl && (
                 <a 
                   href={sosNotification.data.mapUrl}
                   target="_blank"
@@ -1209,7 +1209,7 @@ const UserNotifications = () => {
                   <i className="ri-map-2-line me-2"></i>
                   Xem bản đồ
                 </a>
-              )}
+              )} */}
             </div>
           </div>
         </div>
