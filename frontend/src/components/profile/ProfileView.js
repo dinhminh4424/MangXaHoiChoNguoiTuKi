@@ -5,6 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 
 import FriendButton from "../friend/FriendButton";
+import FriendsListModal from "../friend/FriendsListModal";
 import followService from "../../services/followService";
 import { io } from "socket.io-client";
 
@@ -50,6 +51,7 @@ const ProfileView = ({ userId }) => {
   const [followerCount, setFollowerCount] = React.useState(0);
   const [isFollowing, setIsFollowing] = React.useState(false);
   const [followLoading, setFollowLoading] = React.useState(false);
+  const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const socketRef = React.useRef(null);
   const followActionInProgress = React.useRef(false);
 
@@ -1046,7 +1048,11 @@ const ProfileView = ({ userId }) => {
                 </div>
               </div>
               <div className="col-md-4">
-                <div className="card border-0 bg-gradient-success text-white text-center">
+                <div 
+                  className="card border-0 bg-gradient-success text-white text-center"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setShowFriendsModal(true)}
+                >
                   <div className="card-body py-3">
                     <h5 className="mb-1">{friendCount}</h5>
                     <small>Bạn bè</small>
@@ -1065,6 +1071,14 @@ const ProfileView = ({ userId }) => {
           </div>
         </div>
       </div>
+
+      {/* Friends List Modal */}
+      <FriendsListModal
+        show={showFriendsModal}
+        onHide={() => setShowFriendsModal(false)}
+        userId={userId || viewedUser?.id || viewedUser?._id}
+        userName={viewedUser?.fullName || viewedUser?.username}
+      />
     </div>
   );
 };
