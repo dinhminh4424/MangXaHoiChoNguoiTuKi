@@ -306,10 +306,13 @@ const ProfileView = ({ userId }) => {
     const handleFollowerCountChanged = (data) => {
       const { followingId, change } = data;
       const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const currentUserId = String(currentUser?.id || currentUser._id);
       const followingIdStr = String(followingId);
 
-      // Nếu đang xem profile của người được follow/unfollow
-      if (viewedUserId === followingIdStr) {
+      // Cập nhật số lượng followers nếu:
+      // 1. Đang xem profile của người được follow/unfollow (viewedUserId === followingIdStr)
+      // 2. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === followingIdStr)
+      if (viewedUserId === followingIdStr || (isOwnProfile && currentUserId === followingIdStr)) {
         // Cập nhật số lượng followers (bất kỳ ai follow/unfollow user đó)
         setFollowerCount((prev) => Math.max(0, prev + change));
       }
@@ -319,13 +322,22 @@ const ProfileView = ({ userId }) => {
     const handleFriendCountChanged = (data) => {
       const { userId, otherUserId, change } = data;
       const viewedUserId = String(viewedUser?.id || viewedUser?._id);
+      const currentUserId = String(currentUser?.id || currentUser._id);
       const userIdStr = String(userId);
       const otherUserIdStr = otherUserId ? String(otherUserId) : null;
 
       // Cập nhật số lượng bạn bè nếu:
       // 1. Đang xem profile của người có số lượng bạn bè thay đổi (userId)
       // 2. Hoặc đang xem profile của người kia trong mối quan hệ bạn bè (otherUserId)
-      if (viewedUserId === userIdStr || (otherUserIdStr && viewedUserId === otherUserIdStr)) {
+      // 3. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === userIdStr)
+      // 4. Hoặc đang xem profile của chính mình và event liên quan đến mình (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr)
+      const shouldUpdate = 
+        viewedUserId === userIdStr || 
+        (otherUserIdStr && viewedUserId === otherUserIdStr) ||
+        (isOwnProfile && currentUserId === userIdStr) ||
+        (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr);
+
+      if (shouldUpdate) {
         // Cập nhật số lượng bạn bè (bất kỳ ai kết bạn/hủy bạn bè với user đó)
         setFriendCount((prev) => Math.max(0, prev + change));
       }
