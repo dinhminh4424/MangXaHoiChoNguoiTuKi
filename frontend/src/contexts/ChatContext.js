@@ -403,23 +403,6 @@ export const ChatProvider = ({ children }) => {
     []
   );
 
-  // Start conversation với user mới
-  // const startConversation = useCallback(
-  //   async (otherUserId) => {
-  //     try {
-  //       const result = await createConversation([otherUserId], false);
-  //       if (result.success) {
-  //         await selectChat(result.conversation);
-  //       }
-  //       return result;
-  //     } catch (error) {
-  //       console.error("Lỗi khi bắt đầu cuộc trò chuyện:", error);
-  //       return { success: false, error: error.message };
-  //     }
-  //   },
-  //   [createConversation, selectChat]
-  // );
-
   // Trong ChatContext.js - sửa hàm startConversation
   const startConversation = useCallback(
     async (otherUserId) => {
@@ -587,6 +570,28 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const pinConversation = async (chatId) => {
+    try {
+      const res = await api.put(`/api/chat/${chatId}/pin`);
+      if (res?.data?.success) {
+        const updatedChat = res.data.chat;
+        setConversations((prev) => {
+          const list = Array.isArray(prev) ? prev : [];
+          // loại mọi conversation cùng id (nếu có)
+          const filtered = list.filter(
+            (c) => String(c._id) !== String(updatedChat._id)
+          );
+          // thêm updatedChat lên đầu (hoặc cuối tuỳ bạn)
+          return [updatedChat, ...filtered];
+        });
+      }
+      return res.data;
+    } catch (err) {
+      console.error("Error loading more messages:", err);
+      setError("Không thể Ghim hộp thoại này: ", err.toString());
+    }
+  };
+
   // Context value
   const value = {
     // State
@@ -621,6 +626,7 @@ export const ChatProvider = ({ children }) => {
     recallMessage,
     replyToMessage,
     deleteConversation,
+    pinConversation,
 
     // Setters (nếu cần)
     setSelectedChat,

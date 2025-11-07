@@ -1,6 +1,8 @@
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const Friend = require("../models/Friend");
+const mongoose = require("mongoose");
 // const { param } = require("../routes/posts");
 const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
@@ -102,9 +104,7 @@ exports.getPosts = async (req, res) => {
     limit = parseInt(limit);
     const skip = (page - 1) * limit;
 
-    // let query = { isBlocked: false }; // lấy những cái ko bị vi phạm
-
-    const query = {
+    let query = {
       $or: [
         { isDeletedByUser: false },
         { isDeletedByUser: { $exists: false } },
@@ -112,23 +112,137 @@ exports.getPosts = async (req, res) => {
       isBlocked: false,
     }; // lấy những cái ko bị vi phạm
 
-    // query.isDeletedByUser = false;
+    // Lấy current user ID nếu có (từ token)
+    const currentUserId = req.user?.userId || null;
 
     if (userCreateID) {
       query.userCreateID = userCreateID; // lấy theo user id
+      
+      // Kiểm tra xem currentUser có phải là owner không
+      const isOwner = currentUserId && currentUserId.toString() === userCreateID.toString();
+      
+      // Kiểm tra xem currentUser có phải là bạn bè của owner không
+      let isFriend = false;
+      if (currentUserId && !isOwner) {
+        const friendship = await Friend.findOne({
+          $or: [
+            { userA: currentUserId, userB: userCreateID },
+            { userA: userCreateID, userB: currentUserId },
+          ],
+        });
+        isFriend = !!friendship;
+      }
+
+      // Filter posts theo privacy
+      if (privacy === "all") {
+        // Nếu là profile của chính mình, hiển thị tất cả
+        if (isOwner) {
+          // Không filter privacy, hiển thị tất cả
+        } else {
+          // Nếu không phải owner, chỉ hiển thị public hoặc friends (nếu là bạn bè)
+          if (isFriend) {
+            query.privacy = { $in: ["public", "friends"] };
+          } else {
+            query.privacy = "public";
+          }
+        }
+      } else if (privacy) {
+        // Nếu có privacy cụ thể
+        if (isOwner) {
+          // Owner có thể xem tất cả
+          query.privacy = privacy;
+        } else {
+          // Nếu không phải owner, chỉ có thể xem public hoặc friends (nếu là bạn bè)
+          if (privacy === "public") {
+            query.privacy = "public";
+          } else if (privacy === "friends" && isFriend) {
+            query.privacy = "friends";
+          } else {
+            // Không có quyền xem, trả về empty
+            query.privacy = "__no_access__";
+          }
+        }
+      } else {
+        // Nếu không có privacy parameter
+        if (isOwner) {
+          // Owner có thể xem tất cả
+          // Không filter privacy
+        } else {
+          // Nếu không phải owner, chỉ hiển thị public hoặc friends (nếu là bạn bè)
+          if (isFriend) {
+            query.privacy = { $in: ["public", "friends"] };
+          } else {
+            query.privacy = "public";
+          }
+        }
+      }
+    } else {
+      // Nếu không có userCreateID (tìm kiếm hoặc feed)
+      if (currentUserId) {
+        // Nếu có currentUser (feed), hiển thị:
+        // - Posts của chính mình (bất kỳ privacy nào)
+        // - Posts public của người khác
+        // - Posts friends của những người là bạn bè
+        
+        // Lấy danh sách bạn bè
+        const friendships = await Friend.find({
+          $or: [
+            { userA: currentUserId },
+            { userB: currentUserId },
+          ],
+        });
+        
+        const friendIds = friendships.map((f) => {
+          return f.userA.toString() === currentUserId.toString()
+            ? f.userB.toString()
+            : f.userA.toString();
+        });
+        
+        // Tạo query phức tạp hơn với $and để kết hợp các điều kiện
+        const privacyConditions = {
+          $or: [
+            // Posts của chính mình (bất kỳ privacy nào)
+            { userCreateID: currentUserId },
+            // Posts public của người khác
+            { privacy: "public", userCreateID: { $ne: currentUserId } },
+            // Posts friends của những người là bạn bè
+            friendIds.length > 0
+              ? {
+                  privacy: "friends",
+                  userCreateID: {
+                    $in: friendIds.map((id) => new mongoose.Types.ObjectId(id)),
+                  },
+                }
+              : { _id: null }, // Nếu không có bạn bè, điều kiện này không match
+          ],
+        };
+        
+        // Sử dụng $and để kết hợp query gốc với privacy conditions
+        query = {
+          $and: [query, privacyConditions],
+        };
+      } else {
+        // Nếu không có currentUser (tìm kiếm không đăng nhập), chỉ hiển thị public
+        query.privacy = "public";
+      }
     }
+
     if (emotions) {
       query.emotions = { $in: emotions.split(",") }; // lấy theo emotions
     }
     if (tags) {
       query.tags = { $in: tags.split(",") }; // lấy theo hashtag
     }
-    if (privacy) {
-      if (privacy == "all") {
-        query.privacy;
-      } else {
-        query.privacy = privacy;
-      }
+
+    // Nếu query có privacy = "__no_access__", trả về empty
+    if (query.privacy === "__no_access__") {
+      return res.status(200).json({
+        success: true,
+        page,
+        totalPages: 0,
+        totalPosts: 0,
+        posts: [],
+      });
     }
 
     const posts = await Post.find(query)

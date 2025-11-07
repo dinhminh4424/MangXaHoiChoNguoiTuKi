@@ -279,12 +279,17 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import friendService from "../../services/friendService";
+import Modal from "../UI/Modal";
 import "./Notifications.css";
 
 const UserNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [activeTab, setActiveTab] = useState("all"); // "all", "posts", "friends", "system"
+  const [selectedNotification, setSelectedNotification] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [sosNotification, setSosNotification] = useState(null);
+  const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
   const socketRef = useRef(null);
   const dropdownRef = useRef(null);
   const { user } = useAuth();
@@ -510,7 +515,14 @@ const UserNotifications = () => {
 
       setNotifications((prev) => [notification, ...prev.slice(0, 19)]); // Tăng limit để có đủ data cho tabs
       setUnreadCount((prev) => prev + 1);
-      showToast(notification);
+      
+      // Kiểm tra nếu là SOS khẩn cấp thì hiển thị popup
+      if (notification.type === "SOS_EMERGENCY" || notification.type === "SOS_ALERT") {
+        setSosNotification(notification);
+        setIsSosPopupOpen(true);
+      } else {
+        showToast(notification);
+      }
     });
 
     // Lắng nghe khi thông báo bị xóa
@@ -607,6 +619,40 @@ const UserNotifications = () => {
     } catch (error) {
       console.error("Error marking notification as read:", error);
     }
+  };
+
+  const handleNotificationClick = (notification) => {
+    // Nếu là SOS thì hiển thị popup SOS thay vì modal
+    if (notification.type === "SOS_EMERGENCY" || notification.type === "SOS_ALERT") {
+      setSosNotification(notification);
+      setIsSosPopupOpen(true);
+      // Đánh dấu đã đọc khi mở popup
+      if (!notification.read) {
+        markAsRead(notification._id);
+      }
+    } else {
+      // Các loại thông báo khác vẫn dùng modal
+      setSelectedNotification(notification);
+      setIsModalOpen(true);
+      // Đánh dấu đã đọc khi mở modal
+      if (!notification.read) {
+        markAsRead(notification._id);
+      }
+    }
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+    setSelectedNotification(null);
+  };
+
+  const closeSosPopup = () => {
+    // Đánh dấu đã đọc khi đóng popup
+    if (sosNotification && !sosNotification.read) {
+      markAsRead(sosNotification._id);
+    }
+    setIsSosPopupOpen(false);
+    setSosNotification(null);
   };
 
   const markAllAsRead = async () => {
@@ -879,79 +925,41 @@ const UserNotifications = () => {
                   {filteredNotifications.map((notification) => (
                     <div
                       key={notification._id}
-                      className={`alert p-2 mb-2 ${
+                      className={`alert notification-item-compact p-3 mb-2 ${
                         isPostNotification(notification.type)
                           ? "alert-info"
                           : "alert-light"
                       } ${!notification.read ? "unread-notification" : ""}`}
                       onClick={(e) => {
-                        // Chỉ mark as read nếu không click vào button
+                        // Chỉ mở modal nếu không click vào button
                         if (!e.target.closest("button")) {
-                          markAsRead(notification._id);
+                          handleNotificationClick(notification);
                         }
                         // Ngăn dropdown auto-close
                         e.stopPropagation();
                       }}
                       style={{ cursor: "pointer" }}
                     >
-                      <div className="notif-item">
-                        <div className="notif-header d-flex justify-content-between">
-                          <div className="d-flex align-items-start">
-                            <i
-                              className={`${getNotificationIcon(
-                                notification.type
-                              )} me-2 mt-1`}
-                            ></i>
-                            <h6 className="notif-title mb-0">
-                              {notification.title}
-                            </h6>
-                          </div>
-                          <small className="notif-time text-muted">
-                            {formatTime(notification.createdAt)}
-                          </small>
-                        </div>
-                        <p className="notif-message mb-1">
-                          {notification.message}
-                        </p>
-                        <small className="notif-meta text-muted d-inline-flex align-items-center">
+                      <div className="d-flex align-items-center justify-content-between w-100">
+                        <div className="d-flex align-items-center flex-grow-1" style={{ minWidth: 0 }}>
                           <i
                             className={`${getNotificationIcon(
                               notification.type
-                            )} me-1`}
+                            )} me-3 notification-icon-compact`}
                           ></i>
-                          {getNotificationCategory(notification.type)}
-                        </small>
-                        {/* Action buttons cho friend request */}
-                        {notification.type === "FRIEND_REQUEST" &&
-                          notification.data?.friendRequestId && (
-                            <div
-                              className="mt-2 d-flex gap-2"
-                              onClick={(e) => e.stopPropagation()}
-                            >
-                              <button
-                                className="btn btn-success btn-sm"
-                                onClick={() =>
-                                  handleAcceptFriendRequest(notification)
-                                }
-                              >
-                                <i className="ri-check-line me-1"></i>
-                                Chấp nhận
-                              </button>
-                              <button
-                                className="btn btn-outline-danger btn-sm"
-                                onClick={() =>
-                                  handleRejectFriendRequest(notification)
-                                }
-                              >
-                                <i className="ri-close-line me-1"></i>
-                                Từ chối
-                              </button>
-                            </div>
+                          <h6 className="notif-title-compact mb-0">
+                            {notification.title}
+                          </h6>
+                        </div>
+                        <div className="d-flex align-items-center gap-2 flex-shrink-0">
+                          {!notification.read && (
+                            <span className="badge bg-primary notification-badge-compact">Mới</span>
                           )}
+                          <small className="notif-time-compact text-muted">
+                            {formatTime(notification.createdAt)}
+                          </small>
+                        </div>
                       </div>
-                      {!notification.read && (
-                        <span className="badge bg-primary ms-2">Mới</span>
-                      )}
                     </div>
                   ))}
                 </div>
@@ -973,6 +981,239 @@ const UserNotifications = () => {
           </div>
         </div>
       </li>
+
+      {/* Notification Detail Modal */}
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        title="Chi tiết thông báo"
+        size="medium"
+      >
+        {selectedNotification && (
+          <div className="notification-detail-modal">
+            <div className="notification-detail-header mb-4">
+              <div className="d-flex align-items-center mb-3">
+                <i
+                  className={`${getNotificationIcon(
+                    selectedNotification.type
+                  )} notification-detail-icon me-3`}
+                ></i>
+                <div>
+                  <h4 className="notification-detail-title mb-1">
+                    {selectedNotification.title}
+                  </h4>
+                  <div className="d-flex align-items-center gap-3">
+                    <small className="text-muted">
+                      <i className="ri-time-line me-1"></i>
+                      {new Date(selectedNotification.createdAt).toLocaleString("vi-VN")}
+                    </small>
+                    <span className="badge bg-secondary">
+                      {getNotificationCategory(selectedNotification.type)}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="notification-detail-content mb-4">
+              <p className="notification-detail-message">
+                {selectedNotification.message}
+              </p>
+            </div>
+
+            {/* Additional data for SOS notifications or any notification with data */}
+            {selectedNotification.data && Object.keys(selectedNotification.data).length > 0 && (
+              <div className={`notification-detail-extra mb-4 p-3 rounded ${
+                selectedNotification.type === "SOS_ALERT" 
+                  ? "bg-danger bg-opacity-10 border border-danger border-opacity-25" 
+                  : "bg-light border"
+              }`}>
+                {selectedNotification.type === "SOS_ALERT" && (
+                  <h6 className="text-danger mb-3">
+                    <i className="ri-alarm-warning-line me-2"></i>
+                    Thông tin khẩn cấp
+                  </h6>
+                )}
+                {selectedNotification.data.userName && (
+                  <p className="mb-2">
+                    <strong>Người dùng:</strong> {selectedNotification.data.userName}
+                  </p>
+                )}
+                {selectedNotification.data.message && (
+                  <p className="mb-2">
+                    <strong>Tin nhắn:</strong> {selectedNotification.data.message}
+                  </p>
+                )}
+                {selectedNotification.data.location && (
+                  <p className="mb-2">
+                    <strong>Vị trí:</strong> {selectedNotification.data.location}
+                  </p>
+                )}
+                {/* Hiển thị các trường dữ liệu khác nếu có */}
+                {Object.entries(selectedNotification.data).map(([key, value]) => {
+                  if (['userName', 'message', 'location', 'friendRequestId'].includes(key)) {
+                    return null;
+                  }
+                  if (value && (typeof value === 'string' || typeof value === 'number')) {
+                    return (
+                      <p key={key} className="mb-2">
+                        <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {String(value)}
+                      </p>
+                    );
+                  }
+                  return null;
+                })}
+              </div>
+            )}
+
+            {/* Action buttons cho friend request */}
+            {selectedNotification.type === "FRIEND_REQUEST" && 
+             selectedNotification.data?.friendRequestId && (
+              <div className="notification-detail-actions mt-4 pt-4 border-top">
+                <div className="d-flex gap-2 justify-content-end">
+                  <button
+                    className="btn btn-success"
+                    onClick={() => {
+                      handleAcceptFriendRequest(selectedNotification);
+                      closeModal();
+                    }}
+                  >
+                    <i className="ri-check-line me-1"></i>
+                    Chấp nhận
+                  </button>
+                  <button
+                    className="btn btn-outline-danger"
+                    onClick={() => {
+                      handleRejectFriendRequest(selectedNotification);
+                      closeModal();
+                    }}
+                  >
+                    <i className="ri-close-line me-1"></i>
+                    Từ chối
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </Modal>
+
+      {/* SOS Emergency Popup */}
+      {isSosPopupOpen && sosNotification && (
+        <div className="sos-emergency-popup-overlay" onClick={closeSosPopup}>
+          <div className="sos-emergency-popup" onClick={(e) => e.stopPropagation()}>
+            <div className="sos-popup-header">
+              <div className="sos-popup-icon-container">
+                <i className="ri-alarm-warning-fill"></i>
+              </div>
+              <h3 className="sos-popup-title">🚨 Tín hiệu SOS khẩn cấp</h3>
+              <button className="sos-popup-close" onClick={closeSosPopup}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+            
+            <div className="sos-popup-body">
+              <div className="sos-info-section">
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-user-line"></i>
+                    <span>Tên người dùng</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.userName || "Không xác định"}
+                  </div>
+                </div>
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-map-pin-line"></i>
+                    <span>Địa chỉ</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.address || "Không xác định"}
+                  </div>
+                  {sosNotification.data?.mapUrl && (
+                    <a 
+                      href={sosNotification.data.mapUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="sos-map-link"
+                    >
+                      <i className="ri-map-2-line me-1"></i>
+                      Xem trên bản đồ
+                    </a>
+                  )}
+                </div>
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-phone-line"></i>
+                    <span>Số điện thoại</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.phoneNumber ? (
+                      <a href={`tel:${sosNotification.data.phoneNumber}`} className="sos-phone-link">
+                        {sosNotification.data.phoneNumber}
+                      </a>
+                    ) : (
+                      "Không có"
+                    )}
+                  </div>
+                </div>
+
+                {sosNotification.data?.message && (
+                  <div className="sos-info-item">
+                    <div className="sos-info-label">
+                      <i className="ri-message-line"></i>
+                      <span>Tin nhắn</span>
+                    </div>
+                    <div className="sos-info-value">
+                      {sosNotification.data.message}
+                    </div>
+                  </div>
+                )}
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-time-line"></i>
+                    <span>Thời gian</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {new Date(sosNotification.createdAt).toLocaleString("vi-VN")}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sos-popup-footer">
+              <button className="btn btn-primary sos-popup-action-btn" onClick={closeSosPopup}>
+                <i className="ri-check-line me-2"></i>
+                Đã xem
+              </button>
+              {sosNotification.data?.phoneNumber && (
+                <a 
+                  href={`tel:${sosNotification.data.phoneNumber}`}
+                  className="btn btn-success sos-popup-action-btn"
+                >
+                  <i className="ri-phone-line me-2"></i>
+                  Gọi ngay
+                </a>
+              )}
+              {/* {sosNotification.data?.mapUrl && (
+                <a 
+                  href={sosNotification.data.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline-primary sos-popup-action-btn"
+                >
+                  <i className="ri-map-2-line me-2"></i>
+                  Xem bản đồ
+                </a>
+              )} */}
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
