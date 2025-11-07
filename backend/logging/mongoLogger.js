@@ -1,7 +1,7 @@
 // logging/mongoLogger.js
 const AccessLog = require("../models/AccessLog");
 const { maskPIIInObject } = require("./mask");
-const { v4: uuidv4 } = require("uuid");
+const { randomUUID } = require("crypto");
 
 // Environment variables
 const FULL_LOG = process.env.FULL_LOGGING === "true";
@@ -241,7 +241,7 @@ module.exports = function mongoLogger(req, res, next) {
   const start = Date.now();
 
   const correlationId =
-    req.headers["x-correlation-id"] || req.correlationId || uuidv4();
+    req.headers["x-correlation-id"] || req.correlationId || randomUUID();
   req.correlationId = correlationId;
 
   if (res.setHeader) {
