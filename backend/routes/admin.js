@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const adminController = require("../controllers/adminController");
 const auth = require("../middleware/auth");
+const upload = require("../middleware/upload");
 const adminAuth = require("../middleware/adminAuth");
 
 // Middleware kiểm tra đăng nhập trước, sau đó kiểm tra quyền admin
@@ -14,10 +15,11 @@ router.get("/dashboard", adminController.getDashboardStats);
 // Quản lý người dùng
 router.get("/users", adminController.getAllUsers);
 router.get("/users/:userId", adminController.getUserById);
-router.put("/users/:id/active", adminController.updateActiveUser);
-router.put("/users/:userId", adminController.updateUser);
+
 router.delete("/users/:userId", adminController.deleteUser);
+router.put("/users/:id/active", adminController.updateActiveUser);
 router.put("/users/:userId/role", adminController.updateUserRole);
+router.put("/users/:id", adminController.updateUser);
 router.post("/users", adminController.createUser);
 
 // Quản lý bài viết
@@ -36,8 +38,26 @@ router.get("/journals/:journalId", adminController.getJournalById);
 router.delete("/journals/:journalId", adminController.deleteJournal);
 
 // Quản lý nhóm
+
 router.get("/groups", adminController.getAllGroups);
+router.get("/groups/stats", adminController.getGroupStats);
+router.post(
+  "/groups",
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "coverPhoto", maxCount: 1 },
+  ]),
+  adminController.createGroup
+);
 router.get("/groups/:groupId", adminController.getGroupById);
+router.put(
+  "/groups/:groupId",
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "coverPhoto", maxCount: 1 },
+  ]),
+  adminController.updateGroup
+);
 router.delete("/groups/:groupId", adminController.deleteGroup);
 
 // Quản lý bình luận
@@ -65,8 +85,11 @@ router.put(
   adminController.updateViolationCommentStatus
 );
 router.put("/violation/users/:id", adminController.updateViolationUser);
+router.put("/violation/groups/:id", adminController.updateViolationGroupStatus);
+
 router.get("/violation/posts", adminController.getPostViolation);
 router.get("/violation/comments", adminController.getCommentViolation);
 router.get("/violation/users", adminController.getUserViolation);
+router.get("/violation/groups", adminController.getGroupViolation);
 
 module.exports = router;

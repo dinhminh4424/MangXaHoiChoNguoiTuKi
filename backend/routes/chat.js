@@ -6,29 +6,192 @@ const auth = require("../middleware/auth");
 const router = express.Router();
 
 // Tạo cuộc trò chuyện mới
+// router.post("/conversation", auth, async (req, res) => {
+//   try {
+//     const { members, isGroup = false, name, description } = req.body;
+//     const currentUserId = req.user.userId;
+
+//     // Đảm bảo có ít nhất 2 thành viên
+//     const allMembers = [...new Set([currentUserId, ...members])];
+
+//     if (allMembers.length < 2) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Cuộc trò chuyện cần ít nhất 2 thành viên",
+//       });
+//     }
+
+//     // Kiểm tra cuộc trò chuyện 1-1 đã tồn tại chưa
+//     if (!isGroup && allMembers.length === 2) {
+//       const existingChat = await Chat.findOne({
+//         isGroup: false,
+//         members: { $all: allMembers, $size: allMembers.length },
+//       }).populate("members", "username fullName profile.avatar isOnline");
+
+//       if (existingChat) {
+//         return res.json({
+//           success: true,
+//           data: existingChat,
+//           isExisting: true,
+//           message: "Cuộc trò chuyện đã tồn tại",
+//         });
+//       }
+//     }
+
+//     const chatData = {
+//       members: allMembers,
+//       isGroup,
+//       createdBy: currentUserId,
+//     };
+
+//     if (isGroup) {
+//       if (!name) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Tên nhóm là bắt buộc",
+//         });
+//       }
+//       chatData.name = name;
+//       chatData.description = description;
+//       chatData.admins = [currentUserId];
+//     }
+
+//     const chat = new Chat(chatData);
+//     await chat.save();
+
+//     // Populate thông tin members
+//     await chat.populate("members", "username fullName profile.avatar isOnline");
+
+//     res.status(201).json({
+//       success: true,
+//       data: chat,
+//       isExisting: false,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi tạo cuộc trò chuyện",
+//       error: error.message,
+//     });
+//   }
+// });
+
+// router.post("/conversation", auth, async (req, res) => {
+//   try {
+//     const { members, isGroup = false, name, description } = req.body;
+//     const currentUserId = req.user.userId;
+
+//     // 1. Tạo danh sách thành viên + loại trùng + SẮP XẾP THEO ID
+//     const sortedMembers = [...new Set([currentUserId, ...members])].sort(
+//       (a, b) => a.localeCompare(b)
+//     );
+
+//     if (sortedMembers.length < 2) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Cuộc trò chuyện cần ít nhất 2 thành viên",
+//       });
+//     }
+
+//     // 2. KIỂM TRA CUỘC TRÒ CHUYỆN 1-1 ĐÃ TỒN TẠI CHƯA
+//     if (!isGroup && sortedMembers.length === 2) {
+//       const existingChat = await Chat.findOne({
+//         isGroup: false,
+//         members: sortedMembers, // ← Dùng mảng đã sort → chính xác 100%
+//       }).populate("members", "username fullName profile.avatar isOnline");
+
+//       if (existingChat) {
+//         return res.json({
+//           success: true,
+//           data: existingChat,
+//           isExisting: true,
+//           message: "Cuộc trò chuyện đã tồn tại",
+//         });
+//       }
+//     }
+
+//     // 3. TẠO CUỘC TRÒ CHUYỆN MỚI
+//     const chatData = {
+//       members: sortedMembers, // ← Lưu luôn mảng đã sort
+//       isGroup,
+//       createdBy: currentUserId,
+//     };
+
+//     if (isGroup) {
+//       if (!name?.trim()) {
+//         return res.status(400).json({
+//           success: false,
+//           message: "Tên nhóm là bắt buộc",
+//         });
+//       }
+//       chatData.name = name.trim();
+//       chatData.description = description?.trim();
+//       chatData.admins = [currentUserId];
+//     }
+
+//     const chat = new Chat(chatData);
+//     await chat.save();
+
+//     // 4. Populate thông tin thành viên
+//     await chat.populate("members", "username fullName profile.avatar isOnline");
+
+//     res.status(201).json({
+//       success: true,
+//       data: chat,
+//       isExisting: false,
+//       message: "Tạo cuộc trò chuyện thành công",
+//     });
+//   } catch (error) {
+//     if (error.code === 11000) {
+//       const sorted = [...new Set([req.user.userId, ...req.body.members])].sort(
+//         (a, b) => a.localeCompare(b)
+//       );
+//       const existing = await Chat.findOne({
+//         isGroup: false,
+//         members: sorted,
+//       }).populate("members", "username fullName profile.avatar isOnline");
+
+//       if (existing) {
+//         return res.json({ success: true, data: existing, isExisting: true });
+//       }
+//     }
+//     res.status(500).json({ success: false, message: "Lỗi server" });
+//   }
+// });
+
 router.post("/conversation", auth, async (req, res) => {
   try {
     const { members, isGroup = false, name, description } = req.body;
     const currentUserId = req.user.userId;
 
-    // Đảm bảo có ít nhất 2 thành viên
+    // 1. Tạo danh sách thành viên + loại trùng + SẮP XẾP THEO ID
     const allMembers = [...new Set([currentUserId, ...members])];
 
-    if (allMembers.length < 2) {
+    // SẮP XẾP QUAN TRỌNG: Đảm bảo thứ tự luôn giống nhau
+    const sortedMembers = allMembers.sort((a, b) =>
+      a.toString().localeCompare(b.toString())
+    );
+
+    if (sortedMembers.length < 2) {
       return res.status(400).json({
         success: false,
         message: "Cuộc trò chuyện cần ít nhất 2 thành viên",
       });
     }
 
-    // Kiểm tra cuộc trò chuyện 1-1 đã tồn tại chưa
-    if (!isGroup && allMembers.length === 2) {
+    // 2. KIỂM TRA CUỘC TRÒ CHUYỆN 1-1 ĐÃ TỒN TẠI CHƯA
+    if (!isGroup && sortedMembers.length === 2) {
+      console.log("🔍 Tìm conversation 1-1 với members:", sortedMembers);
+
       const existingChat = await Chat.findOne({
         isGroup: false,
-        members: { $all: allMembers, $size: allMembers.length },
-      }).populate("members", "username fullName profile.avatar isOnline");
+        members: { $all: sortedMembers, $size: sortedMembers.length },
+      })
+        .populate("members", "username fullName profile.avatar isOnline")
+        .populate("lastMessage");
 
       if (existingChat) {
+        console.log("✅ Đã tìm thấy conversation tồn tại:", existingChat._id);
         return res.json({
           success: true,
           data: existingChat,
@@ -36,41 +199,72 @@ router.post("/conversation", auth, async (req, res) => {
           message: "Cuộc trò chuyện đã tồn tại",
         });
       }
+      console.log("❌ Không tìm thấy conversation tồn tại, tạo mới");
     }
 
+    // 3. TẠO CUỘC TRÒ CHUYỆN MỚI
     const chatData = {
-      members: allMembers,
+      members: sortedMembers,
       isGroup,
       createdBy: currentUserId,
     };
 
     if (isGroup) {
-      if (!name) {
+      if (!name?.trim()) {
         return res.status(400).json({
           success: false,
           message: "Tên nhóm là bắt buộc",
         });
       }
-      chatData.name = name;
-      chatData.description = description;
+      chatData.name = name.trim();
+      chatData.description = description?.trim();
       chatData.admins = [currentUserId];
     }
+
+    console.log("🆕 Tạo conversation mới với data:", chatData);
 
     const chat = new Chat(chatData);
     await chat.save();
 
-    // Populate thông tin members
+    // 4. Populate thông tin thành viên
     await chat.populate("members", "username fullName profile.avatar isOnline");
+    await chat.populate("lastMessage");
 
     res.status(201).json({
       success: true,
       data: chat,
       isExisting: false,
+      message: "Tạo cuộc trò chuyện thành công",
     });
   } catch (error) {
+    console.error("❌ Lỗi tạo conversation:", error);
+
+    // Xử lý duplicate key error (nếu có unique index)
+    if (error.code === 11000) {
+      console.log("🔄 Phát hiện duplicate, tìm conversation hiện có...");
+
+      const sorted = [...new Set([req.user.userId, ...req.body.members])].sort(
+        (a, b) => a.toString().localeCompare(b.toString())
+      );
+
+      const existing = await Chat.findOne({
+        isGroup: false,
+        members: { $all: sorted, $size: sorted.length },
+      }).populate("members", "username fullName profile.avatar isOnline");
+
+      if (existing) {
+        return res.json({
+          success: true,
+          data: existing,
+          isExisting: true,
+          message: "Đã tìm thấy conversation tồn tại (từ duplicate error)",
+        });
+      }
+    }
+
     res.status(500).json({
       success: false,
-      message: "Lỗi khi tạo cuộc trò chuyện",
+      message: "Lỗi server khi tạo conversation",
       error: error.message,
     });
   }
@@ -83,6 +277,7 @@ router.get("/conversations", auth, async (req, res) => {
 
     const conversations = await Chat.find({
       members: userId,
+      userHidden: { $nin: userId },
     })
       .populate("members", "username fullName profile.avatar isOnline lastSeen")
       .populate("lastMessage")
@@ -273,6 +468,7 @@ router.post("/:chatId/messages", auth, async (req, res) => {
 
     // Cập nhật lastMessage cho chat
     chat.lastMessage = message._id;
+    chat.userHidden = [];
     await chat.save();
 
     // Populate thông tin
@@ -400,6 +596,61 @@ router.post("/messages/:messageId/recall", auth, async (req, res) => {
       success: false,
       message: "Lỗi khi thu hồi tin nhắn",
       error: error.message,
+    });
+  }
+});
+
+router.delete("/conversation/:chatId", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const userId = req.user.userId;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      console.log("Không tìm thấy hộp thoại:", chatId);
+      res.status(400).json({
+        success: false,
+        message: "Không tìm thấy hộp thoại: " + chatId,
+        error: error.message,
+      });
+    }
+
+    if (!chat.members.includes(userId)) {
+      console.log(
+        "Bạn: " + userId + " không có trong cuộc hội thoại này:" + chat.members
+      );
+      res.status(400).json({
+        success: false,
+        message:
+          "Bạn: " +
+          userId +
+          " không có trong cuộc hội thoại này:" +
+          chat.members.toString(),
+        error:
+          "Bạn: " +
+          userId +
+          " không có trong cuộc hội thoại này:" +
+          chat.members.toString(),
+      });
+    }
+
+    await Message.updateMany({ chatId }, { $addToSet: { deletedFor: userId } });
+
+    chat.userHidden.addToSet(userId);
+
+    await chat.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Xoá Hộp Thoại Thành Công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi xoá hộp thoại:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xoá hộp thoại",
+      error: error,
     });
   }
 });

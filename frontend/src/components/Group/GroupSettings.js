@@ -68,7 +68,7 @@ const GroupSettings = ({ group, onGroupUpdate }) => {
       setDeleteLoading(true);
       const response = await groupService.deleteGroup(group._id);
       if (response.success) {
-        window.location.href = "/groups";
+        window.location.href = "/group";
       }
     } catch (err) {
       setError(err.response?.data?.message || "Lỗi khi xóa nhóm");

@@ -34,6 +34,12 @@ const chatSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Message",
     },
+    userHidden: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "User",
+      },
+    ],
   },
   { timestamps: true }
 );
@@ -42,4 +48,31 @@ const chatSchema = new mongoose.Schema(
 chatSchema.index({ members: 1 }); // Tối ưu truy vấn theo thành viên
 chatSchema.index({ isGroup: 1, createdAt: -1 }); // Tối ưu truy vấn nhóm theo thời gian tạo
 
+chatSchema.index({
+  members: 1,
+  isGroup: 1,
+});
+
+// THÊM INDEX QUAN TRỌNG - sửa lỗi tạo 2 conversation
+chatSchema.index(
+  {
+    members: 1,
+    isGroup: 1,
+  },
+  {
+    unique: false,
+  }
+);
+
+// Index đặc biệt cho chat 1-1 - đảm bảo không trùng
+chatSchema.index(
+  {
+    members: 1,
+    isGroup: 1,
+  },
+  {
+    unique: false,
+    partialFilterExpression: { isGroup: false },
+  }
+);
 module.exports = mongoose.model("Chat", chatSchema);

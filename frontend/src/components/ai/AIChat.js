@@ -449,7 +449,7 @@ const AIChat = () => {
     try {
       // Địa chỉ webhook của bạn
       const webhookUrl =
-        "http://localhost:5678/webhook-test/7d3bc223-c78a-44c6-aa2f-2444c00a3303";
+        "http://localhost:5678/webhook/7d3bc223-c78a-44c6-aa2f-2444c00a3303";
 
       const dataToSend = {
         action: "chat",

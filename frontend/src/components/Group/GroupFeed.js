@@ -1,7 +1,7 @@
 // components/Group/GroupFeed.js
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "../../contexts/AuthContext";
-import { Alert, Spinner, Button } from "react-bootstrap";
+import { Alert, Spinner } from "react-bootstrap";
 import groupService from "../../services/groupService";
 import Post from "../Post/Post";
 import "./GroupFeed.css";
@@ -10,27 +10,47 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
   const { user } = useAuth();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
 
+  // Ref để theo dõi phần tử cuối
+  const observer = useRef();
+  const lastPostRef = useCallback(
+    (node) => {
+      if (loading || loadingMore) return;
+      if (observer.current) observer.current.disconnect();
+
+      observer.current = new IntersectionObserver(
+        (entries) => {
+          if (entries[0].isIntersecting && hasMore) {
+            loadPosts(page + 1, true);
+          }
+        },
+        { rootMargin: "300px" } // Tải trước khi đến cuối 300px
+      );
+
+      if (node) observer.current.observe(node);
+    },
+    [loading, loadingMore, hasMore, page]
+  );
+
   const loadPosts = useCallback(
     async (pageNum = 1, append = false) => {
       try {
-        if (pageNum === 1) setLoading(true);
+        if (pageNum === 1) {
+          setLoading(true);
+          setPosts([]);
+        } else {
+          setLoadingMore(true);
+        }
 
         const response = await groupService.getGroupFeed(groupId, {
           page: pageNum,
           limit: 10,
         });
 
-        console.log(
-          "==========================================================================="
-        );
-        console.log(response);
-        console.log(
-          "==========================================================================="
-        );
         if (response.success) {
           const newPosts = response.posts || [];
 
@@ -47,35 +67,28 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
         setError(err.response?.data?.message || "Lỗi khi tải bài viết");
       } finally {
         setLoading(false);
+        setLoadingMore(false);
       }
     },
     [groupId]
   );
 
-  const handleDeletePost = async (postId) => {
-    try {
-      setPosts((prev) => prev.filter((post) => post._id !== postId));
-    } catch (err) {
-      setError("Lỗi khi xóa bài viết");
-    }
+  const handleDeletePost = (postId) => {
+    setPosts((prev) => prev.filter((post) => post._id !== postId));
   };
 
   const handleUpdatePost = (updatedPost) => {
     setPosts((prev) =>
-      prev.map((post) => (post._id === updatedPost._id ? updatedPost : post))
+      prev.map((post) => (post._id === updatedPost.__id ? updatedPost : post))
     );
   };
 
-  const handleLoadMore = () => {
-    if (!loading && hasMore) {
-      loadPosts(page + 1, true);
-    }
-  };
-
+  // Tải lại khi refreshTrigger thay đổi
   useEffect(() => {
     loadPosts(1);
-  }, [loadPosts, refreshTrigger]); // Thêm refreshTrigger vào dependency
+  }, [loadPosts, refreshTrigger]);
 
+  // Hiệu ứng loading đầu tiên
   if (loading && posts.length === 0) {
     return (
       <div className="d-flex justify-content-center align-items-center py-5">
@@ -95,7 +108,7 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
 
       {posts.length === 0 ? (
         <div className="text-center py-5">
-          <div className="display-1 mb-3">📝</div>
+          <div className="display-1 mb-3">Empty</div>
           <h3 className="h4 mb-3">Chưa có bài viết nào</h3>
           <p className="text-muted">
             {canPost
@@ -106,32 +119,32 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
       ) : (
         <>
           <div className="posts-list">
-            {posts.map((post) => (
-              <Post
+            {posts.map((post, index) => (
+              <div
                 key={post._id}
-                post={post}
-                onDelete={handleDeletePost}
-                onUpdate={handleUpdatePost}
-              />
+                ref={index === posts.length - 1 ? lastPostRef : null} // Gắn ref vào bài cuối
+              >
+                <Post
+                  post={post}
+                  onDelete={handleDeletePost}
+                  onUpdate={handleUpdatePost}
+                />
+              </div>
             ))}
           </div>
 
-          {hasMore && (
-            <div className="load-more text-center mt-4">
-              <Button
-                variant="outline-primary"
-                onClick={handleLoadMore}
-                disabled={loading}
-              >
-                {loading ? (
-                  <>
-                    <Spinner animation="border" size="sm" className="me-2" />
-                    Đang tải...
-                  </>
-                ) : (
-                  "Tải thêm bài viết"
-                )}
-              </Button>
+          {/* Hiệu ứng loading khi kéo */}
+          {loadingMore && (
+            <div className="d-flex justify-content-center py-4">
+              <Spinner animation="border" size="sm" />
+              <span className="ms-2">Đang tải thêm...</span>
+            </div>
+          )}
+
+          {/* Không còn bài */}
+          {!hasMore && posts.length > 0 && (
+            <div className="text-center text-muted py-4">
+              <small>Đã hiển thị tất cả bài viết</small>
             </div>
           )}
         </>

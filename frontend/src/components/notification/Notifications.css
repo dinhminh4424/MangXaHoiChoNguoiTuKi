@@ -244,74 +244,43 @@
 
 /* New layout refinements */
 .notif-item {
-  padding: 0;
-  position: relative;
+  padding: 6px 6px 4px 2px;
 }
-
 .notif-header {
-  margin-bottom: 8px;
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 12px;
+  margin-bottom: 6px;
 }
-
 .notif-title {
-  font-size: 0.9375rem;
+  font-size: 0.92rem;
   font-weight: 700;
   color: #111827;
-  line-height: 1.4;
-  margin: 0;
-  flex: 1;
 }
-
 .notif-time {
-  font-size: 0.75rem;
-  color: #6b7280;
-  white-space: nowrap;
-  font-weight: 500;
+  font-size: 0.72rem;
 }
-
 .notif-message {
-  font-size: 0.875rem;
-  color: #4b5563;
-  line-height: 1.6;
-  margin: 0 0 8px 0;
-  padding-left: 0;
+  font-size: 0.85rem;
+  color: #374151;
+  margin-left: 38px;
 }
-
 .notif-meta {
-  font-size: 0.75rem;
-  color: #6b7280;
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  margin-top: 4px;
+  margin-left: 38px;
+  font-size: 0.72rem;
 }
 
 .alert .d-flex i.text-danger {
-  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
-  color: #dc2626 !important;
+  background: #fee2e2;
 }
-
 .alert .d-flex i.text-info {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: #2563eb !important;
+  background: #e0f2fe;
 }
-
 .alert .d-flex i.text-primary {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  color: rgb(28, 140, 238) !important;
+  background: #e0e7ff;
 }
-
 .alert .d-flex i.text-warning {
-  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
-  color: #d97706 !important;
+  background: #fef3c7;
 }
-
 .alert .d-flex i.text-success {
-  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
-  color: #16a34a !important;
+  background: #dcfce7;
 }
 
 /* Title, message, meta */
@@ -499,9 +468,9 @@
 }
 
 .notification-badge {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  border-radius: 25%;
   flex-shrink: 0;
   margin-top: 4px;
 }
@@ -963,19 +932,5 @@
 
   .notification-message {
     font-size: 0.75rem;
-  }
-
-  .notification-item-compact {
-    padding: 10px 12px !important;
-  }
-
-  .notification-icon-compact {
-    width: 32px;
-    height: 32px;
-    font-size: 0.9rem;
-  }
-
-  .notif-title-compact {
-    font-size: 0.875rem;
   }
 }

@@ -5,6 +5,7 @@ import { Modal } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
 import SpeechToText from "../../components/voice/SpeechToText";
+import { File, Image, Video, Music } from "lucide-react";
 
 const Chat = () => {
   const { user, logout } = useAuth();
@@ -33,6 +34,7 @@ const Chat = () => {
     deleteMessage,
     recallMessage,
     replyToMessage,
+    deleteConversation,
   } = useChat();
 
   const [newMessage, setNewMessage] = useState("");
@@ -52,6 +54,9 @@ const Chat = () => {
   const [showMessageMenu, setShowMessageMenu] = useState(null);
   const [replyingTo, setReplyingTo] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
+  const [showDeleteConversationConfirm, setShowDeleteConversationConfirm] =
+    useState(null);
+  const [showSuccess, setShowSuccess] = useState(null);
   const [showRecallConfirm, setShowRecallConfirm] = useState(null);
 
   const fileInputRef = useRef(null);
@@ -114,12 +119,45 @@ const Chat = () => {
     }
   };
 
+  const hasStartedConversation = useRef(false);
+
+  // useEffect(() => {
+  //   let userIdChat = chatUserId;
+  //   if (userIdChat) {
+  //     startConversation(userIdChat);
+  //   }
+  // }, [chatUserId]);
+
   useEffect(() => {
-    let userIdChat = chatUserId;
-    if (userIdChat) {
-      startConversation(userIdChat);
-    }
-  }, [chatUserId]);
+    if (hasStartedConversation.current || !chatUserId) return;
+
+    console.log("🎯 Bắt đầu chat với user:", chatUserId);
+    hasStartedConversation.current = true;
+
+    const startChat = async () => {
+      try {
+        // KIỂM TRA: Conversation đã tồn tại chưa?
+        const existingConv = conversations.find(
+          (conv) =>
+            !conv.isGroup &&
+            conv.members.some((member) => member._id === chatUserId)
+        );
+
+        if (existingConv) {
+          console.log("✅ Dùng conversation có sẵn:", existingConv._id);
+          await selectChat(existingConv);
+        } else {
+          console.log("🆕 Tạo conversation mới");
+          await startConversation(chatUserId);
+        }
+      } catch (error) {
+        console.error("Lỗi khi bắt đầu chat:", error);
+        hasStartedConversation.current = false;
+      }
+    };
+
+    startChat();
+  }, [chatUserId, conversations, startConversation, selectChat]);
 
   useEffect(() => {
     if (user) {
@@ -157,6 +195,17 @@ const Chat = () => {
       };
     }
   }, [handleScroll]);
+
+  const handleDeleteConversation = async (conversationId) => {
+    try {
+      const result = await deleteConversation(conversationId);
+      if (result.success) {
+        setShowDeleteConversationConfirm(false);
+      }
+    } catch (error) {
+      console.error("Lỗi khi xoá hộp thoại tin nhắn:", error);
+    }
+  };
 
   // Reset scroll state khi chọn chat mới
   useEffect(() => {
@@ -212,7 +261,7 @@ const Chat = () => {
       console.error("Lỗi khi xoá tin nhắn:", error);
     }
   };
-  // Hàm xoá tin nhắn
+  // Hàm thu hồi tin nhắn
   const handleRecallMessage = async (messageId) => {
     try {
       const result = await recallMessage(messageId);
@@ -356,6 +405,13 @@ const Chat = () => {
     logout();
   };
 
+  const truncateText = (text, maxLength = 50) => {
+    if (!text) return "";
+    return text.length > maxLength
+      ? text.substring(0, maxLength) + "..."
+      : text;
+  };
+
   const handleRandomChat = async () => {
     try {
       const availableUsers = users.filter((u) => u._id !== user.id);
@@ -490,6 +546,7 @@ const Chat = () => {
                           </button>
                         </div>
 
+                        {/* Modal thông tin người dùng */}
                         <Modal
                           show={showUserDetailPopup}
                           onHide={() => setShowUserDetailPopup(false)}
@@ -594,9 +651,9 @@ const Chat = () => {
                             groupConversations.map((item) => (
                               <li key={item._id}>
                                 <button
-                                  className={`nav-link w-100 text-start p-0 border-0 bg-primary  ${
+                                  className={`nav-link w-100 text-start p-0 border-0   ${
                                     selectedChat?._id === item._id
-                                      ? "active"
+                                      ? "bg-primary active "
                                       : "bg-transparent"
                                   }`}
                                   onClick={() => {
@@ -617,8 +674,13 @@ const Chat = () => {
                                         {truncateName(item.name)}
                                       </h6>
                                       <span className="text-muted d-block">
-                                        {item.lastMessage?.content ||
-                                          "Chưa có tin nhắn"}
+                                        {/* {item.lastMessage?.content ||
+                                          "Chưa có tin nhắn"} */}
+                                        {truncateText(
+                                          item.lastMessage?.content ||
+                                            "Chưa có tin nhắn",
+                                          150
+                                        )}
                                         {item.lastMessage?.file && " 📎"}
                                       </span>
                                     </div>
@@ -652,10 +714,10 @@ const Chat = () => {
                             directConversations.map((item) => (
                               <li key={item._id}>
                                 <button
-                                  className={`nav-link w-100 text-start p-0 border-0 bg-transparent ${
+                                  className={`nav-link w-100 text-start p-0 border-0  ${
                                     selectedChat?._id === item._id
-                                      ? "active"
-                                      : ""
+                                      ? "active bg-primary"
+                                      : "bg-transparent"
                                   }`}
                                   onClick={() => selectChat(item)}
                                 >
@@ -684,9 +746,69 @@ const Chat = () => {
                                         )}
                                       </h6>
                                       <span className="text-muted d-block">
-                                        {item.lastMessage?.content ||
-                                          "Chưa có tin nhắn"}
-                                        {item.lastMessage?.file && " 📎"}
+                                        {/* {item.lastMessage?.content ||
+                                          "Chưa có tin nhắn"} */}
+                                        {truncateText(
+                                          item.lastMessage?.content ||
+                                            "Chưa có tin nhắn",
+                                          30
+                                        )}
+
+                                        <div
+                                          className={
+                                            "truncate-text flex items-center gap-1" +
+                                              selectedChat?._id ===
+                                            item._id
+                                              ? "active"
+                                              : "text-gray-600"
+                                          }
+                                        >
+                                          {item.lastMessage?.messageType ===
+                                            "file" && (
+                                            <>
+                                              <File size={16} />
+                                              <span>
+                                                {truncateText(
+                                                  item.lastMessage?.fileName ||
+                                                    "Đã gửi một file"
+                                                )}
+                                              </span>
+                                            </>
+                                          )}
+
+                                          {item.lastMessage?.messageType ===
+                                            "image" && (
+                                            <>
+                                              <Image size={16} />
+                                              {truncateText(
+                                                item.lastMessage?.fileName ||
+                                                  "Đã gửi một hình ảnh"
+                                              )}
+                                            </>
+                                          )}
+
+                                          {item.lastMessage?.messageType ===
+                                            "video" && (
+                                            <>
+                                              <Video size={16} />
+                                              {truncateText(
+                                                item.lastMessage?.fileName ||
+                                                  "Đã gửi một video"
+                                              )}
+                                            </>
+                                          )}
+
+                                          {item.lastMessage?.messageType ===
+                                            "audio" && (
+                                            <>
+                                              <Music size={16} />
+                                              {truncateText(
+                                                item.lastMessage?.fileName ||
+                                                  "Đã gửi một đoạn âm thanh"
+                                              )}
+                                            </>
+                                          )}
+                                        </div>
                                       </span>
                                     </div>
                                     {item.unreadCount > 0 && (
@@ -785,6 +907,7 @@ const Chat = () => {
                                       : truncateName(otherUser?.fullName)}
                                   </h5>
                                 </div>
+                                {/* Modal thông tin người đối diện */}
                                 <Modal
                                   show={showChatDetailPopup}
                                   onHide={() => setShowChatDetailPopup(false)}
@@ -859,7 +982,7 @@ const Chat = () => {
                                   </Modal.Footer>
                                 </Modal>
                                 <div className="chat-header-icons d-flex">
-                                  <a
+                                  {/* <a
                                     href="#"
                                     className="chat-icon-phone bg-soft-primary"
                                   >
@@ -870,9 +993,11 @@ const Chat = () => {
                                     className="chat-icon-video bg-soft-primary"
                                   >
                                     <i className="ri-vidicon-line"></i>
-                                  </a>
+                                  </a> */}
                                   <a
-                                    href="#"
+                                    onClick={() =>
+                                      setShowDeleteConversationConfirm(true)
+                                    }
                                     className="chat-icon-delete bg-soft-primary"
                                   >
                                     <i className="ri-delete-bin-line"></i>
@@ -1482,14 +1607,14 @@ const Chat = () => {
           style={{ zIndex: 1050 }}
         >
           <div
-            className="modal-dialog modal-dialog-centered modal-xl"
+            className="modal-dialog  modal-dialog-centered modal-lg"
             role="document"
           >
             <div className="modal-content border-0 bg-transparent">
               <div className="modal-header border-0 justify-content-end p-2">
                 <button
                   type="button"
-                  className="btn-close btn-close-white"
+                  className="btn-close btn-close-dark"
                   onClick={closeImageModal}
                   aria-label="Đóng"
                 ></button>
@@ -1562,6 +1687,50 @@ const Chat = () => {
           </div>
         </div>
       )}
+      {/* Modal xác nhận xoá tin nhắn */}
+      {showDeleteConversationConfirm && (
+        <div
+          className="modal fade show d-block position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+          tabIndex="-1"
+          role="dialog"
+          style={{ zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">Xác nhận xoá hộp thoại tin nhắn</h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDeleteConversationConfirm(null)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Bạn có chắc chắn muốn xoá hộp thoại tin nhắn này?</p>
+                <small className="text-muted">
+                  Hành động này không thể hoàn tác.
+                </small>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowDeleteConversationConfirm(null)}
+                >
+                  Huỷ
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() => handleDeleteConversation(selectedChat._id)}
+                >
+                  Xoá tin nhắn
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Modal xác nhận thu hồi */}
       {showRecallConfirm && (
         <div
@@ -1607,7 +1776,44 @@ const Chat = () => {
           </div>
         </div>
       )}
-
+      {showSuccess && (
+        <div
+          className="modal fade show d-block position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+          tabIndex="-1"
+          role="dialog"
+          style={{ zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Xác nhận xoá hộp thoại Thành công
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => showSuccess(false)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Bạn có chắc chắn muốn xoá hộp thoại tin nhắn này?</p>
+                <small className="text-muted">
+                  Hành động này không thể hoàn tác.
+                </small>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-success"
+                  onClick={() => showSuccess(false)}
+                >
+                  Thành công
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
       {/* Uploading Overlay */}
       {isUploading && (
         <div className="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center bg-dark bg-opacity-50 z-3">
