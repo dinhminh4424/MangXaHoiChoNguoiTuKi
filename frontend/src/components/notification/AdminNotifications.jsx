@@ -7,6 +7,8 @@ import "./Notifications.css";
 const AdminNotifications = () => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sosNotification, setSosNotification] = useState(null);
+  const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
   const socketRef = useRef(null);
 
   const getPriorityClass = (priority) => {
@@ -91,6 +93,12 @@ const AdminNotifications = () => {
       });
       setUnreadCount((prev) => prev + 1);
       showToast(notificationObj);
+
+      // Kiểm tra nếu là SOS khẩn cấp thì hiển thị popup
+      if (notificationObj.type === "SOS_EMERGENCY") {
+        setSosNotification(notificationObj);
+        setIsSosPopupOpen(true);
+      }
     });
 
     // Lắng nghe thông báo mới cho user cụ thể (nếu admin cũng có user account)
@@ -103,6 +111,12 @@ const AdminNotifications = () => {
       });
       setUnreadCount((prev) => prev + 1);
       showToast(notification);
+
+      // Kiểm tra nếu là SOS khẩn cấp thì hiển thị popup
+      if (notification.type === "SOS_EMERGENCY") {
+        setSosNotification(notification);
+        setIsSosPopupOpen(true);
+      }
     });
 
     // Lấy danh sách thông báo chưa đọc từ API
@@ -161,6 +175,16 @@ const AdminNotifications = () => {
       console.error("Error marking all as read:", error);
     }
   };
+
+  const closeSosPopup = () => {
+    // Đánh dấu đã đọc khi đóng popup
+    if (sosNotification && !sosNotification.read) {
+      markAsRead(sosNotification._id);
+    }
+    setIsSosPopupOpen(false);
+    setSosNotification(null);
+  };
+
 
   const getPriorityIcon = (priority, type) => {
     // Đặc biệt cho SOS Emergency
@@ -367,6 +391,90 @@ const AdminNotifications = () => {
           </div>
         </div>
       </li>
+
+      {/* SOS Emergency Popup */}
+      {isSosPopupOpen && sosNotification && (
+        <div className="sos-emergency-popup-overlay" onClick={closeSosPopup}>
+          <div
+            className="sos-emergency-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sos-popup-header">
+              <div className="sos-popup-icon-container">
+                <i className="ri-alarm-warning-fill"></i>
+              </div>
+              <h3 className="sos-popup-title">🚨 Tín hiệu SOS khẩn cấp</h3>
+              <button className="sos-popup-close" onClick={closeSosPopup}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+
+            <div className="sos-popup-body">
+              <div className="sos-info-section">
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-user-line"></i>
+                    <span>Tên người dùng</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.userName || "Không xác định"}
+                  </div>
+                </div>
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-map-pin-line"></i>
+                    <span>Địa chỉ</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.address || "Không xác định"}
+                  </div>
+                  {sosNotification.data?.mapUrl && (
+                    <a
+                      href={sosNotification.data.mapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="sos-map-link"
+                    >
+                      <i className="ri-map-2-line me-1"></i>
+                      Xem trên bản đồ
+                    </a>
+                  )}
+                </div>
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-phone-line"></i>
+                    <span>Số điện thoại</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {sosNotification.data?.phoneNumber ? (
+                      <a
+                        href={`tel:${sosNotification.data.phoneNumber}`}
+                        className="sos-phone-link"
+                      >
+                        {sosNotification.data.phoneNumber}
+                      </a>
+                    ) : (
+                      "Không có"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sos-popup-footer">
+              <button
+                className="btn btn-primary sos-popup-action-btn"
+                onClick={closeSosPopup}
+              >
+                <i className="ri-check-line me-2"></i>
+                Đã xem
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 };
