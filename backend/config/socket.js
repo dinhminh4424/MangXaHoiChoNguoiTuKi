@@ -389,7 +389,13 @@ const configureSocket = (server) => {
         }
 
         // Kiểm tra chat tồn tại
-        const chat = await Chat.findById(chatId);
+        const chat = await Chat.findById(chatId)
+          .populate(
+            "members",
+            "username fullName profile.avatar isOnline lastSeen"
+          )
+          .populate("lastMessage")
+          .populate("createdBy", "username fullName");
         if (!chat) {
           socket.emit("message_error", {
             message: "Cuộc trò chuyện không tồn tại",
@@ -415,6 +421,7 @@ const configureSocket = (server) => {
 
         // Update chat lastMessage
         chat.lastMessage = message._id;
+        chat.userHidden = [];
         await chat.save();
 
         // Populate sender & repliedTo for emitting
@@ -428,7 +435,8 @@ const configureSocket = (server) => {
         ]);
 
         // Emit to room
-        io.to(chatId).emit("receive_message", message);
+        // io.to(chatId).emit("receive_message", {message});
+        io.to(chatId).emit("receive_message", { message, chat });
 
         // optional: log to AccessLog for tracing
         AccessLog?.create?.({

@@ -277,6 +277,7 @@ router.get("/conversations", auth, async (req, res) => {
 
     const conversations = await Chat.find({
       members: userId,
+      userHidden: { $nin: userId },
     })
       .populate("members", "username fullName profile.avatar isOnline lastSeen")
       .populate("lastMessage")
@@ -467,6 +468,7 @@ router.post("/:chatId/messages", auth, async (req, res) => {
 
     // Cập nhật lastMessage cho chat
     chat.lastMessage = message._id;
+    chat.userHidden = [];
     await chat.save();
 
     // Populate thông tin
@@ -594,6 +596,61 @@ router.post("/messages/:messageId/recall", auth, async (req, res) => {
       success: false,
       message: "Lỗi khi thu hồi tin nhắn",
       error: error.message,
+    });
+  }
+});
+
+router.delete("/conversation/:chatId", auth, async (req, res) => {
+  try {
+    const { chatId } = req.params;
+
+    const userId = req.user.userId;
+
+    const chat = await Chat.findById(chatId);
+    if (!chat) {
+      console.log("Không tìm thấy hộp thoại:", chatId);
+      res.status(400).json({
+        success: false,
+        message: "Không tìm thấy hộp thoại: " + chatId,
+        error: error.message,
+      });
+    }
+
+    if (!chat.members.includes(userId)) {
+      console.log(
+        "Bạn: " + userId + " không có trong cuộc hội thoại này:" + chat.members
+      );
+      res.status(400).json({
+        success: false,
+        message:
+          "Bạn: " +
+          userId +
+          " không có trong cuộc hội thoại này:" +
+          chat.members.toString(),
+        error:
+          "Bạn: " +
+          userId +
+          " không có trong cuộc hội thoại này:" +
+          chat.members.toString(),
+      });
+    }
+
+    await Message.updateMany({ chatId }, { $addToSet: { deletedFor: userId } });
+
+    chat.userHidden.addToSet(userId);
+
+    await chat.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Xoá Hộp Thoại Thành Công",
+    });
+  } catch (error) {
+    console.error("Lỗi khi xoá hộp thoại:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi xoá hộp thoại",
+      error: error,
     });
   }
 });
