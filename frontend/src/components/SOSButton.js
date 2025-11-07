@@ -94,7 +94,7 @@ function SOSButton({ userId }) {
             borderRadius: "10px",
             padding: "15px",
             width: "320px",
-            boxShadow: "0 4px 10px rgba(0,0,0,0.2)",
+            boxShadow: "0 4px 1~0px rgba(0,0,0,0.2)",
             zIndex: 9999,
             overflowY: "auto",
             maxHeight: "80vh",
