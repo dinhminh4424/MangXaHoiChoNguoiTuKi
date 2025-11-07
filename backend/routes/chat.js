@@ -271,31 +271,69 @@ router.post("/conversation", auth, async (req, res) => {
 });
 
 // Lấy danh sách cuộc trò chuyện của user
+// router.get("/conversations", auth, async (req, res) => {
+//   try {
+//     const userId = req.user.userId;
+
+//     const conversations = await Chat.find({
+//       members: userId,
+//       userHidden: { $nin: userId },
+//     })
+//       .populate("members", "username fullName profile.avatar isOnline lastSeen")
+//       .populate("lastMessage")
+//       .populate("createdBy", "username fullName")
+//       .sort({ updatedAt: -1 });
+
+//     // if (conversations.members.length == 2) {
+//     //   return res.json({
+//     //     success: false,
+//     //     data: conversations,
+//     //   });
+//     // }
+
+//     return res.json({
+//       success: true,
+//       data: conversations,
+//     });
+//   } catch (error) {
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi lấy danh sách hội thoại",
+//       error: error.message,
+//     });
+//   }
+// });
+
 router.get("/conversations", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
 
     const conversations = await Chat.find({
       members: userId,
-      userHidden: { $nin: userId },
+      userHidden: { $nin: [userId] },
     })
       .populate("members", "username fullName profile.avatar isOnline lastSeen")
       .populate("lastMessage")
       .populate("createdBy", "username fullName")
-      .sort({ updatedAt: -1 });
+      .sort({ updatedAt: -1 })
+      .lean();
 
-    // if (conversations.members.length == 2) {
-    //   return res.json({
-    //     success: false,
-    //     data: conversations,
-    //   });
-    // }
+    // 🔹 Sắp xếp pinned lên đầu
+    const sorted = conversations.sort((a, b) => {
+      const aPinned = a.pinnedBy?.some((id) => id.toString() === userId);
+      const bPinned = b.pinnedBy?.some((id) => id.toString() === userId);
+
+      if (aPinned && !bPinned) return -1;
+      if (!aPinned && bPinned) return 1;
+      return new Date(b.updatedAt) - new Date(a.updatedAt);
+    });
 
     return res.json({
       success: true,
-      data: conversations,
+      data: sorted,
     });
   } catch (error) {
+    console.error("Error fetching conversations:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi khi lấy danh sách hội thoại",
@@ -515,6 +553,32 @@ router.put("/:chatId/messages/read", auth, async (req, res) => {
       message: "Lỗi khi đánh dấu tin nhắn đã đọc",
       error: error.message,
     });
+  }
+});
+
+// Ghim
+router.patch("/:chatId/pin", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+
+    await Chat.updateOne({ _id: chatId }, { $addToSet: { pinnedBy: userId } });
+    res.json({ success: true, message: "Đã ghim cuộc trò chuyện" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Bỏ ghim
+router.patch("/:chatId/unpin", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+
+    await Chat.updateOne({ _id: chatId }, { $pull: { pinnedBy: userId } });
+    res.json({ success: true, message: "Đã bỏ ghim cuộc trò chuyện" });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
