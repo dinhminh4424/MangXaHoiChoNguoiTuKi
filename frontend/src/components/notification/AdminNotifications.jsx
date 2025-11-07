@@ -464,13 +464,30 @@ const AdminNotifications = () => {
             </div>
 
             <div className="sos-popup-footer">
-              <button
-                className="btn btn-primary sos-popup-action-btn"
-                onClick={closeSosPopup}
-              >
+              <button className="btn btn-primary sos-popup-action-btn" onClick={closeSosPopup}>
                 <i className="ri-check-line me-2"></i>
                 Đã xem
               </button>
+              {sosNotification.data?.phoneNumber && (
+                <a 
+                  href={`tel:${sosNotification.data.phoneNumber}`}
+                  className="btn btn-success sos-popup-action-btn"
+                >
+                  <i className="ri-phone-line me-2"></i>
+                  Gọi ngay
+                </a>
+              )}
+              {/* {sosNotification.data?.mapUrl && (
+                <a 
+                  href={sosNotification.data.mapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline-primary sos-popup-action-btn"
+                >
+                  <i className="ri-map-2-line me-2"></i>
+                  Xem bản đồ
+                </a>
+              )} */}
             </div>
           </div>
         </div>
