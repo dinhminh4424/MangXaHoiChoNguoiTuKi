@@ -663,15 +663,16 @@ function AppRoutes() {
         return <Route key={path} path={path} element={routeElement} />;
       })}
 
-      {/* Home Route - Public */}
+      {/* Home Route - Public/Protected */}
       <Route
         path="/home"
         element={
           isAuthenticated ? (
-            <>
-              <Navbar />
-              <Home />
-            </>
+            <ProtectedRoute>
+              <UserLayout>
+                <Home />
+              </UserLayout>
+            </ProtectedRoute>
           ) : (
             <Home />
           )
