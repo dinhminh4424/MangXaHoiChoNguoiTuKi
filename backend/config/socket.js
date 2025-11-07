@@ -313,14 +313,14 @@ const configureSocket = (server) => {
     console.log("User connected:", socket.id || null);
 
     // optional: log connect event to AccessLog
-    AccessLog?.create?.({
-      timestamp: new Date(),
-      level: "info",
-      service: process.env.SERVICE_NAME || "social-api",
-      env: process.env.NODE_ENV || "development",
-      request: { path: "socket:connect", userId: socket.userId || null },
-      meta: { socketId: socket.id },
-    }).catch(() => {});
+    // AccessLog?.create?.({
+    //   timestamp: new Date(),
+    //   level: "info",
+    //   service: process.env.SERVICE_NAME || "social-api",
+    //   env: process.env.NODE_ENV || "development",
+    //   request: { path: "socket:connect", userId: socket.userId || null },
+    //   meta: { socketId: socket.id },
+    // }).catch(() => {});
 
     // Join all chats of user (if userId available)
     socket.on("join_chats", async (userIdFromClient) => {
@@ -336,12 +336,12 @@ const configureSocket = (server) => {
         chats.forEach((chat) => socket.join(chat._id.toString()));
         console.log(`User ${uid} joined ${chats.length} chats`);
 
-        AccessLog?.create?.({
-          timestamp: new Date(),
-          level: "info",
-          request: { path: "socket:join_chats", userId: uid },
-          meta: { count: chats.length },
-        }).catch(() => {});
+        // AccessLog?.create?.({
+        //   timestamp: new Date(),
+        //   level: "info",
+        //   request: { path: "socket:join_chats", userId: uid },
+        //   meta: { count: chats.length },
+        // }).catch(() => {});
       } catch (error) {
         console.error("Error joining chats:", error);
         socket.emit("error", { message: "Lỗi khi tham gia chats" });
@@ -504,12 +504,12 @@ const configureSocket = (server) => {
 
     socket.on("disconnect", () => {
       console.log("User disconnected:", socket.id);
-      AccessLog?.create?.({
-        timestamp: new Date(),
-        level: "info",
-        request: { path: "socket:disconnect", userId: socket.userId || null },
-        meta: { socketId: socket.id },
-      }).catch(() => {});
+      // AccessLog?.create?.({
+      //   timestamp: new Date(),
+      //   level: "info",
+      //   request: { path: "socket:disconnect", userId: socket.userId || null },
+      //   meta: { socketId: socket.id },
+      // }).catch(() => {});
     });
 
     // ---------- delete_message (fixed) ----------

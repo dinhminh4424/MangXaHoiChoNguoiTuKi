@@ -5,7 +5,7 @@ import { Modal } from "react-bootstrap";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
 import SpeechToText from "../../components/voice/SpeechToText";
-import { File, Image, Video, Music } from "lucide-react";
+import { File, Image, Video, Music, PinIcon } from "lucide-react";
 
 const Chat = () => {
   const { user, logout } = useAuth();
@@ -34,6 +34,7 @@ const Chat = () => {
     deleteMessage,
     recallMessage,
     replyToMessage,
+    pinConversation,
     deleteConversation,
   } = useChat();
 
@@ -389,8 +390,15 @@ const Chat = () => {
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
   };
 
-  const handlePinChat = (chatId) => {
-    console.log(`Ghim cuộc trò chuyện: ${chatId}`);
+  const handlePinChat = async (chatId) => {
+    try {
+      const res = await pinConversation(chatId);
+      if (res.success) {
+        console.log("Thành công");
+      }
+    } catch (error) {
+      console.log("error", error);
+    }
   };
 
   const handleDeleteChat = (chatId) => {
@@ -737,6 +745,10 @@ const Chat = () => {
                                         <i className="ri-checkbox-blank-circle-fill text-success"></i>
                                       </span>
                                     </div>
+                                    {item.isPinned && (
+                                      <PinIcon className="text-yellow-500" />
+                                    )}
+                                    <div></div>
                                     <div className="chat-sidebar-name flex-grow-1">
                                       <h6 className="mb-0">
                                         {truncateName(
@@ -1029,7 +1041,7 @@ const Chat = () => {
                                         className="dropdown-item"
                                         href="#"
                                         onClick={() =>
-                                          handleDeleteChat(selectedChat._id)
+                                          setShowDeleteConversationConfirm(true)
                                         }
                                       >
                                         <i className="ri-delete-bin-6-line me-1 h5"></i>

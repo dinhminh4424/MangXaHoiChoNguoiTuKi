@@ -318,13 +318,16 @@ router.get("/conversations", auth, async (req, res) => {
       .sort({ updatedAt: -1 })
       .lean();
 
-    // 🔹 Sắp xếp pinned lên đầu
-    const sorted = conversations.sort((a, b) => {
-      const aPinned = a.pinnedBy?.some((id) => id.toString() === userId);
-      const bPinned = b.pinnedBy?.some((id) => id.toString() === userId);
+    // 🔹 Gắn thêm cờ `isPinned`
+    const withPinnedFlag = conversations.map((conv) => ({
+      ...conv,
+      isPinned: conv.pinnedBy?.some((id) => id.toString() === userId),
+    }));
 
-      if (aPinned && !bPinned) return -1;
-      if (!aPinned && bPinned) return 1;
+    // 🔹 Sắp xếp pinned lên đầu
+    const sorted = withPinnedFlag.sort((a, b) => {
+      if (a.isPinned && !b.isPinned) return -1;
+      if (!a.isPinned && b.isPinned) return 1;
       return new Date(b.updatedAt) - new Date(a.updatedAt);
     });
 
@@ -557,28 +560,55 @@ router.put("/:chatId/messages/read", auth, async (req, res) => {
 });
 
 // Ghim
-router.patch("/:chatId/pin", auth, async (req, res) => {
+// PUT /:chatId/pin  — toggle pin: nếu đã ghim sẽ bỏ, nếu chưa sẽ ghim
+router.put("/:chatId/pin", auth, async (req, res) => {
   try {
     const userId = req.user.userId;
     const { chatId } = req.params;
 
-    await Chat.updateOne({ _id: chatId }, { $addToSet: { pinnedBy: userId } });
-    res.json({ success: true, message: "Đã ghim cuộc trò chuyện" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-});
+    // 1) Kiểm tra chat tồn tại và user là thành viên
+    const chat = await Chat.findOne({ _id: chatId, members: userId });
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Không tìm thấy cuộc trò chuyện hoặc bạn không phải thành viên.",
+      });
+    }
 
-// Bỏ ghim
-router.patch("/:chatId/unpin", auth, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { chatId } = req.params;
+    // 2) Kiểm tra xem user đã ghim chưa (dùng String(...) để an toàn khi là ObjectId)
+    const isPinned =
+      Array.isArray(chat.pinnedBy) &&
+      chat.pinnedBy.some((id) => String(id) === String(userId));
 
-    await Chat.updateOne({ _id: chatId }, { $pull: { pinnedBy: userId } });
-    res.json({ success: true, message: "Đã bỏ ghim cuộc trò chuyện" });
+    // 3) Chuẩn bị update: nếu đang ghim thì pull, chưa ghim thì addToSet
+    const update = isPinned
+      ? { $pull: { pinnedBy: userId } }
+      : { $addToSet: { pinnedBy: userId } };
+
+    await Chat.updateOne({ _id: chatId }, update);
+
+    // 4) Lấy lại chat đã cập nhật (populate nếu cần) để trả về client
+    const updatedChat = await Chat.findById(chatId)
+      .populate("members", "username fullName profile.avatar isOnline lastSeen")
+      .populate("lastMessage")
+      .populate("createdBy", "username fullName")
+      .lean();
+
+    return res.json({
+      success: true,
+      message: isPinned
+        ? "Đã bỏ ghim cuộc trò chuyện"
+        : "Đã ghim cuộc trò chuyện",
+      chat: updatedChat,
+    });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    console.error("Lỗi khi ghim/bỏ ghim hộp thoại:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật ghim hộp thoại",
+      error: error.message,
+    });
   }
 });
 
