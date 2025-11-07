@@ -519,7 +519,6 @@ const ReportGroup = () => {
                   ) : (
                     <>
                       <i className="bi bi-search me-1"></i>
-                      Áp dụng
                     </>
                   )}
                 </button>
@@ -557,7 +556,7 @@ const ReportGroup = () => {
               </th>
               <th scope="col">Nhóm</th>
               <th scope="col">Lý do</th>
-              <th scope="col" width="110">
+              <th scope="col" width="100">
                 Ngày báo cáo
               </th>
               <th scope="col" width="120">
@@ -585,15 +584,15 @@ const ReportGroup = () => {
                     <code className="text-primary">{report._id}</code>
                   </td>
                   <td>
-                    <div className="d-flex align-items-center">
+                    <div className="">
                       {report.targetId?.avatar && (
                         <img
                           src={report.targetId.avatar}
                           alt={report.targetId.name}
                           className="rounded-circle me-2"
                           style={{
-                            width: "32px",
-                            height: "32px",
+                            width: "39px",
+                            height: "39px",
                             objectFit: "cover",
                           }}
                         />
@@ -603,7 +602,7 @@ const ReportGroup = () => {
                           {report.targetId?.name || "N/A"}
                         </div>
                         <small className="text-muted">
-                          {report.targetId?.memberCount || 0} thành viên
+                          {report.targetId?.memberCount || 0} Mber
                         </small>
                       </div>
                     </div>

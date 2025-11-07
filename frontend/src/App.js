@@ -447,6 +447,7 @@ import "bootstrap/dist/css/bootstrap.min.css";
 // Page imports
 import Login from "./pages/auth/Login";
 import FaceLogin from "./pages/auth/FaceLogin";
+import FaceLoginImage from "./pages/auth/FaceLoginImage";
 import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
@@ -524,6 +525,7 @@ const routeConfigs = [
   // Public Routes
   { path: "/login", component: Login, isPublic: true },
   { path: "/faceLogin", component: FaceLogin, isPublic: true },
+  { path: "/faceLoginImage", component: FaceLoginImage, isPublic: true },
   { path: "/register", component: Register, isPublic: true },
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
 

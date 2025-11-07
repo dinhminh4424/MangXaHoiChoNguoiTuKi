@@ -57,31 +57,70 @@ export const ChatProvider = ({ children }) => {
       socketRef.current.emit("join_chats", user.id);
     });
 
-    socketRef.current.on("receive_message", (newMessage) => {
+    // socketRef.current.on("receive_message", (newMessage) => {
+    //   setMessages((prev) => {
+    //     // Kiểm tra xem tin nhắn đã tồn tại chưa
+    //     const isDuplicate = prev.some(
+    //       (msg) =>
+    //         msg._id === newMessage._id ||
+    //         (msg.tempId && msg.tempId === newMessage.tempId)
+    //     );
+
+    //     if (isDuplicate) {
+    //       console.log("Tin nhắn trùng lặp đã được bỏ qua:", newMessage._id);
+    //       return prev;
+    //     }
+
+    //     return [...prev, newMessage];
+    //   });
+
+    //   // Cập nhật last message trong conversations
+    //   setConversations((prev) =>
+    //     prev.map((conv) =>
+    //       conv._id === newMessage.chatId
+    //         ? { ...conv, lastMessage: newMessage }
+    //         : conv
+    //     )
+    //   );
+    // });
+    socketRef.current.on("receive_message", (data) => {
+      const incomingMessage = data?.message;
+      const incomingChat = data?.chat;
+      const chatId = incomingChat?._id || incomingMessage?.chatId;
+
+      if (!incomingMessage || !chatId) {
+        console.warn("receive_message missing", data);
+        return;
+      }
+
+      // 1) Messages: dedupe và push
       setMessages((prev) => {
-        // Kiểm tra xem tin nhắn đã tồn tại chưa
-        const isDuplicate = prev.some(
-          (msg) =>
-            msg._id === newMessage._id ||
-            (msg.tempId && msg.tempId === newMessage.tempId)
+        const exists = prev.some(
+          (m) =>
+            String(m?._id) === String(incomingMessage._id) ||
+            (m?.tempId &&
+              incomingMessage?.tempId &&
+              m.tempId === incomingMessage.tempId)
         );
-
-        if (isDuplicate) {
-          console.log("Tin nhắn trùng lặp đã được bỏ qua:", newMessage._id);
-          return prev;
-        }
-
-        return [...prev, newMessage];
+        if (exists) return prev;
+        return [...prev, incomingMessage];
       });
 
-      // Cập nhật last message trong conversations
-      setConversations((prev) =>
-        prev.map((conv) =>
-          conv._id === newMessage.chatId
-            ? { ...conv, lastMessage: newMessage }
-            : conv
-        )
-      );
+      // 2) Conversations: cập nhật đúng, tránh duplicate
+      setConversations((prev) => {
+        const list = Array.isArray(prev) ? prev.slice() : [];
+
+        // Remove any existing conversation with same id (avoid duplicates)
+        const filtered = list.filter((c) => String(c?._id) !== String(chatId));
+
+        // If incomingChat provided by server, use it; otherwise derive minimal object
+        const chatToInsert = incomingChat
+          ? { ...incomingChat, lastMessage: incomingMessage }
+          : { _id: chatId, lastMessage: incomingMessage };
+
+        // Insert at front (move-to-top behavior). If you want keep order, modify accordingly.
+        return [chatToInsert, ...filtered];
+      });
     });
 
     socketRef.current.on("message_read_update", (data) => {
@@ -533,6 +572,21 @@ export const ChatProvider = ({ children }) => {
     [sendMessage]
   );
 
+  const deleteConversation = async (chatId) => {
+    try {
+      const res = await api.delete(`/api/chat/conversation/${chatId}`);
+      if (res?.data.success) {
+        console.log("THÀNH CÔNG");
+        setConversations((prev) => prev.filter((conv) => conv._id !== chatId));
+        setSelectedChat(null);
+      }
+      return res.data;
+    } catch (err) {
+      console.error("Error loading more messages:", err);
+      setError("Không thể xoá hộp thoại này: ", err.toString());
+    }
+  };
+
   // Context value
   const value = {
     // State
@@ -566,6 +620,7 @@ export const ChatProvider = ({ children }) => {
     deleteMessage,
     recallMessage,
     replyToMessage,
+    deleteConversation,
 
     // Setters (nếu cần)
     setSelectedChat,
