@@ -121,6 +121,52 @@ const groupService = {
     const res = await api.get("/api/groups/popular", { params });
     return res.data;
   },
+
+  // báo cáo group
+  reportGroup: async (groupId, reportData) => {
+    const formData = new FormData();
+    //
+    // // thêm các giá trị từ form
+    Object.entries(reportData).forEach(([key, value]) => {
+      if (value === undefined || value === null) return;
+
+      // Nếu là file list
+      if (key === "files" && Array.isArray(value)) {
+        value.forEach((file) => {
+          // nếu file có dạng { fileObject: File, fileName, ... }
+          if (file instanceof File) {
+            formData.append("files", file);
+          } else if (file.fileObject instanceof File) {
+            formData.append("files", file.fileObject);
+          }
+        });
+      }
+
+      // Nếu là mảng (tags, emotions,...)
+      else if (Array.isArray(value)) {
+        value.forEach((item) => {
+          // Nếu item là object => stringify
+          if (typeof item === "object" && !(item instanceof File)) {
+            formData.append(key, JSON.stringify(item));
+          } else {
+            formData.append(key, item);
+          }
+        });
+      }
+
+      // Nếu là object bình thường (vd: { lat: 10, lng: 20 })
+      else if (typeof value === "object" && !(value instanceof File)) {
+        formData.append(key, JSON.stringify(value));
+      }
+
+      // Nếu là kiểu primitive
+      else {
+        formData.append(key, value);
+      }
+    });
+    const res = await api.post(`/api/groups/${groupId}/report`, formData);
+    return res.data;
+  },
 };
 
 export default groupService;

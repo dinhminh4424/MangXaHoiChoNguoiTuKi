@@ -693,9 +693,6 @@ exports.unLikePost = async (req, res) => {
       (like) => like.user.toString() !== userId.toString()
     );
 
-    console.log("unLikePost - post.likes: ", post.likes);
-    console.log("unLikePost - params id:", req.params.id);
-    console.log("unLikePost - req.user:", req.user);
     if (post.likes.length < initialLength) {
       post.likeCount = Math.max(0, post.likes.length); // đảm bảo >= 0
       await post.save();

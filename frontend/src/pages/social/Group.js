@@ -258,7 +258,8 @@ const GroupsPage = () => {
               <Button
                 variant="primary"
                 className="d-block w-100"
-                onClick={() => handleJoinGroup(group._id)}
+                // onClick={() => handleJoinGroup(group._id)}
+                onClick={() => navigate("/group/" + group._id)}
               >
                 Vào Nhóm
               </Button>

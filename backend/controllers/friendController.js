@@ -1,6 +1,7 @@
 const FriendRequest = require("../models/FriendRequest");
 const Friend = require("../models/Friend");
 const User = require("../models/User");
+const Follow = require("../models/Follow");
 const NotificationService = require("../services/notificationService");
 
 class FriendController {
@@ -141,8 +142,9 @@ class FriendController {
         });
       }
 
-      const recipientIdStr = friendRequest.recipient.toString();
-      const userIdStr = userId.toString();
+      // Convert tất cả IDs sang string để đảm bảo nhất quán
+      const recipientIdStr = String(friendRequest.recipient);
+      const userIdStr = String(userId);
       
       if (recipientIdStr !== userIdStr) {
         return res.status(403).json({
@@ -170,6 +172,99 @@ class FriendController {
       });
       await friendship.save();
 
+      // Tự động follow nhau khi thành bạn bè
+      // Requester follow recipient
+      const follow1 = await Follow.findOne({
+        follower: friendRequest.requester,
+        following: friendRequest.recipient,
+      });
+      let newFollow1 = false;
+      if (!follow1) {
+        await new Follow({
+          follower: friendRequest.requester,
+          following: friendRequest.recipient,
+        }).save();
+        newFollow1 = true;
+      }
+      // Recipient follow requester
+      const follow2 = await Follow.findOne({
+        follower: friendRequest.recipient,
+        following: friendRequest.requester,
+      });
+      let newFollow2 = false;
+      if (!follow2) {
+        await new Follow({
+          follower: friendRequest.recipient,
+          following: friendRequest.requester,
+        }).save();
+        newFollow2 = true;
+      }
+
+      // Emit socket events để cập nhật real-time cho cả 2 user
+      const { getIO } = require("../config/socket");
+      const io = getIO();
+      
+      // Convert requester ID sang string để đảm bảo nhất quán
+      const requesterIdStr = String(friendRequest.requester);
+      
+      // Emit cho requester (người gửi yêu cầu) - họ đã follow recipient
+      if (newFollow1) {
+        io.to(`user_${requesterIdStr}`).emit("follow_status_changed", {
+          followerId: requesterIdStr,
+          followingId: recipientIdStr,
+          action: "followed",
+        });
+        // Emit cho recipient để cập nhật số lượng followers
+        io.to(`user_${recipientIdStr}`).emit("follower_count_changed", {
+          followingId: recipientIdStr,
+          action: "followed",
+          change: 1,
+        });
+      }
+      
+      // Emit cho recipient (người nhận/chấp nhận) - họ đã follow requester
+      if (newFollow2) {
+        io.to(`user_${recipientIdStr}`).emit("follow_status_changed", {
+          followerId: recipientIdStr,
+          followingId: requesterIdStr,
+          action: "followed",
+        });
+        // Emit cho requester để cập nhật số lượng followers
+        io.to(`user_${requesterIdStr}`).emit("follower_count_changed", {
+          followingId: requesterIdStr,
+          action: "followed",
+          change: 1,
+        });
+      }
+
+      // Emit friend_status_changed cho cả 2 user để cập nhật nút bạn bè
+      io.to(`user_${requesterIdStr}`).emit("friend_status_changed", {
+        userId: requesterIdStr,
+        otherUserId: recipientIdStr,
+        status: "friend",
+      });
+      io.to(`user_${recipientIdStr}`).emit("friend_status_changed", {
+        userId: recipientIdStr,
+        otherUserId: requesterIdStr,
+        status: "friend",
+      });
+
+      // Emit friend_count_changed cho cả 2 user để cập nhật số lượng bạn bè
+      // Emit cho requester với cả 2 userId để frontend có thể cập nhật đúng
+      io.to(`user_${requesterIdStr}`).emit("friend_count_changed", {
+        userId: requesterIdStr,
+        otherUserId: recipientIdStr,
+        action: "friend",
+        change: 1,
+      });
+      // Emit cho recipient với cả 2 userId để frontend có thể cập nhật đúng
+      io.to(`user_${recipientIdStr}`).emit("friend_count_changed", {
+        userId: recipientIdStr,
+        otherUserId: requesterIdStr,
+        action: "friend",
+        change: 1,
+      });
+
       // Lấy thông tin người chấp nhận và người đã gửi yêu cầu
       const acceptor = await User.findById(userId).select(
         "username fullName profile.avatar"
@@ -195,8 +290,6 @@ class FriendController {
 
       // Cập nhật thông báo FRIEND_REQUEST cũ thành FRIEND_REQUEST_ACCEPTED cho người đã chấp nhận
       const Notification = require("../models/Notification");
-      const { getIO } = require("../config/socket");
-      const io = getIO();
       const oldNotification = await Notification.findOne({
         recipient: userId,
         sender: friendRequest.requester,
@@ -215,6 +308,9 @@ class FriendController {
           friendRequestId: friendRequest._id,
           friendId: friendship._id,
         };
+        // Đánh dấu đã đọc ngay để không làm tăng badge ở dropdown "Yêu cầu kết bạn"
+        oldNotification.read = true;
+        oldNotification.readAt = new Date();
         await oldNotification.save();
 
         await oldNotification.populate([
@@ -332,6 +428,9 @@ class FriendController {
         // Với người nhận là chính người từ chối (userId), thông điệp cần dùng tên của người đã gửi lời mời
         const requesterName = requesterUser?.fullName || requesterUser?.username || "người này";
         oldNotification.message = `Bạn đã từ chối lời mời kết bạn từ ${requesterName}`;
+        // Đánh dấu đã đọc ngay để không hiển thị là chưa đọc ở dropdown yêu cầu kết bạn
+        oldNotification.read = true;
+        oldNotification.readAt = new Date();
         await oldNotification.save();
 
         await oldNotification.populate([
@@ -540,6 +639,58 @@ class FriendController {
     }
   }
 
+  // [GET] /api/friends/:userId - Lấy danh sách bạn bè của một user cụ thể
+  async getFriendsByUserId(req, res) {
+    try {
+      const { userId: targetUserId } = req.params;
+      const { page = 1, limit = 20 } = req.query;
+
+      const friendships = await Friend.find({
+        $or: [{ userA: targetUserId }, { userB: targetUserId }],
+      })
+        .populate("userA", "username fullName profile.avatar isOnline")
+        .populate("userB", "username fullName profile.avatar isOnline")
+        .sort({ createdAt: -1 })
+        .limit(parseInt(limit))
+        .skip((parseInt(page) - 1) * parseInt(limit));
+
+      // Trả về thông tin bạn bè (người không phải target user)
+      const friends = friendships.map((friendship) => {
+        const friend =
+          friendship.userA._id.toString() === targetUserId
+            ? friendship.userB
+            : friendship.userA;
+        return {
+          ...friend.toObject(),
+          friendshipId: friendship._id,
+          becameFriendsAt: friendship.createdAt,
+        };
+      });
+
+      const total = await Friend.countDocuments({
+        $or: [{ userA: targetUserId }, { userB: targetUserId }],
+      });
+
+      res.json({
+        success: true,
+        data: friends,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          results: friends.length,
+          totalFriends: total,
+        },
+      });
+    } catch (error) {
+      console.error("Error getting friends by userId:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy danh sách bạn bè",
+        error: error.message,
+      });
+    }
+  }
+
   // [GET] /api/friends/status/:userId - Kiểm tra trạng thái với một user
   async getFriendStatus(req, res) {
     try {
@@ -647,7 +798,91 @@ class FriendController {
         });
       }
 
+      // Xác định user còn lại (người kia)
+      const otherUserId = 
+        friendship.userA.toString() === userId 
+          ? friendship.userB 
+          : friendship.userA;
+
+      // Xóa mối quan hệ bạn bè
       await Friend.deleteOne({ _id: friendshipId });
+
+      // Tự động hủy follow nhau khi xóa bạn bè
+      const follow1 = await Follow.findOneAndDelete({
+        follower: userId,
+        following: otherUserId,
+      });
+      const follow2 = await Follow.findOneAndDelete({
+        follower: otherUserId,
+        following: userId,
+      });
+
+      // Emit socket events để cập nhật real-time
+      const { getIO } = require("../config/socket");
+      const io = getIO();
+
+      // Emit follow_status_changed cho cả 2 user (để cập nhật nút follow)
+      if (follow1) {
+        io.to(`user_${userId}`).emit("follow_status_changed", {
+          followerId: userId,
+          followingId: otherUserId,
+          action: "unfollowed",
+        });
+      }
+      if (follow2) {
+        io.to(`user_${otherUserId}`).emit("follow_status_changed", {
+          followerId: otherUserId,
+          followingId: userId,
+          action: "unfollowed",
+        });
+      }
+
+      // Emit follower_count_changed cho cả 2 user (để cập nhật số lượng followers)
+      if (follow1) {
+        io.to(`user_${otherUserId}`).emit("follower_count_changed", {
+          followingId: otherUserId,
+          action: "unfollowed",
+          change: -1,
+        });
+      }
+      if (follow2) {
+        io.to(`user_${userId}`).emit("follower_count_changed", {
+          followingId: userId,
+          action: "unfollowed",
+          change: -1,
+        });
+      }
+
+      // Emit friend_status_changed cho cả 2 user (để cập nhật nút bạn bè)
+      io.to(`user_${userId}`).emit("friend_status_changed", {
+        userId,
+        otherUserId,
+        status: "none",
+      });
+      io.to(`user_${otherUserId}`).emit("friend_status_changed", {
+        userId: otherUserId,
+        otherUserId: userId,
+        status: "none",
+      });
+
+      // Emit friend_count_changed cho cả 2 user để cập nhật số lượng bạn bè
+      const userIdStr = String(userId);
+      const otherUserIdStr = String(otherUserId);
+      
+      // Emit cho userId với cả 2 userId để frontend có thể cập nhật đúng
+      io.to(`user_${userIdStr}`).emit("friend_count_changed", {
+        userId: userIdStr,
+        otherUserId: otherUserIdStr,
+        action: "unfriend",
+        change: -1,
+      });
+      // Emit cho otherUserId với cả 2 userId để frontend có thể cập nhật đúng
+      io.to(`user_${otherUserIdStr}`).emit("friend_count_changed", {
+        userId: otherUserIdStr,
+        otherUserId: userIdStr,
+        action: "unfriend",
+        change: -1,
+      });
 
       res.json({
         success: true,

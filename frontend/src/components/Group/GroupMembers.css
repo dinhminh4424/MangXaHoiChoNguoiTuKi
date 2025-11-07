@@ -241,7 +241,7 @@
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
   .group-members .card {
-    background-color: #2d3748;
+    /* background-color: #2d3748; */
   }
 
   .group-members .member-card {
@@ -249,11 +249,11 @@
   }
 
   .group-members .member-card:hover {
-    background-color: #4a5568;
+    /* background-color: #4a5568; */
   }
 
   .group-members .member-card h6 {
-    color: #e2e8f0;
+    /* color: #e2e8f0; */
   }
 
   .group-members .form-control,
@@ -271,10 +271,10 @@
   }
 
   .group-members .members-list::-webkit-scrollbar-track {
-    background: #4a5568;
+    /* background: #4a5568; */
   }
 
   .group-members .members-list::-webkit-scrollbar-thumb {
-    background: #718096;
+    /* background: #718096; */
   }
 }

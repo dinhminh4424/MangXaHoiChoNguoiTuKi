@@ -31,6 +31,8 @@ const notificationSchema = new mongoose.Schema(
         "COMMENT_BLOCKED", //  Khoá bình luận
         "USER_BANNED", // User bị ban
         "USER_WARNED", // User bị cảnh báo
+        "GROUP_BLOCKED", // Group bị chặn
+        "GROUP_WARNED", //  Group bị cảnh báo
 
         // Bài viết và tương tác
         "POST_LIKED", // Bài viết được like

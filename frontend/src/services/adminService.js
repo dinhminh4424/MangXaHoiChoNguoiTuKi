@@ -25,7 +25,8 @@ export const getUserById = (userId) => {
 };
 
 export const updateUser = async (userId, data) => {
-  return await api.put(`/api/admin/users/${userId}`, data);
+  const res = await api.put(`/api/admin/users/${userId}`, data);
+  return res.data;
 };
 
 export const updateActiveUser = async (id) => {
@@ -78,16 +79,34 @@ export const deleteJournal = (journalId) => {
 };
 
 // Quản lý nhóm
-export const getAllGroups = (params = {}) => {
-  return api.get("/api/admin/groups", { params });
+export const getAllGroups = async (filters = {}) => {
+  const res = await api.get(`/api/admin/groups`, { params: filters });
+  return res.data;
 };
 
-export const getGroupById = (groupId) => {
-  return api.get(`/api/admin/groups/${groupId}`);
+export const getGroupStats = async () => {
+  const res = await api.get("/api/admin/groups/stats");
+  return res.data;
 };
 
-export const deleteGroup = (groupId) => {
-  return api.delete(`/api/admin/groups/${groupId}`);
+export const createGroup = async (groupData) => {
+  return await api.post("/api/admin/groups", groupData, {
+    headers: {
+      "Content-Type": "multipart/form-data",
+    },
+  });
+};
+
+export const updateGroup = async (groupId, groupData) => {
+  return await api.put(`/api/admin/groups/${groupId}`, groupData);
+};
+
+export const deleteGroup = async (groupId) => {
+  return await api.delete(`/api/admin/groups/${groupId}`);
+};
+
+export const getGroupDetail = async (groupId) => {
+  return await api.get(`/api/admin/groups/${groupId}`);
 };
 
 // Quản lý bình luận
@@ -198,6 +217,30 @@ export const getUsersViolation = async (
 export const updateUsersViolationStatus = async (violationId, updateData) => {
   const res = await api.put(
     `/api/admin/violation/users/${violationId}`,
+    updateData
+  );
+  return res.data;
+};
+
+// report group
+export const getGroupViolation = async (
+  params = {
+    page: 1,
+    limit: 10,
+    status: "all",
+    dateFrom: "",
+    dateTo: "",
+    search: "",
+    reportId: "",
+  }
+) => {
+  const res = await api.get("/api/admin/violation/groups", { params });
+  return res.data;
+};
+
+export const updateGroupViolationStatus = async (violationId, updateData) => {
+  const res = await api.put(
+    `/api/admin/violation/groups/${violationId}`,
     updateData
   );
   return res.data;
