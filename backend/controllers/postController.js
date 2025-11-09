@@ -1675,16 +1675,111 @@ exports.reportPost = async (req, res) => {
       },
     });
 
-    return res
-      .status(200)
-      .json({
-        success: true,
-        message: "Báo cáo thành công",
-        data: newViolation,
-      });
+    return res.status(200).json({
+      success: true,
+      message: "Báo cáo thành công",
+      data: newViolation,
+    });
   } catch (error) {
     console.error("Lỗi báo cáo bài viết:", error);
     return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getImagePosts = async (req, res) => {
+  try {
+    let { page = 1, limit = 10, userCreateID, sortBy } = req.query;
+
+    page = Math.max(1, parseInt(page) || 1);
+    limit = Math.max(1, parseInt(limit) || 10);
+    const skip = (page - 1) * limit;
+
+    const query = {
+      $or: [
+        { isDeletedByUser: false },
+        { isDeletedByUser: { $exists: false } },
+      ],
+      isBlocked: false,
+      "files.0": { $exists: true },
+    };
+
+    if (userCreateID) query.userCreateID = userCreateID;
+
+    const userId = req.user?.userId; // có thể undefined nếu không auth
+
+    // nếu truyền userCreateID thì lọc theo user đó
+    if (userCreateID) query.userCreateID = userCreateID;
+
+    // Nếu đang xem bài của user khác (không phải chính mình) -> chỉ public
+    // Lưu ý: chỉ áp dụng khi userCreateID được truyền (xem trang user cụ thể)
+    if (userCreateID && userId && String(userCreateID) !== String(userId)) {
+      query.privacy = "public";
+    }
+
+    // Build sort object (mặc định: createdAt desc)
+    let sortObj = { createdAt: -1 };
+    if (sortBy) {
+      // Ví dụ: sortBy = "createdAt:1" hoặc "likes:-1"
+      // Nếu bạn truyền sortBy như "createdAt" mặc định desc
+      const parts = String(sortBy).split(":");
+      if (parts.length === 2) {
+        sortObj = { [parts[0]]: parseInt(parts[1]) || -1 };
+      } else {
+        sortObj = { [parts[0]]: -1 };
+      }
+    }
+
+    // Lấy posts (với populate nếu cần). lean() để performance.
+    const posts = await Post.find(query)
+      .sort(sortObj)
+      .skip(skip)
+      .limit(limit)
+      .populate("userCreateID", "username _id profile.avatar fullName")
+      .lean();
+
+    // Lấy tổng số posts (để tính totalPages)
+    const totalPosts = await Post.countDocuments(query);
+    const totalPages = Math.ceil(totalPosts / limit);
+
+    // Lọc ra images từ posts
+    const images = [];
+    for (const post of posts) {
+      if (!post.files || !Array.isArray(post.files)) continue;
+
+      for (const file of post.files) {
+        // Chỉ lấy khi type KHÔNG phải "text" và KHÔNG phải "file"
+        // (tức là type khác cả hai)
+        if (file && file.type !== "text" && file.type !== "file") {
+          images.push({
+            imageUrl: file.fileUrl,
+            type: file.type,
+            post: post,
+            postCreatedAt: post.createdAt,
+            // nếu muốn, kèm user info đã populate:
+            user: post.userCreateID
+              ? {
+                  _id: post.userCreateID._id,
+                  username: post.userCreateID.username,
+                  fullName: post.userCreateID.fullName,
+                  avatar: post.userCreateID.profile?.avatar,
+                }
+              : undefined,
+          });
+        }
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      page,
+      totalPages,
+      totalPosts,
+      imagesCount: images.length, // số ảnh trong page hiện tại
+      images,
+    });
+  } catch (err) {
+    console.error("Lỗi lấy danh sách bài viết:", err);
+    return res.status(500).json({ success: false, message: err.message });
   }
 };
 

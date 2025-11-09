@@ -108,7 +108,7 @@
   position: relative;
   border-radius: 0.375rem;
   overflow: hidden;
-  aspect-ratio: 1;
+  /* aspect-ratio: 1; */
 }
 
 .media-item img,
@@ -225,7 +225,7 @@
   color: white;
 }
 .emotion-sad {
-  background-color: #6c757d;
+  /* background-color: #6c757d; */
   color: white;
 }
 .emotion-angry {
