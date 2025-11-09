@@ -1120,6 +1120,91 @@ exports.deleteAllSubtasks = async (req, res) => {
 };
 
 // === LẤY CÔNG VIỆC HÔM NAY ===
+// exports.getTodayTodos = async (req, res) => {
+//   try {
+//     const {
+//       priority,
+//       type,
+//       sortBy = "dueDate",
+//       limit = 50,
+//       page = 1,
+//     } = req.query;
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(tomorrow.getDate() + 1);
+
+//     const filters = {
+//       createdBy: req.user.userId,
+//       // dueDate: {
+//       //   $gte: today,
+//       //   $lt: tomorrow,
+//       // },
+//     };
+
+//     // thêm bắt đầu và kết thuc nwuax
+//     filters.$or = [
+//       // 1) bắt đầu trong ngày
+//       { start: { $gte: today, $lt: tomorrow } },
+
+//       // 2) kết thúc trong ngày
+//       { end: { $gte: today, $lt: tomorrow } },
+
+//       // 3) bắt đầu trước (hoặc đúng lúc) today và kết thúc sau (hoặc đúng lúc) tomorrow
+//       { start: { $lte: today }, end: { $gte: tomorrow } },
+//     ];
+
+//     if (priority) filters.priority = priority;
+//     if (type) filters.type = type;
+
+//     const limitNum = parseInt(limit);
+//     const skip = (parseInt(page) - 1) * limitNum;
+
+//     const todos = await Todo.find(filters)
+//       .populate("createdBy", "username fullName profile.avatar")
+//       .populate("attendees", "username fullName profile.avatar")
+//       .sort({ status: -1, [sortBy]: 1, priority: -1 })
+//       .skip(skip)
+//       .limit(limitNum);
+
+//     const total = await Todo.countDocuments(filters);
+
+//     // Tính thống kê
+//     const stats = {
+//       total,
+//       completed: await Todo.countDocuments({ ...filters, status: "done" }),
+//       inProgress: await Todo.countDocuments({
+//         ...filters,
+//         status: "in-progress",
+//       }),
+//       scheduled: await Todo.countDocuments({ ...filters, status: "scheduled" }),
+//       overdue: await Todo.countDocuments({
+//         ...filters,
+//         dueDate: { $lt: new Date() },
+//         status: { $ne: "done" },
+//       }),
+//       highPriority: await Todo.countDocuments({ ...filters, priority: "high" }),
+//     };
+
+//     return res.status(200).json({
+//       success: true,
+//       todos,
+//       stats,
+//       pagination: {
+//         page: parseInt(page),
+//         limit: limitNum,
+//         total,
+//         totalPages: Math.ceil(total / limitNum),
+//       },
+//     });
+//   } catch (error) {
+//     console.error("Lỗi lấy công việc hôm nay:", error);
+//     return res.status(500).json({ success: false, message: error.message });
+//   }
+// };
+// controllers/todoController.js (hoặc file tương ứng)
 exports.getTodayTodos = async (req, res) => {
   try {
     const {
@@ -1130,48 +1215,99 @@ exports.getTodayTodos = async (req, res) => {
       page = 1,
     } = req.query;
 
+    // ID người dùng từ middleware auth
+    const userId = req.user.userId;
+
+    // Chuẩn hoá ngày: today = 00:00:00 của ngày hiện tại, tomorrow = 00:00:00 ngày kế tiếp
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
+    // Thời điểm hiện tại (dùng cho cập nhật in-progress)
+    const now = new Date();
+
+    // ============================
+    // 1) CẬP NHẬT TRẠNG THÁI TỰ ĐỘNG
+    // ============================
+    // 1.a) Đánh dấu "overdue" (quá hạn)
+    // - Điều kiện: thuộc user, trạng thái chưa phải done/cancelled/overdue,
+    //   và (end < today OR dueDate < today)
+    // - Hành động: set status = "overdue", lưu overdueAt
+    await Todo.updateMany(
+      {
+        createdBy: userId,
+        status: { $nin: ["done", "cancelled", "overdue"] },
+        $or: [
+          { end: { $lt: today } }, // event kết thúc trước hôm nay
+          { dueDate: { $lt: today } }, // hoặc deadline trước hôm nay
+        ],
+      },
+      {
+        $set: { status: "overdue", overdueAt: new Date() },
+      }
+    );
+
+    // 1.b) Đánh dấu "in-progress" (đang thực hiện)
+    // - Điều kiện: thuộc user, start <= now < end, và hiện đang "scheduled"
+    // - Hành động: set status = "in-progress", lưu startedAt
+    // Note: điều kiện status có thể điều chỉnh tùy cách bạn dùng status khác (vd: null hoặc "")
+    await Todo.updateMany(
+      {
+        createdBy: userId,
+        start: { $lte: now },
+        end: { $gt: now },
+        status: { $in: ["scheduled"] }, // chỉ chuyển từ scheduled -> in-progress
+      },
+      {
+        $set: { status: "in-progress", startedAt: new Date() },
+      }
+    );
+
+    // ============================
+    // 2) BUILD FILTERS LẤY CÔNG VIỆC "HÔM NAY"
+    // ============================
     const filters = {
-      createdBy: req.user.userId,
-      // dueDate: {
-      //   $gte: today,
-      //   $lt: tomorrow,
-      // },
+      createdBy: userId,
     };
 
-    // thêm bắt đầu và kết thuc nwuax
+    // Lấy tất cả event/todo có phần nằm trong ngày hôm nay:
     filters.$or = [
-      {
-        start: { $lte: tomorrow },
-        end: { $gte: today },
-      },
-      {
-        // fallback: nếu chỉ có dueDate thì kiểm tra dueDate trong ngày
-        // dueDate: { $gte: today, $lt: tomorrow },
-      },
+      // 1) bắt đầu trong ngày hôm nay
+      { start: { $gte: today, $lt: tomorrow } },
+
+      // 2) kết thúc trong ngày hôm nay
+      { end: { $gte: today, $lt: tomorrow } },
+
+      // 3) span qua cả ngày (bắt đầu trước today và kết thúc sau hoặc vào tomorrow)
+      { start: { $lte: today }, end: { $gte: tomorrow } },
+
+      // 4) fallback: todo chỉ có dueDate nằm trong ngày hôm nay
+      { dueDate: { $gte: today, $lt: tomorrow } },
     ];
 
+    // Áp thêm filter theo query nếu có
     if (priority) filters.priority = priority;
     if (type) filters.type = type;
 
-    const limitNum = parseInt(limit);
-    const skip = (parseInt(page) - 1) * limitNum;
+    // Pagination / sorting
+    const limitNum = Math.max(1, parseInt(limit) || 50);
+    const skip = (Math.max(1, parseInt(page) || 1) - 1) * limitNum;
 
+    // Lấy dữ liệu (populate để trả về thông tin user/attendees)
     const todos = await Todo.find(filters)
       .populate("createdBy", "username fullName profile.avatar")
       .populate("attendees", "username fullName profile.avatar")
+      // Nếu muốn: đưa todo chưa hoàn thành lên trước, bạn có thể sort theo status ưu tiên.
+      // Hiện tại dùng status descending (tùy enum ordering) — bạn có thể đổi thành { status: 1 } hoặc dùng aggregation.
       .sort({ status: -1, [sortBy]: 1, priority: -1 })
       .skip(skip)
       .limit(limitNum);
 
     const total = await Todo.countDocuments(filters);
 
-    // Tính thống kê
+    // Tính thống kê (dùng status đã được cập nhật phía trên)
     const stats = {
       total,
       completed: await Todo.countDocuments({ ...filters, status: "done" }),
@@ -1180,14 +1316,11 @@ exports.getTodayTodos = async (req, res) => {
         status: "in-progress",
       }),
       scheduled: await Todo.countDocuments({ ...filters, status: "scheduled" }),
-      overdue: await Todo.countDocuments({
-        ...filters,
-        dueDate: { $lt: new Date() },
-        status: { $ne: "done" },
-      }),
+      overdue: await Todo.countDocuments({ ...filters, status: "overdue" }),
       highPriority: await Todo.countDocuments({ ...filters, priority: "high" }),
     };
 
+    // Trả về kết quả
     return res.status(200).json({
       success: true,
       todos,
@@ -1313,54 +1446,114 @@ exports.getTodoStats = async (req, res) => {
 };
 
 // === LẤY CÔNG VIỆC SẮP TỚI ===
+// controllers/todoController.js (hoặc file tương ứng)
 exports.getUpcomingTodos = async (req, res) => {
   try {
-    const { days = 7 } = req.query;
-    const userId = req.user.userId;
+    const userId = req.user.userId; // hoặc req.user.id tùy auth middleware
+    const {
+      startDate: startDateStr,
+      endDate: endDateStr,
+      days = 7, // mặc định tìm trong 7 ngày tới nếu user không truyền start/end
+      priority,
+      type,
+      sortBy = "dueDate",
+      limit = 50,
+      page = 1,
+    } = req.query;
 
-    const startDate = new Date();
+    // parse start/end nếu có, nếu không => today -> today + days
+    const startDate = startDateStr
+      ? new Date(startDateStr)
+      : (() => {
+          const d = new Date();
+          d.setHours(0, 0, 0, 0);
+          return d;
+        })();
+
+    const endDate = endDateStr
+      ? new Date(endDateStr)
+      : (() => {
+          const d = new Date(startDate);
+          d.setDate(d.getDate() + Number(days));
+          d.setHours(0, 0, 0, 0);
+          return d;
+        })();
+
+    // normalize: startDate at 00:00:00, endDate at 00:00:00 of that day (exclusive)
     startDate.setHours(0, 0, 0, 0);
+    endDate.setHours(0, 0, 0, 0);
 
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + parseInt(days));
-
+    // build filters
     const filters = {
       createdBy: userId,
-      dueDate: {
-        $gte: startDate,
-        $lt: endDate,
-      },
-      status: { $ne: "done" },
+      status: { $ne: "done" }, // loại trừ các công việc đã hoàn thành
     };
+
+    if (priority) filters.priority = priority;
+    if (type) filters.type = type;
+
+    // match mọi todo "giao cắt" với khoảng [startDate, endDate)
+    // - start/end overlap với khoảng
+    // - hoặc dueDate nằm trong khoảng
+    filters.$or = [
+      // event bắt đầu trong khoảng
+      { start: { $gte: startDate, $lt: endDate } },
+
+      // event kết thúc trong khoảng
+      { end: { $gte: startDate, $lt: endDate } },
+
+      // event span bao phủ hoàn toàn khoảng
+      { start: { $lte: startDate }, end: { $gte: endDate } },
+
+      // fallback: todo chỉ có dueDate
+      { dueDate: { $gte: startDate, $lt: endDate } },
+    ];
+
+    const limitNum = Math.max(1, parseInt(limit) || 50);
+    const skip = (Math.max(1, parseInt(page) || 1) - 1) * limitNum;
 
     const todos = await Todo.find(filters)
       .populate("createdBy", "username fullName profile.avatar")
       .populate("attendees", "username fullName profile.avatar")
-      .sort({ dueDate: 1, priority: -1 })
-      .limit(50);
+      .sort({ [sortBy]: 1, priority: -1 })
+      .skip(skip)
+      .limit(limitNum);
 
-    // Nhóm theo ngày
-    const todosByDate = todos.reduce((acc, todo) => {
-      const dateKey = todo.dueDate.toISOString().split("T")[0];
-      if (!acc[dateKey]) {
-        acc[dateKey] = [];
-      }
-      acc[dateKey].push(todo);
-      return acc;
-    }, {});
+    const total = await Todo.countDocuments(filters);
+
+    const stats = {
+      total,
+      completed: await Todo.countDocuments({ ...filters, status: "done" }),
+      inProgress: await Todo.countDocuments({
+        ...filters,
+        status: "in-progress",
+      }),
+      scheduled: await Todo.countDocuments({ ...filters, status: "scheduled" }),
+      overdue: await Todo.countDocuments({
+        ...filters,
+        end: { $lt: new Date() },
+        status: { $ne: "done" },
+      }),
+      highPriority: await Todo.countDocuments({ ...filters, priority: "high" }),
+    };
 
     return res.status(200).json({
       success: true,
       todos,
-      todosByDate,
-      period: {
-        start: startDate,
-        end: endDate,
-        days: parseInt(days),
+      stats,
+      pagination: {
+        page: parseInt(page),
+        limit: limitNum,
+        total,
+        totalPages: Math.ceil(total / limitNum),
+      },
+      range: {
+        startDate: startDate.toISOString(),
+        endDate: endDate.toISOString(),
       },
     });
   } catch (error) {
-    console.error("Lỗi lấy công việc sắp tới:", error);
+    console.error("getUpcomingTodos error:", error);
     return res.status(500).json({ success: false, message: error.message });
   }
 };
