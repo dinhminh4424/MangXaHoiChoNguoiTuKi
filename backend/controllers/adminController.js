@@ -1131,23 +1131,95 @@ const deletePost = async (req, res) => {
 };
 
 // Quản lý nhật ký
+const mongoose = require("mongoose");
+
 const getAllJournals = async (req, res) => {
   try {
-    const { page = 1, limit = 10, search = "" } = req.query;
+    const {
+      page = 1,
+      limit = 10,
+      search = "",
+      searchId = "", // Thêm searchId
+      emotion = "",
+      privacy = "",
+      dateFrom = "",
+      dateTo = "",
+      sortBy = "createdAt",
+      sortOrder = "desc",
+    } = req.query;
+
     const skip = (page - 1) * limit;
 
+    // Tạo filter
     const filter = {};
-    if (search) {
+
+    // Tìm kiếm theo ID (ưu tiên cao nhất)
+    if (searchId) {
+      try {
+        // Chuyển đổi string ID thành ObjectId
+        filter._id = new mongoose.Types.ObjectId(searchId);
+      } catch (error) {
+        // Nếu ID không hợp lệ, trả về mảng rỗng
+        return res.json({
+          success: true,
+          data: {
+            journals: [],
+            pagination: {
+              current: parseInt(page),
+              pages: 0,
+              total: 0,
+            },
+          },
+        });
+      }
+    }
+    // Tìm kiếm theo tiêu đề và nội dung (chỉ khi không tìm theo ID)
+    else if (search) {
       filter.$or = [
         { title: { $regex: search, $options: "i" } },
         { content: { $regex: search, $options: "i" } },
       ];
     }
 
+    // Lọc theo cảm xúc
+    if (emotion) {
+      filter.emotions = { $in: [emotion] };
+    }
+
+    // Lọc theo quyền riêng tư
+    if (privacy === "private") {
+      filter.isPrivate = true;
+    } else if (privacy === "public") {
+      filter.isPrivate = false;
+    }
+
+    // Lọc theo ngày
+    if (dateFrom || dateTo) {
+      filter.date = {};
+      if (dateFrom) {
+        const fromDate = new Date(dateFrom);
+        fromDate.setHours(0, 0, 0, 0);
+        filter.date.$gte = fromDate;
+      }
+      if (dateTo) {
+        const toDate = new Date(dateTo);
+        toDate.setHours(23, 59, 59, 999);
+        filter.date.$lte = toDate;
+      }
+    }
+
+    // Sắp xếp
+    const sort = {};
+    if (sortBy === "title") {
+      sort.title = sortOrder === "asc" ? 1 : -1;
+    } else {
+      sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+    }
+
     const [journals, total] = await Promise.all([
       Journal.find(filter)
         .populate("userId", "username email profile.avatar")
-        .sort({ createdAt: -1 })
+        .sort(sort)
         .skip(skip)
         .limit(parseInt(limit)),
       Journal.countDocuments(filter),
@@ -1177,8 +1249,8 @@ const getJournalById = async (req, res) => {
   try {
     const { journalId } = req.params;
     const journal = await Journal.findById(journalId).populate(
-      "author",
-      "username email"
+      "userId",
+      "username email profile.avatar"
     );
 
     if (!journal) {
@@ -1222,6 +1294,137 @@ const deleteJournal = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Lỗi khi xóa nhật ký",
+    });
+  }
+};
+const getJournalStats = async (req, res) => {
+  try {
+    const [
+      totalJournals,
+      privateJournals,
+      todayJournals,
+      thisWeekJournals,
+      thisMonthJournals,
+      lastMonthJournals,
+      withMedia,
+      emotionDistribution,
+      privacyDistribution,
+      topWriters,
+      avgMediaPerJournal,
+    ] = await Promise.all([
+      Journal.countDocuments(),
+      Journal.countDocuments({ isPrivate: true }),
+      Journal.countDocuments({
+        date: {
+          $gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          $lte: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      }),
+      Journal.countDocuments({
+        date: {
+          $gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      }),
+      Journal.countDocuments({
+        date: {
+          $gte: new Date(new Date().getFullYear(), new Date().getMonth(), 1),
+        },
+      }),
+      Journal.countDocuments({
+        date: {
+          $gte: new Date(
+            new Date().getFullYear(),
+            new Date().getMonth() - 1,
+            1
+          ),
+          $lte: new Date(new Date().getFullYear(), new Date().getMonth(), 0),
+        },
+      }),
+      Journal.countDocuments({ media: { $exists: true, $ne: [] } }),
+      Journal.aggregate([
+        { $unwind: "$emotions" },
+        { $group: { _id: "$emotions", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+      ]),
+      Journal.aggregate([
+        { $group: { _id: "$isPrivate", count: { $sum: 1 } } },
+      ]),
+      Journal.aggregate([
+        {
+          $group: {
+            _id: "$userId",
+            journalCount: { $sum: 1 },
+            lastJournal: { $max: "$date" },
+          },
+        },
+        { $sort: { journalCount: -1 } },
+        { $limit: 10 },
+        {
+          $lookup: {
+            from: "users",
+            localField: "_id",
+            foreignField: "_id",
+            as: "user",
+          },
+        },
+        { $unwind: "$user" },
+        {
+          $project: {
+            username: "$user.username",
+            avatar: "$user.profile.avatar",
+            journalCount: 1,
+            lastJournal: 1,
+          },
+        },
+      ]),
+      Journal.aggregate([
+        { $project: { mediaCount: { $size: { $ifNull: ["$media", []] } } } },
+        { $group: { _id: null, avg: { $avg: "$mediaCount" } } },
+      ]),
+    ]);
+
+    // Tính tỷ lệ tăng trưởng
+    const growthRate = lastMonthJournals
+      ? ((thisMonthJournals - lastMonthJournals) / lastMonthJournals) * 100
+      : thisMonthJournals > 0
+      ? 100
+      : 0;
+
+    // Tìm cảm xúc phổ biến nhất
+    const topEmotionData = emotionDistribution[0];
+    const topEmotion = topEmotionData ? topEmotionData._id : null;
+    const topEmotionCount = topEmotionData ? topEmotionData.count : 0;
+
+    res.json({
+      success: true,
+      data: {
+        totalJournals,
+        privateJournals,
+        todayJournals,
+        thisWeekJournals,
+        thisMonthJournals,
+        withMedia,
+        topEmotion,
+        topEmotionCount,
+        growthRate: Math.round(growthRate * 100) / 100,
+        emotionDistribution: emotionDistribution.reduce((acc, curr) => {
+          acc[curr._id] = curr.count;
+          return acc;
+        }, {}),
+        privacyDistribution: privacyDistribution.reduce((acc, curr) => {
+          acc[curr._id ? "private" : "public"] = curr.count;
+          return acc;
+        }, {}),
+        topWriters,
+        avgMediaPerJournal:
+          Math.round((avgMediaPerJournal[0]?.avg || 0) * 100) / 100,
+      },
+    });
+  } catch (error) {
+    console.error("Get journal stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê nhật ký",
     });
   }
 };
@@ -3300,6 +3503,7 @@ module.exports = {
   getPostById,
   deletePost,
   getAllJournals,
+  getJournalStats,
   getJournalById,
   deleteJournal,
   getAllComments,
