@@ -4,6 +4,7 @@ import api from "../../services/api";
 import debounce from "lodash/debounce";
 import EmptyState from "../../components/UI/EmptyState";
 import FriendButton from "../../components/friend/FriendButton";
+import Post from "../../components/Post/Post";
 import "./SearchPage.css";
 
 const SearchPage = () => {
@@ -61,7 +62,7 @@ const SearchPage = () => {
         const [usersResponse, postsResponse, groupsResponse, journalsResponse] =
           await Promise.all([
             api.get("/api/users", { params: { search: query, limit: 20 } }),
-            api.get("/api/posts", { params: { search: query, limit: 10 } }),
+            api.get("/api/posts", { params: { search: query, limit: 10, privacy: "public" } }),
             api.get("/api/groups", { params: { search: query, limit: 10 } }),
             api.get("/api/journals", { params: { search: query, limit: 10 } }),
           ]);
@@ -218,30 +219,8 @@ const SearchPage = () => {
 
             case "posts":
               return (
-                <div
-                  key={item._id}
-                  className="search-result-item"
-                  onClick={() => navigate(`/posts/${item._id}`)}
-                >
-                  <div className="d-flex align-items-center mb-2">
-                    <img
-                      src={
-                        item.userCreateID?.profile?.avatar ||
-                        "/assets/images/user/1.jpg"
-                      }
-                      className="rounded-circle"
-                      alt=""
-                      width="32"
-                      height="32"
-                    />
-                    <div className="ms-2">
-                      <h6 className="mb-0">{item.userCreateID?.fullName}</h6>
-                      <small className="text-muted">
-                        {new Date(item.createdAt).toLocaleDateString()}
-                      </small>
-                    </div>
-                  </div>
-                  <p className="mb-0">{item.content}</p>
+                <div key={item._id} className="mb-4">
+                  <Post post={item} showActions={true} />
                 </div>
               );
 

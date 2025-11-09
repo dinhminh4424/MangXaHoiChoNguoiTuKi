@@ -21,6 +21,7 @@ const ProfilePosts = ({ userId }) => {
       if (refreshing) return;
 
       const id = userId || currentUser?.id;
+      if (!id) return;
 
       setRefreshing(true);
       try {
@@ -28,11 +29,11 @@ const ProfilePosts = ({ userId }) => {
           page: pageNum,
           limit: 10,
           userCreateID: id, // Lọc theo userId
-          privacy: isOwnProfile ? "all" : "public",
+          privacy: isOwnProfile ? "all" : undefined, // Nếu là profile của bản thân thì truyền "all", nếu không thì để undefined để backend tự xử lý
           sortBy: "newest",
         };
 
-        const response = await fetchPosts(params);
+        const response = await fetchPosts(params, append);
 
         if (!append || !response.posts) {
           setHasMore(true);
@@ -47,13 +48,16 @@ const ProfilePosts = ({ userId }) => {
         setRefreshing(false);
       }
     },
-    [fetchPosts, userId, refreshing]
+    [fetchPosts, userId, currentUser?.id, isOwnProfile]
   );
 
   // Initial load
   useEffect(() => {
-    loadProfilePosts(1, false);
-  }, [userId]);
+    const id = userId || currentUser?.id;
+    if (id) {
+      loadProfilePosts(1, false);
+    }
+  }, [userId, currentUser?.id, loadProfilePosts]);
 
   // Refresh posts
   const handleRefresh = () => {
@@ -77,9 +81,12 @@ const ProfilePosts = ({ userId }) => {
   };
 
   // Filter posts by user
-  const userPosts = posts.filter((post) =>
-    userId ? post.author?._id === userId : true
-  );
+  const userPosts = posts.filter((post) => {
+    if (!userId) return true;
+    const postUserId = post.userCreateID?._id || post.userCreateID || post.author?._id;
+    const targetUserId = userId.toString();
+    return postUserId?.toString() === targetUserId;
+  });
 
   return (
     <div className="profile-posts">
