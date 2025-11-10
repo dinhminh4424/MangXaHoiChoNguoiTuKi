@@ -18,6 +18,7 @@ const notificationsRoutes = require("./notifications");
 const friendsRoutes = require("./friends");
 const followRoutes = require("./follow");
 const clientLogsRouter = require("./clientLogs");
+const todosRouter = require("./todos");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -35,6 +36,7 @@ router.use("/mood", moodRoutes);
 router.use("/admin", adminRoutes);
 router.use("/friends", friendsRoutes);
 router.use("/follow", followRoutes);
+router.use("/todos", todosRouter);
 
 router.use("/client-logs", clientLogsRouter);
 

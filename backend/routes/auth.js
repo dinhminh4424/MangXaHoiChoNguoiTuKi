@@ -6,7 +6,11 @@ const mailService = require("../services/mailService");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const router = express.Router();
-const { normalizeBaseUsername, generateUniqueUsernameFrom } = require("../utils/username");
+const {
+  normalizeBaseUsername,
+  generateUniqueUsernameFrom,
+} = require("../utils/username");
+const { logUserActivity } = require("../logging/userActivityLogger");
 
 // Tạo token JWT với (userId) và thời gian hết hạn
 const generateToken = (userId) => {
@@ -51,8 +55,12 @@ router.post("/register", async (req, res) => {
     const { username, email, password, fullName, role } = req.body;
 
     // Chuẩn hóa username đầu vào (loại bỏ dấu/khoảng trắng/ký tự đặc biệt)
-    const normalizedUsernameBase = normalizeBaseUsername(username || fullName || (email ? email.split("@")[0] : "user"));
-    const normalizedUsername = await generateUniqueUsernameFrom(normalizedUsernameBase);
+    const normalizedUsernameBase = normalizeBaseUsername(
+      username || fullName || (email ? email.split("@")[0] : "user")
+    );
+    const normalizedUsername = await generateUniqueUsernameFrom(
+      normalizedUsernameBase
+    );
 
     // Kiểm tra user đã tồn tại
     const existingUser = await User.findOne({
@@ -94,7 +102,7 @@ router.post("/register", async (req, res) => {
     // Tạo token
     const token = generateToken(user._id);
 
-    res.status(201).json({
+    const responsePayload = {
       success: true,
       message: "Đăng ký thành công!",
       data: {
@@ -108,7 +116,27 @@ router.post("/register", async (req, res) => {
         token,
         emailSent: emailResult.success,
       },
+    };
+
+    res.status(201);
+    logUserActivity({
+      action: "auth.register",
+      req,
+      res,
+      userId: user._id.toString(),
+      role: user.role,
+      target: { type: "user", id: user._id.toString() },
+      description: "Người dùng đăng ký tài khoản",
+      payload: {
+        email: user.email,
+        username: user.username,
+      },
+      meta: {
+        emailSent: emailResult.success,
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -265,7 +293,7 @@ router.post("/login", async (req, res) => {
     // Tạo token
     const token = generateToken(user._id);
 
-    res.json({
+    const responsePayload = {
       success: true,
       message: "Đăng nhập thành công",
       data: {
@@ -279,7 +307,24 @@ router.post("/login", async (req, res) => {
         },
         token,
       },
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "auth.login",
+      req,
+      res,
+      userId: user._id.toString(),
+      role: user.role,
+      target: { type: "user", id: user._id.toString() },
+      description: "Người dùng đăng nhập",
+      payload: {
+        email,
+        userId: user._id.toString(),
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -300,11 +345,24 @@ router.post("/logout", authMiddleware, async (req, res) => {
       { new: true }
     );
 
-    res.status(200).json({
+    const responsePayload = {
       success: true,
       message: "Đăng xuất thành công",
       data: null,
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "auth.logout",
+      req,
+      res,
+      userId: userId.toString(),
+      role: req.user?.role,
+      target: { type: "user", id: userId.toString() },
+      description: "Người dùng đăng xuất",
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -346,7 +404,20 @@ router.post("/face-login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    res.json({ success: true, token });
+    const responsePayload = { success: true, token };
+
+    res.status(200);
+    logUserActivity({
+      action: "auth.face_login",
+      req,
+      res,
+      userId: user._id.toString(),
+      role: user.role,
+      target: { type: "user", id: user._id.toString() },
+      description: "Người dùng đăng nhập bằng khuôn mặt",
+    });
+
+    return res.json(responsePayload);
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }

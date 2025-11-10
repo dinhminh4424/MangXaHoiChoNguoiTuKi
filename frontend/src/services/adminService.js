@@ -6,8 +6,8 @@ import api from "./api";
  */
 
 // Dashboard
-export const getDashboardStats = async () => {
-  const res = await api.get("/api/admin/dashboard");
+export const getDashboardStats = async (params = {}) => {
+  const res = await api.get("/api/admin/dashboard", { params });
   return res.data;
 };
 
@@ -66,16 +66,29 @@ export const deletePost = (postId) => {
 };
 
 // Quản lý nhật ký
-export const getAllJournals = (params = {}) => {
-  return api.get("/api/admin/journals", { params });
+// Lấy danh sách nhật ký với filter
+export const getAllJournals = async (filters = {}) => {
+  const queryString = new URLSearchParams(filters).toString();
+  const response = await api.get(`/api/admin/journals?${queryString}`);
+  return response.data;
 };
 
-export const getJournalById = (journalId) => {
-  return api.get(`/api/admin/journals/${journalId}`);
+// Lấy chi tiết nhật ký
+export const getJournalById = async (journalId) => {
+  const response = await api.get(`/api/admin/journals/${journalId}`);
+  return response.data;
 };
 
-export const deleteJournal = (journalId) => {
-  return api.delete(`/api/admin/journals/${journalId}`);
+// Xóa nhật ký
+export const deleteJournal = async (journalId) => {
+  const response = await api.delete(`/api/admin/journals/${journalId}`);
+  return response.data;
+};
+
+// Lấy thống kê nhật ký
+export const getJournalStats = async () => {
+  const response = await api.get("/api/admin/journals/stats");
+  return response.data;
 };
 
 // Quản lý nhóm

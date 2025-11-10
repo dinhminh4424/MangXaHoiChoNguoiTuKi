@@ -34,6 +34,7 @@ router.delete("/posts/:postId", adminController.deletePost);
 
 // Quản lý nhật ký
 router.get("/journals", adminController.getAllJournals);
+router.get("/journals/stats", adminController.getJournalStats);
 router.get("/journals/:journalId", adminController.getJournalById);
 router.delete("/journals/:journalId", adminController.deleteJournal);
 

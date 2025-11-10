@@ -98,8 +98,8 @@ const PostActions = ({
   };
 
   return (
-    <div className="post-actions">
-      <div className="post-stats-bar">
+    <div className="post-actions" style={{ padding: "8px" }}>
+      {/* <div className="post-stats-bar">
         {likeCount > 0 && (
           <div className="stat-item">
             <span className="stat-icon">👍</span>
@@ -112,7 +112,7 @@ const PostActions = ({
             <span className="stat-count">{formatLikeCount(commentCount)}</span>
           </div>
         )}
-      </div>
+      </div> */}
 
       <div className="actions-container">
         <div className="action-group">

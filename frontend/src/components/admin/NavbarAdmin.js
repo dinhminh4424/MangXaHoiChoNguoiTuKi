@@ -78,6 +78,11 @@ function NavbarAdmin() {
       ],
     },
     {
+      path: "/admin/journals",
+      icon: "ri-book-open-line",
+      label: "Quản Lý Nhật Kí",
+    },
+    {
       path: "/admin/system",
       icon: "ri-settings-3-line",
       label: "System Settings",

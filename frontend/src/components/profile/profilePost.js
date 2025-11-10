@@ -81,18 +81,15 @@ const ProfilePosts = ({ userId }) => {
   };
 
   // Filter posts by user
-  const userPosts = posts.filter((post) => {
-    if (!userId) return true;
-    const postUserId = post.userCreateID?._id || post.userCreateID || post.author?._id;
-    const targetUserId = userId.toString();
-    return postUserId?.toString() === targetUserId;
-  });
+  const userPosts = posts.filter((post) =>
+    userId ? post.userCreateID?._id === userId : true
+  );
 
   return (
     <div className="profile-posts">
       {/* Header với refresh button */}
       <div className="d-flex justify-content-between align-items-center mb-4">
-        <h5 className="mb-0">📝 Bài viết</h5>
+        <h5 className="mb-0"> Bài viết</h5>
         <button
           className="btn btn-outline-primary btn-sm"
           onClick={handleRefresh}

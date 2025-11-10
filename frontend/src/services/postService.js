@@ -234,4 +234,13 @@ export const postService = {
       throw error.response?.data || error;
     }
   },
+
+  imagesPost: async (params) => {
+    try {
+      const res = await api.get("/api/posts/images", { params: params });
+      return res.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
 };

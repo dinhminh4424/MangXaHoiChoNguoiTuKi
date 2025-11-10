@@ -3,6 +3,7 @@ const Message = require("../models/Message");
 const Chat = require("../models/Chat");
 const User = require("../models/User");
 const auth = require("../middleware/auth");
+const { logUserActivity } = require("../logging/userActivityLogger");
 const router = express.Router();
 
 // Tạo cuộc trò chuyện mới
@@ -516,10 +517,30 @@ router.post("/:chatId/messages", auth, async (req, res) => {
     await message.populate("sender", "username fullName profile.avatar");
     await message.populate("repliedTo");
 
-    res.status(201).json({
+    const responsePayload = {
       success: true,
       data: message,
+    };
+
+    res.status(201);
+    logUserActivity({
+      action: "message.send",
+      req,
+      res,
+      userId: senderId,
+      role: req.user?.role,
+      target: { type: "chat", id: chatId },
+      description: "Người dùng gửi tin nhắn",
+      payload: {
+        messageId: message._id.toString(),
+        chatId,
+        messageType,
+        hasAttachment: Boolean(fileUrl),
+        repliedTo: repliedTo || null,
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     res.status(500).json({
       success: false,
@@ -635,10 +656,28 @@ router.delete("/messages/:messageId", auth, async (req, res) => {
     // Gửi socket event để cập nhật real-time (chỉ cho user hiện tại)
     // Có thể gửi qua socket hoặc để client tự xử lý
 
-    res.json({
+    const responsePayload = {
       success: true,
       message: "Tin nhắn đã được xoá",
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "message.delete",
+      req,
+      res,
+      userId,
+      role: req.user?.role,
+      target: { type: "chat", id: message.chatId.toString() },
+      description: "Người dùng xoá tin nhắn cho chính mình",
+      payload: {
+        messageId,
+        chatId: message.chatId.toString(),
+        scope: "self",
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("Lỗi khi xoá tin nhắn:", error);
     res.status(500).json({
@@ -680,10 +719,27 @@ router.post("/messages/:messageId/recall", auth, async (req, res) => {
     // Gửi socket event để cập nhật real-time cho tất cả
     // (sẽ thêm socket sau)
 
-    res.json({
+    const responsePayload = {
       success: true,
       message: "Tin nhắn đã được thu hồi",
+    };
+
+    res.status(200);
+    logUserActivity({
+      action: "message.recall",
+      req,
+      res,
+      userId,
+      role: req.user?.role,
+      target: { type: "chat", id: message.chatId.toString() },
+      description: "Người dùng thu hồi tin nhắn",
+      payload: {
+        messageId,
+        chatId: message.chatId.toString(),
+      },
     });
+
+    return res.json(responsePayload);
   } catch (error) {
     console.error("Lỗi khi thu hồi tin nhắn:", error);
     res.status(500).json({
