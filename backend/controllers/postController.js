@@ -1715,7 +1715,7 @@ exports.reportPost = async (req, res) => {
 
 exports.getImagePosts = async (req, res) => {
   try {
-    let { page = 1, limit = 10, userCreateID, sortBy } = req.query;
+    let { page = 1, limit = 100, userCreateID, sortBy, groupId } = req.query;
 
     page = Math.max(1, parseInt(page) || 1);
     limit = Math.max(1, parseInt(limit) || 10);
@@ -1730,12 +1730,12 @@ exports.getImagePosts = async (req, res) => {
       "files.0": { $exists: true },
     };
 
-    if (userCreateID) query.userCreateID = userCreateID;
-
     const userId = req.user?.userId; // có thể undefined nếu không auth
 
     // nếu truyền userCreateID thì lọc theo user đó
     if (userCreateID) query.userCreateID = userCreateID;
+
+    if (groupId) query.groupId = groupId;
 
     // Nếu đang xem bài của user khác (không phải chính mình) -> chỉ public
     // Lưu ý: chỉ áp dụng khi userCreateID được truyền (xem trang user cụ thể)
@@ -1759,8 +1759,8 @@ exports.getImagePosts = async (req, res) => {
     // Lấy posts (với populate nếu cần). lean() để performance.
     const posts = await Post.find(query)
       .sort(sortObj)
-      .skip(skip)
-      .limit(limit)
+      // .skip(skip)
+      // .limit(limit)
       .populate("userCreateID", "username _id profile.avatar fullName")
       .lean();
 
@@ -1769,7 +1769,7 @@ exports.getImagePosts = async (req, res) => {
     const totalPages = Math.ceil(totalPosts / limit);
 
     // Lọc ra images từ posts
-    const images = [];
+    let images = [];
     for (const post of posts) {
       if (!post.files || !Array.isArray(post.files)) continue;
 
@@ -1796,6 +1796,11 @@ exports.getImagePosts = async (req, res) => {
       }
     }
 
+    const totalImages = images.length;
+    const start = (page - 1) * limit;
+    const end = start + limit;
+    images = images.slice(start, end);
+
     return res.status(200).json({
       success: true,
       page,
@@ -1811,6 +1816,150 @@ exports.getImagePosts = async (req, res) => {
 };
 
 // === HỖ TRỢ: Parse mảng từ string ===
+// controllers/postController.js
+// exports.getImagePosts = async (req, res) => {
+//   try {
+//     let { page = 1, limit = 10, userCreateID, sortBy, groupId } = req.query;
+
+//     page = Math.max(1, parseInt(page) || 1);
+//     limit = Math.max(1, parseInt(limit) || 10);
+//     const skip = (page - 1) * limit;
+
+//     const userId = req.user?.userId;
+
+//     // build post match
+//     const postMatch = {
+//       $or: [
+//         { isDeletedByUser: false },
+//         { isDeletedByUser: { $exists: false } },
+//       ],
+//       isBlocked: false,
+//       "files.0": { $exists: true },
+//     };
+
+//     // if (userCreateID) postMatch.userCreateID = userCreateID;
+//     // if (groupId) postMatch.groupId = groupId; // nếu bạn có group filter
+
+//     if (userCreateID && userId && String(userCreateID) !== String(userId)) {
+//       postMatch.privacy = "public";
+//     }
+
+//     // build sort (mặc định sort theo post.createdAt desc)
+//     let sortObj = { postCreatedAt: -1 };
+//     if (sortBy) {
+//       const parts = String(sortBy).split(":");
+//       const key = parts[0];
+//       const dir = parts.length === 2 ? parseInt(parts[1]) || -1 : -1;
+//       // hỗ trợ sort theo post.createdAt hoặc file.createdAt (nếu cần)
+//       if (key === "createdAt") sortObj = { postCreatedAt: dir };
+//       else if (key.startsWith("file."))
+//         sortObj = { [key.replace("file.", "file.")]: dir };
+//       else sortObj = { postCreatedAt: dir };
+//     }
+
+//     const pipeline = [
+//       { $match: postMatch },
+//       { $sort: { createdAt: -1 } }, // sort posts first (giúp ổn định)
+//       { $unwind: "$files" },
+//       {
+//         $match: {
+//           $expr: {
+//             $and: [
+//               { $ne: ["$files.type", "text"] },
+//               { $ne: ["$files.type", "file"] },
+//             ],
+//           },
+//         },
+//       },
+//       {
+//         $project: {
+//           file: "$files",
+//           postId: "$_id",
+//           postCreatedAt: "$createdAt",
+//           postContent: "$content",
+//           postUser: "$userCreateID",
+//           postLikeCount: "$likeCount",
+//           postCommentCount: "$commentCount",
+//         },
+//       },
+//       // lookup user info (change 'users' nếu collection tên khác)
+//       {
+//         $lookup: {
+//           from: "users",
+//           localField: "postUser",
+//           foreignField: "_id",
+//           as: "user",
+//         },
+//       },
+//       {
+//         $addFields: {
+//           user: { $arrayElemAt: ["$user", 0] },
+//         },
+//       },
+//       // shape final
+//       {
+//         $project: {
+//           _id: 0,
+//           imageUrl: "$file.fileUrl",
+//           type: "$file.type",
+//           file: "$file",
+//           post: {
+//             _id: "$postId",
+//             createdAt: "$postCreatedAt",
+//             content: "$postContent",
+//             likeCount: "$postLikeCount",
+//             commentCount: "$postCommentCount",
+//           },
+//           user: {
+//             _id: "$user._id",
+//             username: "$user.username",
+//             fullName: "$user.fullName",
+//             avatar: "$user.profile.avatar",
+//           },
+//           postCreatedAt: "$postCreatedAt",
+//         },
+//       },
+//       { $sort: sortObj },
+//       { $skip: skip },
+//       { $limit: limit },
+//     ];
+
+//     const images = await Post.aggregate(pipeline).exec();
+
+//     // count total images for pagination
+//     const countPipeline = [
+//       { $match: postMatch },
+//       { $unwind: "$files" },
+//       {
+//         $match: {
+//           $expr: {
+//             $and: [
+//               { $ne: ["$files.type", "text"] },
+//               { $ne: ["$files.type", "file"] },
+//             ],
+//           },
+//         },
+//       },
+//       { $count: "totalImages" },
+//     ];
+//     const cntRes = await Post.aggregate(countPipeline).exec();
+//     const totalImages = (cntRes[0] && cntRes[0].totalImages) || 0;
+//     const totalPages = Math.ceil(totalImages / limit);
+
+//     return res.status(200).json({
+//       success: true,
+//       page,
+//       totalPages,
+//       totalImages,
+//       imagesCount: images.length,
+//       images,
+//     });
+//   } catch (err) {
+//     console.error("Lỗi lấy danh sách ảnh từ bài viết:", err);
+//     return res.status(500).json({ success: false, message: err.message });
+//   }
+// };
+
 function parseArray(input) {
   if (Array.isArray(input)) return input;
   if (typeof input === "string") {
@@ -1890,5 +2039,65 @@ async function AddViolationUserByID(
     });
   } catch (err) {
     console.error("Lỗi cập nhật vi phạm user:", err);
+  }
+}
+
+async function sendViolationEmails(violation, reporter, post) {
+  try {
+    // Lấy thông tin người đăng bài
+    const postOwner = await User.findById(post.userCreateID);
+    if (!postOwner) return;
+
+    // 1. Gửi email cho người đăng bài
+    await mailService.sendEmail({
+      to: postOwner.email,
+      subject: "📢 Bài viết của bạn đã được báo cáo - Autism Support",
+      templateName: "POST_REPORTED",
+      templateData: {
+        postOwnerName: postOwner.fullName || postOwner.username,
+        reason: violation.reason,
+        notes: violation.notes,
+        reportTime: new Date(violation.createdAt).toLocaleString("vi-VN"),
+        reportId: violation._id.toString(),
+        postContent: post.content,
+        postFiles: post.files ? post.files.length : 0,
+        postTime: new Date(post.createdAt).toLocaleString("vi-VN"),
+        postLink: `${process.env.FRONTEND_URL}/posts/${post._id}`,
+        contactLink: `${process.env.FRONTEND_URL}/support`,
+      },
+    });
+
+    // 2. Gửi email cho admin về báo cáo mới
+    const admins = await User.find({
+      role: { $in: ["admin", "supporter"] },
+      email: { $exists: true, $ne: "" },
+    });
+
+    if (admins.length > 0) {
+      const adminEmails = admins.map((admin) => admin.email);
+
+      await mailService.sendEmail({
+        to: adminEmails,
+        subject: "🔔 Báo cáo mới cần xử lý - Autism Support",
+        templateName: "ADMIN_REPORT_ALERT",
+        templateData: {
+          reportId: violation._id.toString(),
+          contentType: "Bài viết",
+          reason: violation.reason,
+          priority: "medium", // Có thể tính toán dựa trên loại vi phạm
+          reportTime: new Date(violation.createdAt).toLocaleString("vi-VN"),
+          reporterName: reporter.fullName || reporter.username,
+          postOwnerName: postOwner.fullName || postOwner.username,
+          ownerViolationCount: postOwner.violationCount || 0,
+          ownerRole: postOwner.role,
+          reviewLink: `${process.env.FRONTEND_URL}/admin/reports/${violation._id}`,
+          adminDashboardLink: `${process.env.FRONTEND_URL}/admin`,
+        },
+      });
+    }
+
+    console.log("✅ Đã gửi email thông báo vi phạm");
+  } catch (error) {
+    console.error("❌ Lỗi gửi email thông báo vi phạm:", error);
   }
 }

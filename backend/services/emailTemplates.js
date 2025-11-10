@@ -851,6 +851,99 @@ class EmailTemplates {
         </body>
         </html>
       `,
+
+      // Templet thông báo SOS
+      EMERGENCY_NEW_REQUEST: (data) => `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+        .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; color: #222; }
+        .header { background: linear-gradient(135deg, #dc3545 0%, #b02a37 100%); padding: 30px; text-align: center; color: white; border-radius: 8px 8px 0 0; }
+        .content { padding: 28px; background: #ffffff; }
+        .footer { padding: 18px; text-align: center; background: #f5f5f5; color: #666; border-radius: 0 0 8px 8px; }
+        .alert-box { background: #fff0f0; border: 2px solid #dc3545; padding: 20px; border-radius: 8px; margin: 16px 0; }
+        .info-box { background: #f8f9fa; padding: 16px; border-radius: 6px; margin: 12px 0; border-left: 4px solid #007bff; }
+        .button { background: #dc3545; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; display: inline-block; margin: 8px; }
+        .button-secondary { background: #6c757d; }
+        .small { font-size: 13px; color: #666; }
+    </style>
+</head>
+<body style="background:#f0f2f5; padding: 20px 0;">
+    <div class="container">
+        <div class="header">
+            <h1>🚨 YÊU CẦU KHẨN CẤP MỚI</h1>
+            <p>Hệ thống nhận được yêu cầu hỗ trợ khẩn cấp</p>
+        </div>
+
+        <div class="content">
+            <div class="alert-box">
+                <h2 style="margin-top:0; color: #dc3545;">CẦN PHẢN HỒI NGAY LẬP TỨC</h2>
+                <p>Một yêu cầu hỗ trợ khẩn cấp mới vừa được gửi đến hệ thống.</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Thông tin yêu cầu</h3>
+                <p><strong>Mã yêu cầu:</strong> ${
+                  data.requestId || "Đang cập nhật"
+                }</p>
+                <p><strong>Thời gian:</strong> ${
+                  data.createdAt || new Date().toLocaleString("vi-VN")
+                }</p>
+                <p><strong>Loại yêu cầu:</strong> ${data.type || "Khẩn cấp"}</p>
+                <p><strong>Trạng thái:</strong> ${data.status || "Pending"}</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Thông tin người dùng</h3>
+                <p><strong>ID người dùng:</strong> ${
+                  data.userId || "Chưa xác định"
+                }</p>
+                <p><strong>Số điện thoại:</strong> ${
+                  data.phoneNumber || "Chưa cung cấp"
+                }</p>
+            </div>
+
+            <div class="info-box">
+                <h3>Vị trí & Thông tin thêm</h3>
+                <p><strong>Địa chỉ:</strong> ${
+                  data.address || "Đang xác định..."
+                }</p>
+                <p><strong>Tọa độ:</strong> ${data.latitude}, ${
+        data.longitude
+      }</p>
+                <p><strong>Tin nhắn:</strong> ${
+                  data.message || "Không có tin nhắn"
+                }</p>
+                <p><strong>Chế độ im lặng:</strong> ${
+                  data.isSilent ? "CÓ" : "KHÔNG"
+                }</p>
+            </div>
+
+            <div style="text-align: center; margin: 25px 0;">
+                <a href="${
+                  data.adminLink || "#"
+                }" class="button">XEM CHI TIẾT & XỬ LÝ</a>
+                <a href="${
+                  data.mapLink || "#"
+                }" class="button button-secondary">XEM VỊ TRÍ TRÊN BẢN ĐỒ</a>
+            </div>
+
+            <div class="small" style="background: #fff3cd; padding: 12px; border-radius: 4px;">
+                <strong>Lưu ý quan trọng:</strong> Vui lòng phản hồi yêu cầu này càng sớm càng tốt để đảm bảo an toàn cho người dùng.
+            </div>
+        </div>
+
+        <div class="footer">
+            <p class="small">Hệ thống Quản lý Khẩn cấp - Autism Support Platform</p>
+            <p class="small">© ${new Date().getFullYear()} - Tự động gửi từ hệ thống</p>
+        </div>
+    </div>
+</body>
+</html>
+          `,
     };
   }
 
