@@ -92,6 +92,28 @@ const userSchema = new mongoose.Schema(
     // CÁC TRƯỜNG CHO RESET PASSWORD
     resetPasswordOTP: String,
     resetPasswordExpire: Date,
+
+    // Thêm các trường mới
+    deactivatedAt: Date, // ngày xoá
+    deactivationReason: String, // lý do xoá
+
+    // Cài đặt privacy
+    settings: {
+      emailNotifications: { type: Boolean, default: true },
+      pushNotifications: { type: Boolean, default: true },
+      profileVisibility: {
+        type: String,
+        enum: ["public", "friends", "private"],
+        default: "public",
+      },
+      showOnlineStatus: { type: Boolean, default: true },
+      allowFriendRequests: { type: Boolean, default: true },
+      allowMessages: {
+        type: String,
+        enum: ["everyone", "friends", "none"],
+        default: "everyone",
+      },
+    },
   },
   {
     timestamps: true,

@@ -386,7 +386,9 @@ const EditPost = () => {
             <div className="user-info-card">
               <div className="d-flex align-items-center">
                 <img
-                  src={user?.avatar || "/images/default-avatar.png"}
+                  src={
+                    user?.profile.avatar || "/assets/images/default-avatar.png"
+                  }
                   alt="Avatar"
                   className="user-avatar"
                 />

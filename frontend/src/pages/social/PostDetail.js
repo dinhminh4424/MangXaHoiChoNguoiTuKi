@@ -60,9 +60,11 @@ const PostDetail = () => {
           </div>
         </div>
       ) : (
-        <>
-          <Post post={currentPost} />
-        </>
+        <div className="m-5">
+          <div>
+            <Post post={currentPost} />
+          </div>
+        </div>
       )}
     </div>
   );

@@ -8,6 +8,7 @@ import GroupSidebar from "./GroupSidebar";
 import GroupFeed from "./GroupFeed";
 import GroupMembers from "./GroupMembers";
 import GroupImage from "./GroupImage";
+import GroupFiles from "./GroupFile";
 import GroupSettings from "./GroupSettings";
 import CreatePost from "../../pages/social/CreatePost"; // Sửa đường dẫn này
 
@@ -172,6 +173,7 @@ const Group = () => {
           )}
 
           {activeTab === "images" && <GroupImage groupId={groupId} />}
+          {activeTab === "files" && <GroupFiles groupId={groupId} />}
 
           {activeTab === "settings" && isAdmin && (
             <GroupSettings group={group} onGroupUpdate={loadGroup} />

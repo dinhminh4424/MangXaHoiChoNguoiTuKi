@@ -13,7 +13,8 @@ const ClientLogSchema = new mongoose.Schema(
     ip: String,
     meta: Object,
   },
-  { collection: "client_logs" }
+  { collection: "client_logs" },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("ClientLog", ClientLogSchema);

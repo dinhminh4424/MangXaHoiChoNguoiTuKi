@@ -52,6 +52,8 @@ import TodoCalendar from "./pages/todo/TodoCalendar";
 import TodoList from "./pages/todo/TodoList";
 import TodoDetail from "./pages/todo/TodoDetail";
 
+import SettingsDashboard from "./components/settings/SettingsDashboard";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
@@ -160,6 +162,9 @@ const routeConfigs = [
 
   // Protected User Routes - Emotion
   { path: "/nhandien", component: Emotion, layout: UserLayout },
+
+  // Protected User Setting
+  { path: "/settings", component: SettingsDashboard, layout: UserLayout },
 
   // Admin Routes
   {

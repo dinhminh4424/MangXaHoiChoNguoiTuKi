@@ -26,21 +26,22 @@ class UserController {
         });
       }
 
-      const [countPost, countFriends, countFollowers, countFollowing] = await Promise.all([
-        Post.countDocuments({
-          userCreateID: user._id,
-          isBlocked: false,
-        }),
-        Friend.countDocuments({
-          $or: [{ userA: user._id }, { userB: user._id }],
-        }),
-        Follow.countDocuments({
-          following: user._id,
-        }),
-        Follow.countDocuments({
-          follower: user._id,
-        }),
-      ]);
+      const [countPost, countFriends, countFollowers, countFollowing] =
+        await Promise.all([
+          Post.countDocuments({
+            userCreateID: user._id,
+            isBlocked: false,
+          }),
+          Friend.countDocuments({
+            $or: [{ userA: user._id }, { userB: user._id }],
+          }),
+          Follow.countDocuments({
+            following: user._id,
+          }),
+          Follow.countDocuments({
+            follower: user._id,
+          }),
+        ]);
 
       res.json({
         success: true,
@@ -167,7 +168,7 @@ class UserController {
     }
   }
 
-  // Thêm vào userController.js
+  // thống kê
   async getUserDashboard(req, res) {
     try {
       const userId = req.user.userId;
@@ -413,7 +414,13 @@ class UserController {
         });
       }
 
-      const [countPost, countChat, countFriends, countFollowers, countFollowing] = await Promise.all([
+      const [
+        countPost,
+        countChat,
+        countFriends,
+        countFollowers,
+        countFollowing,
+      ] = await Promise.all([
         Post.countDocuments({
           userCreateID: user._id,
           isBlocked: false,
@@ -489,7 +496,7 @@ class UserController {
 
       // Tìm kiếm theo @ username hoặc fullname
       if (search) {
-        if (search.startsWith('@')) {
+        if (search.startsWith("@")) {
           // Nếu bắt đầu bằng @, chỉ tìm theo username
           const usernameSearch = search.slice(1); // Bỏ ký tự @ ở đầu
           query.username = { $regex: usernameSearch, $options: "i" };
@@ -559,7 +566,7 @@ class UserController {
       }
 
       const users = await User.find(query)
-        .select('-password')
+        .select("-password")
         .sort({ isOnline: -1, fullName: 1 })
         .limit(limit * 1)
         .skip((page - 1) * limit);

@@ -19,6 +19,8 @@ const friendsRoutes = require("./friends");
 const followRoutes = require("./follow");
 const clientLogsRouter = require("./clientLogs");
 const todosRouter = require("./todos");
+const accountRoute = require("./account");
+const settingsRoute = require("./settings");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -37,6 +39,8 @@ router.use("/admin", adminRoutes);
 router.use("/friends", friendsRoutes);
 router.use("/follow", followRoutes);
 router.use("/todos", todosRouter);
+router.use("/account", accountRoute);
+router.use("/settings", settingsRoute);
 
 router.use("/client-logs", clientLogsRouter);
 
