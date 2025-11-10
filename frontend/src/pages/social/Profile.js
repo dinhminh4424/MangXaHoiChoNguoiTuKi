@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useProfile } from "../../contexts/ProfileContext";
+import { useAuth } from "../../contexts/AuthContext";
 import ProfileView from "../../components/profile/ProfileView";
 import ProfileEdit from "../../components/profile/ProfileEdit";
 import ProfileImage from "../../components/profile/ProfileImage";
@@ -12,11 +13,15 @@ import ProfilePosts from "../../components/profile/profilePost";
 import api from "../../services/api";
 
 const Profile = () => {
-  const { userId } = useParams();
+  const { userId: userIdParam } = useParams();
   const { isOwnProfile, viewMyProfile } = useProfile();
+  const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("posts");
   const [isVerified, setIsVerified] = useState(false);
+
+  // Tính toán userId: nếu không có trong URL thì dùng currentUser.id
+  const userId = userIdParam || currentUser?.id;
 
   // Kiểm tra đã xác minh chưa (chỉ khi là profile cá nhân)
   useEffect(() => {
@@ -36,12 +41,12 @@ const Profile = () => {
     checkVerification();
   }, [isOwnProfile]);
 
-  // Load profile khi vào /profile (không có userId)
+  // Load profile khi vào /profile (không có userId trong URL)
   useEffect(() => {
-    if (!userId) {
+    if (!userIdParam) {
       viewMyProfile();
     }
-  }, [userId, viewMyProfile]);
+  }, [userIdParam, viewMyProfile]);
 
   const handleTabSelect = (tab) => {
     if (tab === "edit" && !isOwnProfile) {

@@ -1060,7 +1060,11 @@ const ProfileView = ({ userId }) => {
                 </div>
               </div>
               <div className="col-md-4">
-                <div className="card border-0 bg-gradient-info text-white text-center">
+                <div 
+                  className="card border-0 bg-gradient-info text-white text-center"
+                  style={{ cursor: "pointer" }}
+                  onClick={() => setShowFollowersModal(true)}
+                >
                   <div className="card-body py-3">
                     <h5 className="mb-1">{followerCount}</h5>
                     <small>Theo dõi</small>

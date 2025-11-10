@@ -1543,6 +1543,7 @@ class FriendController {
         .limit(parseInt(limit))
         .skip((parseInt(page) - 1) * parseInt(limit));
 
+      // Trả về thông tin bạn bè (người không phải target user)
       const friends = friendships.map((friendship) => {
         const friend =
           friendship.userA._id.toString() === targetUserId

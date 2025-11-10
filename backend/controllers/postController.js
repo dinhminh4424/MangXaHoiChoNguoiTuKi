@@ -1017,6 +1017,9 @@
 const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
+const Friend = require("../models/Friend");
+const mongoose = require("mongoose");
+// const { param } = require("../routes/posts");
 const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");

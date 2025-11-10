@@ -286,15 +286,16 @@ function AppRoutes() {
         return <Route key={path} path={path} element={routeElement} />;
       })}
 
-      {/* Home Route - Public */}
+      {/* Home Route - Public/Protected */}
       <Route
         path="/home"
         element={
           isAuthenticated ? (
-            <>
-              <Navbar />
-              <Home />
-            </>
+            <ProtectedRoute>
+              <UserLayout>
+                <Home />
+              </UserLayout>
+            </ProtectedRoute>
           ) : (
             <Home />
           )
@@ -314,11 +315,14 @@ function AppRoutes() {
  * COMPONENT: AppContent
  */
 function AppContent() {
+  const { user } = useAuth();
+  const userId = user?._id || user?.id || null;
+  
   return (
     <div className="App">
       <AppRoutes />
       {/* ✅ Nút SOS hiển thị trên mọi trang */}
-      <SOSButton userId="currentUserId" />
+      {userId && <SOSButton userId={userId} />}
     </div>
   );
 }
