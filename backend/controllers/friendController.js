@@ -1614,16 +1614,16 @@ class FriendController {
 
       if (friendship) {
         // GHI LOG: Xem trạng thái bạn bè
-        logUserActivity?.({
-          action: "friend.status.check",
-          req,
-          res,
-          userId: currentUserId,
-          role: req.user.role,
-          target: { type: "user", id: targetUserId },
-          description: "Kiểm tra trạng thái bạn bè",
-          payload: { targetUserId, status: "friend" },
-        });
+        // logUserActivity?.({
+        //   action: "friend.status.check",
+        //   req,
+        //   res,
+        //   userId: currentUserId,
+        //   role: req.user.role,
+        //   target: { type: "user", id: targetUserId },
+        //   description: "Kiểm tra trạng thái bạn bè",
+        //   payload: { targetUserId, status: "friend" },
+        // });
 
         return res.json({
           success: true,
@@ -1656,16 +1656,16 @@ class FriendController {
           friendRequest.requester.toString() === currentUserId.toString();
 
         // GHI LOG
-        logUserActivity?.({
-          action: "friend.status.check",
-          req,
-          res,
-          userId: currentUserId,
-          role: req.user.role,
-          target: { type: "user", id: targetUserId },
-          description: "Kiểm tra trạng thái bạn bè",
-          payload: { targetUserId, status: isRequester ? "sent" : "received" },
-        });
+        // logUserActivity?.({
+        //   action: "friend.status.check",
+        //   req,
+        //   res,
+        //   userId: currentUserId,
+        //   role: req.user.role,
+        //   target: { type: "user", id: targetUserId },
+        //   description: "Kiểm tra trạng thái bạn bè",
+        //   payload: { targetUserId, status: isRequester ? "sent" : "received" },
+        // });
 
         return res.json({
           success: true,
@@ -1682,16 +1682,16 @@ class FriendController {
       }
 
       // GHI LOG: Không có quan hệ
-      logUserActivity?.({
-        action: "friend.status.check",
-        req,
-        res,
-        userId: currentUserId,
-        role: req.user.role,
-        target: { type: "user", id: targetUserId },
-        description: "Kiểm tra trạng thái bạn bè",
-        payload: { targetUserId, status: "none" },
-      });
+      // logUserActivity?.({
+      //   action: "friend.status.check",
+      //   req,
+      //   res,
+      //   userId: currentUserId,
+      //   role: req.user.role,
+      //   target: { type: "user", id: targetUserId },
+      //   description: "Kiểm tra trạng thái bạn bè",
+      //   payload: { targetUserId, status: "none" },
+      // });
 
       res.json({
         success: true,

@@ -54,6 +54,7 @@ const ProfileView = ({ userId }) => {
   const [followLoading, setFollowLoading] = React.useState(false);
   const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const [showFollowersModal, setShowFollowersModal] = React.useState(false);
+
   const socketRef = React.useRef(null);
   const followActionInProgress = React.useRef(false);
 
@@ -266,7 +267,10 @@ const ProfileView = ({ userId }) => {
   React.useEffect(() => {
     if (!currentUser) return;
 
-    const API_BASE_URL = process.env.REACT_APP_BACKEND_URL || process.env.REACT_APP_API_URL || "http://localhost:5000";
+    const API_BASE_URL =
+      process.env.REACT_APP_BACKEND_URL ||
+      process.env.REACT_APP_API_URL ||
+      "http://localhost:5000";
     const socket = io(API_BASE_URL, {
       withCredentials: true,
     });
@@ -316,7 +320,10 @@ const ProfileView = ({ userId }) => {
       // Cập nhật số lượng followers nếu:
       // 1. Đang xem profile của người được follow/unfollow (viewedUserId === followingIdStr)
       // 2. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === followingIdStr)
-      if (viewedUserId === followingIdStr || (isOwnProfile && currentUserId === followingIdStr)) {
+      if (
+        viewedUserId === followingIdStr ||
+        (isOwnProfile && currentUserId === followingIdStr)
+      ) {
         // Cập nhật số lượng followers (bất kỳ ai follow/unfollow user đó)
         setFollowerCount((prev) => Math.max(0, prev + change));
       }
@@ -335,8 +342,8 @@ const ProfileView = ({ userId }) => {
       // 2. Hoặc đang xem profile của người kia trong mối quan hệ bạn bè (otherUserId)
       // 3. Hoặc đang xem profile của chính mình và event là cho mình (isOwnProfile && currentUserId === userIdStr)
       // 4. Hoặc đang xem profile của chính mình và event liên quan đến mình (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr)
-      const shouldUpdate = 
-        viewedUserId === userIdStr || 
+      const shouldUpdate =
+        viewedUserId === userIdStr ||
         (otherUserIdStr && viewedUserId === otherUserIdStr) ||
         (isOwnProfile && currentUserId === userIdStr) ||
         (isOwnProfile && otherUserIdStr && currentUserId === otherUserIdStr);
@@ -366,8 +373,14 @@ const ProfileView = ({ userId }) => {
 
   // Xử lý follow/unfollow
   const handleFollowToggle = async () => {
-    if (!userId || isOwnProfile || followLoading || followActionInProgress.current) return;
-    
+    if (
+      !userId ||
+      isOwnProfile ||
+      followLoading ||
+      followActionInProgress.current
+    )
+      return;
+
     setFollowLoading(true);
     followActionInProgress.current = true;
     try {
@@ -1009,7 +1022,9 @@ const ProfileView = ({ userId }) => {
                     </button>
                     <FriendButton userId={userId} />
                     <button
-                      className={`btn ${isFollowing ? 'btn-secondary' : 'btn-outline-secondary'} px-4 py-2 d-flex align-items-center`}
+                      className={`btn ${
+                        isFollowing ? "btn-secondary" : "btn-outline-secondary"
+                      } px-4 py-2 d-flex align-items-center`}
                       onClick={handleFollowToggle}
                       disabled={followLoading}
                     >
@@ -1020,8 +1035,12 @@ const ProfileView = ({ userId }) => {
                         </>
                       ) : (
                         <>
-                          <i className={`fas ${isFollowing ? 'fa-bell-slash' : 'fa-bell'} me-2`}></i>
-                          {isFollowing ? 'Đang theo dõi' : 'Theo dõi'}
+                          <i
+                            className={`fas ${
+                              isFollowing ? "fa-bell-slash" : "fa-bell"
+                            } me-2`}
+                          ></i>
+                          {isFollowing ? "Đang theo dõi" : "Theo dõi"}
                         </>
                       )}
                     </button>
@@ -1050,7 +1069,7 @@ const ProfileView = ({ userId }) => {
                 </div>
               </div>
               <div className="col-md-4">
-                <div 
+                <div
                   className="card border-0 bg-gradient-success text-white text-center"
                   style={{ cursor: "pointer" }}
                   onClick={() => setShowFriendsModal(true)}
@@ -1062,7 +1081,7 @@ const ProfileView = ({ userId }) => {
                 </div>
               </div>
               <div className="col-md-4">
-                <div 
+                <div
                   className="card border-0 bg-gradient-info text-white text-center"
                   style={{ cursor: "pointer" }}
                   onClick={() => setShowFollowersModal(true)}

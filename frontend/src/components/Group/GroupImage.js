@@ -1,8 +1,9 @@
 // import { useCallback, useEffect, useRef, useState } from "react";
 // import { usePost } from "../../contexts/PostContext";
 // import { useAuth } from "../../contexts/AuthContext";
+// import "./GroupFile.css";
 
-// const ImageProfile = ({ userId }) => {
+// const ImageGroup = ({ groupId }) => {
 //   const [myImages, setMyImages] = useState([]);
 //   const [loading, setLoading] = useState(false); // lần load đầu
 //   const [error, setError] = useState("");
@@ -21,8 +22,6 @@
 
 //   const { fetchImagesPost } = usePost();
 
-//   const isOwnProfile = !userId || userId === currentUser?.id;
-
 //   // load một trang ảnh
 //   const loadingImagePost = useCallback(
 //     async (pageToFetch = 1, forUserId) => {
@@ -37,10 +36,10 @@
 //         }
 //         setError("");
 
-//         const id = forUserId || userId || currentUser?.id;
+//         const id = groupId;
 
 //         const params = {
-//           userCreateID: id,
+//           groupId: id,
 //           page: pageToFetch,
 //           limit,
 //         };
@@ -89,7 +88,7 @@
 //         isFetchingRef.current = false;
 //       }
 //     },
-//     [fetchImagesPost, userId, currentUser?.id]
+//     [fetchImagesPost, groupId, currentUser?.id]
 //   );
 
 //   // Khi userId thay đổi -> reset và load trang 1
@@ -98,9 +97,9 @@
 //     setMyImages([]);
 //     setHasMore(true);
 //     setError("");
-//     loadingImagePost(1, userId);
+//     loadingImagePost(1, groupId);
 //     // eslint-disable-next-line react-hooks/exhaustive-deps
-//   }, [userId]); // intentionally only on userId change
+//   }, [groupId]); // intentionally only on userId change
 
 //   // Intersection Observer để load thêm
 //   useEffect(() => {
@@ -122,7 +121,7 @@
 //           // tăng page và gọi load trang tiếp theo
 //           setPages((prev) => {
 //             const next = prev + 1;
-//             loadingImagePost(next, userId);
+//             loadingImagePost(next, groupId);
 //             return next;
 //           });
 //         }
@@ -135,7 +134,7 @@
 //     return () => {
 //       if (observerRef.current) observerRef.current.disconnect();
 //     };
-//   }, [loadingImagePost, hasMore, loadingMore, loading, userId]);
+//   }, [loadingImagePost, hasMore, loadingMore, loading, groupId]);
 
 //   return (
 //     <div className="container">
@@ -249,14 +248,14 @@
 //   );
 // };
 
-// export default ImageProfile;
+// export default ImageGroup;
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { usePost } from "../../contexts/PostContext";
 import { useAuth } from "../../contexts/AuthContext";
-import "./ImageProfile.css";
+import "./GroupFile.css";
 
-const ImageProfile = ({ userId }) => {
+const ImageGroup = ({ groupId }) => {
   const [myImages, setMyImages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -270,16 +269,14 @@ const ImageProfile = ({ userId }) => {
   const observerRef = useRef(null);
   const sentinelRef = useRef(null);
 
-  const limit = 12;
+  const limit = 12; // Tăng limit để load nhiều ảnh hơn
 
   const { fetchImagesPost } = usePost();
   const { user: currentUser } = useAuth();
 
-  const isOwnProfile = !userId || userId === currentUser?.id;
-
   // Load images
   const loadingImagePost = useCallback(
-    async (pageToFetch = 1, forUserId) => {
+    async (pageToFetch = 1) => {
       if (isFetchingRef.current) return;
       isFetchingRef.current = true;
 
@@ -292,10 +289,8 @@ const ImageProfile = ({ userId }) => {
         }
         setError("");
 
-        const id = forUserId || userId || currentUser?.id;
-
         const params = {
-          userCreateID: id,
+          groupId: groupId,
           page: pageToFetch,
           limit,
         };
@@ -319,7 +314,7 @@ const ImageProfile = ({ userId }) => {
           setError(msg);
         }
       } catch (err) {
-        console.error("Error loading profile images:", err);
+        console.error("Error loading group images:", err);
         setError(err?.message || String(err));
       } finally {
         setLoading(false);
@@ -327,17 +322,17 @@ const ImageProfile = ({ userId }) => {
         isFetchingRef.current = false;
       }
     },
-    [fetchImagesPost, userId, currentUser?.id, limit]
+    [fetchImagesPost, groupId, limit]
   );
 
-  // Reset khi userId thay đổi
+  // Reset khi groupId thay đổi
   useEffect(() => {
     setCurrentPage(1);
     setMyImages([]);
     setHasMore(true);
     setError("");
-    loadingImagePost(1, userId);
-  }, [userId, loadingImagePost]);
+    loadingImagePost(1);
+  }, [groupId, loadingImagePost]);
 
   // Intersection Observer
   useEffect(() => {
@@ -352,7 +347,7 @@ const ImageProfile = ({ userId }) => {
         if (entry.isIntersecting && hasMore && !loadingMore && !loading) {
           const nextPage = currentPage + 1;
           setCurrentPage(nextPage);
-          loadingImagePost(nextPage, userId);
+          loadingImagePost(nextPage);
         }
       },
       { root: null, rootMargin: "100px", threshold: 0.1 }
@@ -363,13 +358,10 @@ const ImageProfile = ({ userId }) => {
     return () => {
       if (observerRef.current) observerRef.current.disconnect();
     };
-  }, [loadingImagePost, hasMore, loadingMore, loading, userId, currentPage]);
+  }, [loadingImagePost, hasMore, loadingMore, loading, currentPage]);
 
   // Format số lượng
   const formatCount = (count) => {
-    if (count >= 1000000) {
-      return (count / 1000000).toFixed(1) + "M";
-    }
     if (count >= 1000) {
       return (count / 1000).toFixed(1) + "k";
     }
@@ -377,14 +369,23 @@ const ImageProfile = ({ userId }) => {
   };
 
   return (
-    <div className="container-fluid profile-image-grid">
-      {/* Profile Header */}
+    <div className="container-fluid">
+      {/* Header với thống kê */}
       {!loading && myImages.length > 0 && (
-        <div className="profile-header">
-          <div className="header-content text-center">
-            <h3 className="fw-bold mb-2">Bộ sưu tập hình ảnh</h3>
-            <p className="mb-3 opacity-90">Tất cả hình ảnh và video đã đăng</p>
-            <span className="image-count-badge">{totalImages} hình ảnh</span>
+        <div className="row mb-4">
+          <div className="col-12">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h4 className="mb-1 fw-bold">Hình ảnh nhóm</h4>
+                <p className="text-muted mb-0">
+                  Tất cả hình ảnh được chia sẻ trong nhóm
+                </p>
+              </div>
+              <span className="badge image-count-badge fs-6">
+                {totalImages} ảnh
+              </span>
+            </div>
+            <hr className="mt-3" />
           </div>
         </div>
       )}
@@ -393,17 +394,12 @@ const ImageProfile = ({ userId }) => {
       {loading && (
         <div className="row">
           <div className="col-12">
-            <div className="card border-0">
+            <div className="card border-0 shadow-sm">
               <div className="card-body text-center py-5">
-                <div
-                  className="spinner-border text-primary mb-3"
-                  role="status"
-                  style={{ width: "3rem", height: "3rem" }}
-                >
+                <div className="spinner-border text-primary mb-3" role="status">
                   <span className="visually-hidden">Đang tải...</span>
                 </div>
-                <h5 className="text-muted">Đang tải hình ảnh...</h5>
-                <p className="text-muted mb-0">Vui lòng chờ trong giây lát</p>
+                <p className="mt-2 text-muted">Đang tải danh sách ảnh...</p>
               </div>
             </div>
           </div>
@@ -415,20 +411,10 @@ const ImageProfile = ({ userId }) => {
         <div className="row">
           <div className="col-12">
             <div className="card border-0 shadow-sm">
-              <div className="card-body text-center py-5">
-                <i
-                  className="ri-error-warning-line text-danger mb-3"
-                  style={{ fontSize: "3rem" }}
-                ></i>
-                <h5 className="text-danger mb-2">Đã xảy ra lỗi</h5>
-                <p className="text-muted">{error}</p>
-                <button
-                  className="btn btn-primary mt-2"
-                  onClick={() => loadingImagePost(1, userId)}
-                >
-                  <i className="ri-refresh-line me-2"></i>
-                  Thử lại
-                </button>
+              <div className="card-body text-center py-5 text-danger">
+                <i className="fas fa-exclamation-circle fa-2x mb-3 opacity-50"></i>
+                <h5 className="mb-2">Đã xảy ra lỗi</h5>
+                <p className="mb-0 text-muted">{error}</p>
               </div>
             </div>
           </div>
@@ -444,17 +430,17 @@ const ImageProfile = ({ userId }) => {
 
               return (
                 <div className="col-xl-3 col-lg-4 col-md-6 col-sm-6" key={key}>
-                  <div className="image-profile-card">
+                  <div className="image-grid-card">
                     <div className="image-container">
                       <a
                         href={"/posts/" + (myImage.post?._id || "")}
-                        className="d-block text-decoration-none h-100"
+                        className="d-block text-decoration-none"
                       >
                         {myImage.type === "image" && (
                           <img
                             src={myImage.imageUrl}
                             className="img-fluid"
-                            alt={myImage.post?.content || "Hình ảnh cá nhân"}
+                            alt={myImage.post?.content || "Hình ảnh nhóm"}
                             loading="lazy"
                           />
                         )}
@@ -463,13 +449,9 @@ const ImageProfile = ({ userId }) => {
                             <video
                               src={myImage.imageUrl}
                               className="img-fluid"
-                              alt="Video cá nhân"
+                              alt="Video nhóm"
                               loading="lazy"
                             />
-                            <div className="video-indicator">
-                              <i className="ri-play-mini-fill me-1"></i>
-                              VIDEO
-                            </div>
                             <div className="video-overlay">
                               <i className="ri-play-circle-fill play-icon"></i>
                             </div>
@@ -478,41 +460,39 @@ const ImageProfile = ({ userId }) => {
                       </a>
 
                       {/* Hover Stats */}
-                      <div className="image-hover-stats">
-                        <div className="stats-grid">
+                      <div className="image-hover-data">
+                        <div className="stats-list">
                           <a href="#" className="stat-item">
-                            <i className="ri-heart-3-fill stat-icon"></i>
-                            <span className="stat-count">
+                            <i className="ri-heart-fill"></i>
+                            <span>
                               {formatCount(myImage.post?.likeCount || 0)}
                             </span>
                           </a>
                           <a href="#" className="stat-item">
-                            <i className="ri-chat-3-fill stat-icon"></i>
-                            <span className="stat-count">
+                            <i className="ri-chat-3-fill"></i>
+                            <span>
                               {formatCount(myImage.post?.commentCount || 0)}
                             </span>
                           </a>
                           <a href="#" className="stat-item">
-                            <i className="ri-share-forward-fill stat-icon"></i>
-                            <span className="stat-count">
-                              {formatCount(myImage.post?.shareCount || 10)}
+                            <i className="ri-share-forward-fill"></i>
+                            <span>
+                              {formatCount(myImage.post?.shareCount || 0)}
                             </span>
                           </a>
                         </div>
                       </div>
 
-                      {/* Edit Button (chỉ hiện với chủ profile) */}
-                      {isOwnProfile && (
-                        <a
-                          href="#"
-                          className="edit-image-btn"
-                          data-bs-toggle="tooltip"
-                          data-bs-placement="top"
-                          title="Chỉnh sửa hoặc xóa"
-                        >
-                          <i className="ri-more-2-fill"></i>
-                        </a>
-                      )}
+                      {/* Edit Button */}
+                      <a
+                        href="#"
+                        className="image-edit-btn"
+                        data-bs-toggle="tooltip"
+                        data-bs-placement="top"
+                        title="Chỉnh sửa hoặc xóa"
+                      >
+                        <i className="ri-more-2-fill"></i>
+                      </a>
                     </div>
                   </div>
                 </div>
@@ -521,19 +501,11 @@ const ImageProfile = ({ userId }) => {
           : !loading && (
               <div className="col-12">
                 <div className="empty-state">
-                  <i className="ri-image-2-line empty-state-icon"></i>
+                  <i className="ri-image-line empty-state-icon"></i>
                   <h4 className="mb-2">Chưa có hình ảnh</h4>
                   <p className="text-muted mb-0">
-                    {isOwnProfile
-                      ? "Hãy bắt đầu chia sẻ những khoảnh khắc đầu tiên của bạn!"
-                      : "Người dùng này chưa chia sẻ hình ảnh nào"}
+                    Nhóm chưa có hình ảnh hoặc video được chia sẻ
                   </p>
-                  {isOwnProfile && (
-                    <button className="btn btn-primary mt-3">
-                      <i className="ri-upload-cloud-line me-2"></i>
-                      Đăng ảnh đầu tiên
-                    </button>
-                  )}
                 </div>
               </div>
             )}
@@ -549,7 +521,7 @@ const ImageProfile = ({ userId }) => {
             >
               <span className="visually-hidden">Loading...</span>
             </div>
-            <span className="text-muted">Đang tải thêm hình ảnh...</span>
+            <span className="text-muted">Đang tải thêm ảnh...</span>
           </div>
         </div>
       )}
@@ -560,4 +532,4 @@ const ImageProfile = ({ userId }) => {
   );
 };
 
-export default ImageProfile;
+export default ImageGroup;

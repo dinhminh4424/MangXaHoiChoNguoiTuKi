@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import api from "../services/api";
 
 function SOSButton({ userId }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -26,13 +27,24 @@ function SOSButton({ userId }) {
         };
 
         try {
-          const response = await fetch("http://localhost:5000/api/emergency/sos", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(data),
-          });
+          // const response = await fetch(
+          //   `${
+          //     process.env.REACT_APP_API_URL || "http://localhost:5000"
+          //   }/api/emergency/sos`,
+          //   {
+          //     method: "POST",
+          //     headers: { "Content-Type": "application/json" },
+          //     body: JSON.stringify(data),
+          //   }
+          // );
+          const response = await api.post(
+            `${
+              process.env.REACT_APP_API_URL || "http://localhost:5000"
+            }/api/emergency/sos`,
+            data
+          );
 
-          const result = await response.json();
+          const result = await response.data;
 
           if (result.success) {
             setAddress(result.address || "Không xác định vị trí cụ thể");
@@ -102,7 +114,9 @@ function SOSButton({ userId }) {
         >
           <h5 style={{ marginBottom: "10px" }}>📞 Gửi tín hiệu khẩn cấp</h5>
 
-          <label style={{ fontSize: "14px", display: "block", marginBottom: "6px" }}>
+          <label
+            style={{ fontSize: "14px", display: "block", marginBottom: "6px" }}
+          >
             Nhập số điện thoại liên hệ:
           </label>
           <input
@@ -140,27 +154,38 @@ function SOSButton({ userId }) {
 
           {/* 🩺 Hướng dẫn sơ cứu */}
           <h5>🩺 Hướng dẫn sơ cứu</h5>
-          <ul style={{ fontSize: "14px", lineHeight: "1.6", paddingLeft: "18px" }}>
+          <ul
+            style={{ fontSize: "14px", lineHeight: "1.6", paddingLeft: "18px" }}
+          >
             <li>Ngồi xuống, hít thở sâu.</li>
             <li>Giữ bình tĩnh, đếm từ 1 đến 10.</li>
             <li>Liên hệ người hỗ trợ qua các số điện thoại:</li>
             <ul style={{ marginTop: "6px", marginBottom: "10px" }}>
-              <li>Tổng đài Quốc gia Bảo vệ Trẻ em: <strong>111</strong></li>
-              <li>Đường dây nóng "Ngày mai": <strong>1900 561 295</strong></li>
-              <li>Viện Sức khỏe Tâm thần: <strong>0984 104 115</strong></li>
+              <li>
+                Tổng đài Quốc gia Bảo vệ Trẻ em: <strong>111</strong>
+              </li>
+              <li>
+                Đường dây nóng "Ngày mai": <strong>1900 561 295</strong>
+              </li>
+              <li>
+                Viện Sức khỏe Tâm thần: <strong>0984 104 115</strong>
+              </li>
             </ul>
           </ul>
 
           {/* 📍 Hiển thị địa chỉ nếu có */}
           {address && (
             <p style={{ fontSize: "13px", marginTop: "10px", color: "#444" }}>
-              <strong>📍 Vị trí hiện tại:</strong><br />
+              <strong>📍 Vị trí hiện tại:</strong>
+              <br />
               {address}
               <br />
               <button
                 onClick={() =>
                   window.open(
-                    `https://www.google.com/maps?q=${encodeURIComponent(address)}`,
+                    `https://www.google.com/maps?q=${encodeURIComponent(
+                      address
+                    )}`,
                     "_blank"
                   )
                 }

@@ -1,0 +1,234 @@
+/* Thêm vào file CSS của bạn */
+.file-card {
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.file-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1) !important;
+}
+
+.file-card .card-hover-border {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #007bff, #0056b3);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+}
+
+.file-card:hover .card-hover-border {
+  transform: scaleX(1);
+}
+
+.file-icon-wrapper {
+  transition: all 0.3s ease;
+}
+
+.file-card:hover .file-icon-wrapper {
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
+}
+
+.file-card:hover .file-icon-wrapper svg {
+  color: white !important;
+}
+
+.file-name {
+  word-break: break-word;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.hover-shadow {
+  transition: box-shadow 0.3s ease;
+}
+
+/* GroupFile.css */
+.image-grid-card {
+  transition: all 0.3s ease;
+  border: none;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: 100%;
+}
+
+.image-grid-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.image-container {
+  position: relative;
+  overflow: hidden;
+  background: #f8f9fa;
+}
+
+.image-container img,
+.image-container video {
+  transition: transform 0.3s ease;
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.image-grid-card:hover .image-container img,
+.image-grid-card:hover .image-container video {
+  transform: scale(1.05);
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.3s ease;
+}
+
+.image-grid-card:hover .video-overlay {
+  opacity: 0.9;
+}
+
+.play-icon {
+  color: white;
+  font-size: 3rem;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s ease;
+}
+
+.image-grid-card:hover .play-icon {
+  transform: scale(1.1);
+}
+
+.image-hover-data {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0, 0, 0, 0.8));
+  padding: 20px 12px 12px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition: all 0.3s ease;
+}
+
+.image-grid-card:hover .image-hover-data {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.stats-list {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+}
+
+.stat-item {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: white;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  transition: color 0.2s ease;
+}
+
+.stat-item:hover {
+  color: #40a9ff;
+}
+
+.image-edit-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #666;
+  text-decoration: none;
+  opacity: 0;
+  transform: translateY(-10px);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.image-grid-card:hover .image-edit-btn {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.image-edit-btn:hover {
+  background: white;
+  color: #1890ff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+.empty-state {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: #666;
+}
+
+.empty-state-icon {
+  font-size: 4rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.image-count-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  font-weight: 600;
+  padding: 8px 16px;
+  border-radius: 20px;
+  margin-bottom: 1.5rem;
+}
+
+/* Loading animations */
+.skeleton-loader {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: loading 1.5s infinite;
+  border-radius: 8px;
+}
+
+@keyframes loading {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .image-container img,
+  .image-container video {
+    height: 180px;
+  }
+
+  .stats-list {
+    gap: 12px;
+  }
+
+  .stat-item {
+    font-size: 0.8rem;
+  }
+}

@@ -33,7 +33,7 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
       visible: isMember,
     },
     {
-      id: "media",
+      id: "images",
       label: "Ảnh & Video",
       icon: <Images size={18} />,
       visible: isMember,

@@ -14,7 +14,8 @@ const AuditLogSchema = new mongoose.Schema(
     ip: String,
     meta: Object,
   },
-  { collection: "audit_logs" }
+  { collection: "audit_logs" },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("AuditLog", AuditLogSchema);

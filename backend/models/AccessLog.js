@@ -32,7 +32,8 @@ const AccessLogSchema = new mongoose.Schema(
     error: Object,
     meta: Object,
   },
-  { collection: "access_logs" }
+  { collection: "access_logs" },
+  { timestamps: true }
 );
 
 module.exports = mongoose.model("AccessLog", AccessLogSchema);
