@@ -371,6 +371,14 @@ const UserNotifications = () => {
         return "ri-user-unfollow-fill text-danger";
       case "FRIEND_REQUEST_CANCELLED":
         return "ri-user-unfollow-fill text-secondary";
+      case "POST_LIKED":
+        return "ri-heart-fill text-danger";
+      case "POST_COMMENTED":
+        return "ri-chat-1-fill text-info";
+      case "COMMENT_LIKED":
+        return "ri-thumb-up-fill text-primary";
+      case "COMMENT_REPLIED":
+        return "ri-reply-fill text-warning";
       default:
         return "ri-notification-fill text-secondary";
     }

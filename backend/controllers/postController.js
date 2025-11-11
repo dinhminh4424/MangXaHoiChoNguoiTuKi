@@ -1486,6 +1486,30 @@ exports.likePost = async (req, res) => {
     post.likeCount = post.likes.length;
     await post.save();
 
+     // === THÊM THÔNG BÁO ===
+    if (post.userCreateID.toString() !== userId) {
+      try {
+        const sender = await User.findById(userId);
+        await NotificationService.createAndEmitNotification({
+          recipient: post.userCreateID,
+          sender: userId,
+          type: "POST_LIKED",
+          title: "Bài viết của bạn được thích ❤️",
+          message: `${sender.fullName || sender.username} đã thích bài viết của bạn`,
+          data: {
+            postId: post._id,
+            emotion: emotion,
+            likeCount: post.likeCount,
+            postContent: post.content?.substring(0, 100) || ""
+          },
+          priority: "low",
+          url: `/posts/${post._id}`
+        });
+      } catch (notifError) {
+        console.error("Error sending like notification:", notifError);
+      }
+    }
+
     // GHI LOG LIKE
     logUserActivity({
       action: `post.${action}`,
