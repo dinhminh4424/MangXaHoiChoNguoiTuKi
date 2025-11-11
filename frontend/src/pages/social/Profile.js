@@ -5,6 +5,7 @@ import { useProfile } from "../../contexts/ProfileContext";
 import { useAuth } from "../../contexts/AuthContext";
 import ProfileView from "../../components/profile/ProfileView";
 import ProfileEdit from "../../components/profile/ProfileEdit";
+import ProfileImage from "../../components/profile/ProfileImage";
 import VerificationTab from "../../components/profile/VerificationTab";
 import ProfileJournal from "../../components/profile/profileJournal";
 import ProfileFriends from "../../components/profile/profileFriends";
@@ -85,6 +86,14 @@ const Profile = () => {
                 Nhật ký
               </button>
             </li>
+            <li className="nav-item">
+              <button
+                className={`nav-link ${activeTab === "images" ? "active" : ""}`}
+                onClick={() => handleTabSelect("images")}
+              >
+                Hình ảnh
+              </button>
+            </li>
 
             {/* Bạn bè */}
             <li className="nav-item">
@@ -149,6 +158,13 @@ const Profile = () => {
             {activeTab === "friends" && (
               <div className="tab-pane fade show active">
                 <ProfileFriends userId={userId} />
+              </div>
+            )}
+
+            {/* Chỉnh sửa */}
+            {activeTab === "images" && (
+              <div className="tab-pane fade show active">
+                <ProfileImage />
               </div>
             )}
 

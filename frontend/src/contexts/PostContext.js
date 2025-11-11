@@ -250,6 +250,16 @@ export const PostProvider = ({ children }) => {
     [currentPost]
   );
 
+  const fetchImagesPost = useCallback(async (params) => {
+    try {
+      const response = await postService.imagesPost(params);
+      return response;
+    } catch (err) {
+      // setError(err.message || "Có lỗi xảy ra khi lấy danh sách bài viết");
+      throw err;
+    }
+  }, []);
+
   const value = {
     posts,
     currentPost,
@@ -268,6 +278,7 @@ export const PostProvider = ({ children }) => {
     setCurrentPost,
     setError,
     reportPost,
+    fetchImagesPost,
   };
 
   return <PostContext.Provider value={value}>{children}</PostContext.Provider>;

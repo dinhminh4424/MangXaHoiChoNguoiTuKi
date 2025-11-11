@@ -452,7 +452,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         </div>
       </div>
 
-      {/* Right Sidebar - Simplified */}
+      {/* Right Sidebar - Simplified bên phair*/}
       <div className="right-sidebar-mini right-sidebar">
         <div className="right-sidebar-panel p-0">
           <div className="card shadow-none">

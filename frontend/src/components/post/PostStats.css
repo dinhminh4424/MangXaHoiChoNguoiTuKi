@@ -21,6 +21,7 @@
   align-items: center;
   gap: 16px;
   flex: 1;
+  padding-left: 29px;
 }
 
 .engagement-item {

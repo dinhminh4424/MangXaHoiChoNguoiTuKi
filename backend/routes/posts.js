@@ -35,6 +35,7 @@ router.delete("/:id", postController.deletePost);
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Get
 
 // Lấy chi tiết bài viết theo ID
+router.get("/images", postController.getImagePosts);
 router.get("/:id", postController.getPostDetails);
 
 // Lấy danh sách bài viết với phân trang và lọc

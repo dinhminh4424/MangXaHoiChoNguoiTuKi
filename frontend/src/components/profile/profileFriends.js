@@ -5,7 +5,7 @@ import "./profileFriends.css";
 
 const ProfileFriends = ({ userId }) => {
   const [friends, setFriends] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
   const [pagination, setPagination] = useState(null);
@@ -92,9 +92,7 @@ const ProfileFriends = ({ userId }) => {
         <div className="card-body text-center text-muted py-5">
           <i className="fas fa-users fa-3x mb-3 text-light"></i>
           <h5>Chưa có bạn bè</h5>
-          <p className="mb-0">
-            Kết nối với mọi người để xem danh sách bạn bè
-          </p>
+          <p className="mb-0">Kết nối với mọi người để xem danh sách bạn bè</p>
         </div>
       </div>
     );
@@ -132,9 +130,7 @@ const ProfileFriends = ({ userId }) => {
                   e.target.src = "/assets/images/default-avatar.png";
                 }}
               />
-              {friend.isOnline && (
-                <span className="online-indicator"></span>
-              )}
+              {friend.isOnline && <span className="online-indicator"></span>}
             </div>
             <div className="friend-info">
               <div className="friend-name">
@@ -186,4 +182,3 @@ const ProfileFriends = ({ userId }) => {
 };
 
 export default ProfileFriends;
-

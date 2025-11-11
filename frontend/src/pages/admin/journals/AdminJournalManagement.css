@@ -1,0 +1,365 @@
+.admin-journal-management {
+  padding: 20px;
+}
+
+.page-header {
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 1rem;
+}
+
+.stats-card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: all 0.3s ease;
+}
+
+.stats-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+}
+
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.loading-container {
+  min-height: 300px;
+}
+
+/* Table styles */
+.table th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* Badge styles */
+.badge {
+  font-size: 0.75em;
+}
+
+/* Button group styles */
+.btn-group-sm > .btn {
+  padding: 0.25rem 0.5rem;
+}
+
+/* Modal styles */
+.modal-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-title {
+  font-weight: 600;
+}
+
+/* Form styles */
+.form-label {
+  font-weight: 500;
+  margin-bottom: 0.5rem;
+}
+
+/* Content preview */
+.content-preview {
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #e9ecef;
+  border-radius: 0.375rem;
+  padding: 0.75rem;
+  background-color: #f8f9fa;
+}
+
+.content-preview img {
+  max-width: 100%;
+  height: auto;
+}
+
+/* Emotion tags */
+.emotion-tag {
+  display: inline-block;
+  padding: 0.25rem 0.5rem;
+  margin: 0.125rem;
+  border-radius: 1rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+/* Media gallery */
+.media-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.media-item {
+  position: relative;
+  border-radius: 0.375rem;
+  overflow: hidden;
+  /* aspect-ratio: 1; */
+}
+
+.media-item img,
+.media-item video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.media-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .admin-journal-management {
+    padding: 10px;
+  }
+
+  .page-header {
+    flex-direction: column;
+    align-items: flex-start !important;
+  }
+
+  .page-header > div:last-child {
+    margin-top: 1rem;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-group-sm > .btn {
+    padding: 0.125rem 0.25rem;
+  }
+
+  .media-gallery {
+    grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+  }
+}
+
+/* Custom scrollbar */
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.content-preview::-webkit-scrollbar {
+  width: 6px;
+}
+
+.content-preview::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.content-preview::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.content-preview::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.stats-card,
+.table-responsive {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Hover effects */
+.table tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+/* Emotion color variants */
+.emotion-happy {
+  background-color: #28a745;
+  color: white;
+}
+.emotion-sad {
+  /* background-color: #6c757d; */
+  color: white;
+}
+.emotion-angry {
+  background-color: #dc3545;
+  color: white;
+}
+.emotion-excited {
+  background-color: #ffc107;
+  color: black;
+}
+.emotion-calm {
+  background-color: #17a2b8;
+  color: white;
+}
+.emotion-anxious {
+  background-color: #6f42c1;
+  color: white;
+}
+.emotion-loved {
+  background-color: #e83e8c;
+  color: white;
+}
+.emotion-grateful {
+  background-color: #20c997;
+  color: white;
+}
+
+/* Media Preview Styles */
+.media-preview-container {
+  display: flex;
+  align-items: center;
+}
+
+.media-preview-item {
+  position: relative;
+  display: inline-block;
+}
+
+.media-thumbnail {
+  border-radius: 8px;
+  border: 2px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.media-preview-item:hover .media-thumbnail {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.media-count-badge {
+  position: absolute;
+  bottom: -5px;
+  right: -5px;
+}
+
+.video-item {
+  width: 60px;
+  height: 60px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid #e9ecef;
+}
+
+.media-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+  border-radius: 6px;
+}
+
+.media-fullview {
+  max-width: 100%;
+  border-radius: 8px;
+}
+
+.media-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Content preview improvements */
+.content-preview {
+  max-height: 60px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.journal-content {
+  line-height: 1.6;
+}
+
+.journal-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  margin: 0.5rem 0;
+}
+
+/* Table improvements */
+.table td {
+  vertical-align: middle;
+  padding: 0.75rem;
+}
+
+.table th {
+  padding: 0.75rem;
+}
+
+.journal-id {
+  font-family: "Courier New", monospace;
+  font-size: 0.8rem;
+  color: #6c757d;
+  background-color: #f8f9fa;
+  padding: 2px 6px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.journal-id:hover {
+  background-color: #e9ecef;
+  color: #495057;
+}
