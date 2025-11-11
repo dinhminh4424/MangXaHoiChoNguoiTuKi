@@ -6,6 +6,7 @@ import { Modal, Button } from "react-bootstrap";
 
 import FriendButton from "../friend/FriendButton";
 import FriendsListModal from "../friend/FriendsListModal";
+import FollowersListModal from "../friend/FollowersListModal";
 import followService from "../../services/followService";
 import { io } from "socket.io-client";
 
@@ -52,6 +53,7 @@ const ProfileView = ({ userId }) => {
   const [isFollowing, setIsFollowing] = React.useState(false);
   const [followLoading, setFollowLoading] = React.useState(false);
   const [showFriendsModal, setShowFriendsModal] = React.useState(false);
+  const [showFollowersModal, setShowFollowersModal] = React.useState(false);
   const socketRef = React.useRef(null);
   const followActionInProgress = React.useRef(false);
 
@@ -1080,6 +1082,14 @@ const ProfileView = ({ userId }) => {
       <FriendsListModal
         show={showFriendsModal}
         onHide={() => setShowFriendsModal(false)}
+        userId={userId || viewedUser?.id || viewedUser?._id}
+        userName={viewedUser?.fullName || viewedUser?.username}
+      />
+
+      {/* Followers List Modal */}
+      <FollowersListModal
+        show={showFollowersModal}
+        onHide={() => setShowFollowersModal(false)}
         userId={userId || viewedUser?.id || viewedUser?._id}
         userName={viewedUser?.fullName || viewedUser?.username}
       />
