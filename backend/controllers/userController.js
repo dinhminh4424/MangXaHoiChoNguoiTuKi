@@ -12,6 +12,7 @@ const NotificationService = require("../services/notificationService");
 const Friend = require("../models/Friend");
 const Follow = require("../models/Follow");
 const mailService = require("../services/mailService");
+const { logUserActivity } = require("../logging/userActivityLogger");
 
 class UserController {
   // [GET] /api/users/me - Lấy thông tin user hiện tại
@@ -158,6 +159,26 @@ class UserController {
         },
       };
 
+      // Log cho Thống kê
+      logUserActivity({
+        action: "user.dashboard.view",
+        req,
+        res,
+        userId,
+        role,
+        target: { type: "dashboard", id: userId },
+        description: "Xem thống kê dashboard",
+        payload: {
+          period: `${dayNumber}days`,
+          totalPosts,
+          newPostsThisWeek,
+          totalJournals,
+          newJournalsThisWeek,
+          moodStatsCount: moodStats.length,
+        },
+        meta: { source: "api", view: "dashboard" },
+      });
+
       res.json(responseData);
     } catch (error) {
       return res.status(500).json({
@@ -256,6 +277,29 @@ class UserController {
           userId: userId,
         }),
       ]);
+
+      // Log cho Thống kê
+      logUserActivity({
+        action: "user.dashboard.view",
+        req,
+        res,
+        userId,
+        role,
+        target: { type: "dashboard", id: userId },
+        description: "Xem thống kê dashboard",
+        payload: {
+          period: `${dayNumber}days`,
+          totalPosts,
+          newPostsThisWeek,
+          totalJournals,
+          totalComments,
+          totalGroups,
+          newJournalsThisWeek,
+          moodStatsCount: moodStats.length,
+          totalMessages,
+        },
+        meta: { source: "api", view: "dashboard" },
+      });
 
       res.json({
         success: true,
@@ -446,6 +490,23 @@ class UserController {
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
 
+      // log lấy us theo id
+      logUserActivity({
+        action: "user.profile.view.other",
+        req,
+        res,
+        userId: currentUserId,
+        role,
+        target: { type: "user", id: targetId },
+        description: "Xem hồ sơ người khác",
+        payload: {
+          countPost,
+          countFriends,
+          isSelf: currentUserId === targetId,
+        },
+        meta: { source: "api", view: "profile" },
+      });
+
       res.json({
         success: true,
         data: userDoc,
@@ -473,6 +534,17 @@ class UserController {
         });
       }
 
+      // log lấy use theo UserName
+      logUserActivity({
+        action: "user.profile.view.byUsername",
+        req,
+        res,
+        userId: currentUserId,
+        target: { type: "user", id: user._id },
+        description: "Xem hồ sơ bằng username",
+        payload: { username: userName },
+        meta: { source: "api" },
+      });
       res.json({
         success: true,
         data: user,
@@ -521,6 +593,18 @@ class UserController {
         .skip((page - 1) * limit);
 
       const total = await User.countDocuments(query);
+
+      // Log tìm kiếm người dùng
+      logUserActivity({
+        action: "user.search",
+        req,
+        res,
+        userId: currentUserId,
+        target: { type: "user.list" },
+        description: "Tìm kiếm người dùng",
+        payload: { search, role, page, limit, results: users.length, total },
+        meta: { source: "api" },
+      });
 
       res.json({
         success: true,
@@ -597,6 +681,8 @@ class UserController {
     try {
       const { fullName, bio, interests, skills } = req.body;
 
+      const userId = req.user.userId;
+
       const updateData = {};
 
       if (fullName) updateData.fullName = fullName;
@@ -653,6 +739,26 @@ class UserController {
         { new: true, runValidators: true }
       ).select("-password");
 
+      // Log Cập nhật hồ sơ
+
+      logUserActivity({
+        action: "user.profile.update",
+        req,
+        res,
+        userId,
+        target: { type: "user", id: userId },
+        description: "Cập nhật hồ sơ",
+        payload: {
+          updatedFields: Object.keys(updateData),
+          hasAvatar: !!req.file,
+          hasBio: bio !== undefined,
+          fullName,
+          interests,
+          skills,
+        },
+        meta: { source: "api" },
+      });
+
       res.json({
         success: true,
         message: "Cập nhật thông tin thành công",
@@ -663,6 +769,7 @@ class UserController {
       if (req.file) {
         fs.unlinkSync(req.file.path);
       }
+      console.log(error);
       res.status(500).json({
         success: false,
         message: "Lỗi khi cập nhật thông tin",
@@ -876,6 +983,24 @@ class UserController {
         url: `/profile/${targetId}`,
       });
 
+      // Log Báo cáo người dùng
+      logUserActivity({
+        action: "user.report",
+        req,
+        res,
+        userId: userCurrentId,
+        role: req.user.role,
+        target: { type: "user", id: targetId },
+        description: "Báo cáo người dùng",
+        payload: {
+          reason,
+          hasFiles: files.length > 0,
+          violationId: newViolation._id,
+          targetUserId: targetId,
+        },
+        meta: { source: "api", sensitive: true },
+      });
+
       return res.json({
         success: true,
         message: "Báo cáo đã được gửi thành công",
@@ -891,7 +1016,7 @@ class UserController {
     }
   }
 }
-
+ 
 // Thêm vi phạm cho user theo ID
 async function AddViolationUserByID(
   userId,
