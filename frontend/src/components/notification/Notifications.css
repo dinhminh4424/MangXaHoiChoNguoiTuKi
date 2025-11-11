@@ -153,7 +153,7 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background: #f3f4f6;
+  /* background: #f3f4f6; */
   font-size: 1.1rem;
   flex-shrink: 0;
   margin-right: 12px;
@@ -938,7 +938,6 @@
   .notification-title {
     font-size: 0.875rem;
   }
-
 
   .notification-message {
     font-size: 0.75rem;
