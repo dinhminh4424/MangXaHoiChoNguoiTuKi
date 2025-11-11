@@ -915,51 +915,6 @@ class CommentController {
 
       await comment.save();
 
-      try {
-        // Thông báo cho chủ bài viết
-        const postOwner = await Post.findById(postID).select('userID');
-        if (postOwner && postOwner.userID.toString() !== userID) {
-          await NotificationService.createAndEmitNotification({
-            recipient: postOwner.userID,
-            sender: userID,
-            type: "NEW_COMMENT",
-            title: "Có bình luận mới",
-            message: `${req.user.username} đã bình luận bài viết của bạn`,
-            data: {
-              postId: postID,
-              commentId: comment._id,
-              content: content ? content.substring(0, 100) : "Đã đính kèm file"
-            },
-            priority: "medium",
-            url: `/posts/${postID}`
-          });
-        }
-
-        // Thông báo cho chủ comment cha (nếu là reply)
-        if (parentCommentID) {
-          const parentComment = await Comment.findById(parentCommentID).populate('userID');
-          if (parentComment && parentComment.userID._id.toString() !== userID) {
-            await NotificationService.createAndEmitNotification({
-              recipient: parentComment.userID._id,
-              sender: userID,
-              type: "COMMENT_REPLY",
-              title: "Có phản hồi mới",
-              message: `${req.user.username} đã phản hồi bình luận của bạn`,
-              data: {
-                postId: postID,
-                commentId: comment._id,
-                parentCommentId: parentCommentID
-              },
-              priority: "medium",
-              url: `/posts/${postID}`
-            });
-          }
-        }
-      } catch (notifyError) {
-        console.error("Lỗi gửi thông báo:", notifyError);
-        // KHÔNG throw error ở đây để không ảnh hưởng flow chính
-      }
-
       // Cập nhật counter
       if (!parentCommentID) {
         await Post.findByIdAndUpdate(postID, { $inc: { commentCount: 1 } });
@@ -967,6 +922,68 @@ class CommentController {
         await Comment.findByIdAndUpdate(parentCommentID, {
           $inc: { replyCount: 1 },
         });
+      }
+
+      try {
+        console.log("🔍 Bắt đầu gửi thông báo comment...");
+        
+        // Lấy thông tin chủ bài viết - SỬA THÀNH userCreateID
+        const post = await Post.findById(postID);
+        
+        if (post && post.userCreateID && post.userCreateID.toString() !== userID) {
+          console.log("✅ Điều kiện gửi thông báo: ĐÚNG");
+          
+          // Gửi thông báo cho chủ bài viết
+          await NotificationService.createAndEmitNotification({
+            recipient: post.userCreateID, // SỬA: dùng userCreateID
+            sender: userID,
+            type: "POST_COMMENTED",
+            title: "📝 Có bình luận mới",
+            message: `${req.user.username} đã bình luận bài viết của bạn`,
+            data: {
+              postId: postID,
+              commentId: comment._id.toString(),
+              content: content ? content.substring(0, 100) : "Đã đính kèm file",
+              commentType: parentCommentID ? "reply" : "comment"
+            },
+            priority: "medium",
+            url: `/posts/${postID}?comment=${comment._id}`
+          });
+          
+          console.log(`✅ Đã gửi thông báo cho chủ bài viết`);
+        } else {
+          console.log("❌ Điều kiện gửi thông báo: SAI");
+        }
+
+        // Thông báo cho chủ comment cha (nếu là reply)
+        if (parentCommentID) {
+          const parentComment = await Comment.findById(parentCommentID);
+          
+          if (parentComment && parentComment.userID && 
+              parentComment.userID.toString() !== userID &&
+              (!post.userCreateID || parentComment.userID.toString() !== post.userCreateID.toString())) {
+            
+            await NotificationService.createAndEmitNotification({
+              recipient: parentComment.userID,
+              sender: userID,
+              type: "COMMENT_REPLIED",
+              title: "💬 Có phản hồi mới",
+              message: `${req.user.username} đã phản hồi bình luận của bạn`,
+              data: {
+                postId: postID,
+                commentId: comment._id.toString(),
+                parentCommentId: parentCommentID,
+                content: content ? content.substring(0, 100) : "Đã đính kèm file"
+              },
+              priority: "medium",
+              url: `/posts/${postID}?comment=${parentCommentID}`
+            });
+            
+            console.log(`✅ Đã gửi thông báo reply`);
+          }
+        }
+      } catch (notifyError) {
+        console.error("❌ Lỗi gửi thông báo comment:", notifyError);
       }
 
       await comment.populate("userID", "_id username profile.avatar fullName");
