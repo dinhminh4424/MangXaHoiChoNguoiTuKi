@@ -60,8 +60,9 @@ class UserController {
             countFriends: countFriends,
             countFollowers: countFollowers,
             countFollowing: countFollowing,
-            loginStreak: user.loginStreak, // ✅ THÊM: Trả về chuỗi ngày đăng nhập
+            checkInStreak: user.checkInStreak, // ✅ SỬA: Trả về chuỗi ngày điểm danh
             journalStreak: user.journalStreak, // ✅ THÊM: Trả về chuỗi ngày viết nhật ký
+            lastCheckInDate: user.lastCheckInDate, // ✅ THÊM: Trả về ngày điểm danh cuối
           },
         },
       });
@@ -447,7 +448,7 @@ class UserController {
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
-      userDoc.loginStreak = user.loginStreak; // ✅ THÊM
+      userDoc.checkInStreak = user.checkInStreak; // ✅ SỬA
       userDoc.journalStreak = user.journalStreak; // ✅ THÊM
 
       res.json({

@@ -4,9 +4,6 @@ const GoogleStrategy = require("passport-google-oauth20").Strategy;
 const FacebookStrategy = require("passport-facebook").Strategy;
 const User = require("../models/User"); // Đường dẫn tới User model của bạn
 const { generateUniqueUsernameFrom } = require("../utils/username");
-const {
-  handleLoginStreak,
-} = require("../routes/auth.js")._internal; // ✅ Import hàm xử lý chuỗi ngày
 
 // Chiến lược Google (chỉ đăng ký khi có đủ ENV để tránh crash trong dev)
 if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
@@ -27,12 +24,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
-          // ✅ Người dùng cũ đăng nhập -> Cập nhật chuỗi ngày
-          const milestone = handleLoginStreak(user);
-          await user.save();
-          // Gắn milestone vào user object để route handler có thể truy cập
-          user.milestone = milestone;
-          return done(null, user); // User đã tồn tại, trả về
+          await user.save(); // Lưu các thay đổi tiềm năng khác nếu có
+          return done(null, user);
         }
 
         // 2. Nếu chưa, kiểm tra xem có user nào dùng email này không
@@ -52,13 +45,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
             user.fullName = displayName;
           }
 
-          // ✅ Người dùng cũ đăng nhập -> Cập nhật chuỗi ngày
-          const milestone = handleLoginStreak(user);
-
           await user.save();
-          // Gắn milestone vào user object
-          user.milestone = milestone;
-          return done(null, user);
+          return done(null, user); // Trả về user đã được liên kết
         }
 
         // 3. Nếu không có, tạo user mới
@@ -78,13 +66,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           // Mật khẩu có thể để trống vì họ dùng social login
         });
 
-        // ✅ Người dùng mới đăng ký -> Cập nhật chuỗi ngày
-        const milestone = handleLoginStreak(newUser);
-
         await newUser.save();
-        // Gắn milestone vào user object
-        newUser.milestone = milestone;
-        return done(null, newUser);
+        return done(null, newUser); // Trả về user mới
       } catch (err) {
         return done(err, false);
       }
@@ -122,12 +105,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         let user = await User.findOne({ facebookId: profile.id });
 
         if (user) {
-          // ✅ Người dùng cũ đăng nhập -> Cập nhật chuỗi ngày
-          const milestone = handleLoginStreak(user);
-          await user.save();
-          // Gắn milestone vào user object
-          user.milestone = milestone;
-          return done(null, user); // User đã tồn tại, trả về
+          await user.save(); // Lưu các thay đổi tiềm năng khác nếu có
+          return done(null, user);
         }
 
         // 2. Nếu chưa, kiểm tra xem có user nào dùng email này không
@@ -142,13 +121,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
             user.profile.avatar = profile.photos[0].value;
           }
 
-          // ✅ Người dùng cũ đăng nhập -> Cập nhật chuỗi ngày
-          const milestone = handleLoginStreak(user);
-
           await user.save();
-          // Gắn milestone vào user object
-          user.milestone = milestone;
-          return done(null, user);
+          return done(null, user); // Trả về user đã được liên kết
         }
 
         // 3. Nếu không có, tạo user mới
@@ -163,13 +137,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
           },
         });
 
-        // ✅ Người dùng mới đăng ký -> Cập nhật chuỗi ngày
-        const milestone = handleLoginStreak(newUser);
-
         await newUser.save();
-        // Gắn milestone vào user object
-        newUser.milestone = milestone;
-        return done(null, newUser);
+        return done(null, newUser); // Trả về user mới
       } catch (err) {
         return done(err, false);
       }

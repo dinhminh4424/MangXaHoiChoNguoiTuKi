@@ -98,10 +98,14 @@ const userSchema = new mongoose.Schema(
     deactivationReason: String, // lý do xoá
 
     // === TÍNH NĂNG STREAKS ===
-    loginStreak: { type: Number, default: 0 },
-    lastLoginDate: { type: Date },
+    checkInStreak: { type: Number, default: 0 },
+    lastCheckInDate: { type: Date },
     journalStreak: { type: Number, default: 0 },
     lastJournalDate: { type: Date },
+    // ✅ NEW: Fields for streak restoration
+    streakRestoreTokens: { type: Number, default: 2 }, // Số lần khôi phục chuỗi mỗi tuần
+    lastStreakRestoreWeeklyReset: { type: Date, default: () => new Date() }, // Ngày reset số lần khôi phục
+
 
     // Cài đặt privacy
     settings: {

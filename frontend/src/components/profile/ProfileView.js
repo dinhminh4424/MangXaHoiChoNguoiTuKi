@@ -28,7 +28,7 @@ const ProfileView = ({ userId }) => {
     updateImageCover,
     reportUser,
   } = useProfile();
-  const { user: currentUser } = useAuth();
+  const { user: currentUser, checkIn } = useAuth(); // ✅ Lấy hàm checkIn từ context
 
   const [showModalUpdateCoverPhoto, setShowModalUpdateCoverPhoto] =
     React.useState(false);
@@ -55,6 +55,8 @@ const ProfileView = ({ userId }) => {
   const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const [showFollowersModal, setShowFollowersModal] = React.useState(false);
 
+  const [hasCheckedInToday, setHasCheckedInToday] = React.useState(false); // ✅ State mới
+  const [checkInLoading, setCheckInLoading] = React.useState(false); // ✅ State cho loading điểm danh
   const socketRef = React.useRef(null);
   const followActionInProgress = React.useRef(false);
 
@@ -235,6 +237,23 @@ const ProfileView = ({ userId }) => {
     }
   }, [userId, viewUserProfile]);
 
+  // ✅ NEW: Kiểm tra xem người dùng đã điểm danh hôm nay chưa
+  React.useEffect(() => {
+    if (isOwnProfile && currentUser?.lastCheckInDate) {
+      const lastCheckIn = new Date(currentUser.lastCheckInDate);
+      const today = new Date();
+
+      const hasCheckedIn =
+        lastCheckIn.getDate() === today.getDate() &&
+        lastCheckIn.getMonth() === today.getMonth() &&
+        lastCheckIn.getFullYear() === today.getFullYear();
+
+      setHasCheckedInToday(hasCheckedIn);
+    } else {
+      setHasCheckedInToday(false);
+    }
+  }, [currentUser, isOwnProfile]);
+
   React.useEffect(() => {
     if (file) {
       setPreviewImage(URL.createObjectURL(file));
@@ -412,6 +431,36 @@ const ProfileView = ({ userId }) => {
     }
   };
 
+  // ✅ NEW: Hàm xử lý khi nhấn nút điểm danh
+  const handleCheckIn = async () => {
+    setCheckInLoading(true);
+    try {
+      const result = await checkIn();
+      if (result.success) {
+        NotificationService.success({
+          title: "Điểm danh thành công!",
+          text: "Chuỗi điểm danh của bạn đã được cập nhật.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        setHasCheckedInToday(true); // ✅ Cập nhật trạng thái đã điểm danh
+      } else {
+        NotificationService.warning({
+          title: "Không thể điểm danh",
+          text: result.message || "Bạn đã điểm danh hôm nay rồi.",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        if (result.message.includes("Bạn đã điểm danh hôm nay rồi")) {
+          setHasCheckedInToday(true); // ✅ Đồng bộ lại trạng thái nếu API báo đã điểm danh
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi khi điểm danh từ ProfileView:", error);
+    } finally {
+      setCheckInLoading(false);
+    }
+  };
   const removeFile = (index) => {
     // Revoke object URL to prevent memory leaks
     URL.revokeObjectURL(dataReport.files[index].fileUrl);
@@ -1065,18 +1114,43 @@ const ProfileView = ({ userId }) => {
                 </h6>
                 <div className="d-flex justify-content-around text-center">
                   <div>
-                    <div className="fw-bold fs-4 text-primary">
-                      {viewedUser.loginStreak || 0}
+                    <div className="fw-bold fs-4 text-danger">
+                      {/* Sửa: hiển thị checkInStreak từ currentUser nếu là profile của mình, ngược lại là của viewedUser */}
+                      {isOwnProfile
+                        ? currentUser?.checkInStreak || 0
+                        : viewedUser.checkInStreak || 0}
                     </div>
-                    <small className="text-muted">Ngày đăng nhập</small>
+                    <small className="text-muted">Ngày điểm danh</small>
                   </div>
                   <div>
                     <div className="fw-bold fs-4 text-success">
-                      {viewedUser.journalStreak || 0}
+                      {isOwnProfile
+                        ? currentUser?.journalStreak || 0
+                        : viewedUser.journalStreak || 0}
                     </div>
                     <small className="text-muted">Ngày viết nhật ký</small>
                   </div>
                 </div>
+                {/* ✅ THÊM NÚT ĐIỂM DANH */}
+                {isOwnProfile && (
+                  <div className="d-grid mt-3">
+                    <button
+                      className={`btn ${
+                        hasCheckedInToday ? "btn-secondary" : "btn-danger"
+                      }`}
+                      onClick={handleCheckIn}
+                      disabled={checkInLoading || hasCheckedInToday}
+                    >
+                      {checkInLoading ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : hasCheckedInToday ? (
+                        "Đã điểm danh"
+                      ) : (
+                        "Điểm danh ngay"
+                      )}
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
 

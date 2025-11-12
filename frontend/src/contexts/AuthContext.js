@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }) => {
     let text = "";
     let icon = "success";
 
-    if (type === "login") {
+    if (type === "check-in") {
       text = `Bạn đã duy trì chuỗi đăng nhập ${days} ngày liên tiếp. Hãy tiếp tục thói quen tuyệt vời này nhé!`;
     } else if (type === "journal") {
       text = `Bạn đã duy trì chuỗi viết nhật ký ${days} ngày liên tiếp. Một thành tích đáng nể!`;
@@ -283,6 +283,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ NEW: Hàm điểm danh hàng ngày
+  const checkIn = async () => {
+    try {
+      const response = await api.post("/api/auth/check-in");
+
+      if (response.data.success) {
+        const { checkInStreak, milestone } = response.data.data;
+
+        // Cập nhật streak trong user context
+        setUser((prevUser) => ({
+          ...prevUser,
+          checkInStreak: checkInStreak,
+          lastCheckInDate: new Date().toISOString(), // ✅ Cập nhật ngày điểm danh ngay lập tức
+        }));
+
+        // Hiển thị popup nếu đạt mốc
+        if (milestone) {
+          showMilestonePopup(milestone);
+        }
+      }
+
+      return response.data; // Trả về toàn bộ response để component xử lý
+    } catch (error) {
+      console.error("Lỗi khi điểm danh:", error);
+      return error.response?.data || { success: false, message: "Lỗi server không xác định" };
+    }
+  };
+
   // Giá trị cung cấp cho các component con sử dụng context
   const value = {
     user,
@@ -297,6 +325,7 @@ export const AuthProvider = ({ children }) => {
     resetPassword,
     forgotPassword,
     updateUserStreaks, // ✅ Export hàm mới
+    checkIn, // ✅ Export hàm điểm danh
     showMilestonePopup, // ✅ Export hàm này để các context/component khác có thể dùng
   };
 
