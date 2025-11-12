@@ -18,6 +18,30 @@ class NotificationService {
       // Emit real-time notification
       const io = getIO();
 
+      // const userRecipient = await User.findById(notification.recipient._id);
+
+      // setting chặn thông báo
+      // if (
+      //   !userRecipient ||
+      //   (userRecipient.settings &&
+      //     userRecipient.settings.pushNotifications !== false)
+      // ) {
+      //   console.log(`✅ Cho phép gửi Thông báo cho: ${userRecipient.email}`);
+      // } else {
+      //   console.log(
+      //     `⏸️ Bỏ qua ${userRecipient._id} - ${userRecipient.email} - đã tắt Push Notifications`
+      //   );
+      //   return {
+      //     success: true,
+      //     skipped: true,
+      //     message:
+      //       "Không gửi Thông Báo được vì " +
+      //       userRecipient.email +
+      //       " không có người nhận hợp lệ / Người nhận tắt thông báo",
+      //   };
+      // }
+
+
       // Gửi cho người nhận cụ thể
       io.to(`user_${notification.recipient._id}`).emit(
         "new_notification",

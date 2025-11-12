@@ -705,13 +705,13 @@ exports.likePost = async (req, res) => {
     }
     // GHI LOG LIKE
     logUserActivity({
-      action: `post.${action}`,
+      action: `post.${emotion}`,
       req,
       res,
       userId,
       role: req.user.role,
       target: { type: "post", id: id },
-      description: action === "like" ? "Thích bài viết" : "Cập nhật cảm xúc",
+      description: emotion === "like" ? "Thích bài viết" : "Cập nhật cảm xúc",
       payload: { postId: id, emotion, likeCount: post.likeCount },
     });
 

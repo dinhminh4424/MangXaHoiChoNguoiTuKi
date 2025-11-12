@@ -279,7 +279,7 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import friendService from "../../services/friendService";
-import Modal from "../UI/Modal";
+import { Modal, Button } from "react-bootstrap";
 import "./Notifications.css";
 
 const UserNotifications = () => {
@@ -433,8 +433,9 @@ const UserNotifications = () => {
     if (
       (notification.type === "FRIEND_REQUEST_ACCEPTED" ||
         notification.type === "FRIEND_REQUEST_REJECTED") &&
-      ((notification.recipient?._id || notification.recipient) === currentUserId) &&
-      ((notification.sender?._id || notification.sender) === currentUserId)
+      (notification.recipient?._id || notification.recipient) ===
+        currentUserId &&
+      (notification.sender?._id || notification.sender) === currentUserId
     ) {
       return false;
     }
@@ -467,8 +468,12 @@ const UserNotifications = () => {
     const visible = notifications.filter(isVisibleForUser);
     const allCount = visible.length;
     const postsCount = visible.filter((n) => isPostNotification(n.type)).length;
-    const friendsCount = visible.filter((n) => isFriendNotification(n.type)).length;
-    const systemCount = visible.filter((n) => isSystemNotification(n.type)).length;
+    const friendsCount = visible.filter((n) =>
+      isFriendNotification(n.type)
+    ).length;
+    const systemCount = visible.filter((n) =>
+      isSystemNotification(n.type)
+    ).length;
     return { allCount, postsCount, friendsCount, systemCount };
   };
 
@@ -476,7 +481,9 @@ const UserNotifications = () => {
 
   // Tính lại số lượng chưa đọc từ danh sách hiện có
   // Loại bỏ FRIEND_REQUEST và FRIEND_REQUEST_ACCEPTED/REJECTED mà người dùng là người nhận và sender (đã chấp nhận/từ chối)
-  const computedUnreadCount = notifications.filter((n) => !n.read && isVisibleForUser(n)).length;
+  const computedUnreadCount = notifications.filter(
+    (n) => !n.read && isVisibleForUser(n)
+  ).length;
 
   useEffect(() => {
     if (!user) return;
@@ -523,9 +530,12 @@ const UserNotifications = () => {
 
       setNotifications((prev) => [notification, ...prev.slice(0, 19)]); // Tăng limit để có đủ data cho tabs
       setUnreadCount((prev) => prev + 1);
-      
+
       // Kiểm tra nếu là SOS khẩn cấp thì hiển thị popup
-      if (notification.type === "SOS_EMERGENCY" || notification.type === "SOS_ALERT") {
+      if (
+        notification.type === "SOS_EMERGENCY" ||
+        notification.type === "SOS_ALERT"
+      ) {
         setSosNotification(notification);
         setIsSosPopupOpen(true);
       } else {
@@ -631,7 +641,10 @@ const UserNotifications = () => {
 
   const handleNotificationClick = (notification) => {
     // Nếu là SOS thì hiển thị popup SOS thay vì modal
-    if (notification.type === "SOS_EMERGENCY" || notification.type === "SOS_ALERT") {
+    if (
+      notification.type === "SOS_EMERGENCY" ||
+      notification.type === "SOS_ALERT"
+    ) {
       setSosNotification(notification);
       setIsSosPopupOpen(true);
       // Đánh dấu đã đọc khi mở popup
@@ -949,7 +962,10 @@ const UserNotifications = () => {
                       style={{ cursor: "pointer" }}
                     >
                       <div className="d-flex align-items-center justify-content-between w-100">
-                        <div className="d-flex align-items-center flex-grow-1" style={{ minWidth: 0 }}>
+                        <div
+                          className="d-flex align-items-center flex-grow-1"
+                          style={{ minWidth: 0 }}
+                        >
                           <i
                             className={`${getNotificationIcon(
                               notification.type
@@ -961,7 +977,9 @@ const UserNotifications = () => {
                         </div>
                         <div className="d-flex align-items-center gap-2 flex-shrink-0">
                           {!notification.read && (
-                            <span className="badge bg-primary notification-badge-compact">Mới</span>
+                            <span className="badge bg-primary notification-badge-compact">
+                              Mới
+                            </span>
                           )}
                           <small className="notif-time-compact text-muted">
                             {formatTime(notification.createdAt)}
@@ -994,8 +1012,12 @@ const UserNotifications = () => {
       <Modal
         isOpen={isModalOpen}
         onClose={closeModal}
+        onHide={closeModal}
         title="Chi tiết thông báo"
         size="medium"
+        centered
+        scrollable
+        showCloseButton
       >
         {selectedNotification && (
           <div className="notification-detail-modal">
@@ -1013,7 +1035,9 @@ const UserNotifications = () => {
                   <div className="d-flex align-items-center gap-3">
                     <small className="text-muted">
                       <i className="ri-time-line me-1"></i>
-                      {new Date(selectedNotification.createdAt).toLocaleString("vi-VN")}
+                      {new Date(selectedNotification.createdAt).toLocaleString(
+                        "vi-VN"
+                      )}
                     </small>
                     <span className="badge bg-secondary">
                       {getNotificationCategory(selectedNotification.type)}
@@ -1029,87 +1053,271 @@ const UserNotifications = () => {
               </p>
             </div>
 
-            {/* Additional data for SOS notifications or any notification with data */}
-            {selectedNotification.data && Object.keys(selectedNotification.data).length > 0 && (
-              <div className={`notification-detail-extra mb-4 p-3 rounded ${
-                selectedNotification.type === "SOS_ALERT" 
-                  ? "bg-danger bg-opacity-10 border border-danger border-opacity-25" 
-                  : "bg-light border"
-              }`}>
-                {selectedNotification.type === "SOS_ALERT" && (
-                  <h6 className="text-danger mb-3">
-                    <i className="ri-alarm-warning-line me-2"></i>
-                    Thông tin khẩn cấp
-                  </h6>
-                )}
-                {selectedNotification.data.userName && (
-                  <p className="mb-2">
-                    <strong>Người dùng:</strong> {selectedNotification.data.userName}
-                  </p>
-                )}
-                {selectedNotification.data.message && (
-                  <p className="mb-2">
-                    <strong>Tin nhắn:</strong> {selectedNotification.data.message}
-                  </p>
-                )}
-                {selectedNotification.data.location && (
-                  <p className="mb-2">
-                    <strong>Vị trí:</strong> {selectedNotification.data.location}
-                  </p>
-                )}
-                {/* Hiển thị các trường dữ liệu khác nếu có */}
-                {Object.entries(selectedNotification.data).map(([key, value]) => {
-                  if (['userName', 'message', 'location', 'friendRequestId'].includes(key)) {
-                    return null;
-                  }
-                  if (value && (typeof value === 'string' || typeof value === 'number')) {
-                    return (
-                      <p key={key} className="mb-2">
-                        <strong>{key.charAt(0).toUpperCase() + key.slice(1)}:</strong> {String(value)}
-                      </p>
-                    );
-                  }
-                  return null;
-                })}
-              </div>
-            )}
+            {selectedNotification.data &&
+              Object.keys(selectedNotification.data).length > 0 && (
+                <div
+                  className={`notification-detail-extra mb-4 p-3 rounded ${
+                    selectedNotification.type === "SOS_ALERT"
+                      ? "bg-danger bg-opacity-10 border border-danger border-opacity-25"
+                      : "bg-light border"
+                  }`}
+                >
+                  {selectedNotification.type === "SOS_ALERT" && (
+                    <h6 className="text-danger mb-3">
+                      <i className="ri-alarm-warning-line me-2"></i>
+                      Thông tin khẩn cấp
+                    </h6>
+                  )}
+                  {selectedNotification.data.userName && (
+                    <p className="mb-2">
+                      <strong>Người dùng:</strong>{" "}
+                      {selectedNotification.data.userName}
+                    </p>
+                  )}
+                  {selectedNotification.data.message && (
+                    <p className="mb-2">
+                      <strong>Tin nhắn:</strong>{" "}
+                      {selectedNotification.data.message}
+                    </p>
+                  )}
+                  {selectedNotification.data.location && (
+                    <p className="mb-2">
+                      <strong>Vị trí:</strong>{" "}
+                      {selectedNotification.data.location}
+                    </p>
+                  )}
 
-            {/* Action buttons cho friend request */}
-            {selectedNotification.type === "FRIEND_REQUEST" && 
-             selectedNotification.data?.friendRequestId && (
-              <div className="notification-detail-actions mt-4 pt-4 border-top">
-                <div className="d-flex gap-2 justify-content-end">
-                  <button
-                    className="btn btn-success"
-                    onClick={() => {
-                      handleAcceptFriendRequest(selectedNotification);
-                      closeModal();
-                    }}
-                  >
-                    <i className="ri-check-line me-1"></i>
-                    Chấp nhận
-                  </button>
-                  <button
-                    className="btn btn-outline-danger"
-                    onClick={() => {
-                      handleRejectFriendRequest(selectedNotification);
-                      closeModal();
-                    }}
-                  >
-                    <i className="ri-close-line me-1"></i>
-                    Từ chối
-                  </button>
+                  {Object.entries(selectedNotification.data).map(
+                    ([key, value]) => {
+                      if (
+                        [
+                          "userName",
+                          "message",
+                          "location",
+                          "friendRequestId",
+                        ].includes(key)
+                      ) {
+                        return null;
+                      }
+                      if (
+                        value &&
+                        (typeof value === "string" || typeof value === "number")
+                      ) {
+                        return (
+                          <p key={key} className="mb-2">
+                            <strong>
+                              {key.charAt(0).toUpperCase() + key.slice(1)}:
+                            </strong>{" "}
+                            {String(value)}
+                          </p>
+                        );
+                      }
+                      return null;
+                    }
+                  )}
                 </div>
-              </div>
-            )}
+              )}
+
+            {selectedNotification.type === "FRIEND_REQUEST" &&
+              selectedNotification.data?.friendRequestId && (
+                <div className="notification-detail-actions mt-4 pt-4 border-top">
+                  <div className="d-flex gap-2 justify-content-end">
+                    <button
+                      className="btn btn-success"
+                      onClick={() => {
+                        handleAcceptFriendRequest(selectedNotification);
+                        closeModal();
+                      }}
+                    >
+                      <i className="ri-check-line me-1"></i>
+                      Chấp nhận
+                    </button>
+                    <button
+                      className="btn btn-outline-danger"
+                      onClick={() => {
+                        handleRejectFriendRequest(selectedNotification);
+                        closeModal();
+                      }}
+                    >
+                      <i className="ri-close-line me-1"></i>
+                      Từ chối
+                    </button>
+                  </div>
+                </div>
+              )}
           </div>
         )}
       </Modal>
 
+      {selectedNotification && (
+        <Modal
+          show={isModalOpen} // ✅ Bắt buộc: hiển thị modal khi show = true
+          onHide={closeModal} // ✅ Bắt buộc: hàm đóng modal (khi nhấn nút X hoặc click nền)
+          size="lg" // Kích thước modal: sm, lg, xl
+          centered // Căn giữa theo chiều dọc
+        >
+          {/* ====== PHẦN BODY ====== */}
+          <Modal.Body>
+            {selectedNotification && (
+              <div className="notification-detail-modal">
+                <div className="notification-detail-header mb-4">
+                  <div className="d-flex align-items-center mb-3">
+                    <i
+                      className={`${getNotificationIcon(
+                        selectedNotification.type
+                      )} notification-detail-icon me-3`}
+                    ></i>
+                    <div>
+                      <h4 className="notification-detail-title mb-1">
+                        {selectedNotification.title}
+                      </h4>
+                      <div className="d-flex align-items-center gap-3">
+                        <small className="text-muted">
+                          <i className="ri-time-line me-1"></i>
+                          {new Date(
+                            selectedNotification.createdAt
+                          ).toLocaleString("vi-VN")}
+                        </small>
+                        <span className="badge bg-secondary">
+                          {getNotificationCategory(selectedNotification.type)}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="notification-detail-content mb-4">
+                  <p className="notification-detail-message">
+                    {selectedNotification.message}
+                  </p>
+                </div>
+                <div className="container">
+                  <a href={selectedNotification.url}>Đi tới </a>
+                </div>
+
+                {selectedNotification.data &&
+                  Object.keys(selectedNotification.data).length > 0 && (
+                    <div
+                      className={`notification-detail-extra mb-4 p-3 rounded ${
+                        selectedNotification.type === "SOS_ALERT"
+                          ? "bg-danger bg-opacity-10 border border-danger border-opacity-25"
+                          : "bg-light border"
+                      }`}
+                    >
+                      {selectedNotification.type === "SOS_ALERT" && (
+                        <h6 className="text-danger mb-3">
+                          <i className="ri-alarm-warning-line me-2"></i>
+                          Thông tin khẩn cấp
+                        </h6>
+                      )}
+                      {selectedNotification.data.userName && (
+                        <p className="mb-2">
+                          <strong>Người dùng:</strong>{" "}
+                          {selectedNotification.data.userName}
+                        </p>
+                      )}
+                      {selectedNotification.data.message && (
+                        <p className="mb-2">
+                          <strong>Tin nhắn:</strong>{" "}
+                          {selectedNotification.data.message}
+                        </p>
+                      )}
+                      {selectedNotification.data.location && (
+                        <p className="mb-2">
+                          <strong>Vị trí:</strong>{" "}
+                          {selectedNotification.data.location}
+                        </p>
+                      )}
+
+                      {Object.entries(selectedNotification.data).map(
+                        ([key, value]) => {
+                          if (
+                            [
+                              "userName",
+                              "message",
+                              "location",
+                              "friendRequestId",
+                            ].includes(key)
+                          ) {
+                            return null;
+                          }
+                          if (
+                            value &&
+                            (typeof value === "string" ||
+                              typeof value === "number")
+                          ) {
+                            return (
+                              <p key={key} className="mb-2">
+                                <strong>
+                                  {key.charAt(0).toUpperCase() + key.slice(1)}:
+                                </strong>{" "}
+                                {String(value)}
+                              </p>
+                            );
+                          }
+                          return null;
+                        }
+                      )}
+                    </div>
+                  )}
+
+                {selectedNotification.type === "FRIEND_REQUEST" &&
+                  selectedNotification.data?.friendRequestId && (
+                    <div className="notification-detail-actions mt-4 pt-4 border-top">
+                      <div className="d-flex gap-2 justify-content-end">
+                        <button
+                          className="btn btn-success"
+                          onClick={() => {
+                            handleAcceptFriendRequest(selectedNotification);
+                            closeModal();
+                          }}
+                        >
+                          <i className="ri-check-line me-1"></i>
+                          Chấp nhận
+                        </button>
+                        <button
+                          className="btn btn-outline-danger"
+                          onClick={() => {
+                            handleRejectFriendRequest(selectedNotification);
+                            closeModal();
+                          }}
+                        >
+                          <i className="ri-close-line me-1"></i>
+                          Từ chối
+                        </button>
+                      </div>
+                    </div>
+                  )}
+              </div>
+            )}
+          </Modal.Body>
+
+          {/* ====== PHẦN FOOTER ====== */}
+          <Modal.Footer>
+            {/* Nút đóng modal */}
+            <Button variant="secondary" onClick={closeModal}>
+              Đóng
+            </Button>
+
+            {/* Nút hành động */}
+            <Button
+              variant="success" // màu nền
+              onClick={() => {
+                window.location.href = selectedNotification.url;
+              }}
+            >
+              Xem
+            </Button>
+          </Modal.Footer>
+        </Modal>
+      )}
+
       {/* SOS Emergency Popup */}
       {isSosPopupOpen && sosNotification && (
         <div className="sos-emergency-popup-overlay" onClick={closeSosPopup}>
-          <div className="sos-emergency-popup" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="sos-emergency-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
             <div className="sos-popup-header">
               <div className="sos-popup-icon-container">
                 <i className="ri-alarm-warning-fill"></i>
@@ -1119,7 +1327,7 @@ const UserNotifications = () => {
                 <i className="ri-close-line"></i>
               </button>
             </div>
-            
+
             <div className="sos-popup-body">
               <div className="sos-info-section">
                 <div className="sos-info-item">
@@ -1141,9 +1349,9 @@ const UserNotifications = () => {
                     {sosNotification.data?.address || "Không xác định"}
                   </div>
                   {sosNotification.data?.mapUrl && (
-                    <a 
-                      href={sosNotification.data.mapUrl} 
-                      target="_blank" 
+                    <a
+                      href={sosNotification.data.mapUrl}
+                      target="_blank"
                       rel="noopener noreferrer"
                       className="sos-map-link"
                     >
@@ -1160,7 +1368,10 @@ const UserNotifications = () => {
                   </div>
                   <div className="sos-info-value">
                     {sosNotification.data?.phoneNumber ? (
-                      <a href={`tel:${sosNotification.data.phoneNumber}`} className="sos-phone-link">
+                      <a
+                        href={`tel:${sosNotification.data.phoneNumber}`}
+                        className="sos-phone-link"
+                      >
                         {sosNotification.data.phoneNumber}
                       </a>
                     ) : (
@@ -1187,19 +1398,24 @@ const UserNotifications = () => {
                     <span>Thời gian</span>
                   </div>
                   <div className="sos-info-value">
-                    {new Date(sosNotification.createdAt).toLocaleString("vi-VN")}
+                    {new Date(sosNotification.createdAt).toLocaleString(
+                      "vi-VN"
+                    )}
                   </div>
                 </div>
               </div>
             </div>
 
             <div className="sos-popup-footer">
-              <button className="btn btn-primary sos-popup-action-btn" onClick={closeSosPopup}>
+              <button
+                className="btn btn-primary sos-popup-action-btn"
+                onClick={closeSosPopup}
+              >
                 <i className="ri-check-line me-2"></i>
                 Đã xem
               </button>
               {sosNotification.data?.phoneNumber && (
-                <a 
+                <a
                   href={`tel:${sosNotification.data.phoneNumber}`}
                   className="btn btn-success sos-popup-action-btn"
                 >

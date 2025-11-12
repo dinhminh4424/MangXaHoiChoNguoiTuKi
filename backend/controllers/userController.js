@@ -61,6 +61,10 @@ class UserController {
             countFriends: countFriends,
             countFollowers: countFollowers,
             countFollowing: countFollowing,
+            settings: user.settings,
+            showOnlineStatus: user.showOnlineStatus,
+            allowFriendRequests: user.allowFriendRequests,
+            allowMessages: user.allowMessages,
           },
         },
       });
@@ -165,7 +169,7 @@ class UserController {
         req,
         res,
         userId,
-        role,
+        role: req.user.role,
         target: { type: "dashboard", id: userId },
         description: "Xem thống kê dashboard",
         payload: {
@@ -284,7 +288,7 @@ class UserController {
         req,
         res,
         userId,
-        role,
+        role: req.user.userId,
         target: { type: "dashboard", id: userId },
         description: "Xem thống kê dashboard",
         payload: {
@@ -495,14 +499,14 @@ class UserController {
         action: "user.profile.view.other",
         req,
         res,
-        userId: currentUserId,
-        role,
-        target: { type: "user", id: targetId },
+        userId: req.user.userId,
+        role: req.user.role,
+        target: { type: "user", id: req.params.userId },
         description: "Xem hồ sơ người khác",
         payload: {
           countPost,
           countFriends,
-          isSelf: currentUserId === targetId,
+          isSelf: req.user.userId === req.params.userId,
         },
         meta: { source: "api", view: "profile" },
       });
@@ -512,6 +516,7 @@ class UserController {
         data: userDoc,
       });
     } catch (error) {
+      console.log(error);
       res.status(500).json({
         success: false,
         message: "Lỗi khi lấy thông tin user",
@@ -539,7 +544,7 @@ class UserController {
         action: "user.profile.view.byUsername",
         req,
         res,
-        userId: currentUserId,
+        userId: req.user.userId,
         target: { type: "user", id: user._id },
         description: "Xem hồ sơ bằng username",
         payload: { username: userName },
@@ -1016,7 +1021,7 @@ class UserController {
     }
   }
 }
- 
+
 // Thêm vi phạm cho user theo ID
 async function AddViolationUserByID(
   userId,
