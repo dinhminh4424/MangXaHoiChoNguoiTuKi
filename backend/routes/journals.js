@@ -9,6 +9,9 @@ const Journal = require("../models/Journal");
 // Tất cả routes đều cần xác thực
 router.use(auth);
 
+// === ROUTE MỚI: Lấy dữ liệu thống kê ===
+router.get("/stats/:userId", journalController.getJournalStats);
+
 // Tạo nhật ký mới
 router.post("/", upload.array("media"), journalController.createJournal);
 
