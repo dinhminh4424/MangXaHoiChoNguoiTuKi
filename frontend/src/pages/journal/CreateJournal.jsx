@@ -19,10 +19,13 @@ const CreateJournal = () => {
     content: "",
     emotions: [],
     tags: [],
+    moodRating: null, // Thêm trường đánh giá cảm xúc
+    moodTriggers: [], // Thêm trường yếu tố kích hoạt
     isPrivate: true,
     mediaFiles: [],
   });
   const [tagInput, setTagInput] = useState("");
+  const [triggerInput, setTriggerInput] = useState(""); // State cho input trigger
 
   // Kiểm tra nếu chưa có user
   if (!user) {
@@ -117,10 +120,29 @@ const CreateJournal = () => {
     setTagInput("");
   };
 
+  const handleTriggerAdd = () => {
+    if (!triggerInput.trim()) return;
+    const cleanTrigger = triggerInput.trim();
+    if (!formData.moodTriggers.includes(cleanTrigger)) {
+      setFormData((prev) => ({
+        ...prev,
+        moodTriggers: [...prev.moodTriggers, cleanTrigger],
+      }));
+    }
+    setTriggerInput("");
+  };
+
   const handleTagRemove = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const handleTriggerRemove = (triggerToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      moodTriggers: prev.moodTriggers.filter((t) => t !== triggerToRemove),
     }));
   };
 
@@ -188,6 +210,34 @@ const CreateJournal = () => {
               />
             </div>
 
+            {/* === PHẦN NÂNG CẤP: ĐÁNH GIÁ CẢM XÚC VÀ YẾU TỐ KÍCH HOẠT === */}
+            <div className="mb-4 p-3 bg-light rounded">
+              <label className="fw-semibold fs-5 form-label">
+                Đánh giá tâm trạng hôm nay
+              </label>
+              <p className="text-muted small">
+                Bạn cảm thấy thế nào? (1 = Rất tệ, 5 = Rất tốt)
+              </p>
+              <div className="d-flex gap-2">
+                {[1, 2, 3, 4, 5].map((rating) => (
+                  <button
+                    key={rating}
+                    type="button"
+                    className={`btn ${
+                      formData.moodRating === rating
+                        ? "btn-primary"
+                        : "btn-outline-primary"
+                    }`}
+                    onClick={() =>
+                      setFormData((prev) => ({ ...prev, moodRating: rating }))
+                    }
+                  >
+                    {rating} ⭐
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="row">
               <div className="col-md-6">
                 <div className="mb-4">
@@ -249,6 +299,52 @@ const CreateJournal = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="fw-semibold form-label">
+                Yếu tố kích hoạt cảm xúc
+              </label>
+              <div className="d-flex gap-2 mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ví dụ: công việc, gia đình, bạn bè..."
+                  value={triggerInput}
+                  onChange={(e) => setTriggerInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleTriggerAdd();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={handleTriggerAdd}
+                >
+                  Thêm
+                </button>
+              </div>
+              <div className="d-flex flex-wrap gap-1">
+                {formData.moodTriggers.map((trigger, index) => (
+                  <span
+                    key={index}
+                    className="badge bg-info text-dark d-flex align-items-center gap-1 fs-6"
+                  >
+                    {trigger}
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerRemove(trigger)}
+                      className="btn btn-sm p-0 text-dark"
+                      style={{ lineHeight: 1 }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
             </div>
 
