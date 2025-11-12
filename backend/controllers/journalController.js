@@ -1,5 +1,7 @@
 // controllers/journalController.js
+const mongoose = require("mongoose"); // ✅ THÊM: Cần mongoose để xử lý ObjectId
 const Journal = require("../models/Journal");
+const User = require("../models/User"); // ✅ THÊM: Import User model
 const Notification = require("../models/Notification");
 const FileManager = require("../utils/fileManager");
 const { logUserActivity } = require("../logging/userActivityLogger");
@@ -73,6 +75,39 @@ exports.createJournal = async (req, res) => {
     });
 
     await newJournal.save();
+
+    // === TÍNH NĂNG STREAKS: XỬ LÝ CHUỖI NGÀY VIẾT NHẬT KÝ ===
+    try {
+      const user = await User.findById(userId);
+      if (user) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const lastJournal = user.lastJournalDate
+          ? new Date(user.lastJournalDate)
+          : null;
+
+        if (lastJournal) {
+          const lastJournalDay = new Date(lastJournal.getFullYear(), lastJournal.getMonth(), lastJournal.getDate());
+
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          if (lastJournalDay.getTime() === yesterday.getTime()) {
+            user.journalStreak = (user.journalStreak || 0) + 1;
+          } else if (lastJournalDay.getTime() < yesterday.getTime()) {
+            user.journalStreak = 1;
+          }
+          // Nếu viết lại trong ngày (lastJournalDay.getTime() === today.getTime()), không làm gì cả
+        } else {
+          user.journalStreak = 1;
+        }
+        user.lastJournalDate = now;
+        await user.save();
+      }
+    } catch (streakError) {
+      console.error("Lỗi khi cập nhật chuỗi ngày viết nhật ký:", streakError);
+    }
 
     // Tạo thông báo
     // const notification = new Notification({

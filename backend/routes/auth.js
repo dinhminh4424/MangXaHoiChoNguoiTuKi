@@ -23,6 +23,40 @@ const generateToken = (userId) => {
   );
 };
 
+/**
+ * Xử lý logic tính toán và cập nhật chuỗi ngày đăng nhập cho người dùng.
+ * @param {object} user - Đối tượng user từ Mongoose.
+ */
+const handleLoginStreak = (user) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+  const lastLogin = user.lastLoginDate
+    ? new Date(user.lastLoginDate)
+    : null;
+
+  if (lastLogin) {
+    const lastLoginDay = new Date(lastLogin.getFullYear(), lastLogin.getMonth(), lastLogin.getDate());
+
+    // Tính ngày hôm qua
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (lastLoginDay.getTime() === yesterday.getTime()) {
+      // Đăng nhập vào ngày hôm qua -> tăng chuỗi
+      user.loginStreak = (user.loginStreak || 0) + 1;
+    } else if (lastLoginDay.getTime() < yesterday.getTime()) {
+      // Bỏ lỡ một ngày -> reset chuỗi về 1
+      user.loginStreak = 1;
+    }
+    // Nếu đăng nhập lại trong cùng ngày (lastLoginDay.getTime() === today.getTime()), không làm gì cả
+  } else {
+    // Lần đăng nhập đầu tiên (hoặc lần đầu sau khi có tính năng này)
+    user.loginStreak = 1;
+  }
+  user.lastLoginDate = now;
+};
+
 // Middleware xác thực
 const authMiddleware = async (req, res, next) => {
   try {
@@ -83,6 +117,10 @@ router.post("/register", async (req, res) => {
       role: role || "user",
     });
 
+    // ✅ GỌI HÀM XỬ LÝ CHUỖI NGÀY SAU KHI ĐĂNG KÝ
+    handleLoginStreak(user);
+
+    // ✅ LƯU LẠI USER SAU KHI ĐÃ CẬP NHẬT CHUỖI NGÀY
     await user.save();
 
     // GỬI EMAIL CHÀO MỪNG ĐĂNG KÝ THÀNH CÔNG
@@ -112,6 +150,8 @@ router.post("/register", async (req, res) => {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          loginStreak: user.loginStreak, // Trả về chuỗi ngày
+          journalStreak: user.journalStreak,
         },
         token,
         emailSent: emailResult.success,
@@ -285,6 +325,10 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // ✅ GỌI HÀM XỬ LÝ CHUỖI NGÀY KHI ĐĂNG NHẬP
+    handleLoginStreak(user);
+
+
     // Cập nhật trạng thái online
     user.isOnline = true;
     user.lastSeen = new Date();
@@ -304,6 +348,8 @@ router.post("/login", async (req, res) => {
           fullName: user.fullName,
           role: user.role,
           profile: user.profile,
+          loginStreak: user.loginStreak, // ✅ THÊM
+          journalStreak: user.journalStreak, // ✅ THÊM
         },
         token,
       },

@@ -97,6 +97,12 @@ const userSchema = new mongoose.Schema(
     deactivatedAt: Date, // ngày xoá
     deactivationReason: String, // lý do xoá
 
+    // === TÍNH NĂNG STREAKS ===
+    loginStreak: { type: Number, default: 1 },
+    lastLoginDate: { type: Date },
+    journalStreak: { type: Number, default: 0 },
+    lastJournalDate: { type: Date },
+
     // Cài đặt privacy
     settings: {
       emailNotifications: { type: Boolean, default: true },

@@ -1056,6 +1056,30 @@ const ProfileView = ({ userId }) => {
               </div>
             )}
 
+            {/* Streak Section */}
+            <div className="card border-0 bg-light mt-4">
+              <div className="card-body">
+                <h6 className="card-title fw-semibold mb-3">
+                  <i className="fas fa-fire me-2 text-danger"></i>
+                  Chuỗi hoạt động
+                </h6>
+                <div className="d-flex justify-content-around text-center">
+                  <div>
+                    <div className="fw-bold fs-4 text-primary">
+                      {viewedUser.loginStreak || 0}
+                    </div>
+                    <small className="text-muted">Ngày đăng nhập</small>
+                  </div>
+                  <div>
+                    <div className="fw-bold fs-4 text-success">
+                      {viewedUser.journalStreak || 0}
+                    </div>
+                    <small className="text-muted">Ngày viết nhật ký</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* Stats Section (có thể thêm sau) */}
             <div className="row g-3 mt-4">
               <div className="col-md-4">

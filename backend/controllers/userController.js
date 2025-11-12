@@ -60,6 +60,8 @@ class UserController {
             countFriends: countFriends,
             countFollowers: countFollowers,
             countFollowing: countFollowing,
+            loginStreak: user.loginStreak, // ✅ THÊM: Trả về chuỗi ngày đăng nhập
+            journalStreak: user.journalStreak, // ✅ THÊM: Trả về chuỗi ngày viết nhật ký
           },
         },
       });
@@ -445,6 +447,8 @@ class UserController {
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
+      userDoc.loginStreak = user.loginStreak; // ✅ THÊM
+      userDoc.journalStreak = user.journalStreak; // ✅ THÊM
 
       res.json({
         success: true,
