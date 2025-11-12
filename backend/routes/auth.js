@@ -24,13 +24,24 @@ const generateToken = (userId) => {
 };
 
 /**
+ * Kiểm tra xem một chuỗi ngày có đạt mốc quan trọng không.
+ * @param {number} streak - Số ngày trong chuỗi.
+ * @returns {boolean} - True nếu là cột mốc, ngược lại là false.
+ */
+const isMilestone = (streak) => {
+  const milestones = [1, 3, 7, 10, 30, 50, 100, 200, 365, 500, 1000];
+  return milestones.includes(streak);
+};
+
+/**
  * Xử lý logic tính toán và cập nhật chuỗi ngày đăng nhập cho người dùng.
  * @param {object} user - Đối tượng user từ Mongoose.
  */
 const handleLoginStreak = (user) => {
   const now = new Date();
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
+  let milestoneReached = null;
+ 
   const lastLogin = user.lastLoginDate
     ? new Date(user.lastLoginDate)
     : null;
@@ -54,7 +65,15 @@ const handleLoginStreak = (user) => {
     // Lần đăng nhập đầu tiên (hoặc lần đầu sau khi có tính năng này)
     user.loginStreak = 1;
   }
+
+  // Kiểm tra cột mốc sau khi cập nhật chuỗi (trước khi lưu vào DB)
+  if (isMilestone(user.loginStreak)) {
+    milestoneReached = { type: "login", days: user.loginStreak };
+  }
+
   user.lastLoginDate = now;
+
+  return milestoneReached; // Trả về thông tin cột mốc
 };
 
 // Middleware xác thực
@@ -118,7 +137,7 @@ router.post("/register", async (req, res) => {
     });
 
     // ✅ GỌI HÀM XỬ LÝ CHUỖI NGÀY SAU KHI ĐĂNG KÝ
-    handleLoginStreak(user);
+    const loginMilestone = handleLoginStreak(user); // Lấy thông tin cột mốc
 
     // ✅ LƯU LẠI USER SAU KHI ĐÃ CẬP NHẬT CHUỖI NGÀY
     await user.save();
@@ -153,6 +172,7 @@ router.post("/register", async (req, res) => {
           loginStreak: user.loginStreak, // Trả về chuỗi ngày
           journalStreak: user.journalStreak,
         },
+        milestone: loginMilestone, // Thêm thông tin cột mốc vào response
         token,
         emailSent: emailResult.success,
       },
@@ -326,8 +346,7 @@ router.post("/login", async (req, res) => {
     }
 
     // ✅ GỌI HÀM XỬ LÝ CHUỖI NGÀY KHI ĐĂNG NHẬP
-    handleLoginStreak(user);
-
+    const loginMilestone = handleLoginStreak(user); // Lấy thông tin cột mốc
 
     // Cập nhật trạng thái online
     user.isOnline = true;
@@ -351,6 +370,7 @@ router.post("/login", async (req, res) => {
           loginStreak: user.loginStreak, // ✅ THÊM
           journalStreak: user.journalStreak, // ✅ THÊM
         },
+        milestone: loginMilestone, // Thêm thông tin cột mốc vào response
         token,
       },
     };
@@ -529,4 +549,10 @@ router.post(
   }
 );
 
+// ✅ Export router làm mặc định và các hàm khác để sử dụng nội bộ
 module.exports = router;
+module.exports._internal = {
+  handleLoginStreak,
+  isMilestone,
+  generateToken,
+};

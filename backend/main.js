@@ -311,8 +311,16 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
       );
 
+      // ✅ Lấy thông tin milestone từ req.user (được passport gắn vào)
+      const milestone = req.user.milestone;
+      let redirectUrl = `${config.cors.origin}/auth/callback?token=${token}`;
+
+      // ✅ Nếu có milestone, thêm vào URL
+      if (milestone) {
+        redirectUrl += `&milestone=${encodeURIComponent(JSON.stringify(milestone))}`;
+      }
       // Redirect về frontend, gắn token trong query
-      res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+      res.redirect(redirectUrl);
     }
   );
 } else {
@@ -348,7 +356,16 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         process.env.JWT_SECRET,
         { expiresIn: process.env.JWT_EXPIRES_IN || "1d" }
       );
-      res.redirect(`${config.cors.origin}/auth/callback?token=${token}`);
+
+      // ✅ Lấy thông tin milestone từ req.user
+      const milestone = req.user.milestone;
+      let redirectUrl = `${config.cors.origin}/auth/callback?token=${token}`;
+
+      // ✅ Nếu có milestone, thêm vào URL
+      if (milestone) {
+        redirectUrl += `&milestone=${encodeURIComponent(JSON.stringify(milestone))}`;
+      }
+      res.redirect(redirectUrl);
     }
   );
 } else {
