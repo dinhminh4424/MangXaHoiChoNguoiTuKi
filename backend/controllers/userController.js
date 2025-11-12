@@ -487,12 +487,36 @@ class UserController {
         }),
       ]);
 
+      // Lấy Danh Sách BẠN  BÈ
+
+      const isFriend = await Friend.find({
+        $or: [
+          { userA: req.user.userId, userB: user._id },
+          { userA: user._id, userB: req.user.userId },
+        ],
+      });
+      console.log("isFriend: ", isFriend);
+
+      let checkViewProfile = true;
+      if (user.settings.profileVisibility === "private") {
+        checkViewProfile = false;
+      } else if (user.settings.profileVisibility === "friends") {
+        if (req.user.userId !== req.params.userId && !(isFriend.length > 0)) {
+          checkViewProfile = false;
+        }
+      }
+
+      console.log("checkViewProfile: ", checkViewProfile);
+
       const userDoc = user.toObject();
       userDoc.countPost = countPost;
       userDoc.countChat = countChat;
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
+      userDoc.isFriend = isFriend.length > 0;
+
+      userDoc.checkViewProfile = checkViewProfile;
 
       // log lấy us theo id
       logUserActivity({

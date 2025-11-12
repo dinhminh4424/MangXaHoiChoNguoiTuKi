@@ -739,11 +739,12 @@ const Chat = () => {
                                           "/assets/images/default-avatar.png"
                                         }
                                         alt="chatuserimage"
-                                        className="avatar-50 rounded-circle "
+                                        className="rounded-circle w-100 "
                                       />
-                                      <span className="avatar-status">
+                                      {/* Trạng thái */}
+                                      {/* <span className="avatar-status">
                                         <i className="ri-checkbox-blank-circle-fill text-success"></i>
-                                      </span>
+                                      </span> */}
                                     </div>
                                     {item.isPinned && (
                                       <PinIcon className="text-yellow-500" />

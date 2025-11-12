@@ -196,6 +196,7 @@ const Login = () => {
                     onChange={handleChange}
                     required
                     disabled={loading}
+                    autoComplete="email" // gợi ý các lịch sử
                   />
                 </div>
                 <div className="form-group">
