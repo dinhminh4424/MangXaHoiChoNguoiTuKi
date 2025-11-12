@@ -20,8 +20,8 @@ const journalSchema = new mongoose.Schema(
     // --- CÁC TRƯỜNG NÂNG CẤP ---
     moodRating: {
       type: Number,
-      min: 1,
-      max: 5,
+      min: 0,
+      max: 100,
       default: null, // Cho phép không đánh giá
     },
     moodTriggers: {

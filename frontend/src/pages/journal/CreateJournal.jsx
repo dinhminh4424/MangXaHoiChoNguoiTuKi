@@ -19,7 +19,7 @@ const CreateJournal = () => {
     content: "",
     emotions: [],
     tags: [],
-    moodRating: null, // Thêm trường đánh giá cảm xúc
+    moodRating: 50, // Giá trị mặc định cho thanh trượt là 50%
     moodTriggers: [], // Thêm trường yếu tố kích hoạt
     isPrivate: true,
     mediaFiles: [],
@@ -216,25 +216,31 @@ const CreateJournal = () => {
                 Đánh giá tâm trạng hôm nay
               </label>
               <p className="text-muted small">
-                Bạn cảm thấy thế nào? (1 = Rất tệ, 5 = Rất tốt)
+                Kéo thanh trượt để thể hiện mức độ cảm xúc của bạn.
               </p>
-              <div className="d-flex gap-2">
-                {[1, 2, 3, 4, 5].map((rating) => (
-                  <button
-                    key={rating}
-                    type="button"
-                    className={`btn ${
-                      formData.moodRating === rating
-                        ? "btn-primary"
-                        : "btn-outline-primary"
-                    }`}
-                    onClick={() =>
-                      setFormData((prev) => ({ ...prev, moodRating: rating }))
-                    }
-                  >
-                    {rating} ⭐
-                  </button>
-                ))}
+              <div className="d-flex align-items-center gap-3">
+                <span style={{ fontSize: "1.5rem" }}>😰</span>
+                <input
+                  type="range"
+                  className="form-range flex-grow-1"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={formData.moodRating}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      moodRating: parseInt(e.target.value, 10),
+                    }))
+                  }
+                />
+                <span style={{ fontSize: "1.5rem" }}>😍</span>
+                <span
+                  className="badge bg-primary rounded-pill"
+                  style={{ minWidth: "50px" }}
+                >
+                  {formData.moodRating}%
+                </span>
               </div>
             </div>
 
