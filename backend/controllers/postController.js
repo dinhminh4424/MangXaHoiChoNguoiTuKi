@@ -130,12 +130,12 @@ exports.getPosts = async (req, res) => {
     const friendDocs = await Friend.find({
       // status: 'accepted', // <--- LỖI: Model Friend không có status
       $or: [
-          { userA: currentUserId }, // <-- Sửa thành userA
-          { userB: currentUserId }  // <-- Sửa thành userB
-      ]
+        { userA: currentUserId }, // <-- Sửa thành userA
+        { userB: currentUserId }, // <-- Sửa thành userB
+      ],
     }).lean();
 
-    const friendIds = friendDocs.map(doc => {
+    const friendIds = friendDocs.map((doc) => {
       // Sửa logic trích xuất ID
       return doc.userA.equals(currentUserId) ? doc.userB : doc.userA;
     });
@@ -151,15 +151,15 @@ exports.getPosts = async (req, res) => {
       ],
       isBlocked: false,
 
-      $and: [ 
-         {
-           $or: [
-              { privacy: 'public' }, 
-              { userCreateID: currentUserId }, 
-              { privacy: 'friends', userCreateID: { $in: friendIds } } // Mệnh đề $in này giờ sẽ đúng
-           ]
-         }
-      ]
+      $and: [
+        {
+          $or: [
+            { privacy: "public" },
+            { userCreateID: currentUserId },
+            { privacy: "friends", userCreateID: { $in: friendIds } }, // Mệnh đề $in này giờ sẽ đúng
+          ],
+        },
+      ],
     };
 
     // Áp dụng các filter khác
@@ -172,15 +172,15 @@ exports.getPosts = async (req, res) => {
     if (tags) {
       query.tags = { $in: tags.split(",") };
     }
-    
-    if (privacy && privacy !== 'all') {
-       if (privacy === 'private' || privacy === 'friends') {
-          if (userCreateID && userCreateID === currentUserId) {
-             query.privacy = privacy;
-          }
-       } else {
-         query.privacy = privacy; // 'public'
-       }
+
+    if (privacy && privacy !== "all") {
+      if (privacy === "private" || privacy === "friends") {
+        if (userCreateID && userCreateID === currentUserId) {
+          query.privacy = privacy;
+        }
+      } else {
+        query.privacy = privacy; // 'public'
+      }
     }
 
     const posts = await Post.find(query)
@@ -269,29 +269,29 @@ exports.getPostDetails = async (req, res) => {
 
     if (isOwner || isAdmin) {
       if (post.isDeletedByUser === true && !isAdmin) {
-         return res.status(404).json({
-            success: false,
-            message: "Bài viết đã bị xoá",
-         });
+        return res.status(404).json({
+          success: false,
+          message: "Bài viết đã bị xoá",
+        });
       }
-       return res.status(200).json({ success: true, post });
+      return res.status(200).json({ success: true, post });
     }
 
     if (post.isDeletedByUser === true || post.isBlocked === true) {
-       return res.status(404).json({
-         success: false,
-         message: "Bài viết không tồn tại hoặc đã bị ẩn",
-       });
-    }
-
-    if (post.privacy === 'private') {
-      return res.status(403).json({ 
-          success: false,
-          message: "Bạn không có quyền xem bài viết riêng tư này.",
+      return res.status(404).json({
+        success: false,
+        message: "Bài viết không tồn tại hoặc đã bị ẩn",
       });
     }
 
-    if (post.privacy === 'friends') {
+    if (post.privacy === "private") {
+      return res.status(403).json({
+        success: false,
+        message: "Bạn không có quyền xem bài viết riêng tư này.",
+      });
+    }
+
+    if (post.privacy === "friends") {
       const postOwnerId = post.userCreateID;
 
       // --- BẮT ĐẦU SỬA ---
@@ -299,20 +299,20 @@ exports.getPostDetails = async (req, res) => {
       const isFriend = await Friend.findOne({
         // status: 'accepted', // <--- LỖI: Model Friend không có status
         $or: [
-            { userA: currentUserId, userB: postOwnerId }, // <-- Sửa thành userA, userB
-            { userA: postOwnerId, userB: currentUserId }  // <-- Sửa thành userA, userB
-        ]
+          { userA: currentUserId, userB: postOwnerId }, // <-- Sửa thành userA, userB
+          { userA: postOwnerId, userB: currentUserId }, // <-- Sửa thành userA, userB
+        ],
       });
       // --- KẾT THÚC SỬA ---
-      
+
       if (!isFriend) {
         return res.status(403).json({
-            success: false,
-            message: "Đây là bài viết chỉ dành cho bạn bè.",
+          success: false,
+          message: "Đây là bài viết chỉ dành cho bạn bè.",
         });
       }
     }
-    
+
     // GHI LOG XEM CHI TIẾT
     logUserActivity({
       action: "post.view",
@@ -329,7 +329,6 @@ exports.getPostDetails = async (req, res) => {
       success: true,
       post,
     });
-
   } catch (err) {
     return res.status(500).json({
       success: false,
@@ -619,7 +618,7 @@ exports.likePost = async (req, res) => {
     const existingLikeIndex = post.likes.findIndex(
       (like) => like.user.toString() === userId
     );
-    
+
     let action = "like"; // Biến để log
     if (existingLikeIndex > -1) {
       // Nếu đã like thì cập nhật emotion
@@ -806,126 +805,127 @@ exports.reportPost = async (req, res) => {
       });
     }
 
-      const post = await Post.findById(targetId);
-      if (!post) {
-         return res.status(404).json({ success: false, message: "Bài viết không tồn tại" });
-      }
+    const post = await Post.findById(targetId);
+    if (!post) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Bài viết không tồn tại" });
+    }
 
-      // tạo bản ghi mới
-      const newViolation = new Violation({
-        targetType: targetType,
-        targetId: targetId,
-        reason: reason,
-        notes: notes,
-        status: status,
-        files: files,
-        userId: post.userCreateID, // người bị báo cáo của bài viết
-        reportedBy: userId, // ngừời báo cáo
-      });
+    // tạo bản ghi mới
+    const newViolation = new Violation({
+      targetType: targetType,
+      targetId: targetId,
+      reason: reason,
+      notes: notes,
+      status: status,
+      files: files,
+      userId: post.userCreateID, // người bị báo cáo của bài viết
+      reportedBy: userId, // ngừời báo cáo
+    });
 
-      // lưu
+    // lưu
+    await newViolation.save();
+
+    let autoBlocked = false;
+    post.reportCount = (post.reportCount || 0) + 1;
+
+    if (post.reportCount >= 10) {
+      post.isBlocked = true;
+      autoBlocked = true;
+
+      newViolation.status = "auto";
+      newViolation.actionTaken = "auto_blocked";
       await newViolation.save();
 
-      let autoBlocked = false;
-      post.reportCount = (post.reportCount || 0) + 1;
-
-      if (post.reportCount >= 10) {
-        post.isBlocked = true;
-        autoBlocked = true;
-
-        newViolation.status = "auto";
-        newViolation.actionTaken = "auto_blocked";
-        await newViolation.save();
-
-        await Violation.updateMany(
-          { targetId: post._id, targetType: "Post", status: "pending" },
-          { $set: { status: "auto", actionTaken: "auto_blocked" } }
-        );
-
-        await NotificationService.createAndEmitNotification({
-          recipient: newViolation.userId,
-          sender: req.user._id,
-          type: "POST_BLOCKED",
-          title: "Bài viết đã bị ẩn",
-          message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${newViolation.reason}`,
-          data: {
-            violationId: newViolation._id,
-            postId: newViolation.targetId,
-            reason: newViolation.reason,
-            action: "blocked",
-          },
-          priority: "high",
-          url: `/posts/${newViolation.targetId}`,
-        });
-
-        await AddViolationUserByID(
-          post.userCreateID,
-          newViolation,
-          req.user.userId,
-          false
-        );
-      }
-
-      await post.save();
-
-      const reporter = await User.findById(userId);
-
-      await NotificationService.emitNotificationToAdmins({
-        recipient: null, // Gửi cho tất cả admin
-        sender: userId,
-        type: "REPORT_CREATED",
-        title: "Báo cáo mới cần xử lý",
-        message: `Bài viết đã được báo cáo với lý do: ${reason}`,
-        data: {
-          violationId: newViolation._id,
-          postId: targetId,
-          reporterId: userId,
-          reporterName: reporter.fullName || reporter.username,
-          reason: reason,
-        },
-        priority: "high",
-        url: `/admin/reports/${newViolation._id}`,
-      });
+      await Violation.updateMany(
+        { targetId: post._id, targetType: "Post", status: "pending" },
+        { $set: { status: "auto", actionTaken: "auto_blocked" } }
+      );
 
       await NotificationService.createAndEmitNotification({
-        recipient: post.userCreateID._id,
-        sender: userId,
-        type: "USER_WARNED",
-        title: "Bài viết của bạn đã được báo cáo",
-        message: `Bài viết của bạn đã được báo cáo vì: ${reason}. Chúng tôi sẽ xem xét và thông báo kết quả.`,
+        recipient: newViolation.userId,
+        sender: req.user._id,
+        type: "POST_BLOCKED",
+        title: "Bài viết đã bị ẩn",
+        message: `Bài viết của bạn đã bị ẩn do vi phạm nguyên tắc cộng đồng. Lý do: ${newViolation.reason}`,
         data: {
           violationId: newViolation._id,
-          postId: targetId,
-          reason: reason,
+          postId: newViolation.targetId,
+          reason: newViolation.reason,
+          action: "blocked",
         },
-        priority: "medium",
-        url: `/posts/${targetId}`,
+        priority: "high",
+        url: `/posts/${newViolation.targetId}`,
       });
 
-      logUserActivity({
-        action: "post.report",
-        req,
-        res,
-        userId,
-        role: req.user.role,
-        target: { type: "post", id: targetId },
-        description: autoBlocked
-          ? "Báo cáo → Tự động ẩn bài viết"
-          : "Báo cáo bài viết",
-        payload: {
-          postId: targetId,
-          reason,
-          reportCount: post.reportCount,
-          autoBlocked,
-        },
-      });
+      await AddViolationUserByID(
+        post.userCreateID,
+        newViolation,
+        req.user.userId,
+        false
+      );
+    }
 
-      return res.status(200).json({
-        success: true,
-        message: "Báo cáo bài viết thành công",
-        data: newViolation,
-      });
-    
+    await post.save();
+
+    const reporter = await User.findById(userId);
+
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null, // Gửi cho tất cả admin
+      sender: userId,
+      type: "REPORT_CREATED",
+      title: "Báo cáo mới cần xử lý",
+      message: `Bài viết đã được báo cáo với lý do: ${reason}`,
+      data: {
+        violationId: newViolation._id,
+        postId: targetId,
+        reporterId: userId,
+        reporterName: reporter.fullName || reporter.username,
+        reason: reason,
+      },
+      priority: "high",
+      url: `/admin/reports/${newViolation._id}`,
+    });
+
+    await NotificationService.createAndEmitNotification({
+      recipient: post.userCreateID._id,
+      sender: userId,
+      type: "USER_WARNED",
+      title: "Bài viết của bạn đã được báo cáo",
+      message: `Bài viết của bạn đã được báo cáo vì: ${reason}. Chúng tôi sẽ xem xét và thông báo kết quả.`,
+      data: {
+        violationId: newViolation._id,
+        postId: targetId,
+        reason: reason,
+      },
+      priority: "medium",
+      url: `/posts/${targetId}`,
+    });
+
+    logUserActivity({
+      action: "post.report",
+      req,
+      res,
+      userId,
+      role: req.user.role,
+      target: { type: "post", id: targetId },
+      description: autoBlocked
+        ? "Báo cáo → Tự động ẩn bài viết"
+        : "Báo cáo bài viết",
+      payload: {
+        postId: targetId,
+        reason,
+        reportCount: post.reportCount,
+        autoBlocked,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Báo cáo bài viết thành công",
+      data: newViolation,
+    });
   } catch (error) {
     console.error("Tạo report bị lôi: ", error);
     return res.status(500).json({ success: false, message: error.message });
@@ -954,18 +954,17 @@ exports.getImagePosts = async (req, res) => {
     // Lấy danh sách bạn bè (Logic 2 chiều - Sửa lại cho đúng model Friend.js)
     const friendDocs = await Friend.find({
       // status: 'accepted', // <--- LỖI
-      $or: [ 
-          { userA: currentUserId }, // <-- Sửa
-          { userB: currentUserId }  // <-- Sửa
-      ]
+      $or: [
+        { userA: currentUserId }, // <-- Sửa
+        { userB: currentUserId }, // <-- Sửa
+      ],
     }).lean();
 
-    const friendIds = friendDocs.map(doc => {
+    const friendIds = friendDocs.map((doc) => {
       return doc.userA.equals(currentUserId) ? doc.userB : doc.userA;
     });
     friendIds.push(currentUserId); // Thêm chính mình
     // --- KẾT THÚC SỬA ---
-
 
     // Query CƠ SỞ (ĐÃ SỬA)
     const query = {
@@ -974,17 +973,17 @@ exports.getImagePosts = async (req, res) => {
         { isDeletedByUser: { $exists: false } },
       ],
       isBlocked: false,
-      "files.0": { $exists: true }, 
+      "files.0": { $exists: true },
 
       $and: [
-         {
-           $or: [
-              { privacy: 'public' }, 
-              { userCreateID: currentUserId }, 
-              { privacy: 'friends', userCreateID: { $in: friendIds } } 
-           ]
-         }
-      ]
+        {
+          $or: [
+            { privacy: "public" },
+            { userCreateID: currentUserId },
+            { privacy: "friends", userCreateID: { $in: friendIds } },
+          ],
+        },
+      ],
     };
 
     if (userCreateID) {
@@ -1002,15 +1001,15 @@ exports.getImagePosts = async (req, res) => {
       } else {
         sortObj = { [parts[0]]: -1 };
       }
-    } 
+    }
 
     const posts = await Post.find(query)
       .sort(sortObj)
       .populate("userCreateID", "username _id profile.avatar fullName")
-      .lean(); 
+      .lean();
 
     const totalPosts = await Post.countDocuments(query);
- 
+
     let images = [];
     for (const post of posts) {
       if (!post.files || !Array.isArray(post.files)) continue;
@@ -1058,7 +1057,7 @@ exports.getImagePosts = async (req, res) => {
     }
 
     const totalImages = images.length;
-    const totalPages = Math.ceil(totalImages / limit); 
+    const totalPages = Math.ceil(totalImages / limit);
     const start = (page - 1) * limit;
     const end = start + limit;
     images = images.slice(start, end);
@@ -1068,9 +1067,9 @@ exports.getImagePosts = async (req, res) => {
       action: groupId ? "groupMedia" : "profileMedia",
       req,
       res,
-      userId,
+      userCreateID,
       role: req.user.role,
-      target: { type: "get", id: userId },
+      target: { type: "get", id: userCreateID },
       description: groupId
         ? "Xem các file/ hình ảnh của group"
         : "Xem hình ảnh của profile",
@@ -1087,11 +1086,11 @@ exports.getImagePosts = async (req, res) => {
     return res.status(200).json({
       success: true,
       page,
-      totalPages, 
-      totalImages: totalImages, 
+      totalPages,
+      totalImages: totalImages,
       imagesCount: images.length,
       images,
-      totalPosts: totalPosts, 
+      totalPosts: totalPosts,
     });
   } catch (err) {
     console.error("Lỗi lấy danh sách ảnh:", err);

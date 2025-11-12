@@ -5,7 +5,7 @@ import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
 import FriendRequestsDropdown from "./friend/FriendRequestsDropdown";
 function Navbar({ isCollapsed = false, onToggleSidebar }) {
-  const { isAuthenticated, logout, user } = useAuth();
+  const { isAuthenticated, logout, user, loading } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -257,13 +257,15 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                 {/* Friend Requests Dropdown */}
                 {/* <FriendRequestsDropdown /> */}
 
-                {user.settings && user.settings.pushNotifications !== false ? (
+                {(user.settings && user.settings.pushNotifications !== false) ||
+                !user.settings ? (
                   <FriendRequestsDropdown />
                 ) : (
                   <p>Tắt tính năng bạn bè</p>
                 )}
 
-                {user.settings && user.settings.pushNotifications !== false ? (
+                {(user.settings && user.settings.pushNotifications !== false) ||
+                !user.settings ? (
                   <UserNotifications />
                 ) : (
                   <p>Tắt tính năng thông báo</p>
