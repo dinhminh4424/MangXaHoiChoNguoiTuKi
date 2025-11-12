@@ -890,45 +890,52 @@ const ProfileView = ({ userId }) => {
                   </span>
                 </div>
 
-                <div className="d-flex flex-column gap-2 mb-4">
-                  <div className="d-flex align-items-center justify-content-center justify-content-md-start text-muted">
-                    <i className="fas fa-envelope me-2"></i>
-                    <span>{viewedUser.email}</span>
-                  </div>
-
-                  <div className="d-flex align-items-center justify-content-center justify-content-md-start text-muted">
-                    <i className="fas fa-calendar-alt me-2"></i>
-                    <span>
-                      Tham gia:{" "}
-                      {new Date(viewedUser.createdAt).toLocaleDateString(
-                        "vi-VN"
-                      )}
-                    </span>
-                  </div>
-
-                  {!viewedUser.isOnline && viewedUser.lastSeen && (
+                {viewedUser.checkViewProfile && (
+                  <div className="d-flex flex-column gap-2 mb-4">
                     <div className="d-flex align-items-center justify-content-center justify-content-md-start text-muted">
-                      <i className="fas fa-clock me-2"></i>
+                      <i className="fas fa-envelope me-2"></i>
+                      <span>{viewedUser.email}</span>
+                    </div>
+
+                    <div className="d-flex align-items-center justify-content-center justify-content-md-start text-muted">
+                      <i className="fas fa-calendar-alt me-2"></i>
                       <span>
-                        Hoạt động:{" "}
-                        {new Date(viewedUser.lastSeen).toLocaleString("vi-VN")}
+                        Tham gia:{" "}
+                        {new Date(viewedUser.createdAt).toLocaleDateString(
+                          "vi-VN"
+                        )}
+                      </span>
+                    </div>
+
+                    {!viewedUser.isOnline && viewedUser.lastSeen && (
+                      <div className="d-flex align-items-center justify-content-center justify-content-md-start text-muted">
+                        <i className="fas fa-clock me-2"></i>
+                        <span>
+                          Hoạt động:{" "}
+                          {new Date(viewedUser.lastSeen).toLocaleString(
+                            "vi-VN"
+                          )}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Status Badge */}
+                {viewedUser.checkViewProfile &&
+                  viewedUser.settings.showOnlineStatus && (
+                    <div className="mb-4">
+                      <span
+                        className={`badge ${
+                          viewedUser.isOnline ? "bg-success" : "bg-secondary"
+                        } px-3 py-2`}
+                      >
+                        {viewedUser.isOnline
+                          ? "🟢 Đang hoạt động"
+                          : "⚫ Ngoại tuyến"}
                       </span>
                     </div>
                   )}
-                </div>
-
-                {/* Status Badge */}
-                <div className="mb-4">
-                  <span
-                    className={`badge ${
-                      viewedUser.isOnline ? "bg-success" : "bg-secondary"
-                    } px-3 py-2`}
-                  >
-                    {viewedUser.isOnline
-                      ? "🟢 Đang hoạt động"
-                      : "⚫ Ngoại tuyến"}
-                  </span>
-                </div>
               </div>
             </div>
           </div>
@@ -936,7 +943,7 @@ const ProfileView = ({ userId }) => {
           {/* Right Column - Detailed Info */}
           <div className="col-md-8">
             {/* Bio Section */}
-            {viewedUser.profile?.bio && (
+            {viewedUser.checkViewProfile && viewedUser.profile?.bio && (
               <div className="card border-0 bg-light mb-4">
                 <div className="card-body">
                   <h6 className="card-title fw-semibold text-primary mb-3">
@@ -949,61 +956,63 @@ const ProfileView = ({ userId }) => {
             )}
 
             {/* Interests & Skills Grid */}
-            <div className="row g-4">
-              {/* Interests */}
-              {viewedUser.profile?.interests &&
-                viewedUser.profile.interests.length > 0 && (
-                  <div className="col-12 col-lg-6">
-                    <div className="card border-0 shadow-sm h-100">
-                      <div className="card-body">
-                        <h6 className="card-title fw-semibold text-primary mb-3">
-                          <i className="fas fa-heart me-2"></i>
-                          Sở thích
-                        </h6>
-                        <div className="d-flex flex-wrap gap-2">
-                          {viewedUser.profile.interests.map(
-                            (interest, index) => (
+            {viewedUser.checkViewProfile && (
+              <div className="row g-4">
+                {/* Interests */}
+                {viewedUser.profile?.interests &&
+                  viewedUser.profile.interests.length > 0 && (
+                    <div className="col-12 col-lg-6">
+                      <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body">
+                          <h6 className="card-title fw-semibold text-primary mb-3">
+                            <i className="fas fa-heart me-2"></i>
+                            Sở thích
+                          </h6>
+                          <div className="d-flex flex-wrap gap-2">
+                            {viewedUser.profile.interests.map(
+                              (interest, index) => (
+                                <span
+                                  key={index}
+                                  className="badge bg-gradient-info text-white border-0 px-3 py-2"
+                                  style={{ borderRadius: "20px" }}
+                                >
+                                  {interest}
+                                </span>
+                              )
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                {/* Skills */}
+                {viewedUser.profile?.skills &&
+                  viewedUser.profile.skills.length > 0 && (
+                    <div className="col-12 col-lg-6">
+                      <div className="card border-0 shadow-sm h-100">
+                        <div className="card-body">
+                          <h6 className="card-title fw-semibold text-primary mb-3">
+                            <i className="fas fa-star me-2"></i>
+                            Kỹ năng
+                          </h6>
+                          <div className="d-flex flex-wrap gap-2">
+                            {viewedUser.profile.skills.map((skill, index) => (
                               <span
                                 key={index}
-                                className="badge bg-gradient-info text-white border-0 px-3 py-2"
+                                className="badge bg-gradient-warning text-dark border-0 px-3 py-2"
                                 style={{ borderRadius: "20px" }}
                               >
-                                {interest}
+                                {skill}
                               </span>
-                            )
-                          )}
+                            ))}
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </div>
-                )}
-
-              {/* Skills */}
-              {viewedUser.profile?.skills &&
-                viewedUser.profile.skills.length > 0 && (
-                  <div className="col-12 col-lg-6">
-                    <div className="card border-0 shadow-sm h-100">
-                      <div className="card-body">
-                        <h6 className="card-title fw-semibold text-primary mb-3">
-                          <i className="fas fa-star me-2"></i>
-                          Kỹ năng
-                        </h6>
-                        <div className="d-flex flex-wrap gap-2">
-                          {viewedUser.profile.skills.map((skill, index) => (
-                            <span
-                              key={index}
-                              className="badge bg-gradient-warning text-dark border-0 px-3 py-2"
-                              style={{ borderRadius: "20px" }}
-                            >
-                              {skill}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-            </div>
+                  )}
+              </div>
+            )}
 
             {/* Action Buttons */}
             {!isOwnProfile && currentUser && (
@@ -1011,16 +1020,33 @@ const ProfileView = ({ userId }) => {
                 <div className="card-body">
                   <h6 className="card-title fw-semibold mb-3">Kết nối</h6>
                   <div className="d-flex flex-wrap gap-2">
-                    <button
-                      className="btn btn-primary px-4 py-2 d-flex align-items-center"
-                      onClick={() => {
-                        console.log("Nhắn tin");
-                        navigate("/chat/" + userId);
-                      }}
-                    >
-                      <i className="fas fa-comment me-2"></i>
-                      Nhắn tin
-                    </button>
+                    {viewedUser.settings.allowMessages !== "none" &&
+                      (viewedUser.settings.allowMessages === "friends" ? (
+                        viewedUser.isFriend && (
+                          <button
+                            className="btn btn-primary px-4 py-2 d-flex align-items-center"
+                            onClick={() => {
+                              console.log("Nhắn tin");
+                              navigate("/chat/" + userId);
+                            }}
+                          >
+                            <i className="fas fa-comment me-2"></i>
+                            Nhắn tin 123 456
+                          </button>
+                        )
+                      ) : (
+                        <button
+                          className="btn btn-primary px-4 py-2 d-flex align-items-center"
+                          onClick={() => {
+                            console.log("Nhắn tin");
+                            navigate("/chat/" + userId);
+                          }}
+                        >
+                          <i className="fas fa-comment me-2"></i>
+                          Nhắn tin 123
+                        </button>
+                      ))}
+
                     <FriendButton userId={userId} />
                     <button
                       className={`btn ${
@@ -1058,42 +1084,44 @@ const ProfileView = ({ userId }) => {
             )}
 
             {/* Stats Section (có thể thêm sau) */}
-            <div className="row g-3 mt-4">
-              <div className="col-md-4">
-                <div className="card border-0 bg-gradient-primary text-white text-center">
-                  <div className="card-body py-3">
-                    <h5 className="mb-1">
-                      {viewedUser?.countPost || "Chưa cập nhật"}
-                    </h5>
-                    <small>Bài viết</small>
+            {viewedUser.checkViewProfile && (
+              <div className="row g-3 mt-4">
+                <div className="col-md-4">
+                  <div className="card border-0 bg-gradient-primary text-white text-center">
+                    <div className="card-body py-3">
+                      <h5 className="mb-1">
+                        {viewedUser?.countPost || "Chưa cập nhật"}
+                      </h5>
+                      <small>Bài viết</small>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div
+                    className="card border-0 bg-gradient-success text-white text-center"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setShowFriendsModal(true)}
+                  >
+                    <div className="card-body py-3">
+                      <h5 className="mb-1">{friendCount}</h5>
+                      <small>Bạn bè</small>
+                    </div>
+                  </div>
+                </div>
+                <div className="col-md-4">
+                  <div
+                    className="card border-0 bg-gradient-info text-white text-center"
+                    style={{ cursor: "pointer" }}
+                    onClick={() => setShowFollowersModal(true)}
+                  >
+                    <div className="card-body py-3">
+                      <h5 className="mb-1">{followerCount}</h5>
+                      <small>Theo dõi</small>
+                    </div>
                   </div>
                 </div>
               </div>
-              <div className="col-md-4">
-                <div
-                  className="card border-0 bg-gradient-success text-white text-center"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowFriendsModal(true)}
-                >
-                  <div className="card-body py-3">
-                    <h5 className="mb-1">{friendCount}</h5>
-                    <small>Bạn bè</small>
-                  </div>
-                </div>
-              </div>
-              <div className="col-md-4">
-                <div
-                  className="card border-0 bg-gradient-info text-white text-center"
-                  style={{ cursor: "pointer" }}
-                  onClick={() => setShowFollowersModal(true)}
-                >
-                  <div className="card-body py-3">
-                    <h5 className="mb-1">{followerCount}</h5>
-                    <small>Theo dõi</small>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>
