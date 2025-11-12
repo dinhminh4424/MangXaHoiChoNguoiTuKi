@@ -162,7 +162,7 @@ const CreateJournal = () => {
 
   return (
     <div className="container mt-4">
-      <p>id: {user.id}</p>
+      <p hidden>id: {user.id}</p>
       <div className="d-flex align-items-center mb-4">
         <button
           className="btn btn-outline-secondary me-3"
