@@ -948,6 +948,8 @@ exports.getImagePosts = async (req, res) => {
     limit = Math.max(1, parseInt(limit) || 10);
     const skip = (page - 1) * limit;
 
+    console.log("req.query: ", req.query);
+
     const currentUserId = req.user.userId;
 
     // --- BẮT ĐẦU SỬA ---

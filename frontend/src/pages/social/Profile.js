@@ -193,7 +193,7 @@ const Profile = () => {
                 {/* Chỉnh sửa */}
                 {activeTab === "images" && (
                   <div className="tab-pane fade show active">
-                    <ProfileImage />
+                    <ProfileImage userId={userId} />
                   </div>
                 )}
 
