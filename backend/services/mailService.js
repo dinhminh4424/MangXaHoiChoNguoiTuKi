@@ -1,5 +1,6 @@
 const nodemailer = require("nodemailer");
 const emailTemplates = require("./emailTemplates");
+const User = require("../models/User");
 
 class MailService {
   constructor() {
@@ -30,58 +31,63 @@ class MailService {
   /**
    * Hàm gửi mail chính - có thể dùng ở mọi controller
    */
+
   // async sendEmail(mailOptions) {
   //   try {
   //     const { to, subject, templateName, templateData, cc, bcc, attachments } =
   //       mailOptions;
 
-  //     // Validate required fields
   //     if (!to || !subject || !templateName) {
   //       throw new Error(
   //         "Thiếu thông tin bắt buộc: to, subject, hoặc templateName"
   //       );
   //     }
 
-  //     // Get template content
-  //     const htmlContent = emailTemplates.getTemplate(
-  //       templateName,
-  //       templateData
-  //     );
+  //     // Lấy template, bọc try để biết rõ lỗi nếu template không tồn tại
+  //     let htmlContent;
+  //     try {
+  //       htmlContent = emailTemplates.getTemplate(templateName, templateData);
+  //     } catch (err) {
+  //       console.error(`❌ Template error (${templateName}):`, err);
+  //       throw new Error(`Lỗi template: ${templateName}`);
+  //     }
+
+  //     const normalizeAddr = (addr) =>
+  //       Array.isArray(addr) ? addr.join(", ") : addr || undefined;
 
   //     const options = {
-  //       from: process.env.EMAIL_FROM,
-  //       to: Array.isArray(to) ? to.join(", ") : to,
-  //       subject: subject,
+  //       from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
+  //       to: normalizeAddr(to),
+  //       subject,
   //       html: htmlContent,
-  //       cc: cc,
-  //       bcc: bcc,
-  //       attachments: attachments,
+  //       cc: normalizeAddr(cc),
+  //       bcc: normalizeAddr(bcc),
+  //       attachments: Array.isArray(attachments) ? attachments : undefined,
   //     };
 
   //     const result = await this.transporter.sendMail(options);
 
   //     console.log(
-  //       `✅ Email sent to ${to} | Template: ${templateName} | MessageID: ${result.messageId}`
+  //       `✅ Email sent to ${options.to} | Template: ${templateName} | MessageID: ${result.messageId}`
   //     );
-
-  //     console.log(" == = == = = == = result: ", result);
 
   //     return {
   //       success: true,
   //       messageId: result.messageId,
-  //       to: to,
+  //       to: options.to,
   //       template: templateName,
   //     };
   //   } catch (error) {
-  //     console.error("❌  Lỗi gửi email:", error);
+  //     console.error("❌ Lỗi gửi email:", error && (error.stack || error));
   //     return {
   //       success: false,
-  //       error: error.message,
+  //       error: error && (error.message || String(error)),
   //       to: mailOptions.to,
   //       template: mailOptions.templateName,
   //     };
   //   }
   // }
+
   async sendEmail(mailOptions) {
     try {
       const { to, subject, templateName, templateData, cc, bcc, attachments } =
@@ -93,7 +99,7 @@ class MailService {
         );
       }
 
-      // Lấy template, bọc try để biết rõ lỗi nếu template không tồn tại
+      // Lấy template
       let htmlContent;
       try {
         htmlContent = emailTemplates.getTemplate(templateName, templateData);
@@ -102,12 +108,57 @@ class MailService {
         throw new Error(`Lỗi template: ${templateName}`);
       }
 
+      // === FIX: XỬ LÝ FILTER EMAIL ĐÚNG CÁCH ===
+      const normalizeToArray = (addr) => {
+        if (Array.isArray(addr)) return addr;
+        if (typeof addr === "string") return [addr];
+        return [];
+      };
+
+      const toArray = normalizeToArray(to);
+      const mailFilter = [];
+
+      // Kiểm tra từng email
+      for (let email of toArray) {
+        try {
+          const user = await User.findOne({
+            email: email.trim().toLowerCase(),
+          });
+
+          // Nếu không tìm thấy user hoặc user cho phép notifications -> GỬI
+          if (
+            !user ||
+            (user.settings && user.settings.emailNotifications !== false)
+          ) {
+            mailFilter.push(email);
+            console.log(`✅ Cho phép gửi email cho: ${email}`);
+          } else {
+            console.log(`⏸️ Bỏ qua ${email} - đã tắt email notifications`);
+          }
+        } catch (error) {
+          console.error(`❌ Lỗi kiểm tra user ${email}:`, error);
+          mailFilter.push(email); // Mặc định gửi nếu có lỗi
+        }
+      }
+
+      // Nếu không còn email nào hợp lệ
+      if (mailFilter.length === 0) {
+        console.log("📧 Không có người nhận hợp lệ");
+        return {
+          success: true,
+          skipped: true,
+          message: "Không gửi email vì không có người nhận hợp lệ",
+          originalTo: toArray,
+          filteredTo: [],
+        };
+      }
+
       const normalizeAddr = (addr) =>
         Array.isArray(addr) ? addr.join(", ") : addr || undefined;
 
       const options = {
         from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
-        to: normalizeAddr(to),
+        to: normalizeAddr(mailFilter), // Dùng mảng đã filter
         subject,
         html: htmlContent,
         cc: normalizeAddr(cc),
@@ -126,6 +177,9 @@ class MailService {
         messageId: result.messageId,
         to: options.to,
         template: templateName,
+        // Thêm thông tin filter
+        originalRecipients: toArray,
+        filteredRecipients: mailFilter,
       };
     } catch (error) {
       console.error("❌ Lỗi gửi email:", error && (error.stack || error));

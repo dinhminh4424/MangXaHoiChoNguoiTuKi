@@ -134,7 +134,7 @@
 
 /* Modal styles */
 .media-modal .modal-content {
-  background: transparent;
+  /* background: transparent; */
   border: none;
 }
 

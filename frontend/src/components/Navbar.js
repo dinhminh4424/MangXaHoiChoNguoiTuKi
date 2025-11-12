@@ -255,9 +255,19 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                   </Link>
                 </li>
                 {/* Friend Requests Dropdown */}
-                <FriendRequestsDropdown />
+                {/* <FriendRequestsDropdown /> */}
 
-                <UserNotifications />
+                {user.settings && user.settings.pushNotifications !== false ? (
+                  <FriendRequestsDropdown />
+                ) : (
+                  <p>Tắt tính năng bạn bè</p>
+                )}
+
+                {user.settings && user.settings.pushNotifications !== false ? (
+                  <UserNotifications />
+                ) : (
+                  <p>Tắt tính năng thông báo</p>
+                )}
 
                 {/* Notifications Dropdown */}
                 {/* <li className="nav-item dropdown ">
@@ -409,9 +419,9 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                               <i className="ri-account-box-line"></i>
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">Account settings</h6>
+                              <h6 className="mb-0">Cài đặt tài khoản</h6>
                               <p className="mb-0 font-size-12">
-                                Manage your account parameters.
+                                Quản lý các thông số tài khoản
                               </p>
                             </div>
                           </div>

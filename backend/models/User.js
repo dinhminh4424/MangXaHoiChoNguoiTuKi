@@ -99,16 +99,17 @@ const userSchema = new mongoose.Schema(
 
     // Cài đặt privacy
     settings: {
-      emailNotifications: { type: Boolean, default: true },
-      pushNotifications: { type: Boolean, default: true },
+      emailNotifications: { type: Boolean, default: true }, // thông báo email
+      pushNotifications: { type: Boolean, default: true }, // thông báo web
       profileVisibility: {
         type: String,
         enum: ["public", "friends", "private"],
         default: "public",
-      },
-      showOnlineStatus: { type: Boolean, default: true },
-      allowFriendRequests: { type: Boolean, default: true },
+      }, // ai đc xem profile
+      showOnlineStatus: { type: Boolean, default: true }, // hiên thị trạng thái online
+      allowFriendRequests: { type: Boolean, default: true }, // cho phép kết bạn
       allowMessages: {
+        // ai có thể nhắn tin cho bạn
         type: String,
         enum: ["everyone", "friends", "none"],
         default: "everyone",

@@ -7,7 +7,16 @@ const { logUserActivity } = require("../logging/userActivityLogger");
 // Tạo nhật ký mới và gửi thông báo
 exports.createJournal = async (req, res) => {
   try {
-    const { userId, title, content, emotions, tags, isPrivate } = req.body;
+    const {
+      userId,
+      title,
+      content,
+      emotions,
+      tags,
+      isPrivate,
+      moodRating,
+      moodTriggers,
+    } = req.body;
 
     // Kiểm tra xem hôm nay đã có nhật ký chưa
     const today = new Date();
@@ -56,6 +65,8 @@ exports.createJournal = async (req, res) => {
       content,
       emotions: emotions || [],
       tags: tags || [],
+      moodRating: moodRating || null,
+      moodTriggers: moodTriggers || [],
       media: mediaFiles,
       isPrivate: isPrivate !== undefined ? isPrivate : true,
       date: new Date(),
@@ -108,6 +119,77 @@ exports.createJournal = async (req, res) => {
       message: "Lỗi server khi ghi nhật ký: " + error.message,
       error: error.message,
     });
+  }
+};
+
+// === TÍNH NĂNG MỚI: API LẤY DỮ LIỆU THỐNG KÊ NHẬT KÝ ===
+exports.getJournalStats = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { period = "7d" } = req.query; // Mặc định là 7 ngày
+
+    // Xác định ngày bắt đầu dựa trên period
+    const endDate = new Date();
+    const startDate = new Date();
+    if (period === "30d") {
+      startDate.setDate(endDate.getDate() - 30);
+    } else if (period === "90d") {
+      startDate.setDate(endDate.getDate() - 90);
+    } else {
+      startDate.setDate(endDate.getDate() - 7); // Mặc định 7 ngày
+    }
+    startDate.setHours(0, 0, 0, 0);
+
+    // Query chính để lấy dữ liệu
+    const stats = await Journal.aggregate([
+      // 1. Lọc các nhật ký của user trong khoảng thời gian
+      {
+        $match: {
+          userId: new mongoose.Types.ObjectId(userId),
+          date: { $gte: startDate, $lte: endDate },
+        },
+      },
+      // 2. Gom nhóm theo nhiều tiêu chí
+      {
+        $facet: {
+          // 2.1. Thống kê cảm xúc theo ngày (cho line chart)
+          moodOverTime: [
+            {
+              $group: {
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$date" } },
+                avgMood: { $avg: "$moodRating" },
+              },
+            },
+            { $sort: { _id: 1 } }, // Sắp xếp theo ngày
+          ],
+          // 2.2. Đếm tần suất các loại cảm xúc (cho pie chart)
+          emotionCounts: [
+            { $unwind: "$emotions" }, // Tách mảng emotions thành các document riêng
+            { $group: { _id: "$emotions", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+          // 2.3. Đếm tần suất các yếu tố kích hoạt (cho bar chart)
+          triggerCounts: [
+            { $unwind: "$moodTriggers" },
+            { $group: { _id: "$moodTriggers", count: { $sum: 1 } } },
+            { $sort: { count: -1 } },
+          ],
+        },
+      },
+    ]);
+
+    res.json({
+      success: true,
+      message: "Lấy dữ liệu thống kê nhật ký thành công",
+      data: {
+        moodOverTime: stats[0].moodOverTime,
+        emotionCounts: stats[0].emotionCounts,
+        triggerCounts: stats[0].triggerCounts,
+      },
+    });
+  } catch (error) {
+    console.error("Error getting journal stats:", error);
+    res.status(500).json({ success: false, message: "Lỗi server" });
   }
 };
 

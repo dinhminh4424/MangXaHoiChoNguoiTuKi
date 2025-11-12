@@ -72,6 +72,26 @@ exports.createPost = async (req, res) => {
 
     await newPost.save();
 
+    // GHI LOG TẠO BÀI VIẾT
+    logUserActivity({
+      action: "post.create",
+      req,
+      res,
+      userId: userCreateID,
+      role: req.user.role,
+      target: { type: "post", id: newPost._id.toString() },
+      description: "Tạo bài viết mới",
+      payload: {
+        postId: newPost._id.toString(),
+        groupId,
+        privacy,
+        isAnonymous,
+        hasFiles: files.length > 0,
+        fileCount: files.length,
+        contentLength: content?.length || 0,
+      },
+    });
+
     return res.status(201).json({
       success: true,
       message: "Tạo bài viết thành công",
@@ -181,6 +201,8 @@ exports.getPosts = async (req, res) => {
     };
 
     res.status(200);
+
+    // log
     logUserActivity({
       action: "feed.fetch",
       req,
@@ -291,6 +313,18 @@ exports.getPostDetails = async (req, res) => {
       }
     }
     
+    // GHI LOG XEM CHI TIẾT
+    logUserActivity({
+      action: "post.view",
+      req,
+      res,
+      userId,
+      role: req.user.role,
+      target: { type: "post", id: id },
+      description: "Xem chi tiết bài viết",
+      payload: { postId: id, isOwner: post.userCreateID.toString() === userId },
+    });
+
     return res.status(200).json({
       success: true,
       post,
@@ -628,6 +662,18 @@ exports.likePost = async (req, res) => {
         console.error("Error sending like notification:", notifError);
       }
     }
+
+    // GHI LOG LIKE
+    logUserActivity({
+      action: `post.${emotion}`,
+      req,
+      res,
+      userId,
+      role: req.user.role,
+      target: { type: "post", id: id },
+      description: emotion === "like" ? "Thích bài viết" : "Cập nhật cảm xúc",
+      payload: { postId: id, emotion, likeCount: post.likeCount },
+    });
 
     const responsePayload = {
       success: true,
@@ -1016,6 +1062,27 @@ exports.getImagePosts = async (req, res) => {
     const start = (page - 1) * limit;
     const end = start + limit;
     images = images.slice(start, end);
+
+    // GHI Xem Hình ảnh File
+    logUserActivity({
+      action: groupId ? "groupMedia" : "profileMedia",
+      req,
+      res,
+      userId,
+      role: req.user.role,
+      target: { type: "get", id: userId },
+      description: groupId
+        ? "Xem các file/ hình ảnh của group"
+        : "Xem hình ảnh của profile",
+      payload: {
+        success: true,
+        page,
+        totalPages,
+        totalPosts,
+        mediaCount: images.length, // số ảnh trong page hiện tại
+        media: images,
+      },
+    });
 
     return res.status(200).json({
       success: true,

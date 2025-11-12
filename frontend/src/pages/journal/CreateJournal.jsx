@@ -19,10 +19,13 @@ const CreateJournal = () => {
     content: "",
     emotions: [],
     tags: [],
+    moodRating: 50, // Giá trị mặc định cho thanh trượt là 50%
+    moodTriggers: [], // Thêm trường yếu tố kích hoạt
     isPrivate: true,
     mediaFiles: [],
   });
   const [tagInput, setTagInput] = useState("");
+  const [triggerInput, setTriggerInput] = useState(""); // State cho input trigger
 
   // Kiểm tra nếu chưa có user
   if (!user) {
@@ -117,10 +120,29 @@ const CreateJournal = () => {
     setTagInput("");
   };
 
+  const handleTriggerAdd = () => {
+    if (!triggerInput.trim()) return;
+    const cleanTrigger = triggerInput.trim();
+    if (!formData.moodTriggers.includes(cleanTrigger)) {
+      setFormData((prev) => ({
+        ...prev,
+        moodTriggers: [...prev.moodTriggers, cleanTrigger],
+      }));
+    }
+    setTriggerInput("");
+  };
+
   const handleTagRemove = (tagToRemove) => {
     setFormData((prev) => ({
       ...prev,
       tags: prev.tags.filter((tag) => tag !== tagToRemove),
+    }));
+  };
+
+  const handleTriggerRemove = (triggerToRemove) => {
+    setFormData((prev) => ({
+      ...prev,
+      moodTriggers: prev.moodTriggers.filter((t) => t !== triggerToRemove),
     }));
   };
 
@@ -140,7 +162,7 @@ const CreateJournal = () => {
 
   return (
     <div className="container mt-4">
-      <p>id: {user.id}</p>
+      <p hidden>id: {user.id}</p>
       <div className="d-flex align-items-center mb-4">
         <button
           className="btn btn-outline-secondary me-3"
@@ -186,6 +208,40 @@ const CreateJournal = () => {
                 onImageUpload={handleImageUpload}
                 placeholder="Hôm nay của bạn thế nào? Hãy chia sẻ cảm xúc, suy nghĩ và trải nghiệm của bạn..."
               />
+            </div>
+
+            {/* === PHẦN NÂNG CẤP: ĐÁNH GIÁ CẢM XÚC VÀ YẾU TỐ KÍCH HOẠT === */}
+            <div className="mb-4 p-3 bg-light rounded">
+              <label className="fw-semibold fs-5 form-label">
+                Đánh giá tâm trạng hôm nay
+              </label>
+              <p className="text-muted small">
+                Kéo thanh trượt để thể hiện mức độ cảm xúc của bạn.
+              </p>
+              <div className="d-flex align-items-center gap-3">
+                <span style={{ fontSize: "1.5rem" }}>😰</span>
+                <input
+                  type="range"
+                  className="form-range flex-grow-1"
+                  min="0"
+                  max="100"
+                  step="1"
+                  value={formData.moodRating}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      moodRating: parseInt(e.target.value, 10),
+                    }))
+                  }
+                />
+                <span style={{ fontSize: "1.5rem" }}>😍</span>
+                <span
+                  className="badge bg-primary rounded-pill"
+                  style={{ minWidth: "50px" }}
+                >
+                  {formData.moodRating}%
+                </span>
+              </div>
             </div>
 
             <div className="row">
@@ -249,6 +305,52 @@ const CreateJournal = () => {
                     ))}
                   </div>
                 </div>
+              </div>
+            </div>
+
+            <div className="mb-4">
+              <label className="fw-semibold form-label">
+                Yếu tố kích hoạt cảm xúc
+              </label>
+              <div className="d-flex gap-2 mb-2">
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Ví dụ: công việc, gia đình, bạn bè..."
+                  value={triggerInput}
+                  onChange={(e) => setTriggerInput(e.target.value)}
+                  onKeyPress={(e) => {
+                    if (e.key === "Enter") {
+                      e.preventDefault();
+                      handleTriggerAdd();
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-outline-secondary"
+                  onClick={handleTriggerAdd}
+                >
+                  Thêm
+                </button>
+              </div>
+              <div className="d-flex flex-wrap gap-1">
+                {formData.moodTriggers.map((trigger, index) => (
+                  <span
+                    key={index}
+                    className="badge bg-info text-dark d-flex align-items-center gap-1 fs-6"
+                  >
+                    {trigger}
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerRemove(trigger)}
+                      className="btn btn-sm p-0 text-dark"
+                      style={{ lineHeight: 1 }}
+                    >
+                      ×
+                    </button>
+                  </span>
+                ))}
               </div>
             </div>
 

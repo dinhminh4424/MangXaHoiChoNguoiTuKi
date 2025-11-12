@@ -546,12 +546,13 @@ const ProfileView = ({ userId }) => {
                       e.target.src = "/assets/images/default-avatar.png";
                     }}
                   />
-                  {viewedUser.isOnline && (
-                    <span
-                      className="position-absolute bottom-0 end-0 bg-success rounded-circle border-3 border-white"
-                      style={{ width: "20px", height: "20px", zIndex: 3 }}
-                    ></span>
-                  )}
+                  {viewedUser.isOnline &&
+                    viewedUser.settings.showOnlineStatus && (
+                      <span
+                        className="position-absolute bottom-0 end-0 bg-success rounded-circle border-3 border-white"
+                        style={{ width: "20px", height: "20px", zIndex: 3 }}
+                      ></span>
+                    )}
                 </div>
               </div>
             </div>
