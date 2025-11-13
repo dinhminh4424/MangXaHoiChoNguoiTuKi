@@ -258,6 +258,12 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   },
+  {
+    path: "/admin/appeals/:idViodation",
+    component: AppealManagement, // Kháng Nghị
+    layout: AdminLayout,
+    isAdmin: true,
+  },
 ];
 
 /**

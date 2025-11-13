@@ -2167,7 +2167,7 @@ const updateViolationGroupStatus = async (req, res) => {
       const newWarningCount = updatedGroup.warningCount || 0;
 
       // Nếu đạt >5 thì block group
-      if (newWarningCount >= 5) {
+      if (newWarningCount > 5) {
         await Group.findByIdAndUpdate(violation.targetId, {
           active: false,
         });
@@ -2845,6 +2845,7 @@ const updateViolationStatus = async (req, res) => {
       const updatedPost = await Post.findByIdAndUpdate(
         violation.targetId,
         { $inc: { warningCount: 1 } },
+        { $inc: { violationCount: -1 } },
         { new: true }
       );
 
@@ -3384,6 +3385,7 @@ const updateViolationUser = async (req, res) => {
       const updatedUser = await User.findByIdAndUpdate(
         violation.targetId,
         { $inc: { warningCount: 1 } },
+        { $inc: { violationCount: -1 } },
         { new: true }
       );
 
@@ -3391,7 +3393,7 @@ const updateViolationUser = async (req, res) => {
 
       const newWarningCount = updatedUser.warningCount || 0;
 
-      if (newWarningCount >= 5) {
+      if (newWarningCount > 5) {
         // Cập nhật số lần vi phạm của người dùng
         await AddViolationUserByID(
           updatedUser._id,
@@ -3679,6 +3681,347 @@ const getAppealById = async (req, res) => {
   }
 };
 
+// const updateAppealStatus = async (req, res) => {
+//   try {
+//     const { appealId } = req.params;
+//     const { status, appealNotes, actionTaken } = req.body;
+
+//     const violation = await Violation.findOne({
+//       _id: appealId,
+//       "appeal.isAppealed": true,
+//     });
+
+//     if (!violation) {
+//       return res.status(404).json({
+//         success: false,
+//         message: "Không tìm thấy kháng nghị",
+//       });
+//     }
+
+//     console.log("req.body: ", req.body);
+
+//     // Cập nhật thông tin kháng nghị
+//     const updateData = {
+//       "appeal.appealStatus": status,
+//       "appeal.appealReviewedBy": req.user.userId,
+//       "appeal.appealReviewedAt": new Date(),
+//     };
+
+//     if (appealNotes) {
+//       updateData["appeal.appealNotes"] = appealNotes;
+//     }
+
+//     // Nếu kháng nghị được chấp thuận, cập nhật trạng thái violation
+
+//     let hanhDongKhoiPhuc = "none";
+//     if (status === "approved") {
+//       console.log("status === approved");
+
+//       updateData.status = "approved";
+
+//       if (actionTaken) {
+//         if (violation.actionTaken === "warning") {
+//           hanhDongKhoiPhuc = "unblock_warning";
+//         } else if (violation.actionTaken === "block_post") {
+//           hanhDongKhoiPhuc = "unblock_post";
+//         } else if (violation.actionTaken === "block_comment") {
+//           hanhDongKhoiPhuc = "unblock_comment";
+//         } else if (violation.actionTaken === "ban_user") {
+//           hanhDongKhoiPhuc = "unban_user";
+//         } else if (violation.actionTaken === "block_group") {
+//           hanhDongKhoiPhuc = "unblock_group";
+//         } else if (
+//           violation.actionTaken === "auto_blocked" &&
+//           violation.targetType === "Post"
+//         ) {
+//           hanhDongKhoiPhuc = "unblock_post";
+//         } else if (
+//           violation.actionTaken === "auto_blocked" &&
+//           violation.targetType === "Comment"
+//         ) {
+//           hanhDongKhoiPhuc = "unblock_comment";
+//         } else if (
+//           violation.actionTaken === "auto_blocked" &&
+//           violation.targetType === "Group"
+//         ) {
+//           hanhDongKhoiPhuc = "unblock_group";
+//         } else if (
+//           violation.actionTaken === "auto_baned" &&
+//           violation.targetType === "User"
+//         ) {
+//           hanhDongKhoiPhuc = "auto_baned";
+//         }
+
+//         console.log("hanhDongKhoiPhuc: ", hanhDongKhoiPhuc);
+
+//         // await Violation.findByIdAndUpdate(violation._id, { $set: updateData });
+//         // await updateData.save();
+
+//         console.log(updateData);
+
+//         const adminId = req.user.userId;
+//         // Khôi phục đối tượng bị ảnh hưởng
+//         await handleAppealApproval(violation, hanhDongKhoiPhuc, adminId);
+//       }
+//     }
+
+//     updateData.appeal.actionTakenAppeal = hanhDongKhoiPhuc;
+
+//     const updatedAppeal = await Violation.findByIdAndUpdate(
+//       appealId,
+//       updateData,
+//       { new: true }
+//     )
+//       .populate("reportedBy", "username email profile.avatar")
+//       .populate("userId", "username email profile.avatar fullName")
+//       .populate("appeal.appealReviewedBy", "username email profile.avatar");
+
+//     // Gửi thông báo
+//     await sendAppealNotification(violation, status, req.user);
+
+//     res.json({
+//       success: true,
+//       data: updatedAppeal,
+//       message: `Đã ${getAppealStatusText(status)} kháng nghị`,
+//     });
+//   } catch (error) {
+//     console.error("Update appeal status error:", error);
+//     res.status(500).json({
+//       success: false,
+//       message: "Lỗi khi cập nhật trạng thái kháng nghị",
+//     });
+//   }
+// };
+
+// Hàm xử lý khi kháng nghị được chấp thuận
+// const handleAppealApproval = async (violation, actionTaken, adminId) => {
+//   try {
+//     const { targetType, targetId, userId } = violation;
+
+//     switch (targetType) {
+//       case "Post":
+//         if (actionTaken === "unblock_post") {
+//           // mơ khoá post đưa về mặc định do đã xác định bài viết ko lỗi gì
+//           await Post.findByIdAndUpdate(targetId, {
+//             isBlocked: false,
+//             warningCount: 0,
+//             violationCount: 0,
+//           });
+
+//           // giảm lỗi user
+//           await ReduceViolationUserByID(userId, violation, adminId, false);
+//         }
+//         if (actionTaken === "unblock_comment") {
+//           // mở khoá comment post đưa về mặc định do đã xác định bài viết ko lỗi gì
+//           await Post.findByIdAndUpdate(targetId, {
+//             isBlockedComment: false,
+//             warningCount: 0,
+//             violationCount: 0,
+//           });
+
+//           // giảm lỗi user
+//           await ReduceViolationUserByID(userId, violation, adminId, false);
+//         }
+//         if (actionTaken === "unban_user") {
+//           // mở ban user và dưa về mặc định
+//           // await User.findByIdAndUpdate(userId, {
+//           //   active: true,
+//           //   violationCount: 0,
+//           //   warningCount: 0,
+//           // });
+
+//           // mở ban user
+//           await ReduceViolationUserByID(userId, violation, adminId, true);
+//         }
+//         if (actionTaken === "unban_warning") {
+//           const post = await Post.findById(targetId);
+//           const originalWarningCount = post.warningCount || 0;
+
+//           // đưa về mặc định do đã xem xét bài viết ko vi phạm gì
+//           post.warningCount = 0;
+//           post.reportCount = 0;
+//           post.isBlocked = false;
+
+//           await post.save();
+
+//           if (originalWarningCount > 5) {
+//             // giảm lỗi user
+//             await ReduceViolationUserByID(userId, violation, adminId, false);
+//           }
+//         }
+
+//         break;
+
+//       case "Comment":
+//         if (actionTaken === "unblock_comment") {
+//           // đưa về mặc định do đã thấy bình luận ko lỗi gì
+//           await Comment.findByIdAndUpdate(targetId, {
+//             isBlocked: false,
+//             violationCount: 0,
+//             reportCount: 0,
+//           });
+
+//           // giảm lỗi user
+//           await ReduceViolationUserByID(userId, violation, adminId, false);
+//         }
+
+//         if (actionTaken === "unblock_post") {
+//           const comment = await Comment.findById(targetId);
+
+//           // đã xem xét comment đưa về ko lỗi
+//           await Comment.findByIdAndUpdate(targetId, {
+//             isBlocked: false,
+//             violationCount: 0,
+//             reportCount: 0,
+//           });
+
+//           const post = await Post.findById(comment.postId);
+
+//           // đã xem xét bài viết đưa về ko lỗi
+
+//           await Post.findByIdAndUpdate(post._id, {
+//             isBlocked: false,
+//             violationCount: 0,
+//             reportCount: 0,
+//           });
+
+//           // giảm lỗi user
+//           await ReduceViolationUserByID(
+//             post.userCreateID,
+//             violation,
+//             adminId,
+//             false
+//           );
+//         }
+//         if (actionTaken === "unban_user") {
+//           await Comment.findByIdAndUpdate(targetId, {
+//             isBlocked: false,
+//             violationCount: 0,
+//             reportCount: 0,
+//           });
+//           // mở ban user
+//           await ReduceViolationUserByID(userId, violation, adminId, true);
+//         }
+//         if (actionTaken === "unban_warning") {
+//           const comment = await Comment.findById(targetId);
+//           const warningCount = comment.warningCount || 0;
+
+//           // đưa về mặc định do đã xem xét bài viết ko vi phạm gì
+//           comment.warningCount = 0;
+//           comment.reportCount = 0;
+//           comment.isBlocked = false;
+
+//           await comment.save();
+
+//           if (warningCount > 5) {
+//             // giảm lỗi user
+//             await ReduceViolationUserByID(userId, violation, adminId, false);
+//           }
+//         }
+//         break;
+
+//       case "User":
+//         if (actionTaken === "unban_user") {
+//           await ReduceViolationUserByID(userId, violation, adminId, true);
+//         }
+//         if (actionTaken === "unban_warning") {
+//           const user = await User.findByIdAndUpdate(userId);
+
+//           let warningCount =
+//             (user.warningCount || 0) - 1 > 0 ? (user.warningCount || 0) - 1 : 0;
+
+//           await User.findByIdAndUpdate(userId, {
+//             active: true,
+//             warningCount: warningCount,
+//           });
+
+//           if (warningCount >= 5) {
+//             await ReduceViolationUserByID(userId, violation, adminId, false);
+//           }
+//         }
+//         break;
+
+//       case "Group":
+//         if (actionTaken === "unblock_group") {
+//           await Group.findByIdAndUpdate(targetId, {
+//             active: true,
+//             warningCount: 0,
+//             reportCount: 0,
+//           });
+
+//           await ReduceViolationUserByID(userId, violation, adminId, false);
+//         }
+//         if (actionTaken === "unban_warning") {
+//           const group = await Group.findById(targetId);
+
+//           await Group.findByIdAndUpdate(targetId, {
+//             active: true,
+//             warningCount: 0,
+//             reportCount: 0,
+//           });
+
+//           let warningCount = group.warningCount || 0;
+
+//           if (warningCount > 5) {
+//             await ReduceViolationUserByID(userId, violation, adminId, false);
+//           }
+//         }
+//         break;
+//     }
+//   } catch (error) {
+//     console.error("Error handling appeal approval:", error);
+//   }
+
+//   // giảm lỗi cho user
+//   async function ReduceViolationUserByID(
+//     userId,
+//     violation,
+//     userAdminId,
+//     unbanUser = false
+//   ) {
+//     try {
+//       if (!userId) return;
+//       const user = await User.findById(userId);
+//       if (!user) {
+//         console.warn("AddViolationUserByID: user not found", userId);
+//         return;
+//       }
+//       const newCount = (user.violationCount || 0) - 1;
+//       let isActive = newCount <= 5;
+//       if (unbanUser) {
+//         isActive = true;
+//       }
+
+//       await User.findByIdAndUpdate(userId, {
+//         active: isActive,
+//         violationCount: newCount,
+//         lastViolationAt: new Date(),
+//       });
+
+//       // Thông báo khi bị ban/tạm khoá
+//       if (isActive) {
+//         await NotificationService.createAndEmitNotification({
+//           recipient: userId,
+//           sender: userAdminId,
+//           type: "USER_UN_BANNED",
+//           title: "Tài khoản CÓ THỂ HOẠT ĐỘNG TRỞ LẠI",
+//           message: `Tài khoản của bạn đã có thể hoạt đọng trở lại.`,
+//           data: {
+//             violationId: violation._id,
+//             reason: violation.reason,
+//             action: "banned",
+//             actionTakenAppeal: "unban_user",
+//           },
+//           priority: "urgent",
+//           url: `/violations`,
+//         });
+//       }
+//     } catch (err) {
+//       console.error("Lỗi khi cập nhật violation user:", err);
+//     }
+//   }
+// };
+
 const updateAppealStatus = async (req, res) => {
   try {
     const { appealId } = req.params;
@@ -3696,7 +4039,9 @@ const updateAppealStatus = async (req, res) => {
       });
     }
 
-    // Cập nhật thông tin kháng nghị
+    console.log("req.body: ", req.body);
+
+    // Cập nhật thông tin kháng nghị - KHỞI TẠO ĐÚNG CẤU TRÚC
     const updateData = {
       "appeal.appealStatus": status,
       "appeal.appealReviewedBy": req.user.userId,
@@ -3707,15 +4052,54 @@ const updateAppealStatus = async (req, res) => {
       updateData["appeal.appealNotes"] = appealNotes;
     }
 
-    // Nếu kháng nghị được chấp thuận, cập nhật trạng thái violation
-    if (status === "approved") {
-      updateData.status = "reviewed";
-      if (actionTaken) {
-        updateData.actionTaken = actionTaken;
+    let hanhDongKhoiPhuc = "none";
 
-        // Khôi phục đối tượng bị ảnh hưởng
-        await handleAppealApproval(violation, actionTaken);
+    // Nếu kháng nghị được chấp thuận
+    if (status === "approved") {
+      console.log("status === approved");
+
+      updateData.status = "approved";
+
+      if (violation.actionTaken === "warning") {
+        hanhDongKhoiPhuc = "unban_warning";
+      } else if (violation.actionTaken === "block_post") {
+        hanhDongKhoiPhuc = "unblock_post";
+      } else if (violation.actionTaken === "block_comment") {
+        hanhDongKhoiPhuc = "unblock_comment";
+      } else if (violation.actionTaken === "ban_user") {
+        hanhDongKhoiPhuc = "unban_user";
+      } else if (violation.actionTaken === "block_group") {
+        hanhDongKhoiPhuc = "unblock_group";
+      } else if (
+        violation.actionTaken === "auto_blocked" &&
+        violation.targetType === "Post"
+      ) {
+        hanhDongKhoiPhuc = "unblock_post";
+      } else if (
+        violation.actionTaken === "auto_blocked" &&
+        violation.targetType === "Comment"
+      ) {
+        hanhDongKhoiPhuc = "unblock_comment";
+      } else if (
+        violation.actionTaken === "auto_blocked" &&
+        violation.targetType === "Group"
+      ) {
+        hanhDongKhoiPhuc = "unblock_group";
+      } else if (
+        violation.actionTaken === "auto_baned" &&
+        violation.targetType === "User"
+      ) {
+        hanhDongKhoiPhuc = "unban_user";
       }
+
+      console.log("hanhDongKhoiPhuc: ", hanhDongKhoiPhuc);
+
+      const adminId = req.user.userId;
+      // Khôi phục đối tượng bị ảnh hưởng
+      await handleAppealApproval(violation, hanhDongKhoiPhuc, adminId);
+
+      //
+      updateData["appeal.actionTakenAppeal"] = hanhDongKhoiPhuc;
     }
 
     const updatedAppeal = await Violation.findByIdAndUpdate(
@@ -3744,50 +4128,282 @@ const updateAppealStatus = async (req, res) => {
   }
 };
 
-// Hàm xử lý khi kháng nghị được chấp thuận
-const handleAppealApproval = async (violation, actionTaken) => {
+const handleAppealApproval = async (violation, actionTaken, adminId) => {
   try {
     const { targetType, targetId, userId } = violation;
 
     switch (targetType) {
       case "Post":
-        if (actionTaken === "unblock_post") {
-          await Post.findByIdAndUpdate(targetId, {
-            isBlocked: false,
-            warningCount: 0,
-          });
-        }
+        await handlePostAppeal(violation, actionTaken, adminId);
         break;
 
       case "Comment":
-        if (actionTaken === "unblock_comment") {
-          await Comment.findByIdAndUpdate(targetId, {
-            isBlocked: false,
-            warningCount: 0,
-          });
-        }
+        await handleCommentAppeal(violation, actionTaken, adminId);
         break;
 
       case "User":
-        if (actionTaken === "unban_user") {
-          await User.findByIdAndUpdate(userId, {
-            active: true,
-            violationCount: 0,
-          });
-        }
+        await handleUserAppeal(violation, actionTaken, adminId);
         break;
 
       case "Group":
-        if (actionTaken === "unblock_group") {
-          await Group.findByIdAndUpdate(targetId, {
-            active: true,
-            warningCount: 0,
-          });
-        }
+        await handleGroupAppeal(violation, actionTaken, adminId);
         break;
     }
   } catch (error) {
     console.error("Error handling appeal approval:", error);
+    throw error;
+  }
+};
+
+// Xử lý kháng nghị cho Post
+const handlePostAppeal = async (violation, actionTaken, adminId) => {
+  const { targetId, userId } = violation;
+
+  if (actionTaken === "unblock_post") {
+    console.log("KN Post: unblock_post");
+    await Post.findByIdAndUpdate(targetId, {
+      isBlocked: false,
+      warningCount: 0,
+      violationCount: 0,
+      reportCount: 0,
+    });
+
+    console.log("KN Post: giảm lỗi user sau khi đưa all count về 0");
+    await ReduceViolationUserByID(userId, violation, adminId, false);
+  } else if (actionTaken === "unblock_comment") {
+    console.log("KN Post: unblock_comment");
+    await Post.findByIdAndUpdate(targetId, {
+      isBlockedComment: false,
+      warningCount: 0,
+      violationCount: 0,
+      reportCount: 0,
+    });
+    await ReduceViolationUserByID(userId, violation, adminId, false);
+  } else if (actionTaken === "unban_user") {
+    await ReduceViolationUserByID(userId, violation, adminId, true);
+  } else if (actionTaken === "unban_warning") {
+    const post = await Post.findById(targetId);
+    const originalWarningCount = post.warningCount || 0;
+
+    // Reset về 0
+    await Post.findByIdAndUpdate(targetId, {
+      warningCount: 0,
+      reportCount: 0,
+      isBlocked: false,
+    });
+
+    console.log("KN Post: unban_warning đưa về 0 ");
+
+    // Kiểm tra giá trị gốc
+    if (originalWarningCount > 5) {
+      console.log(
+        "KN Post: unban_warning do  originalWarningCount > 5 nên giảm lỗi user: ",
+        originalWarningCount
+      );
+      await ReduceViolationUserByID(userId, violation, adminId, false);
+    }
+  }
+};
+
+// Xử lý kháng nghị cho Comment
+const handleCommentAppeal = async (violation, actionTaken, adminId) => {
+  const { targetId, userId } = violation;
+
+  if (actionTaken === "unblock_comment") {
+    await Comment.findByIdAndUpdate(targetId, {
+      isBlocked: false,
+      violationCount: 0,
+      reportCount: 0,
+    });
+
+    console.log("KN comment: unblock_comment, đưa hết về 0, giảm lỗi user");
+
+    await ReduceViolationUserByID(userId, violation, adminId, false);
+  } else if (actionTaken === "unblock_post") {
+    const comment = await Comment.findById(targetId);
+
+    console.log("KN comment: unblock_post, đưa hết về 0, giảm lỗi user");
+    // Khôi phục comment
+    await Comment.findByIdAndUpdate(targetId, {
+      isBlocked: false,
+      violationCount: 0,
+      reportCount: 0,
+    });
+
+    // Khôi phục post liên quan
+    const post = await Post.findById(comment.postID);
+    await Post.findByIdAndUpdate(post._id, {
+      isBlocked: false,
+      violationCount: 0,
+      reportCount: 0,
+    });
+
+    console.log(
+      "KN comment: unblock_post, giảm lỗi user và đưa post all count về 0"
+    );
+
+    await ReduceViolationUserByID(post.userCreateID, violation, adminId, false);
+  } else if (actionTaken === "unban_user") {
+    await Comment.findByIdAndUpdate(targetId, {
+      isBlocked: false,
+      violationCount: 0,
+      reportCount: 0,
+    });
+    console.log(
+      "KN comment: unban_user, mở khoá comment mở un_ban US và reset về 0"
+    );
+    await ReduceViolationUserByID(userId, violation, adminId, true);
+  } else if (actionTaken === "unban_warning") {
+    const comment = await Comment.findById(targetId);
+    const originalWarningCount = comment.warningCount || 0;
+
+    // Reset về 0
+    await Comment.findByIdAndUpdate(targetId, {
+      warningCount: 0,
+      reportCount: 0,
+      isBlocked: false,
+    });
+
+    console.log(
+      "KN comment: unban_warning, do originalWarningCount > 5 nên giảm lỗi US: ",
+      originalWarningCount
+    );
+
+    // Kiểm tra giá trị gốc
+    if (originalWarningCount > 5) {
+      await ReduceViolationUserByID(userId, violation, adminId, false);
+    }
+  }
+};
+
+// Xử lý kháng nghị cho User
+const handleUserAppeal = async (violation, actionTaken, adminId) => {
+  const { userId } = violation;
+
+  if (actionTaken === "unban_user") {
+    console.log("XL User: unban_user");
+    await ReduceViolationUserByID(userId, violation, adminId, true);
+  } else if (actionTaken === "unban_warning") {
+    console.log("XL User: unban_warning");
+
+    const user = await User.findById(userId);
+    const originalWarningCount = user.warningCount || 0;
+
+    const newWarningCount = Math.max(originalWarningCount - 1, 0);
+
+    await User.findByIdAndUpdate(userId, {
+      active: true,
+      warningCount: newWarningCount,
+    });
+
+    console.log(
+      "XL User: do newWarningCount: ",
+      newWarningCount,
+      " >= 5 nên giảm lỗi user"
+    );
+
+    if (originalWarningCount >= 5) {
+      await ReduceViolationUserByID(userId, violation, adminId, false);
+    }
+  }
+};
+
+// Xử lý kháng nghị cho Group
+const handleGroupAppeal = async (violation, actionTaken, adminId) => {
+  const { targetId, userId } = violation;
+
+  if (actionTaken === "unblock_group") {
+    await Group.findByIdAndUpdate(targetId, {
+      active: true,
+      warningCount: 0,
+      reportCount: 0,
+    });
+
+    console.log("group: unblock_group");
+    await ReduceViolationUserByID(userId, violation, adminId, false);
+  } else if (actionTaken === "unban_warning") {
+    const group = await Group.findById(targetId);
+    const originalWarningCount = group.warningCount || 0;
+
+    console.log("Group: count warning cũ: ", originalWarningCount);
+
+    await Group.findByIdAndUpdate(targetId, {
+      active: true,
+      warningCount: 0,
+      reportCount: 0,
+    });
+
+    console.log("XL Group: unban_warning");
+    console.log("XL Group: count warning cũ: ", originalWarningCount);
+
+    if (originalWarningCount > 5) {
+      console.log("Group: originalWarningCount > 5: nên giảm lỗi user");
+      await ReduceViolationUserByID(userId, violation, adminId, false);
+    }
+  }
+};
+
+//  giảm lỗi user
+const ReduceViolationUserByID = async (
+  userId,
+  violation,
+  userAdminId,
+  unbanUser = false
+) => {
+  try {
+    if (!userId) return;
+
+    const user = await User.findById(userId);
+
+    console.log("EmailUsser giảm lỗi: ", user.email);
+    if (!user) {
+      console.warn("ReduceViolationUserByID: user not found", userId);
+      return;
+    }
+
+    let newCount = Math.max((user.violationCount || 0) - 1, 0);
+    let warning = Math.max(user.warningCount || 0, 0);
+
+    console.log("đã giảm lõi: violationCount user còn: ", newCount);
+
+    let isActive = newCount <= 5;
+
+    if (unbanUser) {
+      isActive = true;
+      newCount = 0;
+      warning = 0;
+    }
+
+    await User.findByIdAndUpdate(userId, {
+      active: isActive,
+      violationCount: newCount,
+      warningCount: warning,
+      lastViolationAt: new Date(),
+    });
+
+    console.log("Gỉam lỗi thành công");
+
+    // Thông báo khi được mở khoá
+    if (isActive) {
+      await NotificationService.createAndEmitNotification({
+        recipient: userId,
+        sender: userAdminId,
+        type: "USER_UN_BANNED",
+        title: "Tài khoản CÓ THỂ HOẠT ĐỘNG TRỞ LẠI",
+        message: `Tài khoản của bạn đã có thể hoạt động trở lại.`,
+        data: {
+          violationId: violation._id,
+          reason: violation.reason,
+          action: "banned",
+          actionTakenAppeal: "unban_user",
+        },
+        priority: "urgent",
+        url: `/violations`,
+      });
+    }
+  } catch (err) {
+    console.error("Lỗi khi cập nhật violation user:", err);
+    throw err;
   }
 };
 

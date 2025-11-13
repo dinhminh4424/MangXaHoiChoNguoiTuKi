@@ -12,6 +12,7 @@ import {
   getAllAppeals,
   updateAppealStatus,
 } from "../../../services/adminService";
+import { useParams } from "react-router-dom";
 
 const AppealManagement = () => {
   const [appeals, setAppeals] = useState([]);
@@ -31,6 +32,8 @@ const AppealManagement = () => {
     cancelled: 0,
   });
 
+  const { idViodation } = useParams();
+
   // State cho bộ lọc
   const [filters, setFilters] = useState({
     status: "all",
@@ -40,7 +43,7 @@ const AppealManagement = () => {
     dateTo: "",
     search: "",
     appealId: "",
-    violationId: "",
+    violationId: idViodation || "",
   });
 
   const limit = 10;
@@ -72,10 +75,26 @@ const AppealManagement = () => {
 
   // Hành động khôi phục theo loại
   const restoreActions = {
-    Post: [{ value: "unblock_post", label: "Mở khóa bài viết" }],
-    Comment: [{ value: "unblock_comment", label: "Mở khóa bình luận" }],
-    User: [{ value: "unban_user", label: "Mở khóa tài khoản" }],
-    Group: [{ value: "unblock_group", label: "Mở khóa nhóm" }],
+    Post: [
+      { value: "unblock_post", label: "Mở khóa bài viết" },
+      { value: "unblock_post", label: "Mở khóa bài viết" },
+      { value: "unblock_comment", label: "Mở khóa bình luận cho bài viết" },
+      { value: "unban_warning", label: "Xoá cảnh báo cho bài viết" },
+    ],
+    Comment: [
+      { value: "unblock_post", label: "Mở khóa bài viết" },
+      { value: "unblock_post", label: "Mở khóa bài viết này của bình luận" },
+      { value: "unblock_comment", label: "Mở khóa bình luận" },
+      { value: "unban_warning", label: "Xoá cảnh báo cho bình luận" },
+    ],
+    User: [
+      { value: "unban_user", label: "Mở khóa tài khoản" },
+      { value: "unban_warning", label: "Xoá cảnh báo cho người dùng" },
+    ],
+    Group: [
+      { value: "unblock_group", label: "Mở khóa nhóm" },
+      { value: "unban_warning", label: "Xoá cảnh báo cho hội nhóm" },
+    ],
   };
 
   const fetchAppeals = useCallback(
@@ -387,7 +406,18 @@ const AppealManagement = () => {
             <strong>Bài viết:</strong>
             <div className="mt-1 p-2 bg-light rounded">
               {targetId.content ? (
-                <div className="text-truncate">{targetId.content}</div>
+                // <div className="text-truncate">{targetId.content}</div>
+                <div
+                  style={{
+                    display: "-webkit-box",
+                    WebkitBoxOrient: "vertical",
+                    WebkitLineClamp: 1, // số dòng muốn hiển thị
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                  }}
+                >
+                  {targetId.content}
+                </div>
               ) : (
                 <span className="text-muted">N/A</span>
               )}

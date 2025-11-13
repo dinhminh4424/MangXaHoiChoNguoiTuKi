@@ -1133,8 +1133,10 @@ class GroupController {
 
       await newViolation.save();
 
-      let reportCount = group.reportCount || 0 + 1;
+      let reportCount = group.reportCount + 1;
+
       group.reportCount = reportCount;
+
       if (reportCount >= 10) {
         group.active = false;
 

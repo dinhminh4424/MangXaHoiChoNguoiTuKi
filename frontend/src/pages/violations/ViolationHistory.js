@@ -330,15 +330,29 @@ const ViolationHistory = () => {
                               size="sm"
                               className="me-2"
                               onClick={() => handleViewDetails(violation)}
+                              title="Chi tiết"
                             >
                               <i className="fas fa-eye"></i>
                             </Button>
-                            {!violation.appeal?.isAppealed &&
+                            {/* {!violation.appeal?.isAppealed &&
                               violation.status === "approved" && (
                                 <Button
                                   variant="outline-warning"
                                   size="sm"
                                   onClick={() => handleAppeal(violation)}
+                                  title="Kháng cáo"
+                                >
+                                  <i className="fas fa-gavel"></i>
+                                </Button>
+                              )} */}
+                            {!violation.appeal?.isAppealed &&
+                              (violation.status === "approved" ||
+                                violation.status === "auto") && (
+                                <Button
+                                  variant="outline-warning"
+                                  size="sm"
+                                  onClick={() => handleAppeal(violation)}
+                                  title="Kháng cáo"
                                 >
                                   <i className="fas fa-gavel"></i>
                                 </Button>

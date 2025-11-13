@@ -2,7 +2,10 @@
 const Violation = require("../models/Violation");
 const User = require("../models/User");
 const Post = require("../models/Post");
+const Group = require("../models/Group");
 const Comment = require("../models/Comment");
+const NotificationService = require("../services/notificationService");
+const { logUserActivity } = require("../logging/userActivityLogger");
 
 // Lấy danh sách vi phạm với phân trang và lọc
 exports.getUserViolations = async (req, res) => {
@@ -261,6 +264,23 @@ exports.createAppeal = async (req, res) => {
     };
 
     await violation.save();
+
+    await NotificationService.emitNotificationToAdmins({
+      recipient: null, // Gửi cho tất cả admin
+      sender: userId,
+      type: "APPEAL_CREATE",
+      title: "Kháng Nghị mới cần xử lý",
+      message: `Kháng nghị  đã được gửi với lý do: ${appealReason}`,
+      data: {
+        violationId: violation._id,
+        targetId: violation.targetId,
+        reporterId: violation.reportedBy,
+        userId: violation.userId,
+        appealReason: violation.appealReason,
+      },
+      priority: "high",
+      url: `/admin/appeals/${violation._id}`,
+    });
 
     res.json({
       success: true,

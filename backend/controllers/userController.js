@@ -1062,8 +1062,14 @@ async function AddViolationUserByID(
     }
     const newCount = (user.violationCount || 0) + 1;
     let isActive = newCount <= 5;
-    if (banUser) {
+    if (banUser || !isActive) {
       isActive = false;
+      const vio = await Violation.findById(violation._id);
+
+      vio.status = "auto";
+      vio.actionTaken = "auto_baned";
+
+      await vio.save();
     }
 
     await User.findByIdAndUpdate(userId, {
