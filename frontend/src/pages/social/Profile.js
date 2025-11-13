@@ -29,7 +29,8 @@ const Profile = () => {
 
     const checkView = async () => {
       try {
-        const res = await api.get(`/api/users/${userIdParam}`);
+        //  const res = await api.get(`/api/users/${userIdParam}`);
+        const res = await api.get(`/api/users/${userId}`);
 
         console.log("res: ", res);
         const verified = res.data.success && res.data.data.checkViewProfile;

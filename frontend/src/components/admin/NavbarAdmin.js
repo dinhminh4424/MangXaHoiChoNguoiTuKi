@@ -83,6 +83,11 @@ function NavbarAdmin() {
       label: "Quản Lý Nhật Kí",
     },
     {
+      path: "/admin/appeals",
+      icon: "ri-file-list-3-line", //kháng nghị
+      label: "Quản Lý Kháng Nghị",
+    },
+    {
       path: "/admin/system",
       icon: "ri-settings-3-line",
       label: "System Settings",

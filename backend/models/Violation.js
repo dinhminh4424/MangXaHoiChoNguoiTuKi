@@ -73,6 +73,53 @@ const violationSchema = new mongoose.Schema(
       ref: "User",
       default: null, // admin/mod xử lý
     },
+
+    // Thông tin kháng cáo
+    appeal: {
+      isAppealed: {
+        // check kháng cáo
+        type: Boolean,
+        default: false,
+      },
+      appealReason: {
+        // lý do kháng cáo
+        type: String,
+        trim: true,
+      },
+      appealAt: {
+        type: Date,
+      },
+      appealStatus: {
+        // trạng thái kháng cáo
+        type: String,
+        enum: ["pending", "approved", "rejected", "cancelled"],
+        default: "pending",
+      },
+      appealReviewedBy: {
+        type: mongoose.Schema.Types.ObjectId, // dc sử lý bởi
+        ref: "User",
+        default: null,
+      },
+      appealReviewedAt: {
+        type: Date, // ngày sử lý
+      },
+      appealNotes: {
+        type: String, // ghi chú kháng cáo
+        trim: true,
+      },
+      files: [
+        // mảng file đính kèm (nếu có)
+        {
+          type: {
+            type: String,
+            enum: ["text", "image", "file", "video", "audio"],
+          },
+          fileUrl: String,
+          fileName: String,
+          fileSize: Number,
+        },
+      ],
+    },
     reviewedAt: Date,
   },
   { timestamps: true }

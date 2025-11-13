@@ -39,44 +39,68 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         { path: "/journal/history", icon: "las la-history", label: "History" },
       ],
     },
-    { path: "/calendar", icon: "las la-calendar", label: "Calendar" },
+    // { path: "/calendar", icon: "las la-calendar", label: "Calendar" },
+    // {
+    //   path: "/email",
+    //   icon: "ri-mail-line",
+    //   label: "Email",
+    //   children: [
+    //     { path: "/email/inbox", icon: "ri-inbox-line", label: "Inbox" },
+    //     {
+    //       path: "/email/compose",
+    //       icon: "ri-edit-line",
+    //       label: "Email Compose",
+    //     },
+    //   ],
+    // },
+    // {
+    //   path: "/ui-elements",
+    //   icon: "ri-focus-2-line",
+    //   label: "UI Elements",
+    //   children: [
+    //     { path: "/ui/colors", icon: "ri-font-color", label: "Colors" },
+    //     { path: "/ui/typography", icon: "ri-text", label: "Typography" },
+    //     {
+    //       path: "/ui/buttons",
+    //       icon: "ri-checkbox-blank-line",
+    //       label: "Buttons",
+    //     },
+    //     { path: "/ui/cards", icon: "ri-bank-card-line", label: "Cards" },
+    //   ],
+    // },
+    // {
+    //   path: "/pages",
+    //   icon: "ri-pages-line",
+    //   label: "Pages",
+    //   children: [
+    //     { path: "/login", icon: "ri-login-box-line", label: "Login" },
+    //     { path: "/register", icon: "ri-login-circle-line", label: "Register" },
+    //     { path: "/pricing", icon: "ri-price-tag-line", label: "Pricing" },
+    //   ],
+    // },
     {
-      path: "/email",
-      icon: "ri-mail-line",
-      label: "Email",
-      children: [
-        { path: "/email/inbox", icon: "ri-inbox-line", label: "Inbox" },
-        {
-          path: "/email/compose",
-          icon: "ri-edit-line",
-          label: "Email Compose",
-        },
-      ],
-    },
-    {
-      path: "/ui-elements",
-      icon: "ri-focus-2-line",
-      label: "UI Elements",
-      children: [
-        { path: "/ui/colors", icon: "ri-font-color", label: "Colors" },
-        { path: "/ui/typography", icon: "ri-text", label: "Typography" },
-        {
-          path: "/ui/buttons",
-          icon: "ri-checkbox-blank-line",
-          label: "Buttons",
-        },
-        { path: "/ui/cards", icon: "ri-bank-card-line", label: "Cards" },
-      ],
-    },
-    {
-      path: "/pages",
+      path: "/notifications",
       icon: "ri-pages-line",
-      label: "Pages",
+      label: "Notifications",
+    },
+    {
+      path: "/ai",
+      icon: "ri-robot-line", // icon mới cho parent
+      label: "AI",
       children: [
-        { path: "/login", icon: "ri-login-box-line", label: "Login" },
-        { path: "/register", icon: "ri-login-circle-line", label: "Register" },
-        { path: "/pricing", icon: "ri-price-tag-line", label: "Pricing" },
+        { path: "/nhandien", icon: "ri-emotion-happy-line", label: "Emotion" }, // icon mới
+        { path: "/aiChat", icon: "ri-chat-1-line", label: "AIChat" }, // icon mới
       ],
+    },
+    {
+      path: "/settings",
+      icon: "ri-settings-3-line",
+      label: "Settings",
+    },
+    {
+      path: "/profile/dashboard",
+      icon: "ri-dashboard-line",
+      label: "Dashboard",
     },
   ];
 
@@ -380,6 +404,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                         </div>
                       </div>
                       <div className="card-body p-0">
+                        {/* profile */}
                         <Link
                           to="/profile"
                           className="iq-sub-card iq-bg-primary-hover"
@@ -396,6 +421,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                             </div>
                           </div>
                         </Link>
+                        {/* Thống kê */}
                         <Link
                           to="/profile/dashboard"
                           className="iq-sub-card iq-bg-warning-hover"
@@ -412,6 +438,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                             </div>
                           </div>
                         </Link>
+                        {/* Cài đặt */}
                         <Link
                           to="/settings"
                           className="iq-sub-card iq-bg-info-hover"
@@ -428,6 +455,29 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                             </div>
                           </div>
                         </Link>
+
+                        {/* Báo cáo */}
+                        <Link
+                          to="/violations"
+                          className="iq-sub-card iq-bg-danger-hover" // đổi màu hover nếu muốn
+                        >
+                          <div className="d-flex align-items-center">
+                            <div className="rounded card-icon bg-soft-danger">
+                              {" "}
+                              {/* đổi màu icon nền */}
+                              <i className="ri-error-warning-line"></i>{" "}
+                              {/* icon mới cho violations */}
+                            </div>
+                            <div className="ms-3">
+                              <h6 className="mb-0">Violations</h6>
+                              <p className="mb-0 font-size-12">
+                                View your violation history.
+                              </p>
+                            </div>
+                          </div>
+                        </Link>
+
+                        {/* Admin */}
                         {user?.role === "admin" && (
                           <Link
                             to="/admin"

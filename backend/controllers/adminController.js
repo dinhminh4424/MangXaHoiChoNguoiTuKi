@@ -3491,6 +3491,373 @@ const updateViolationUser = async (req, res) => {
   }
 };
 
+// Quản lý kháng nghị
+const getAllAppeals = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 10,
+      status = "all",
+      appealStatus = "all",
+      dateFrom = "",
+      dateTo = "",
+      search = "",
+      appealId = "",
+      violationId = "",
+      targetType = "all",
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    // Tạo filter cho kháng nghị
+    const filter = {
+      "appeal.isAppealed": true,
+    };
+
+    // Lọc theo trạng thái kháng nghị
+    if (appealStatus !== "all") {
+      filter["appeal.appealStatus"] = appealStatus;
+    }
+
+    // Lọc theo trạng thái violation
+    if (status !== "all") {
+      filter.status = status;
+    }
+
+    // Lọc theo targetType
+    if (targetType !== "all") {
+      filter.targetType = targetType;
+    }
+
+    // Lọc theo thời gian kháng nghị
+    if (dateFrom || dateTo) {
+      filter["appeal.appealAt"] = {};
+      if (dateFrom) filter["appeal.appealAt"].$gte = new Date(dateFrom);
+      if (dateTo) {
+        const endDate = new Date(dateTo);
+        endDate.setHours(23, 59, 59, 999);
+        filter["appeal.appealAt"].$lte = endDate;
+      }
+    }
+
+    // Xử lý tìm kiếm
+    const searchConditions = [];
+    if (search) {
+      searchConditions.push(
+        { reason: { $regex: search, $options: "i" } },
+        { "appeal.appealReason": { $regex: search, $options: "i" } },
+        { "appeal.appealNotes": { $regex: search, $options: "i" } },
+        { notes: { $regex: search, $options: "i" } }
+      );
+    }
+
+    // Tìm kiếm theo appealId (ID của violation)
+    if (appealId) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$_id" },
+            regex: appealId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Tìm kiếm theo violationId (targetId)
+    if (violationId) {
+      searchConditions.push({
+        $expr: {
+          $regexMatch: {
+            input: { $toString: "$targetId" },
+            regex: violationId,
+            options: "i",
+          },
+        },
+      });
+    }
+
+    // Kết hợp điều kiện tìm kiếm
+    if (searchConditions.length > 0) {
+      filter.$or = searchConditions;
+    }
+
+    const [appeals, total] = await Promise.all([
+      Violation.find(filter)
+        .populate("reportedBy", "username email profile.avatar")
+        .populate("userId", "username email profile.avatar fullName")
+        .populate("appeal.appealReviewedBy", "username email profile.avatar")
+        .populate({
+          path: "targetId",
+          select:
+            "name title content username email description avatar memberCount visibility",
+        })
+        .sort({ "appeal.appealAt": -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      Violation.countDocuments(filter),
+    ]);
+
+    // Thống kê
+    const stats = await Violation.aggregate([
+      { $match: { "appeal.isAppealed": true } },
+      {
+        $group: {
+          _id: "$appeal.appealStatus",
+          count: { $sum: 1 },
+        },
+      },
+    ]);
+
+    const statusStats = {
+      pending: 0,
+      approved: 0,
+      rejected: 0,
+      cancelled: 0,
+    };
+
+    stats.forEach((stat) => {
+      statusStats[stat._id] = stat.count;
+    });
+
+    res.json({
+      success: true,
+      data: {
+        appeals,
+        pagination: {
+          current: parseInt(page),
+          pages: Math.ceil(total / limit),
+          total,
+        },
+        stats: statusStats,
+      },
+    });
+  } catch (error) {
+    console.error("Get all appeals error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách kháng nghị",
+    });
+  }
+};
+
+const getAppealById = async (req, res) => {
+  try {
+    const { appealId } = req.params;
+
+    const appeal = await Violation.findOne({
+      _id: appealId,
+      "appeal.isAppealed": true,
+    })
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email profile.avatar fullName")
+      .populate("reviewedBy", "username email profile.avatar")
+      .populate("appeal.appealReviewedBy", "username email profile.avatar")
+      .populate({
+        path: "targetId",
+        select:
+          "name title content username email description avatar memberCount visibility isBlocked isPrivate",
+      });
+
+    if (!appeal) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy kháng nghị",
+      });
+    }
+
+    res.json({
+      success: true,
+      data: appeal,
+    });
+  } catch (error) {
+    console.error("Get appeal by ID error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thông tin kháng nghị",
+    });
+  }
+};
+
+const updateAppealStatus = async (req, res) => {
+  try {
+    const { appealId } = req.params;
+    const { status, appealNotes, actionTaken } = req.body;
+
+    const violation = await Violation.findOne({
+      _id: appealId,
+      "appeal.isAppealed": true,
+    });
+
+    if (!violation) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy kháng nghị",
+      });
+    }
+
+    // Cập nhật thông tin kháng nghị
+    const updateData = {
+      "appeal.appealStatus": status,
+      "appeal.appealReviewedBy": req.user.userId,
+      "appeal.appealReviewedAt": new Date(),
+    };
+
+    if (appealNotes) {
+      updateData["appeal.appealNotes"] = appealNotes;
+    }
+
+    // Nếu kháng nghị được chấp thuận, cập nhật trạng thái violation
+    if (status === "approved") {
+      updateData.status = "reviewed";
+      if (actionTaken) {
+        updateData.actionTaken = actionTaken;
+
+        // Khôi phục đối tượng bị ảnh hưởng
+        await handleAppealApproval(violation, actionTaken);
+      }
+    }
+
+    const updatedAppeal = await Violation.findByIdAndUpdate(
+      appealId,
+      updateData,
+      { new: true }
+    )
+      .populate("reportedBy", "username email profile.avatar")
+      .populate("userId", "username email profile.avatar fullName")
+      .populate("appeal.appealReviewedBy", "username email profile.avatar");
+
+    // Gửi thông báo
+    await sendAppealNotification(violation, status, req.user);
+
+    res.json({
+      success: true,
+      data: updatedAppeal,
+      message: `Đã ${getAppealStatusText(status)} kháng nghị`,
+    });
+  } catch (error) {
+    console.error("Update appeal status error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật trạng thái kháng nghị",
+    });
+  }
+};
+
+// Hàm xử lý khi kháng nghị được chấp thuận
+const handleAppealApproval = async (violation, actionTaken) => {
+  try {
+    const { targetType, targetId, userId } = violation;
+
+    switch (targetType) {
+      case "Post":
+        if (actionTaken === "unblock_post") {
+          await Post.findByIdAndUpdate(targetId, {
+            isBlocked: false,
+            warningCount: 0,
+          });
+        }
+        break;
+
+      case "Comment":
+        if (actionTaken === "unblock_comment") {
+          await Comment.findByIdAndUpdate(targetId, {
+            isBlocked: false,
+            warningCount: 0,
+          });
+        }
+        break;
+
+      case "User":
+        if (actionTaken === "unban_user") {
+          await User.findByIdAndUpdate(userId, {
+            active: true,
+            violationCount: 0,
+          });
+        }
+        break;
+
+      case "Group":
+        if (actionTaken === "unblock_group") {
+          await Group.findByIdAndUpdate(targetId, {
+            active: true,
+            warningCount: 0,
+          });
+        }
+        break;
+    }
+  } catch (error) {
+    console.error("Error handling appeal approval:", error);
+  }
+};
+
+// Hàm gửi thông báo kháng nghị
+const sendAppealNotification = async (violation, status, adminUser) => {
+  try {
+    const statusText = getAppealStatusText(status);
+    const targetTypeText = getTargetTypeText(violation.targetType);
+
+    await NotificationService.createAndEmitNotification({
+      recipient: violation.userId,
+      sender: adminUser._id,
+      type: "APPEAL_RESOLVED",
+      title: `Kháng nghị đã được ${statusText}`,
+      message: `Kháng nghị của bạn về ${targetTypeText} đã được ${statusText.toLowerCase()}. ${
+        status === "approved" ? "Nội dung đã được khôi phục." : ""
+      }`,
+      data: {
+        appealId: violation._id,
+        targetType: violation.targetType,
+        targetId: violation.targetId,
+        status: status,
+        resolvedBy: adminUser._id,
+      },
+      priority: "medium",
+      url: `/support/appeals/${violation._id}`,
+    });
+
+    // Thông báo cho admin
+    await NotificationService.emitNotificationToAdmins({
+      type: "APPEAL_RESOLVED_ADMIN",
+      title: `Kháng nghị đã được xử lý`,
+      message: `Kháng nghị #${violation._id} đã được ${
+        adminUser.fullName || adminUser.username
+      } ${statusText.toLowerCase()}.`,
+      data: {
+        appealId: violation._id,
+        status: status,
+        resolvedBy: adminUser._id,
+      },
+      priority: "low",
+      url: `/admin/appeals/${violation._id}`,
+    });
+  } catch (error) {
+    console.error("Error sending appeal notification:", error);
+  }
+};
+
+// Helper functions
+const getAppealStatusText = (status) => {
+  const statusMap = {
+    pending: "Đang chờ xử lý",
+    approved: "Chấp thuận",
+    rejected: "Từ chối",
+    cancelled: "Đã hủy",
+  };
+  return statusMap[status] || status;
+};
+
+const getTargetTypeText = (targetType) => {
+  const typeMap = {
+    Post: "bài viết",
+    Comment: "bình luận",
+    User: "người dùng",
+    Group: "nhóm",
+    Message: "tin nhắn",
+  };
+  return typeMap[targetType] || targetType;
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -3534,4 +3901,9 @@ module.exports = {
   getAllGroups,
   getGroupViolation,
   updateViolationGroupStatus,
+
+  // kháng nghị
+  getAllAppeals,
+  getAppealById,
+  updateAppealStatus,
 };

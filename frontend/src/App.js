@@ -54,6 +54,10 @@ import TodoDetail from "./pages/todo/TodoDetail";
 
 import SettingsDashboard from "./components/settings/SettingsDashboard";
 
+import NotificationsPage from "./pages/notifications/NotificationsPage";
+
+import ViolationHistory from "./pages/violations/ViolationHistory";
+
 import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
@@ -65,6 +69,8 @@ import ReportComment from "./pages/admin/reports/ReportComment";
 import ReportUser from "./pages/admin/reports/ReportUser";
 import ReportGroup from "./pages/admin/reports/ReportGroup";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
+
+import AppealManagement from "./pages/admin/appeals/AppealManagement";
 
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -166,6 +172,12 @@ const routeConfigs = [
   // Protected User Setting
   { path: "/settings", component: SettingsDashboard, layout: UserLayout },
 
+  // Protected NotificationsPage
+  { path: "/notifications", component: NotificationsPage, layout: UserLayout },
+
+  // Protected NotificationsPage
+  { path: "/violations", component: ViolationHistory, layout: UserLayout },
+
   // Admin Routes
   {
     path: "/admin",
@@ -236,6 +248,13 @@ const routeConfigs = [
   {
     path: "/admin/groups/reports/:id",
     component: ReportGroup, // ReportGroup
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+
+  {
+    path: "/admin/appeals",
+    component: AppealManagement, // Kháng Nghị
     layout: AdminLayout,
     isAdmin: true,
   },
@@ -322,7 +341,7 @@ function AppRoutes() {
 function AppContent() {
   const { user } = useAuth();
   const userId = user?._id || user?.id || null;
-  
+
   return (
     <div className="App">
       <AppRoutes />

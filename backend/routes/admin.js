@@ -93,4 +93,9 @@ router.get("/violation/comments", adminController.getCommentViolation);
 router.get("/violation/users", adminController.getUserViolation);
 router.get("/violation/groups", adminController.getGroupViolation);
 
+// Quản lý kháng nghị
+router.get("/appeals", adminController.getAllAppeals);
+router.get("/appeals/:appealId", adminController.getAppealById);
+router.put("/appeals/:appealId/status", adminController.updateAppealStatus);
+
 module.exports = router;
