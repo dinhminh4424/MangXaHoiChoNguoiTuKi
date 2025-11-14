@@ -117,6 +117,8 @@
 //       commentResponse.userEmotion = userLike ? userLike.emotion : null;
 
 //       res.status(200);
+
+//       // ghi log
 //       logUserActivity({
 //         action: "comment.create",
 //         req,
@@ -202,6 +204,18 @@
 
 //       const total = await Comment.countDocuments(query);
 
+//       // GHI LOG XEM
+//       logUserActivity({
+//         action: "comment.list",
+//         req,
+//         res,
+//         userId,
+//         role: req.user?.role,
+//         target: { type: "post", id: postId },
+//         description: "Xem danh sách bình luận",
+//         payload: { postId, page, limit, parentCommentID },
+//       });
+
 //       res.status(200).json({
 //         success: true,
 //         comments: commentsWithLikeInfo,
@@ -270,6 +284,18 @@
 
 //       const total = await Comment.countDocuments(query);
 
+//       // ghi log
+//       logUserActivity({
+//         action: "comment.replies",
+//         req,
+//         res,
+//         userId,
+//         role: req.user?.role,
+//         target: { type: "comment", id: commentId },
+//         description: "Xem phản hồi bình luận",
+//         payload: { commentId, page, limit },
+//       });
+
 //       res.status(200).json({
 //         success: true,
 //         comments: commentsWithLikeInfo,
@@ -298,6 +324,8 @@
 //         userID: userId,
 //       });
 
+//        const oldContent = comment.content;
+
 //       if (!comment) {
 //         return res.status(404).json({
 //           success: false,
@@ -314,6 +342,22 @@
 
 //       await comment.save();
 //       await comment.populate("userID", "username avatar fullName");
+
+//       // log cập nhật comment
+//       logUserActivity({
+//         action: "comment.update",
+//         req,
+//         res,
+//         userId,
+//         role: req.user.role,
+//         target: { type: "comment", id: id },
+//         description: "Chỉnh sửa bình luận",
+//         payload: {
+//           commentId: id,
+//           oldContent: oldContent?.substring(0, 100),
+//           newContent: content?.substring(0, 100),
+//         },
+//       });
 
 //       res.status(200).json({
 //         success: true,
@@ -407,6 +451,24 @@
 //       // 4. XÓA TẤT CẢ COMMENT
 //       const deleteResult = await Comment.deleteMany({
 //         _id: { $in: commentIds },
+//       });
+
+//       // log xoá mềm
+//       logUserActivity({
+//         action: "comment.delete",
+//         req,
+//         res,
+//         userId,
+//         role: req.user.role,
+//         target: { type: "comment", id: id },
+//         description: isAdmin
+//           ? "Admin xóa bình luận"
+//           : "Người dùng xóa bình luận",
+//         payload: {
+//           commentId: id,
+//           deletedCount: deleteResult.deletedCount,
+//           filesDeleted: fileUrls.length,
+//         },
 //       });
 
 //       return res.status(200).json({
@@ -926,13 +988,17 @@ class CommentController {
 
       try {
         console.log("🔍 Bắt đầu gửi thông báo comment...");
-        
+
         // Lấy thông tin chủ bài viết - SỬA THÀNH userCreateID
         const post = await Post.findById(postID);
-        
-        if (post && post.userCreateID && post.userCreateID.toString() !== userID) {
+
+        if (
+          post &&
+          post.userCreateID &&
+          post.userCreateID.toString() !== userID
+        ) {
           console.log("✅ Điều kiện gửi thông báo: ĐÚNG");
-          
+
           // Gửi thông báo cho chủ bài viết
           await NotificationService.createAndEmitNotification({
             recipient: post.userCreateID, // SỬA: dùng userCreateID
@@ -944,12 +1010,12 @@ class CommentController {
               postId: postID,
               commentId: comment._id.toString(),
               content: content ? content.substring(0, 100) : "Đã đính kèm file",
-              commentType: parentCommentID ? "reply" : "comment"
+              commentType: parentCommentID ? "reply" : "comment",
             },
             priority: "medium",
-            url: `/posts/${postID}?comment=${comment._id}`
+            url: `/posts/${postID}?comment=${comment._id}`,
           });
-          
+
           console.log(`✅ Đã gửi thông báo cho chủ bài viết`);
         } else {
           console.log("❌ Điều kiện gửi thông báo: SAI");
@@ -958,11 +1024,14 @@ class CommentController {
         // Thông báo cho chủ comment cha (nếu là reply)
         if (parentCommentID) {
           const parentComment = await Comment.findById(parentCommentID);
-          
-          if (parentComment && parentComment.userID && 
-              parentComment.userID.toString() !== userID &&
-              (!post.userCreateID || parentComment.userID.toString() !== post.userCreateID.toString())) {
-            
+
+          if (
+            parentComment &&
+            parentComment.userID &&
+            parentComment.userID.toString() !== userID &&
+            (!post.userCreateID ||
+              parentComment.userID.toString() !== post.userCreateID.toString())
+          ) {
             await NotificationService.createAndEmitNotification({
               recipient: parentComment.userID,
               sender: userID,
@@ -973,12 +1042,14 @@ class CommentController {
                 postId: postID,
                 commentId: comment._id.toString(),
                 parentCommentId: parentCommentID,
-                content: content ? content.substring(0, 100) : "Đã đính kèm file"
+                content: content
+                  ? content.substring(0, 100)
+                  : "Đã đính kèm file",
               },
               priority: "medium",
-              url: `/posts/${postID}?comment=${parentCommentID}`
+              url: `/posts/${postID}?comment=${parentCommentID}`,
             });
-            
+
             console.log(`✅ Đã gửi thông báo reply`);
           }
         }
@@ -1271,7 +1342,11 @@ class CommentController {
 
       try {
         // Chỉ thông báo khi admin xóa comment của người khác
-        if (isAdmin && rootComment && rootComment.userID.toString() !== userId) {
+        if (
+          isAdmin &&
+          rootComment &&
+          rootComment.userID.toString() !== userId
+        ) {
           await NotificationService.createAndEmitNotification({
             recipient: rootComment.userID,
             sender: userId,
@@ -1281,10 +1356,10 @@ class CommentController {
             data: {
               postId: rootComment.postID,
               commentId: rootComment._id,
-              deletedBy: req.user.username
+              deletedBy: req.user.username,
             },
             priority: "high",
-            url: `/support`
+            url: `/support`,
           });
         }
       } catch (notifyError) {
@@ -1360,9 +1435,10 @@ class CommentController {
 
       try {
         // Chỉ thông báo khi like (không phải unlike) và không phải tự like
-        if ((action === "like" || action === "update_emotion") && 
-            comment.userID._id.toString() !== userId) {
-          
+        if (
+          (action === "like" || action === "update_emotion") &&
+          comment.userID._id.toString() !== userId
+        ) {
           await NotificationService.createAndEmitNotification({
             recipient: comment.userID._id,
             sender: userId,
@@ -1372,10 +1448,10 @@ class CommentController {
             data: {
               postId: comment.postID,
               commentId: comment._id,
-              emotion: emotion
+              emotion: emotion,
             },
             priority: "low",
-            url: `/posts/${comment.postID}`
+            url: `/posts/${comment.postID}`,
           });
         }
       } catch (notifyError) {
@@ -1474,16 +1550,18 @@ class CommentController {
           .status(404)
           .json({ success: false, message: "Bình luận không tồn tại" });
 
-      logUserActivity({
-        action: "comment.likes.list",
-        req,
-        res,
-        userId: req.user.userId,
-        role: req.user.role,
-        target: { type: "comment", id },
-        description: "Xem danh sách người thích bình luận",
-        payload: { commentId: id, likeCount: comment.likes.length },
-      });
+      // log
+
+      // logUserActivity({
+      //   action: "comment.likes.list",
+      //   req,
+      //   res,
+      //   userId: req.user.userId,
+      //   role: req.user.role,
+      //   target: { type: "comment", id },
+      //   description: "Xem danh sách người thích bình luận",
+      //   payload: { commentId: id, likeCount: comment.likes.length },
+      // });
 
       res.status(200).json({ success: true, likes: comment.likes });
     } catch (error) {
@@ -1522,10 +1600,10 @@ class CommentController {
             data: {
               postId: comment.postID,
               commentId: comment._id,
-              blockedBy: req.user.username
+              blockedBy: req.user.username,
             },
             priority: "high",
-            url: `/support`
+            url: `/support`,
           });
         }
       } catch (notifyError) {
@@ -1570,7 +1648,7 @@ class CommentController {
         return res
           .status(404)
           .json({ success: false, message: "Bình luận không tồn tại" });
-        
+
       try {
         if (comment) {
           await NotificationService.createAndEmitNotification({
@@ -1581,10 +1659,10 @@ class CommentController {
             message: `Bình luận của bạn đã được hiển thị lại`,
             data: {
               postId: comment.postID,
-              commentId: comment._id
+              commentId: comment._id,
             },
             priority: "medium",
-            url: `/posts/${comment.postID}`
+            url: `/posts/${comment.postID}`,
           });
         }
       } catch (notifyError) {

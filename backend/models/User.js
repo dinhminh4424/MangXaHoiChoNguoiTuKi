@@ -1,6 +1,13 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
 
+//Hàm để lấy ngày bắt đầu của tuần (T2)
+const getStartOfWeek = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 (CN) đến 6 (T7)
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  return new Date(d.setDate(diff));
+}
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -18,6 +25,30 @@ const userSchema = new mongoose.Schema(
     password: {
       type: String,
       required: false,
+    },
+    //---Các trường liên quan tới chuỗi---
+    curent_streak: {
+      type: Number,
+      default: 0,
+    },
+    //Ngày cuối cùng có user hoạt động (để tính chuỗi)
+    last_active_date: {
+      type: Date,
+    },
+    //Số lần đã khôi phục chuỗi trong tuần
+    weekly_recovery_uses: {
+      type: Number,
+      default: 0,
+    },
+    //Ngày bắt đầu của tuần hiện tại (để reset số lần khôi phục chuỗi)
+    last_recovery_week_start: {
+      type: Date,
+      default: () => getStartOfWeek(new Date()),
+    },
+    //Cờ để báo cho frontend biết chuỗi đã bị mất hay chưa
+    has_lost_streak: {
+      type: Boolean,
+      default: false,
     },
     fullName: {
       type: String,
@@ -109,16 +140,17 @@ const userSchema = new mongoose.Schema(
 
     // Cài đặt privacy
     settings: {
-      emailNotifications: { type: Boolean, default: true },
-      pushNotifications: { type: Boolean, default: true },
+      emailNotifications: { type: Boolean, default: true }, // thông báo email
+      pushNotifications: { type: Boolean, default: true }, // thông báo web
       profileVisibility: {
         type: String,
         enum: ["public", "friends", "private"],
         default: "public",
-      },
-      showOnlineStatus: { type: Boolean, default: true },
-      allowFriendRequests: { type: Boolean, default: true },
+      }, // ai đc xem profile
+      showOnlineStatus: { type: Boolean, default: true }, // hiên thị trạng thái online
+      allowFriendRequests: { type: Boolean, default: true }, // cho phép kết bạn
       allowMessages: {
+        // ai có thể nhắn tin cho bạn
         type: String,
         enum: ["everyone", "friends", "none"],
         default: "everyone",
@@ -126,7 +158,7 @@ const userSchema = new mongoose.Schema(
     },
   },
   {
-    timestamps: true,
+    timestamps: true, // Tự động tạo createdAt và updatedAt
   }
 );
 

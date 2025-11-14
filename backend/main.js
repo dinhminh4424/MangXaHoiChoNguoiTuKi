@@ -240,6 +240,8 @@ const guidelineRoutes = require("./routes/guideline");
 const app = express();
 const server = http.createServer(app);
 
+const checkLostStreaks = require('./cron/streak-checker');
+
 // --------------------------------------- [MIDDLEWARE CHUNG] ------------------------------------
 // CORS, body parser, passport
 app.use(cors(corsOptions));
@@ -479,3 +481,6 @@ server.listen(PORT, "0.0.0.0", () => {
   console.log(`🔗 Backend API: http://localhost:${PORT}/api`);
   console.log(`🌍 Environment: ${config.nodeEnv}`);
 });
+
+// Khởi chạy cron job
+checkLostStreaks();
