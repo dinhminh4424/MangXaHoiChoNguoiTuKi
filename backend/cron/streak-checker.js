@@ -17,7 +17,7 @@ const checkLostStreaks = () => {
             const result = await User.updateMany(
                 {
                     checkInStreak: { $gt: 0 }, // Chỉ kiểm tra user có chuỗi
-                    last_activity_date: { $lt: startOfYesterday }
+                    lastCheckInDate: { $lt: startOfYesterday }
                 },
                 {
                     $set: { has_lost_streak: true }

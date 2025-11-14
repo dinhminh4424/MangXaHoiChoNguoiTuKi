@@ -106,7 +106,7 @@ router.post("/debug/run-streak-check", async (req, res) => {
         const result = await User.updateMany(
             {
                 checkInStreak: { $gt: 0 },
-                last_activity_date: { $lt: startOfYesterday }
+                lastCheckInDate: { $lt: startOfYesterday }
             },
             { $set: { has_lost_streak: true } }
         );

@@ -85,9 +85,6 @@ const handleCheckInStreak = (user) => {
   }
 
   user.lastCheckInDate = now;
-  // QUAN TRỌNG: Cập nhật last_activity_date để logic khôi phục chuỗi hoạt động
-  user.last_activity_date = now;
-
 
   return { milestone: milestoneReached, alreadyCheckedIn: false };
 };
@@ -488,7 +485,7 @@ router.post("/streaks/restore", authMiddleware, async (req, res) => {
     // Cập nhật ngày hoạt động cuối cùng thành ngày hôm qua để chuỗi được liền mạch
     const yesterday = new Date();
     yesterday.setDate(yesterday.getDate() - 1);
-    user.last_activity_date = yesterday;
+    user.lastCheckInDate = yesterday;
 
     await user.save();
 

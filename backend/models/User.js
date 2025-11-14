@@ -27,10 +27,6 @@ const userSchema = new mongoose.Schema(
       required: false,
     },
     //---Các trường liên quan tới chuỗi---
-    //Ngày cuối cùng có user hoạt động (để tính chuỗi)
-    last_activity_date: {
-      type: Date,
-    },
     //Số lần đã khôi phục chuỗi trong tuần
     weekly_recovery_uses: {
       type: Number,
