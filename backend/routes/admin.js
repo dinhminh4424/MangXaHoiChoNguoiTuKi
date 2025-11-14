@@ -4,6 +4,7 @@ const adminController = require("../controllers/adminController");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const adminAuth = require("../middleware/adminAuth");
+const User = require("../models/User");
 
 // Middleware kiểm tra đăng nhập trước, sau đó kiểm tra quyền admin
 router.use(auth);
@@ -94,3 +95,23 @@ router.get("/violation/users", adminController.getUserViolation);
 router.get("/violation/groups", adminController.getGroupViolation);
 
 module.exports = router;
+
+router.post("/debug/run-streak-check", async (req, res) => {
+    console.log('Manually running daily streak check...');
+    const startOfYesterday = new Date();
+    startOfYesterday.setDate(startOfYesterday.getDate() - 1);
+    startOfYesterday.setHours(0, 0, 0, 0);
+
+    try {
+        const result = await User.updateMany(
+            {
+                checkInStreak: { $gt: 0 },
+                last_activity_date: { $lt: startOfYesterday }
+            },
+            { $set: { has_lost_streak: true } }
+        );
+        res.json({ success: true, message: `Marked ${result.modifiedCount} users as having lost their streak.` });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+});

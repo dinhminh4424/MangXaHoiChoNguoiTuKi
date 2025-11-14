@@ -27,12 +27,8 @@ const userSchema = new mongoose.Schema(
       required: false,
     },
     //---Các trường liên quan tới chuỗi---
-    curent_streak: {
-      type: Number,
-      default: 0,
-    },
     //Ngày cuối cùng có user hoạt động (để tính chuỗi)
-    last_active_date: {
+    last_activity_date: {
       type: Date,
     },
     //Số lần đã khôi phục chuỗi trong tuần
@@ -133,10 +129,6 @@ const userSchema = new mongoose.Schema(
     lastCheckInDate: { type: Date },
     journalStreak: { type: Number, default: 0 },
     lastJournalDate: { type: Date },
-    // ✅ NEW: Fields for streak restoration
-    streakRestoreTokens: { type: Number, default: 2 }, // Số lần khôi phục chuỗi mỗi tuần
-    lastStreakRestoreWeeklyReset: { type: Date, default: () => new Date() }, // Ngày reset số lần khôi phục
-
 
     // Cài đặt privacy
     settings: {

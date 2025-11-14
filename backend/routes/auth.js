@@ -85,6 +85,9 @@ const handleCheckInStreak = (user) => {
   }
 
   user.lastCheckInDate = now;
+  // QUAN TRỌNG: Cập nhật last_activity_date để logic khôi phục chuỗi hoạt động
+  user.last_activity_date = now;
+
 
   return { milestone: milestoneReached, alreadyCheckedIn: false };
 };
@@ -391,7 +394,7 @@ router.post("/login", async (req, res) => {
           // Thông tin khôi phục chuỗi
           hasLostStreak: user.has_lost_streak,
           canRestore: user.weekly_recovery_uses < 2,
-          streakToRestore: user.current_streak, // Gửi chuỗi cũ để hiển thị
+          streakToRestore: user.checkInStreak, // Gửi chuỗi cũ để hiển thị
         },
         milestone: null, // Không còn milestone khi đăng nhập
         token,
@@ -494,7 +497,7 @@ router.post("/streaks/restore", authMiddleware, async (req, res) => {
       success: true,
       message: "Khôi phục chuỗi thành công!",
       data: {
-        currentStreak: user.current_streak,
+        currentStreak: user.checkInStreak,
         weeklyRecoveryUses: user.weekly_recovery_uses,
       },
     });
@@ -510,7 +513,7 @@ router.post("/streaks/dismiss", authMiddleware, async (req, res) => {
     const user = req.user;
 
     if (user.has_lost_streak) {
-      user.current_streak = 0;
+      user.checkInStreak = 0;
       user.has_lost_streak = false;
       await user.save();
     }
