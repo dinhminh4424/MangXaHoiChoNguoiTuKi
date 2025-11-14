@@ -1,6 +1,7 @@
 // Khai Báo
 const express = require("express");
 const jwt = require("jsonwebtoken");
+const bcrypt = require('bcryptjs'); // Ví dụ dùng bcrypt để so sánh mật khẩu
 const User = require("../models/User");
 const mailService = require("../services/mailService");
 const auth = require("../middleware/auth");
@@ -23,6 +24,13 @@ const generateToken = (userId) => {
   );
 };
 
+//Hàm để lấy ngày bắt đầu của tuần (T2)
+const getStartOfWeek = (date) => {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Điều chỉnh khi ngày là Chủ Nhật
+  return new Date(d.setDate(diff));
+};
 /**
  * Kiểm tra xem một chuỗi ngày có đạt mốc quan trọng không.
  * @param {number} streak - Số ngày trong chuỗi.
@@ -346,6 +354,20 @@ router.post("/login", async (req, res) => {
       });
     }
 
+    // === LOGIC KHÔI PHỤC CHUỖI KHI LOGIN ===
+    // Kiểm tra và reset số lần khôi phục hàng tuần
+    const today = new Date();
+    const currentWeekStart = getStartOfWeek(today);
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    // Nếu tuần khôi phục cuối đã cũ (trước thứ 2 của tuần này), reset lại
+    if (
+      !user.last_recovery_week_start ||
+      user.last_recovery_week_start < currentWeekStart
+    ) {
+      user.weekly_recovery_uses = 0;
+      user.last_recovery_week_start = currentWeekStart;
+    }
     // Cập nhật trạng thái online
     user.isOnline = true;
     await user.save();
@@ -366,6 +388,10 @@ router.post("/login", async (req, res) => {
           profile: user.profile,
           checkInStreak: user.checkInStreak,
           journalStreak: user.journalStreak,
+          // Thông tin khôi phục chuỗi
+          hasLostStreak: user.has_lost_streak,
+          canRestore: user.weekly_recovery_uses < 2,
+          streakToRestore: user.current_streak, // Gửi chuỗi cũ để hiển thị
         },
         milestone: null, // Không còn milestone khi đăng nhập
         token,
@@ -432,6 +458,70 @@ router.post("/check-in", authMiddleware, async (req, res) => {
       message: "Lỗi server",
       error: error.message,
     });
+  }
+});
+
+// === API KHÔI PHỤC VÀ BỎ QUA CHUỖI ===
+
+// API khôi phục chuỗi
+router.post("/streaks/restore", authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // 1. Kiểm tra điều kiện khôi phục
+    if (!user.has_lost_streak) {
+      return res.status(400).json({ message: "Chuỗi của bạn không bị mất." });
+    }
+    if (user.weekly_recovery_uses >= 2) {
+      return res
+        .status(403)
+        .json({ message: "Bạn đã hết lượt khôi phục chuỗi trong tuần này." });
+    }
+
+    // 2. Thực hiện khôi phục
+    user.has_lost_streak = false; // Tắt cờ báo mất chuỗi
+    user.weekly_recovery_uses += 1; // Tăng số lần đã sử dụng
+
+    // Cập nhật ngày hoạt động cuối cùng thành ngày hôm qua để chuỗi được liền mạch
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    user.last_activity_date = yesterday;
+
+    await user.save();
+
+    // 3. Trả về trạng thái mới
+    res.json({
+      success: true,
+      message: "Khôi phục chuỗi thành công!",
+      data: {
+        currentStreak: user.current_streak,
+        weeklyRecoveryUses: user.weekly_recovery_uses,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi khôi phục chuỗi:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+  }
+});
+
+// API từ chối khôi phục (reset chuỗi)
+router.post("/streaks/dismiss", authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+
+    if (user.has_lost_streak) {
+      user.current_streak = 0;
+      user.has_lost_streak = false;
+      await user.save();
+    }
+
+    res.json({
+      success: true,
+      message: "Chuỗi đã được reset về 0.",
+    });
+  } catch (error) {
+    console.error("Lỗi khi từ chối khôi phục chuỗi:", error);
+    res.status(500).json({ success: false, message: "Lỗi máy chủ" });
   }
 });
 

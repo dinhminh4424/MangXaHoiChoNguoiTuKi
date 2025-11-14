@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import notificationService from "../../services/notificationService"; // Import service
+import api from "../../services/api"; // Import api service để gọi API khôi phục
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -40,26 +41,70 @@ const Login = () => {
       const result = await login(formData.email, formData.password);
 
       if (result.success) {
-        console.log("✅ Login successful");
+        const { user } = result.data;
 
-        notificationService.success({
-          title: "Đăng nhập thành công!",
-          text: "Chào mừng bạn trở lại!  ",
-          timer: 3000,
-          showConfirmButton: false,
-        });
-
-        // Thêm timeout nhỏ để đảm bảo state được cập nhật
-        setTimeout(() => {
+        // Hàm điều hướng sau khi xử lý xong
+        const navigateHome = () => {
+          notificationService.success({
+            title: "Đăng nhập thành công!",
+            text: "Chào mừng bạn trở lại!",
+            timer: 2000,
+            showConfirmButton: false,
+          });
           navigate("/");
-        }, 100);
+        };
+
+        // Xử lý logic mất chuỗi
+        if (user.hasLostStreak) {
+          if (user.canRestore) {
+            // Hiển thị popup hỏi khôi phục
+            notificationService
+              .confirm({
+                title: "Ôi không! Bạn đã mất chuỗi!",
+                html: `Bạn đã bỏ lỡ một ngày và làm mất chuỗi <b>${user.streakToRestore} ngày</b> của mình.<br/>Bạn có muốn dùng 1 lượt khôi phục để lấy lại chuỗi không?`,
+                icon: "warning",
+                confirmButtonText: "Khôi phục chuỗi",
+                cancelButtonText: "Bỏ qua",
+                showCancelButton: true,
+              })
+              .then(async (dialogResult) => {
+                if (dialogResult.isConfirmed) {
+                  // Người dùng chọn "Khôi phục"
+                  await api.post("/api/auth/streaks/restore");
+                  notificationService.success({
+                    title: "Đã khôi phục!",
+                    text: "Chuỗi của bạn đã được bảo toàn.",
+                  });
+                } else {
+                  // Người dùng chọn "Bỏ qua"
+                  await api.post("/api/auth/streaks/dismiss");
+                  notificationService.info({
+                    title: "Tiếc quá!",
+                    text: "Chuỗi của bạn đã được reset về 0.",
+                  });
+                }
+                navigateHome();
+              });
+          } else {
+            // Mất chuỗi và không thể khôi phục
+            await api.post("/api/auth/streaks/dismiss"); // Tự động reset
+            notificationService.error({
+              title: "Bạn đã mất chuỗi!",
+              text: "Bạn đã hết lượt khôi phục trong tuần này. Chuỗi của bạn đã reset về 0.",
+              confirmButtonText: "Đã hiểu",
+            });
+            navigateHome();
+          }
+        } else {
+          // Không mất chuỗi, đăng nhập bình thường
+          navigateHome();
+        }
       } else {
         // Hiển thị lỗi bằng SweetAlert2
         notificationService.error({
           title: "Đăng nhập thất bại",
           text: result.message,
           confirmButtonText: "Thử lại",
-          timer: 3000,
         });
         setError(result.message);
       }
