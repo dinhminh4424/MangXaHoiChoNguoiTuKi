@@ -47,35 +47,45 @@ const isMilestone = (streak) => {
  * @returns {{milestone: object|null, alreadyCheckedIn: boolean}} - Trả về thông tin cột mốc và trạng thái đã điểm danh.
  */
 const handleCheckInStreak = (user) => {
+  // Lấy thời gian hiện tại theo múi giờ của server
   const now = new Date();
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // Chuẩn hóa 'hôm nay' về 00:00:00 để so sánh ngày
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
   let milestoneReached = null;
  
   const lastCheckIn = user.lastCheckInDate
     ? new Date(user.lastCheckInDate)
     : null;
 
+  // Nếu chưa từng điểm danh
   if (lastCheckIn) {
+    // Chuẩn hóa ngày điểm danh cuối cùng về 00:00:00 để so sánh
     const lastCheckInDay = new Date(lastCheckIn.getFullYear(), lastCheckIn.getMonth(), lastCheckIn.getDate());
 
-    // Nếu đã điểm danh trong hôm nay rồi thì không làm gì cả
-    if (lastCheckInDay.getTime() === today.getTime()) {
-      return { milestone: null, alreadyCheckedIn: true };
+    // *** FIX: Nếu người dùng bị mất chuỗi, không cho điểm danh ***
+    if (user.has_lost_streak) {
+      // Trả về một trạng thái đặc biệt để frontend xử lý
+      return { milestone: null, alreadyCheckedIn: false, streakLost: true };
     }
 
-    // Tính ngày hôm qua
+    // 1. Kiểm tra xem đã điểm danh hôm nay chưa
+    if (lastCheckInDay.getTime() === today.getTime()) {
+      return { milestone: null, alreadyCheckedIn: true, streakLost: false };
+    }
+
+    // 2. Kiểm tra xem có điểm danh vào ngày hôm qua không
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
 
     if (lastCheckInDay.getTime() === yesterday.getTime()) {
-      // Đăng nhập vào ngày hôm qua -> tăng chuỗi
+      // Điểm danh liên tiếp -> tăng chuỗi
       user.checkInStreak = (user.checkInStreak || 0) + 1;
-    } else if (lastCheckInDay.getTime() < yesterday.getTime()) {
-      // Bỏ lỡ một ngày -> reset chuỗi về 1
+    } else {
+      // Bỏ lỡ ít nhất một ngày -> reset chuỗi về 1
       user.checkInStreak = 1;
     }
   } else {
-    // Lần đăng nhập đầu tiên (hoặc lần đầu sau khi có tính năng này)
+    // Lần điểm danh đầu tiên
     user.checkInStreak = 1;
   }
 
@@ -86,7 +96,7 @@ const handleCheckInStreak = (user) => {
 
   user.lastCheckInDate = now;
 
-  return { milestone: milestoneReached, alreadyCheckedIn: false };
+  return { milestone: milestoneReached, alreadyCheckedIn: false, streakLost: false };
 };
 
 // Middleware xác thực
@@ -390,7 +400,7 @@ router.post("/login", async (req, res) => {
           journalStreak: user.journalStreak,
           // Thông tin khôi phục chuỗi
           hasLostStreak: user.has_lost_streak,
-          canRestore: user.weekly_recovery_uses < 2,
+          canRestore: (user.weekly_recovery_uses || 0) < 2,
           streakToRestore: user.checkInStreak, // Gửi chuỗi cũ để hiển thị
         },
         milestone: null, // Không còn milestone khi đăng nhập
@@ -429,12 +439,22 @@ router.post("/check-in", authMiddleware, async (req, res) => {
     const user = req.user;
 
     // Gọi hàm xử lý chuỗi điểm danh
-    const { milestone, alreadyCheckedIn } = handleCheckInStreak(user);
+    const { milestone, alreadyCheckedIn, streakLost } = handleCheckInStreak(user);
 
     if (alreadyCheckedIn) {
       return res.status(400).json({
         success: false,
         message: "Bạn đã điểm danh hôm nay rồi!",
+        data: {
+          checkInStreak: user.checkInStreak,
+        },
+      });
+    }
+
+    if (streakLost) {
+      return res.status(400).json({
+        success: false,
+        message: "Bạn đã mất chuỗi! Vui lòng khôi phục hoặc bỏ qua để tiếp tục.",
         data: {
           checkInStreak: user.checkInStreak,
         },
@@ -482,12 +502,13 @@ router.post("/streaks/restore", authMiddleware, async (req, res) => {
     user.has_lost_streak = false; // Tắt cờ báo mất chuỗi
     user.weekly_recovery_uses += 1; // Tăng số lần đã sử dụng
 
-    // Cập nhật ngày hoạt động cuối cùng thành ngày hôm qua để chuỗi được liền mạch
-    const yesterday = new Date();
-    yesterday.setDate(yesterday.getDate() - 1);
-    user.lastCheckInDate = yesterday;
+    // Tăng chuỗi và cập nhật ngày điểm danh thành hôm nay
+    user.checkInStreak += 1;
+    user.lastCheckInDate = new Date();
 
     await user.save();
+
+    const milestone = isMilestone(user.checkInStreak) ? { type: "check-in", days: user.checkInStreak } : null;
 
     // 3. Trả về trạng thái mới
     res.json({
@@ -496,6 +517,7 @@ router.post("/streaks/restore", authMiddleware, async (req, res) => {
       data: {
         currentStreak: user.checkInStreak,
         weeklyRecoveryUses: user.weekly_recovery_uses,
+        milestone: milestone,
       },
     });
   } catch (error) {
@@ -510,8 +532,11 @@ router.post("/streaks/dismiss", authMiddleware, async (req, res) => {
     const user = req.user;
 
     if (user.has_lost_streak) {
-      user.checkInStreak = 0;
+      // Reset chuỗi về 1 và coi như đã điểm danh hôm nay
+      user.checkInStreak = 1;
       user.has_lost_streak = false;
+      user.lastCheckInDate = new Date();
+
       await user.save();
     }
 
@@ -522,6 +547,51 @@ router.post("/streaks/dismiss", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Lỗi khi từ chối khôi phục chuỗi:", error);
     res.status(500).json({ success: false, message: "Lỗi máy chủ" });
+  }
+});
+
+// LẤY THÔNG TIN USER HIỆN TẠI (ME)
+router.get("/me", authMiddleware, async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Người dùng không tồn tại" });
+    }
+
+    // Logic kiểm tra và reset lượt khôi phục hàng tuần
+    const today = new Date();
+    const currentWeekStart = getStartOfWeek(today);
+    currentWeekStart.setHours(0, 0, 0, 0);
+
+    if (
+      !user.last_recovery_week_start ||
+      user.last_recovery_week_start < currentWeekStart
+    ) {
+      user.weekly_recovery_uses = 0;
+      user.last_recovery_week_start = currentWeekStart;
+      await user.save();
+    }
+
+    // Trả về dữ liệu user đầy đủ, bao gồm cả thông tin khôi phục
+    res.json({
+      success: true,
+      data: {
+        user: {
+          ...user.toObject(),
+          canRestore: (user.weekly_recovery_uses || 0) < 2,
+          streakToRestore: user.checkInStreak,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi lấy thông tin người dùng:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi máy chủ",
+      error: error.message,
+    });
   }
 });
 

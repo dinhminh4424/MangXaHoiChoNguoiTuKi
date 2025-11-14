@@ -1,6 +1,7 @@
 import React from "react";
 import { useProfile } from "../../contexts/ProfileContext";
 import { useAuth } from "../../contexts/AuthContext";
+import api from "../../services/api";
 import { Link, useNavigate } from "react-router-dom";
 import { Modal, Button } from "react-bootstrap";
 
@@ -28,7 +29,7 @@ const ProfileView = ({ userId }) => {
     updateImageCover,
     reportUser,
   } = useProfile();
-  const { user: currentUser, checkIn } = useAuth(); // ✅ Lấy hàm checkIn từ context
+  const { user: currentUser, setUser, checkIn } = useAuth(); // ✅ Lấy hàm checkIn và setUser từ context
 
   const [showModalUpdateCoverPhoto, setShowModalUpdateCoverPhoto] =
     React.useState(false);
@@ -384,6 +385,67 @@ const ProfileView = ({ userId }) => {
       socket.disconnect();
     };
   }, [currentUser, viewedUser, isOwnProfile]);
+
+  // ✅ ==================== LOGIC HIỂN THỊ POPUP KHÔI PHỤC CHUỖI ====================
+  // Hàm hiển thị popup khôi phục chuỗi
+  const showRestoreStreakPopup = (user) => {
+    const canRestore = user.canRestore;
+    const streakToRestore = user.streakToRestore || 0;
+
+    // ✅ SỬA LỖI: Sử dụng `confirm` thay vì `fire` để khớp với notificationService
+    NotificationService.confirm({
+      title: "🔥 Bạn đã mất chuỗi điểm danh!",
+      html: `
+        <p>Bạn đã bỏ lỡ điểm danh và mất chuỗi <strong>${streakToRestore} ngày</strong>.</p>
+        ${
+          canRestore
+            ? `<p>Bạn có <strong>${
+                2 - (user.weekly_recovery_uses || 0)
+              } lượt</strong> khôi phục chuỗi trong tuần này.</p>
+               <p>Bạn có muốn sử dụng 1 lượt để khôi phục chuỗi không?</p>`
+            : `<p class='text-danger'>Bạn đã hết lượt khôi phục chuỗi trong tuần này.</p>`
+        }
+      `,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: canRestore ? "Khôi phục chuỗi" : "Bắt đầu lại",
+      cancelButtonText: "Để sau",
+      confirmButtonColor: canRestore ? "#3085d6" : "#dc3545",
+      cancelButtonColor: "#6c757d",
+      allowOutsideClick: false,
+    }).then(async (result) => {
+      try {
+        if (result.isConfirmed) {
+          if (canRestore) {
+            const response = await api.post("/api/auth/streaks/restore");
+            NotificationService.success({ text: response.data.message });
+          } else {
+            await api.post("/api/auth/streaks/dismiss");
+            NotificationService.info({
+              text: "Chuỗi của bạn đã bắt đầu lại từ đầu.",
+            });
+          }
+          // Sau khi xử lý, làm mới lại thông tin user trong context
+          const meResponse = await api.get("/api/auth/me");
+          setUser(meResponse.data.data.user);
+        }
+      } catch (error) {
+        NotificationService.error({ text: "Có lỗi xảy ra, vui lòng thử lại." });
+      }
+    });
+  };
+
+  // Lắng nghe khi vào trang cá nhân của chính mình để kiểm tra chuỗi
+  useEffect(() => {
+    const checkStreak = async () => {
+      if (isOwnProfile && currentUser?.has_lost_streak) {
+        // Lấy thông tin mới nhất để đảm bảo `canRestore` là chính xác
+        const response = await api.get("/api/auth/me");
+        showRestoreStreakPopup(response.data.data.user);
+      }
+    };
+    checkStreak();
+  }, [isOwnProfile, currentUser?.has_lost_streak]);
 
   // Lắng nghe window event friend:status-changed (chỉ dùng cho các trường hợp không có socket event)
   // Socket event đã được xử lý trong useEffect trên, không cần xử lý lại ở đây
