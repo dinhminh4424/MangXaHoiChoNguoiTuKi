@@ -18,7 +18,7 @@ class GroupController {
       if (!checkUser.profile.idCard.verified) {
         res.status(400).json({
           success: false,
-          message: "Bạn chưa Xác Minh Danh tính" + err.message,
+          message: "Bạn chưa Xác Minh Danh tính",
         });
       }
 

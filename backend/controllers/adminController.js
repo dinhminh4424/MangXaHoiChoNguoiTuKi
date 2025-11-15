@@ -2825,6 +2825,12 @@ const updateViolationStatus = async (req, res) => {
       await Post.findByIdAndUpdate(violation.targetId, {
         isBlockedComment: true,
       });
+      await AddViolationUserByID(
+        violation.userId,
+        violation,
+        req.user._id,
+        false
+      );
       await NotificationService.createAndEmitNotification({
         recipient: violation.userId,
         sender: req.user._id,
@@ -4168,7 +4174,9 @@ const handlePostAppeal = async (violation, actionTaken, adminId) => {
       reportCount: 0,
     });
 
-    console.log("KN Post: giảm lỗi user sau khi đưa all count về 0");
+    console.log(
+      "KN Post: giảm lỗi user sau khi đưa all count về 0 và giảm lỗi user"
+    );
     await ReduceViolationUserByID(userId, violation, adminId, false);
   } else if (actionTaken === "unblock_comment") {
     console.log("KN Post: unblock_comment");
@@ -4178,8 +4186,20 @@ const handlePostAppeal = async (violation, actionTaken, adminId) => {
       violationCount: 0,
       reportCount: 0,
     });
+    console.log(
+      "KN Post: unblock_comment mở comemnt và đưa về 0 và giảm lỗi user"
+    );
+
     await ReduceViolationUserByID(userId, violation, adminId, false);
   } else if (actionTaken === "unban_user") {
+    await Post.findByIdAndUpdate(targetId, {
+      isBlockedComment: false,
+      isBlocked: false,
+      warningCount: 0,
+      violationCount: 0,
+      reportCount: 0,
+    });
+    console.log("KN Post: unban_user  đưa về 0 và mở khoá  user");
     await ReduceViolationUserByID(userId, violation, adminId, true);
   } else if (actionTaken === "unban_warning") {
     const post = await Post.findById(targetId);
@@ -4190,6 +4210,7 @@ const handlePostAppeal = async (violation, actionTaken, adminId) => {
       warningCount: 0,
       reportCount: 0,
       isBlocked: false,
+      isBlockedComment: false,
     });
 
     console.log("KN Post: unban_warning đưa về 0 ");

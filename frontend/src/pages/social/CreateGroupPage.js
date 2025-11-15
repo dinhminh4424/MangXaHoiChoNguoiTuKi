@@ -131,6 +131,11 @@ const CreateGroupPage = () => {
       return;
     }
 
+    if (!formData.category.trim()) {
+      setError("Vui lòng chọn cảm xúc");
+      return;
+    }
+
     setLoading(true);
     setError("");
 

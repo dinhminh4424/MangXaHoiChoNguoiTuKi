@@ -23,6 +23,8 @@ const accountRoute = require("./account");
 const settingsRoute = require("./settings");
 const violationsRoute = require("./violations");
 
+const imageRoutes = require("./imageRoutes");
+
 // Sử dụng các routes
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -43,6 +45,7 @@ router.use("/todos", todosRouter);
 router.use("/account", accountRoute);
 router.use("/settings", settingsRoute);
 router.use("/violations", violationsRoute);
+router.use("/images", imageRoutes);
 
 router.use("/client-logs", clientLogsRouter);
 

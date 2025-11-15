@@ -64,6 +64,8 @@ import AdminContentManagement from "./pages/admin/contens/AdminContentManagement
 import AdminGroupManagement from "./pages/admin/groups/AdminGroupManagement";
 import AdminJournalManagement from "./pages/admin/journals/AdminJournalManagement";
 
+import ImageManager from "./pages/admin/imagesManager/ImageManager";
+
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
 import ReportUser from "./pages/admin/reports/ReportUser";
@@ -263,7 +265,13 @@ const routeConfigs = [
     component: AppealManagement, // Kháng Nghị
     layout: AdminLayout,
     isAdmin: true,
-  },
+  }, // ImageManager
+  {
+    path: "/admin/imageManager",
+    component: ImageManager, // Kháng Nghị
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // ImageManager
 ];
 
 /**

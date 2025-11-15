@@ -12,6 +12,7 @@ const NotificationService = require("../services/notificationService");
 const Friend = require("../models/Friend");
 const Follow = require("../models/Follow");
 const mailService = require("../services/mailService");
+const ImageBackground = require("../models/ImageBackground");
 const { logUserActivity } = require("../logging/userActivityLogger");
 
 class UserController {
@@ -495,7 +496,7 @@ class UserController {
           { userA: user._id, userB: req.user.userId },
         ],
       });
-      console.log("isFriend: ", isFriend);
+      // console.log("isFriend: ", isFriend);
 
       let checkViewProfile = true;
       if (user.settings.profileVisibility === "private") {
@@ -506,7 +507,7 @@ class UserController {
         }
       }
 
-      console.log("checkViewProfile: ", checkViewProfile);
+      // console.log("checkViewProfile: ", checkViewProfile);
 
       const userDoc = user.toObject();
       userDoc.countPost = countPost;
@@ -517,6 +518,16 @@ class UserController {
       userDoc.isFriend = isFriend.length > 0;
 
       userDoc.checkViewProfile = checkViewProfile;
+
+      if (!user.profile.coverPhoto) {
+        const imageCover = await ImageBackground.findOne({
+          active: true,
+          category: "BannerUser",
+        });
+
+        // console.log(imageCover);
+        userDoc.banner = imageCover.file.path;
+      }
 
       // log lấy us theo id
       logUserActivity({
