@@ -66,6 +66,9 @@ class UserController {
             showOnlineStatus: user.showOnlineStatus,
             allowFriendRequests: user.allowFriendRequests,
             allowMessages: user.allowMessages,
+            checkInStreak: user.checkInStreak, // ✅ SỬA: Trả về chuỗi ngày điểm danh
+            journalStreak: user.journalStreak, // ✅ THÊM: Trả về chuỗi ngày viết nhật ký
+            lastCheckInDate: user.lastCheckInDate, // ✅ THÊM: Trả về ngày điểm danh cuối
           },
         },
       });
@@ -515,6 +518,7 @@ class UserController {
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
+
       userDoc.isFriend = isFriend.length > 0;
 
       userDoc.checkViewProfile = checkViewProfile;
@@ -528,6 +532,9 @@ class UserController {
         // console.log(imageCover);
         userDoc.banner = imageCover.file.path;
       }
+
+      userDoc.checkInStreak = user.checkInStreak; // ✅ SỬA
+      userDoc.journalStreak = user.journalStreak; // ✅ THÊM
 
       // log lấy us theo id
       logUserActivity({

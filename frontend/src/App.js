@@ -83,6 +83,7 @@ import ErrorPage from "./components/error/pages-error";
 import Test from "./pages/test";
 
 import AIChat from "./components/ai/AIChat";
+// import 'animate.css';
 
 /**
  * COMPONENT: ProtectedRoute

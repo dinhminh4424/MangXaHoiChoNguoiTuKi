@@ -23,6 +23,64 @@ const generateToken = (userId) => {
   );
 };
 
+/**
+ * Kiểm tra xem một chuỗi ngày có đạt mốc quan trọng không.
+ * @param {number} streak - Số ngày trong chuỗi.
+ * @returns {boolean} - True nếu là cột mốc, ngược lại là false.
+ */
+const isMilestone = (streak) => {
+  const milestones = [1, 3, 7, 10, 30, 50, 100, 200, 365, 500, 1000];
+  return milestones.includes(streak);
+};
+
+/**
+ * Xử lý logic tính toán và cập nhật chuỗi ngày điểm danh cho người dùng.
+ * @param {object} user - Đối tượng user từ Mongoose.
+ * @returns {{milestone: object|null, alreadyCheckedIn: boolean}} - Trả về thông tin cột mốc và trạng thái đã điểm danh.
+ */
+const handleCheckInStreak = (user) => {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  let milestoneReached = null;
+ 
+  const lastCheckIn = user.lastCheckInDate
+    ? new Date(user.lastCheckInDate)
+    : null;
+
+  if (lastCheckIn) {
+    const lastCheckInDay = new Date(lastCheckIn.getFullYear(), lastCheckIn.getMonth(), lastCheckIn.getDate());
+
+    // Nếu đã điểm danh trong hôm nay rồi thì không làm gì cả
+    if (lastCheckInDay.getTime() === today.getTime()) {
+      return { milestone: null, alreadyCheckedIn: true };
+    }
+
+    // Tính ngày hôm qua
+    const yesterday = new Date(today);
+    yesterday.setDate(yesterday.getDate() - 1);
+
+    if (lastCheckInDay.getTime() === yesterday.getTime()) {
+      // Đăng nhập vào ngày hôm qua -> tăng chuỗi
+      user.checkInStreak = (user.checkInStreak || 0) + 1;
+    } else if (lastCheckInDay.getTime() < yesterday.getTime()) {
+      // Bỏ lỡ một ngày -> reset chuỗi về 1
+      user.checkInStreak = 1;
+    }
+  } else {
+    // Lần đăng nhập đầu tiên (hoặc lần đầu sau khi có tính năng này)
+    user.checkInStreak = 1;
+  }
+
+  // Kiểm tra cột mốc sau khi cập nhật chuỗi (trước khi lưu vào DB)
+  if (isMilestone(user.checkInStreak)) {
+    milestoneReached = { type: "check-in", days: user.checkInStreak };
+  }
+
+  user.lastCheckInDate = now;
+
+  return { milestone: milestoneReached, alreadyCheckedIn: false };
+};
+
 // Middleware xác thực
 const authMiddleware = async (req, res, next) => {
   try {
@@ -112,7 +170,10 @@ router.post("/register", async (req, res) => {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          checkInStreak: user.checkInStreak,
+          journalStreak: user.journalStreak,
         },
+        milestone: null, // Không còn milestone khi đăng ký
         token,
         emailSent: emailResult.success,
       },
@@ -287,7 +348,6 @@ router.post("/login", async (req, res) => {
 
     // Cập nhật trạng thái online
     user.isOnline = true;
-    user.lastSeen = new Date();
     await user.save();
 
     // Tạo token
@@ -304,7 +364,10 @@ router.post("/login", async (req, res) => {
           fullName: user.fullName,
           role: user.role,
           profile: user.profile,
+          checkInStreak: user.checkInStreak,
+          journalStreak: user.journalStreak,
         },
+        milestone: null, // Không còn milestone khi đăng nhập
         token,
       },
     };
@@ -326,6 +389,44 @@ router.post("/login", async (req, res) => {
 
     return res.json(responsePayload);
   } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
+  }
+});
+
+// ĐIỂM DANH HÀNG NGÀY
+router.post("/check-in", authMiddleware, async (req, res) => {
+  try {
+    const user = req.user;
+
+    // Gọi hàm xử lý chuỗi điểm danh
+    const { milestone, alreadyCheckedIn } = handleCheckInStreak(user);
+
+    if (alreadyCheckedIn) {
+      return res.status(400).json({
+        success: false,
+        message: "Bạn đã điểm danh hôm nay rồi!",
+        data: {
+          checkInStreak: user.checkInStreak,
+        },
+      });
+    }
+
+    await user.save();
+
+    res.status(200).json({
+      success: true,
+      message: "Điểm danh thành công!",
+      data: {
+        checkInStreak: user.checkInStreak,
+        milestone: milestone,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi khi điểm danh:", error);
     res.status(500).json({
       success: false,
       message: "Lỗi server",
@@ -404,7 +505,27 @@ router.post("/face-login", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    const responsePayload = { success: true, token };
+    // Cập nhật trạng thái online
+    user.isOnline = true;
+    await user.save();
+
+    const responsePayload = {
+      success: true,
+      message: "Đăng nhập bằng khuôn mặt thành công",
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          role: user.role,
+          profile: user.profile,
+          checkInStreak: user.checkInStreak,
+          journalStreak: user.journalStreak,
+        },
+        token,
+      },
+    };
 
     res.status(200);
     logUserActivity({
@@ -417,7 +538,7 @@ router.post("/face-login", async (req, res) => {
       description: "Người dùng đăng nhập bằng khuôn mặt",
     });
 
-    return res.json(responsePayload);
+    return res.json(responsePayload); // Sửa: trả về responsePayload thay vì { success: true, token }
   } catch (error) {
     res.status(500).json({ success: false, message: "Lỗi server" });
   }
@@ -483,4 +604,10 @@ router.post(
   }
 );
 
+// ✅ Export router làm mặc định và các hàm khác để sử dụng nội bộ
 module.exports = router;
+module.exports._internal = {
+  handleCheckInStreak,
+  isMilestone,
+  generateToken,
+};

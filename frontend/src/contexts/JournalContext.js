@@ -20,7 +20,7 @@ export const useJournal = () => {
 };
 
 export const JournalProvider = ({ children }) => {
-  const { user } = useAuth();
+  const { user, updateUserStreaks, showMilestonePopup } = useAuth(); // ✅ Lấy thêm hàm showMilestonePopup
   const [todayJournal, setTodayJournal] = useState(null);
   const [journalHistory, setJournalHistory] = useState([]);
   const [journalUserHistory, setJournalUserHistory] = useState([]);
@@ -67,7 +67,7 @@ export const JournalProvider = ({ children }) => {
   }, [getUserId]);
 
   // 🔹 Tạo nhật ký mới
-  const createJournal = async (journalData) => {
+  const createJournal = async (journalData) => { // ❌ Bỏ showMilestonePopup khỏi tham số
     const userId = getUserId();
     if (!userId) throw new Error("User not found");
 
@@ -83,6 +83,17 @@ export const JournalProvider = ({ children }) => {
         // ✅ Cập nhật journalDetail nếu đang xem cùng journal
         if (journalDetail?._id === result.data.journal._id) {
           setJournalDetail(result.data.journal);
+        }
+        // ✅ KIỂM TRA VÀ HIỂN THỊ POPUP NẾU CÓ CỘT MỐC
+        if (result?.data?.milestone) {
+          console.log("🎉 Đạt mốc nhật ký!", result.data.milestone);
+          showMilestonePopup(result.data.milestone);
+        }
+
+        // ✅ CẬP NHẬT TRẠNG THÁI CHUỖI NGÀY TRONG AUTHCONTEXT
+        if (result?.data?.journalStreak !== undefined) {
+          console.log("🔄 Updating journal streak in AuthContext:", result.data.journalStreak);
+          updateUserStreaks({ journalStreak: result.data.journalStreak });
         }
       }
       return result;

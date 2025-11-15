@@ -24,7 +24,8 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         let user = await User.findOne({ googleId: profile.id });
 
         if (user) {
-          return done(null, user); // User đã tồn tại, trả về
+          await user.save(); // Lưu các thay đổi tiềm năng khác nếu có
+          return done(null, user);
         }
 
         // 2. Nếu chưa, kiểm tra xem có user nào dùng email này không
@@ -43,8 +44,9 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
           if (!user.fullName) {
             user.fullName = displayName;
           }
+
           await user.save();
-          return done(null, user);
+          return done(null, user); // Trả về user đã được liên kết
         }
 
         // 3. Nếu không có, tạo user mới
@@ -65,7 +67,7 @@ if (process.env.GOOGLE_CLIENT_ID && process.env.GOOGLE_CLIENT_SECRET) {
         });
 
         await newUser.save();
-        return done(null, newUser);
+        return done(null, newUser); // Trả về user mới
       } catch (err) {
         return done(err, false);
       }
@@ -103,7 +105,8 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         let user = await User.findOne({ facebookId: profile.id });
 
         if (user) {
-          return done(null, user); // User đã tồn tại, trả về
+          await user.save(); // Lưu các thay đổi tiềm năng khác nếu có
+          return done(null, user);
         }
 
         // 2. Nếu chưa, kiểm tra xem có user nào dùng email này không
@@ -117,8 +120,9 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
           if (!user.profile.avatar) {
             user.profile.avatar = profile.photos[0].value;
           }
+
           await user.save();
-          return done(null, user);
+          return done(null, user); // Trả về user đã được liên kết
         }
 
         // 3. Nếu không có, tạo user mới
@@ -134,7 +138,7 @@ if (process.env.FACEBOOK_APP_ID && process.env.FACEBOOK_APP_SECRET) {
         });
 
         await newUser.save();
-        return done(null, newUser);
+        return done(null, newUser); // Trả về user mới
       } catch (err) {
         return done(err, false);
       }

@@ -2,9 +2,11 @@ import React, { createContext, useState, useContext, useEffect } from "react";
 // import axios from "axios";
 import api from "../services/api"; // đường dẫn tùy theo vị trí file api.js
 
+import Swal from "sweetalert2";
+
 const AuthContext = createContext();
 
-export const useAuth = () => {
+export const useAuth = () => { // ✅ Export useAuth
   return useContext(AuthContext);
 };
 
@@ -13,6 +15,38 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null); // Lưu thông tin user
   const [token, setToken] = useState(localStorage.getItem("token")); // Lưu token trong state
   const [loading, setLoading] = useState(true); // Trạng thái tải
+
+  // Hàm hiển thị popup chúc mừng
+  const showMilestonePopup = (milestone) => {
+    if (!milestone) return;
+
+    const { type, days } = milestone;
+    const title = `🎉 Chúc mừng bạn đã đạt chuỗi ${days} ngày!`;
+    let text = "";
+    let icon = "success";
+
+    if (type === "check-in") {
+      text = `Bạn đã duy trì chuỗi đăng nhập ${days} ngày liên tiếp. Hãy tiếp tục thói quen tuyệt vời này nhé!`;
+    } else if (type === "journal") {
+      text = `Bạn đã duy trì chuỗi viết nhật ký ${days} ngày liên tiếp. Một thành tích đáng nể!`;
+    }
+
+    // Sử dụng SweetAlert2 để tạo popup đẹp mắt
+    Swal.fire({
+      title: title,
+      text: text,
+      icon: icon,
+      confirmButtonText: "Tuyệt vời!",
+      timer: 5000, // Tự động đóng sau 5 giây
+      timerProgressBar: true,
+      showClass: {
+        popup: "animate__animated animate__fadeInDown",
+      },
+      hideClass: {
+        popup: "animate__animated animate__fadeOutUp",
+      },
+    });
+  };
 
   // Thiết lập header mặc định cho api
   useEffect(() => {
@@ -82,12 +116,15 @@ export const AuthProvider = ({ children }) => {
       });
 
       // Lưu thông tin user và token
-      const { user, token } = response.data.data;
+      const { user, token, milestone } = response.data.data;
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       setUser(user);
       setToken(token);
+
+        // ✅ HIỂN THỊ POPUP NẾU ĐẠT MỐC (từ response.data.data.milestone)
+      showMilestonePopup(response.data.data.milestone);
 
       return { success: true, token };
     } catch (error) {
@@ -116,7 +153,7 @@ export const AuthProvider = ({ children }) => {
 
   // --- NEW FUNCTION ---
   // Hàm xử lý đăng nhập từ Social (Google, Facebook)
-  const handleSocialLogin = async (newToken) => {
+  const handleSocialLogin = async (newToken, milestone) => {
     console.log("🔄 handleSocialLogin started...");
     try {
       // 1. Lưu token mới
@@ -129,6 +166,12 @@ export const AuthProvider = ({ children }) => {
 
       if (response.data && response.data.data && response.data.data.user) {
         setUser(response.data.data.user);
+
+        // ✅ HIỂN THỊ POPUP NẾU CÓ MILESTONE TỪ URL
+        if (milestone) {
+          showMilestonePopup(milestone);
+        }
+
         console.log("✅ Social login successful, user set");
         return { success: true };
       } else {
@@ -149,12 +192,15 @@ export const AuthProvider = ({ children }) => {
       const response = await api.post("/api/auth/register", userData);
 
       // Lưu thông tin user và token
-      const { user, token } = response.data.data;
+      const { user, token, milestone } = response.data.data;
       localStorage.setItem("token", token);
       api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
       setUser(user);
       setToken(token);
+
+      // ✅ HIỂN THỊ POPUP NẾU ĐẠT MỐC (từ response.data.data.milestone)
+      showMilestonePopup(response.data.data.milestone);
 
       return { success: true };
     } catch (error) {
@@ -179,6 +225,21 @@ export const AuthProvider = ({ children }) => {
       delete api.defaults.headers.common["Authorization"];
     }
   };
+
+  // ✅ NEW: Hàm cập nhật streaks cho user
+  const updateUserStreaks = (streaks) => {
+    if (!user) return;
+
+    setUser((prevUser) => {
+      const updatedUser = {
+        ...prevUser,
+        ...streaks, // { loginStreak: 10, journalStreak: 5 }
+      };
+      console.log("🔄 User streaks updated in context:", updatedUser);
+      return updatedUser;
+    });
+  };
+
 
   // Hàm tải các cuộc trò chuyện của người dùng
   const loadUserChats = async () => {
@@ -222,6 +283,34 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // ✅ NEW: Hàm điểm danh hàng ngày
+  const checkIn = async () => {
+    try {
+      const response = await api.post("/api/auth/check-in");
+
+      if (response.data.success) {
+        const { checkInStreak, milestone } = response.data.data;
+
+        // Cập nhật streak trong user context
+        setUser((prevUser) => ({
+          ...prevUser,
+          checkInStreak: checkInStreak,
+          lastCheckInDate: new Date().toISOString(), // ✅ Cập nhật ngày điểm danh ngay lập tức
+        }));
+
+        // Hiển thị popup nếu đạt mốc
+        if (milestone) {
+          showMilestonePopup(milestone);
+        }
+      }
+
+      return response.data; // Trả về toàn bộ response để component xử lý
+    } catch (error) {
+      console.error("Lỗi khi điểm danh:", error);
+      return error.response?.data || { success: false, message: "Lỗi server không xác định" };
+    }
+  };
+
   // Giá trị cung cấp cho các component con sử dụng context
   const value = {
     user,
@@ -235,6 +324,9 @@ export const AuthProvider = ({ children }) => {
     loadUserChats,
     resetPassword,
     forgotPassword,
+    updateUserStreaks, // ✅ Export hàm mới
+    checkIn, // ✅ Export hàm điểm danh
+    showMilestonePopup, // ✅ Export hàm này để các context/component khác có thể dùng
   };
 
   return (

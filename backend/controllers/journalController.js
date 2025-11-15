@@ -1,8 +1,20 @@
 // controllers/journalController.js
+const mongoose = require("mongoose"); // ✅ THÊM: Cần mongoose để xử lý ObjectId
 const Journal = require("../models/Journal");
+const User = require("../models/User"); // ✅ THÊM: Import User model
 const Notification = require("../models/Notification");
 const FileManager = require("../utils/fileManager");
 const { logUserActivity } = require("../logging/userActivityLogger");
+
+/**
+ * Kiểm tra xem một chuỗi ngày có đạt mốc quan trọng không.
+ * @param {number} streak - Số ngày trong chuỗi.
+ * @returns {boolean} - True nếu là cột mốc, ngược lại là false.
+ */
+const isMilestone = (streak) => {
+  const milestones = [1, 3, 7, 10, 30, 50, 100, 200, 365, 500, 1000];
+  return milestones.includes(streak);
+};
 
 // Tạo nhật ký mới và gửi thông báo
 exports.createJournal = async (req, res) => {
@@ -74,6 +86,50 @@ exports.createJournal = async (req, res) => {
 
     await newJournal.save();
 
+    let user; // ✅ KHAI BÁO BIẾN user ở phạm vi cao hơn
+
+    // === TÍNH NĂNG STREAKS: XỬ LÝ CHUỖI NGÀY VIẾT NHẬT KÝ ===
+    try {
+      user = await User.findById(userId); // ✅ GÁN GIÁ TRỊ cho biến user đã khai báo
+      let milestoneReached = null; // Khởi tạo biến để lưu thông tin cột mốc
+      if (user) {
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+        const lastJournal = user.lastJournalDate
+          ? new Date(user.lastJournalDate)
+          : null;
+
+        if (lastJournal) {
+          const lastJournalDay = new Date(lastJournal.getFullYear(), lastJournal.getMonth(), lastJournal.getDate());
+
+          const yesterday = new Date(today);
+          yesterday.setDate(yesterday.getDate() - 1);
+
+          if (lastJournalDay.getTime() === yesterday.getTime()) {
+            user.journalStreak = (user.journalStreak || 0) + 1;
+          } else if (lastJournalDay.getTime() < yesterday.getTime()) {
+            user.journalStreak = 1;
+          }
+          // Nếu viết lại trong ngày (lastJournalDay.getTime() === today.getTime()), không làm gì cả
+        } else {
+          user.journalStreak = 1;
+        }
+        user.lastJournalDate = now;
+        await user.save();
+
+        // ✅ KIỂM TRA CỘT MỐC SAU KHI CẬP NHẬT CHUỖI (trước khi trả về)
+        if (isMilestone(user.journalStreak)) {
+          milestoneReached = { type: "journal", days: user.journalStreak };
+        }
+      }
+
+      // ✅ LƯU CỘT MỐC VÀO res.locals ĐỂ TRUYỀN XUỐNG DƯỚI
+      res.locals.milestone = milestoneReached;
+    } catch (streakError) {
+      console.error("Lỗi khi cập nhật chuỗi ngày viết nhật ký:", streakError);
+    }
+
     // Tạo thông báo
     // const notification = new Notification({
     //   userId,
@@ -87,7 +143,9 @@ exports.createJournal = async (req, res) => {
       success: true,
       message: "Ghi nhật ký thành công!",
       data: {
+        journalStreak: user ? user.journalStreak : 0, // ✅ SỬA LỖI: Truy cập an toàn vào user.journalStreak
         journal: newJournal,
+        milestone: res.locals.milestone, // ✅ LẤY THÔNG TIN CỘT MỐC TỪ res.locals
       },
     };
 
