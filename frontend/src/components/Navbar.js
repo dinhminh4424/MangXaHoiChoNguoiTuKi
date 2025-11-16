@@ -24,19 +24,19 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
 
   // Main navigation items
   const mainNavItems = [
-    { path: "/", icon: "fa-solid fa-house", label: "Home" },
-    { path: "/feed", icon: "las la-newspaper", label: "Newsfeed" },
-    { path: "/profile", icon: "las la-user", label: "Profile" },
+    { path: "/", icon: "fa-solid fa-house", label: "Trang chủ" },
+    { path: "/feed", icon: "las la-newspaper", label: "Bài viết mới" },
+    { path: "/profile", icon: "las la-user", label: "Trang cá nhân" },
     { path: "/chat", icon: "las la-comments", label: "Chat" },
-    { path: "/group", icon: "las la-users", label: "Group" },
+    { path: "/group", icon: "las la-users", label: "Nhóm" },
     { path: "/todo", icon: "las la-check-circle", label: "Todo" },
     {
       path: "/journal",
       icon: "las la-book",
-      label: "Journal",
+      label: "Nhật ký",
       children: [
-        { path: "/journal", icon: "las la-list", label: "Overview" },
-        { path: "/journal/history", icon: "las la-history", label: "History" },
+        { path: "/journal", icon: "las la-list", label: "Tổng quan" },
+        { path: "/journal/history", icon: "las la-history", label: "Lịch sử" },
       ],
     },
     // { path: "/calendar", icon: "las la-calendar", label: "Calendar" },
@@ -81,21 +81,21 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
     {
       path: "/notifications",
       icon: "ri-pages-line",
-      label: "Notifications",
+      label: "Thông báo",
     },
     {
       path: "/ai",
       icon: "ri-robot-line", // icon mới cho parent
       label: "AI",
       children: [
-        { path: "/nhandien", icon: "ri-emotion-happy-line", label: "Emotion" }, // icon mới
-        { path: "/aiChat", icon: "ri-chat-1-line", label: "AIChat" }, // icon mới
+        { path: "/nhandien", icon: "ri-emotion-happy-line", label: "Cảm xúc" }, // icon mới
+        { path: "/aiChat", icon: "ri-chat-1-line", label: "AI Chat" }, // icon mới
       ],
     },
     {
       path: "/settings",
       icon: "ri-settings-3-line",
-      label: "Settings",
+      label: "Cài đặt",
     },
     {
       path: "/profile/dashboard",
@@ -394,7 +394,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                     <div className="card shadow-none m-0">
                       <div className="card-header bg-primary">
                         <div className="header-title">
-                          <h6 className="mb-0 text-white">Hello</h6>
+                          <h6 className="mb-0 text-white">Xin chào!</h6>
                           <h6 className="mb-0 text-white">
                             {user?.username || "User"}
                           </h6>
@@ -414,9 +414,9 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                               <i className="ri-file-user-line"></i>
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">My Profile</h6>
+                              <h6 className="mb-0">Trang cá nhân</h6>
                               <p className="mb-0 font-size-12">
-                                View personal profile details.
+                                Xem trang cá nhân của bạn
                               </p>
                             </div>
                           </div>
@@ -469,9 +469,9 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                               {/* icon mới cho violations */}
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">Violations</h6>
+                              <h6 className="mb-0">Vi phạm</h6>
                               <p className="mb-0 font-size-12">
-                                View your violation history.
+                                Lịch sử vi phạm tài khoản.
                               </p>
                             </div>
                           </div>
@@ -488,7 +488,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                                 <i className="ri-admin-line"></i>
                               </div>
                               <div className="ms-3">
-                                <h6 className="mb-0">Admin Panel</h6>
+                                <h6 className="mb-0">Admin panel</h6>
                                 <p className="mb-0 font-size-12">
                                   Quản trị hệ thống.
                                 </p>
@@ -501,7 +501,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                             className="btn btn-primary iq-sign-btn"
                             onClick={handleLogout}
                           >
-                            Sign out<i className="ri-login-box-line ms-2"></i>
+                            Đăng xuất<i className="ri-login-box-line ms-2"></i>
                           </button>
                         </div>
                       </div>
@@ -522,7 +522,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
               <div className="media-height p-3" data-scrollbar="init">
                 <h6 className="mb-3">Online Friends</h6>
                 <div className="text-center">
-                  <p className="text-muted">No friends online</p>
+                  <p className="text-muted">Hiện không có ai đang hoạt động</p>
                 </div>
               </div>
               <div className="right-sidebar-toggle bg-primary text-white mt-3">

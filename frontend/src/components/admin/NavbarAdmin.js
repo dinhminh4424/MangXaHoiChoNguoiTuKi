@@ -4,7 +4,7 @@ import { useAuth } from "../../contexts/AuthContext";
 import TooltipWrapper from "../TooltipWrapper";
 import AdminNotifications from "../notification/AdminNotifications";
 
-function NavbarAdmin() {
+function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
   const { logout, user } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,22 +90,22 @@ function NavbarAdmin() {
     {
       path: "/admin/system",
       icon: "ri-settings-3-line",
-      label: "System Settings",
+      label: "Cài đặt hệ thống",
       children: [
         {
           path: "/admin/system/general",
           icon: "ri-settings-line",
-          label: "General Settings",
+          label: "Cài đặt chung",
         },
         {
           path: "/admin/system/security",
           icon: "ri-shield-line",
-          label: "Security",
+          label: "Bảo mật",
         },
         {
           path: "/admin/system/backup",
           icon: "ri-database-2-line",
-          label: "Backup & Restore",
+          label: "Sao lưu & Khôi phục",
         },
       ],
     },
@@ -137,23 +137,30 @@ function NavbarAdmin() {
   return (
     <>
       {/* Sidebar Navigation bên trái - GIỐNG HỆT Navbar user */}
-      <div className="iq-sidebar sidebar-default admin-sidebar">
+      <div
+        className={`iq-sidebar sidebar-default admin-sidebar ${
+          isCollapsed ? "sidebar-mini" : ""
+        }`}
+      >
         <div id="sidebar-scrollbar">
           <nav className="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" className="iq-menu">
               {/* Admin Header trong sidebar */}
               <li className="sidebar-header">
-                <div className="d-flex align-items-center p-3 border-bottom border-secondary">
-                  <div className="admin-avatar me-3">
+                {/* Bọc trong thẻ <a> để CSS hoạt động đúng */}
+                <a
+                  href="#!"
+                  onClick={(e) => e.preventDefault()}
+                  className="d-flex align-items-center p-3 border-bottom border-secondary text-decoration-none"
+                >
+                  <div className="admin-avatar">
                     <i className="ri-admin-line text-primary fs-3"></i>
                   </div>
-                  <div className="admin-details">
+                  <span className="ms-3">
                     <h6 className="mb-0 text">Admin Panel</h6>
-                    <small className="text-secondary-50">
-                      Quản trị hệ thống
-                    </small>
-                  </div>
-                </div>
+                    <small className="text-secondary-50">Quản trị hệ thống</small>
+                  </span>
+                </a>
               </li>
 
               {adminNavItems.map((item) => {
@@ -225,23 +232,29 @@ function NavbarAdmin() {
               })}
 
               {/* Footer actions */}
-              <li className="sidebar-footer mt-3">
-                <div className="p-3 border-top border-secondary">
-                  <Link
-                    to="/feed"
-                    className="btn btn-outline-light btn-sm w-100 mb-2"
-                  >
-                    <i className="ri-arrow-left-line me-2"></i>
-                    Về ứng dụng
+              <li className="sidebar-footer mt-auto pt-3 border-top border-secondary">
+                <TooltipWrapper title="Về ứng dụng" placement="right">
+                  <Link to="/feed" className="nav-link sidebar-footer-item">
+                    <i className="ri-arrow-left-line"></i>
+                    <span>Về ứng dụng</span>
                   </Link>
-                  <button
-                    className="btn btn-danger btn-sm w-100"
+                </TooltipWrapper>
+              </li>
+              <li>
+                <TooltipWrapper title="Đăng xuất" placement="right">
+                  <a
+                    className="nav-link sidebar-footer-item text-danger"
                     onClick={handleLogout}
+                    style={{
+                      background: "none",
+                      border: "none",
+                      width: "100%",
+                    }}
                   >
-                    <i className="ri-logout-box-r-line me-2"></i>
-                    Đăng xuất
-                  </button>
-                </div>
+                    <i className="ri-logout-box-r-line"></i>
+                    <span>Đăng xuất</span>
+                  </a>
+                </TooltipWrapper>
               </li>
             </ul>
           </nav>
@@ -260,9 +273,9 @@ function NavbarAdmin() {
                   className="img-fluid"
                   alt="SocialV Admin"
                 />
-                <span>SocialV Admin</span>
+                <span>Connect Admin</span>
               </Link>
-              <div className="iq-menu-bt align-self-center">
+              <div className="iq-menu-bt align-self-center" onClick={onToggleSidebar}>
                 <div className="wrapper-menu">
                   <div className="main-circle">
                     <i className="ri-menu-line"></i>
@@ -327,22 +340,22 @@ function NavbarAdmin() {
                     <div className="card shadow-none m-0">
                       <div className="card-header d-flex justify-content-between bg-primary">
                         <div className="header-title">
-                          <h5 className="mb-0 text-white">System Stats</h5>
+                          <h5 className="mb-0 text-white">Thống kê hệ thống</h5>
                         </div>
                         <small className="badge bg-light text-dark">Live</small>
                       </div>
                       <div className="card-body p-0">
                         <div className="p-3">
                           <div className="d-flex justify-content-between mb-2">
-                            <span>Users Online:</span>
+                            <span>Người dùng đang hoạt động:</span>
                             <strong>1,234</strong>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
-                            <span>New Posts:</span>
+                            <span>Bài viết mới:</span>
                             <strong>56</strong>
                           </div>
                           <div className="d-flex justify-content-between mb-2">
-                            <span>Pending Moderation:</span>
+                            <span>Đang chờ kiểm duyệt:</span>
                             <strong className="text-warning">23</strong>
                           </div>
                           <div className="d-flex justify-content-between">
@@ -425,7 +438,7 @@ function NavbarAdmin() {
                     <div className="card shadow-none m-0">
                       <div className="card-header d-flex justify-content-between bg-primary">
                         <div className="header-title">
-                          <h5 className="mb-0 text-white">System Status</h5>
+                          <h5 className="mb-0 text-white">Trạng thái hệ thống</h5>
                         </div>
                         <small className="badge bg-success">Healthy</small>
                       </div>
@@ -488,7 +501,7 @@ function NavbarAdmin() {
                           <h6 className="mb-0 ">Admin Panel</h6>
                           <h6 className="mb-0 ">{user?.username || "Admin"}</h6>
                           <span className="text-white font-size-12">
-                            Super Administrator
+                            System Administrator
                           </span>
                         </div>
                       </div>
@@ -502,9 +515,9 @@ function NavbarAdmin() {
                               <i className="ri-user-line"></i>
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">Admin Profile</h6>
+                              <h6 className="mb-0">Trang cá nhân admin</h6>
                               <p className="mb-0 font-size-12">
-                                View admin profile details.
+                                Xem và chỉnh sửa thông tin cá nhân admin
                               </p>
                             </div>
                           </div>
@@ -518,9 +531,9 @@ function NavbarAdmin() {
                               <i className="ri-settings-3-line"></i>
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">System Settings</h6>
+                              <h6 className="mb-0">Cài đặt hệ thống</h6>
                               <p className="mb-0 font-size-12">
-                                Configure system parameters.
+                                Quản lý cài đặt hệ thống và tùy chọn.
                               </p>
                             </div>
                           </div>
@@ -534,9 +547,9 @@ function NavbarAdmin() {
                               <i className="ri-arrow-left-line"></i>
                             </div>
                             <div className="ms-3">
-                              <h6 className="mb-0">Back to App</h6>
+                              <h6 className="mb-0">Quay lại trang chủ</h6>
                               <p className="mb-0 font-size-12">
-                                Return to user application.
+                                Trở về giao diện người dùng chính.
                               </p>
                             </div>
                           </div>
@@ -546,7 +559,7 @@ function NavbarAdmin() {
                             className="btn btn-primary iq-sign-btn"
                             onClick={handleLogout}
                           >
-                            Sign out<i className="ri-login-box-line ms-2"></i>
+                            Đăng xuất<i className="ri-login-box-line ms-2"></i>
                           </button>
                         </div>
                       </div>
