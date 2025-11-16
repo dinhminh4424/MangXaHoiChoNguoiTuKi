@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
+import { getImagesByCategoryActive } from "../../services/imageService";
 import {
   Container,
   Row,
@@ -27,6 +28,30 @@ const GroupsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
+
+  const [imageCover, setImageCover] = React.useState("");
+  const [imageAvatar, setImageAvatar] = React.useState("");
+
+  // load image default
+
+  const loadImageDefault = React.useCallback(async () => {
+    try {
+      const resBanner = await getImagesByCategoryActive("BannerGroup");
+      if (resBanner.success) {
+        setImageCover(resBanner.image?.file.path || "");
+      }
+      const resAvatar = await getImagesByCategoryActive("AvartarGroup");
+      if (resAvatar.success) {
+        setImageAvatar(resAvatar.image?.file.path || "");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadImageDefault();
+  }, [loadImageDefault]);
 
   // Load tất cả groups
   const loadAllGroups = async () => {
@@ -133,7 +158,10 @@ const GroupsPage = () => {
         <div className="top-bg-image">
           <img
             src={
-              group?.coverPhoto || "../assets/images/page-img/profile-bg1.jpg"
+              // group?.coverPhoto || "../assets/images/BannerGroup_default_2.jpg"
+              group?.coverPhoto ||
+              imageCover ||
+              "../assets/images/default-cover.jpg"
             }
             className="img-fluid w-100"
             alt="group-bg"
@@ -142,7 +170,11 @@ const GroupsPage = () => {
         <div className="card-body text-center">
           <div className="group-icon">
             <img
-              src={group?.avatar || "../assets/images/page-img/gi-1.jpg"}
+              src={
+                group?.avatar ||
+                imageAvatar ||
+                "../assets/images/AvartarGroup_default.jpg"
+              }
               alt="profile-img"
               className=" img-fluid rounded-circle avatar-120"
             />

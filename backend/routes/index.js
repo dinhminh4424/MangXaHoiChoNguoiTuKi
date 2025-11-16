@@ -25,6 +25,8 @@ const violationsRoute = require("./violations");
 
 const imageRoutes = require("./imageRoutes");
 
+const backupRestoreRoutes = require("./backupRestore");
+
 // Sử dụng các routes
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -46,6 +48,7 @@ router.use("/account", accountRoute);
 router.use("/settings", settingsRoute);
 router.use("/violations", violationsRoute);
 router.use("/images", imageRoutes);
+router.use("/backup", backupRestoreRoutes);
 
 router.use("/client-logs", clientLogsRouter);
 

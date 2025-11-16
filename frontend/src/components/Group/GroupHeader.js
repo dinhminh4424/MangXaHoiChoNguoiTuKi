@@ -10,6 +10,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import groupService from "../../services/groupService";
 import "./GroupHeader.css";
 
+import { getImagesByCategoryActive } from "../../services/imageService";
+
 const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
   const { user } = useAuth();
 
@@ -22,6 +24,30 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
     notes: "",
     files: [],
   });
+
+  const [imageCover, setImageCover] = React.useState("");
+  const [imageAvatar, setImageAvatar] = React.useState("");
+
+  // load image default
+
+  const loadImageDefault = React.useCallback(async () => {
+    try {
+      const resBanner = await getImagesByCategoryActive("BannerGroup");
+      if (resBanner.success) {
+        setImageCover(resBanner.image?.file.path || "");
+      }
+      const resAvatar = await getImagesByCategoryActive("AvartarGroup");
+      if (resAvatar.success) {
+        setImageAvatar(resAvatar.image?.file.path || "");
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  }, []);
+
+  React.useEffect(() => {
+    loadImageDefault();
+  }, [loadImageDefault]);
 
   const fileInputReportRef = React.useRef(null);
   const handleFileClick = (e) => {
@@ -163,7 +189,9 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
           style={{
             backgroundImage: group.coverPhoto
               ? `url(${group.coverPhoto})`
-              : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+              : imageCover
+              ? `url(${imageCover})`
+              : "linear-gradient(135deg, #667eea 0%, #764ba2 100%",
           }}
         />
 
@@ -179,6 +207,12 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                         alt={group.name}
                         className="rounded-circle"
                       />
+                    ) : imageAvatar ? (
+                      <img
+                        src={imageAvatar}
+                        alt={group.name}
+                        className="rounded-circle"
+                      />
                     ) : (
                       <div className="avatar-placeholder rounded-circle">
                         {group.name.charAt(0).toUpperCase()}
@@ -187,7 +221,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                   </div>
 
                   <div className="group-details">
-                    <h1 className="group-name">{group.name}</h1>
+                    <h1 className="group-name text-white">{group.name}</h1>
 
                     <div className="group-meta">
                       <span className="badge bg-light text-dark me-2">

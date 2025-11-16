@@ -10,7 +10,6 @@ import GroupMembers from "./GroupMembers";
 import GroupImage from "./GroupImage";
 import GroupFiles from "./GroupFile";
 import GroupSettings from "./GroupSettings";
-import CreatePost from "../../pages/social/CreatePost"; // Sửa đường dẫn này
 
 import { Alert, Loader } from "../UI";
 import "./Group.css";
@@ -24,6 +23,8 @@ const Group = () => {
   const [activeTab, setActiveTab] = useState("feed");
   const [userRole, setUserRole] = useState(null);
   const [isMember, setIsMember] = useState(false);
+
+  // load group
 
   const loadGroup = async () => {
     try {

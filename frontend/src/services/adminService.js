@@ -277,3 +277,107 @@ export const updateAppealStatus = async (appealId, updateData) => {
   );
   return res.data;
 };
+
+// Backup & Restore Services
+export const backupService = {
+  // Backup Database
+  backupDatabase: async () => {
+    const res = await api.post("/api/backup/backup/database");
+    return res.data;
+  },
+
+  // Backup System Files
+  backupSystemFiles: async () => {
+    const res = await api.post("/api/backup/backup/files");
+    return res.data;
+  },
+
+  // Full Backup
+  backupFull: async () => {
+    const res = await api.post("/api/backup/backup/full");
+    return res.data;
+  },
+
+  // Get Backup List
+  getBackupList: async () => {
+    const res = await api.get("/api/backup/backups");
+    return res.data;
+  },
+
+  // Download Backup
+  downloadBackup: async (filename) => {
+    const res = await api.get(`/api/backup/backups/download/${filename}`, {
+      responseType: "blob",
+    });
+    return res;
+  },
+
+  // Delete Backup
+  deleteBackup: async (filename) => {
+    const res = await api.delete(`/api/backup/backups/${filename}`);
+    return res.data;
+  },
+
+  // Restore System
+  restoreSystem: async (backupFile) => {
+    const formData = new FormData();
+    formData.append("backupFile", backupFile);
+
+    const res = await api.post("/api/backup/restore", formData, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    });
+    return res.data;
+  },
+
+  // Get Restore Progress
+  getRestoreProgress: async (logId) => {
+    const res = await api.get(`/api/backup/restore/progress/${logId}`);
+    return res.data;
+  },
+
+  // Get Backup Logs
+  getBackupLogs: async (params = {}) => {
+    const res = await api.get("/api/backup/backup-logs", { params });
+    return res.data;
+  },
+
+  // Lấy danh sách databases
+  getDatabases: async () => {
+    try {
+      const response = await api.get("/api/backup/databases");
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+
+  // Khôi phục với options
+  restoreSystem: async (file, options = {}) => {
+    try {
+      const formData = new FormData();
+      formData.append("backupFile", file);
+
+      // Thêm options vào formData
+      if (options.targetDatabase) {
+        formData.append("targetDatabase", options.targetDatabase);
+      }
+      if (options.sourceDatabase) {
+        formData.append("sourceDatabase", options.sourceDatabase);
+      }
+      if (options.dropExisting !== undefined) {
+        formData.append("dropExisting", options.dropExisting.toString());
+      }
+
+      const response = await api.post("/api/backup/restore", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      });
+      return response.data;
+    } catch (error) {
+      throw error.response?.data || error;
+    }
+  },
+};
