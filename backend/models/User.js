@@ -26,19 +26,33 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
-    //---Các trường liên quan tới chuỗi---
-    //Số lần đã khôi phục chuỗi trong tuần
-    weekly_recovery_uses: {
+    //--- Các trường liên quan tới chuỗi ĐĂNG NHẬP ---
+    // Số lần đã khôi phục chuỗi đăng nhập trong tuần
+    weekly_checkIn_recovery_uses: {
       type: Number,
       default: 0,
     },
-    //Ngày bắt đầu của tuần hiện tại (để reset số lần khôi phục chuỗi)
-    last_recovery_week_start: {
+    // Ngày bắt đầu của tuần hiện tại (để reset số lần khôi phục chuỗi đăng nhập)
+    last_checkIn_recovery_week_start: {
       type: Date,
       default: () => getStartOfWeek(new Date()),
     },
-    //Cờ để báo cho frontend biết chuỗi đã bị mất hay chưa
-    has_lost_streak: {
+    // Cờ báo mất chuỗi đăng nhập
+    has_lost_checkIn_streak: {
+      type: Boolean,
+      default: false,
+    },
+
+    //--- Các trường liên quan tới chuỗi VIẾT NHẬT KÝ ---
+    weekly_journal_miss_uses: {
+      type: Number,
+      default: 0,
+    },
+    last_journal_miss_week_start: {
+      type: Date,
+      default: () => getStartOfWeek(new Date()),
+    },
+    has_lost_journal_streak: {
       type: Boolean,
       default: false,
     },

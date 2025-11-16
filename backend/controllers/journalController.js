@@ -16,11 +16,20 @@ const isMilestone = (streak) => {
   return milestones.includes(streak);
 };
 
+// Hàm tiện ích để lấy ngày bắt đầu của tuần (Thứ 2)
+const getStartOfWeek = (date) => {
+  const d = new Date(date);
+  const day = d.getDay(); // 0 (CN) đến 6 (T7)
+  const diff = d.getDate() - day + (day === 0 ? -6 : 1);
+  const startOfWeek = new Date(d.setDate(diff));
+  startOfWeek.setHours(0, 0, 0, 0);
+  return startOfWeek;
+};
+
 // Tạo nhật ký mới và gửi thông báo
 exports.createJournal = async (req, res) => {
   try {
     const {
-      userId,
       title,
       content,
       emotions,
@@ -29,46 +38,85 @@ exports.createJournal = async (req, res) => {
       moodRating,
       moodTriggers,
     } = req.body;
+    const userId = req.user.userId; // ✅ Lấy userId từ auth middleware, an toàn hơn
 
     // Kiểm tra xem hôm nay đã có nhật ký chưa
     const today = new Date();
     const startOfDay = new Date(today.setHours(0, 0, 0, 0));
     const endOfDay = new Date(today.setHours(23, 59, 59, 999));
 
-    const existingJournal = await Journal.findOne({
-      userId,
-      date: { $gte: startOfDay, $lte: endOfDay },
-    });
+    const [user, existingJournal] = await Promise.all([
+      User.findById(userId),
+      Journal.findOne({ userId, date: { $gte: startOfDay, $lte: endOfDay } }),
+    ]);
+
+    if (!user) {
+      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+    }
 
     if (existingJournal) {
       return res.status(400).json({
         success: false,
-        message: "Hôm nay bạn đã ghi nhật ký rồi!",
+        message: "Hôm nay bạn đã ghi nhật ký rồi! Bạn có muốn cập nhật không?",
       });
     }
 
+    // --- LOGIC XỬ LÝ CHUỖI (STREAK) ĐÃ CẢI TIẾN ---
+    const now = new Date();
+    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterdayMidnight = new Date(todayMidnight);
+    yesterdayMidnight.setDate(yesterdayMidnight.getDate() - 1);
+
+    const lastJournalDay = user.lastJournalDate
+      ? new Date(new Date(user.lastJournalDate).setHours(0, 0, 0, 0))
+      : null;
+
+    // 1. Kiểm tra và reset lượt bỏ lỡ hàng tuần
+    const currentWeekStart = getStartOfWeek(now);
+    const lastMissWeekStart = user.last_journal_miss_week_start || new Date(0);
+    if (lastMissWeekStart.getTime() < currentWeekStart.getTime()) {
+        user.weekly_journal_miss_uses = 0;
+        user.last_journal_miss_week_start = currentWeekStart;
+        user.has_lost_journal_streak = false; // Reset cờ khi sang tuần mới
+    }
+
+    // 2. Xử lý chuỗi
+    if (user.has_lost_journal_streak) {
+        // Nếu chuỗi đã bị mất trong tuần, reset về 1
+        user.journalStreak = 1;
+        user.has_lost_journal_streak = false; // Reset cờ sau khi bắt đầu chuỗi mới
+    } else if (lastJournalDay) {
+        if (lastJournalDay.getTime() === yesterdayMidnight.getTime()) {
+            // Viết liên tiếp -> tăng chuỗi
+            user.journalStreak = (user.journalStreak || 0) + 1;
+        } else if (lastJournalDay.getTime() < yesterdayMidnight.getTime()) {
+            // Bỏ lỡ ngày, kiểm tra lượt bỏ lỡ
+            if (user.weekly_journal_miss_uses < 2) {
+                // Còn lượt bỏ lỡ -> dùng 1 lượt, chuỗi tiếp tục
+                user.weekly_journal_miss_uses += 1;
+                user.journalStreak = (user.journalStreak || 0) + 1; // Tiếp tục chuỗi
+            } else {
+                // Hết lượt bỏ lỡ -> reset chuỗi
+                user.journalStreak = 1;
+            }
+        }
+        // Nếu viết lại trong ngày (lastJournalDay.getTime() === todayMidnight.getTime()), không làm gì cả
+    } else {
+        // Lần đầu tiên viết nhật ký
+        user.journalStreak = 1;
+    }
+
+    user.lastJournalDate = now;
+    // --- KẾT THÚC LOGIC XỬ LÝ CHUỖI ---
+
     // Xử lý media files nếu có
-    const mediaFiles = req.files
-      ? req.files.map((file) => {
-          // Xác định thư mục theo mimetype của file
-          let fileFolder = "documents";
-
-          if (file.mimetype.startsWith("image/")) {
-            fileFolder = "images";
-          } else if (file.mimetype.startsWith("video/")) {
-            fileFolder = "videos";
-          } else if (file.mimetype.startsWith("audio/")) {
-            fileFolder = "audio";
-          }
-
-          // Tạo URL truy cập - SỬA: file.filename thay vì req.file.filename
-          const fileUrl = `${req.protocol}://${req.get(
-            "host"
-          )}/api/uploads/${fileFolder}/${file.filename}`;
-
-          return fileUrl;
-        })
-      : [];
+    const mediaFiles = req.files ? req.files.map((file) => {
+      let fileFolder = "documents";
+      if (file.mimetype.startsWith("image/")) fileFolder = "images";
+      else if (file.mimetype.startsWith("video/")) fileFolder = "videos";
+      else if (file.mimetype.startsWith("audio/")) fileFolder = "audio";
+      return `/api/uploads/${fileFolder}/${file.filename}`;
+    }) : [];
 
     // Tạo nhật ký mới
     const newJournal = new Journal({
@@ -81,53 +129,16 @@ exports.createJournal = async (req, res) => {
       moodTriggers: moodTriggers || [],
       media: mediaFiles,
       isPrivate: isPrivate !== undefined ? isPrivate : true,
-      date: new Date(),
+      date: now,
     });
 
-    await newJournal.save();
+    // Lưu cả hai vào DB cùng lúc
+    await Promise.all([newJournal.save(), user.save()]);
 
-    let user; // ✅ KHAI BÁO BIẾN user ở phạm vi cao hơn
-
-    // === TÍNH NĂNG STREAKS: XỬ LÝ CHUỖI NGÀY VIẾT NHẬT KÝ ===
-    try {
-      user = await User.findById(userId); // ✅ GÁN GIÁ TRỊ cho biến user đã khai báo
-      let milestoneReached = null; // Khởi tạo biến để lưu thông tin cột mốc
-      if (user) {
-        const now = new Date();
-        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-
-        const lastJournal = user.lastJournalDate
-          ? new Date(user.lastJournalDate)
-          : null;
-
-        if (lastJournal) {
-          const lastJournalDay = new Date(lastJournal.getFullYear(), lastJournal.getMonth(), lastJournal.getDate());
-
-          const yesterday = new Date(today);
-          yesterday.setDate(yesterday.getDate() - 1);
-
-          if (lastJournalDay.getTime() === yesterday.getTime()) {
-            user.journalStreak = (user.journalStreak || 0) + 1;
-          } else if (lastJournalDay.getTime() < yesterday.getTime()) {
-            user.journalStreak = 1;
-          }
-          // Nếu viết lại trong ngày (lastJournalDay.getTime() === today.getTime()), không làm gì cả
-        } else {
-          user.journalStreak = 1;
-        }
-        user.lastJournalDate = now;
-        await user.save();
-
-        // ✅ KIỂM TRA CỘT MỐC SAU KHI CẬP NHẬT CHUỖI (trước khi trả về)
-        if (isMilestone(user.journalStreak)) {
-          milestoneReached = { type: "journal", days: user.journalStreak };
-        }
-      }
-
-      // ✅ LƯU CỘT MỐC VÀO res.locals ĐỂ TRUYỀN XUỐNG DƯỚI
-      res.locals.milestone = milestoneReached;
-    } catch (streakError) {
-      console.error("Lỗi khi cập nhật chuỗi ngày viết nhật ký:", streakError);
+    // Kiểm tra cột mốc
+    let milestoneReached = null;
+    if (isMilestone(user.journalStreak)) {
+      milestoneReached = { type: "journal", days: user.journalStreak };
     }
 
     // Tạo thông báo
@@ -143,9 +154,9 @@ exports.createJournal = async (req, res) => {
       success: true,
       message: "Ghi nhật ký thành công!",
       data: {
-        journalStreak: user ? user.journalStreak : 0, // ✅ SỬA LỖI: Truy cập an toàn vào user.journalStreak
+        journalStreak: user.journalStreak,
         journal: newJournal,
-        milestone: res.locals.milestone, // ✅ LẤY THÔNG TIN CỘT MỐC TỪ res.locals
+        milestone: milestoneReached,
       },
     };
 

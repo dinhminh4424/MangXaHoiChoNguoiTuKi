@@ -1,10 +1,11 @@
 // pages/journal/Journal.jsx
 import React, { useState, useEffect } from "react";
+import api from "../../services/api"; // ✅ THÊM: Import instance api
+import Swal from "sweetalert2"; // ✅ THÊM: Import SweetAlert2
 import { useJournal } from "../../contexts/JournalContext";
 import { useAuth } from "../../contexts/AuthContext";
 import TiptapEditor from "../../components/journal/TiptapEditor";
 import { EmotionSelector } from "../../components/journal/EmotionSelector";
-import { MediaUploader } from "../../components/journal/MediaUploader";
 import { imageUploadService } from "../../services/imageUploadService";
 import MediaPreview from "../../components/MediaPreview";
 import {
@@ -13,10 +14,6 @@ import {
   Clock,
   Lock,
   Unlock,
-  Image as ImageIcon,
-  Video,
-  File,
-  ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
@@ -36,6 +33,45 @@ const Journal = () => {
     isPrivate: true,
     mediaFiles: [],
   });
+
+  // ✅ THÊM: useEffect để kiểm tra trạng thái chuỗi khi vào trang
+  useEffect(() => {
+    const checkJournalStreakStatus = async () => {
+      try {
+        const response = await api.get("/api/journals/streaks/status");
+        const { success, data } = response.data;
+
+        if (success) {
+          // Kịch bản 1: Mất chuỗi hoàn toàn
+          if (data.hasLostJournalStreak) {
+            Swal.fire({
+              icon: "error",
+              title: "Bạn đã mất chuỗi!",
+              text: "Bạn đã bỏ lỡ quá 2 lần viết nhật ký trong tuần này. Chuỗi sẽ được bắt đầu lại từ đầu.",
+              confirmButtonText: "Đã hiểu",
+            });
+          }
+          // Kịch bản 2: Chuỗi đang tạm dừng
+          else if (data.isPaused) {
+            const missesLeft = data.weeklyMissesAllowed - data.weeklyMissesUsed;
+            Swal.fire({
+              icon: "warning",
+              title: "Chuỗi của bạn đang tạm dừng!",
+              html: `Bạn đã bỏ lỡ một ngày viết nhật ký. <br/>Hãy viết bài hôm nay để tiếp tục chuỗi nhé. <br/>Bạn còn <strong>${missesLeft}</strong> lần bỏ lỡ trong tuần.`,
+              confirmButtonText: "OK, tôi sẽ viết ngay!",
+            });
+          }
+        }
+      } catch (error) {
+        console.error("Lỗi khi kiểm tra trạng thái chuỗi nhật ký:", error);
+      }
+    };
+
+    // Chỉ gọi khi có user đăng nhập
+    if (user) {
+      checkJournalStreakStatus();
+    }
+  }, [user]); // Phụ thuộc vào user để đảm bảo chỉ chạy khi đã đăng nhập
 
   useEffect(() => {
     if (todayJournal) {
@@ -118,36 +154,6 @@ const Journal = () => {
       <div className="mt-4">
         <h6 className="fw-semibold mb-3">File đính kèm:</h6>
         <div className="row">
-          {/* {todayJournal.media.map((mediaUrl, index) => {
-            const isImage = mediaUrl.match(/\.(jpg|jpeg|png|gif|webp)$/i);
-            const isVideo = mediaUrl.match(/\.(mp4|mov|avi|wmv)$/i);
-
-            return (
-              <div key={index} className="col-6 col-md-4 col-lg-3 mb-3">
-                <div className="card h-100">
-                  <div className="card-body p-2 text-center">
-                    {isImage ? (
-                      <ImageIcon size={32} className="text-primary mb-2" />
-                    ) : isVideo ? (
-                      <Video size={32} className="text-success mb-2" />
-                    ) : (
-                      <File size={32} className="text-secondary mb-2" />
-                    )}
-                    <small className="d-block text-truncate">
-                      {mediaUrl.split("/").pop()}
-                    </small>
-                    <button
-                      className="btn btn-outline-primary btn-sm mt-1"
-                      onClick={() => window.open(mediaUrl, "_blank")}
-                    >
-                      Xem
-                    </button>
-                  </div>
-                </div>
-              </div>
-            );
-          })} */}
-
           {todayJournal?.media && todayJournal.media.length > 0 && (
             <MediaPreview mediaList={todayJournal.media} />
           )}
