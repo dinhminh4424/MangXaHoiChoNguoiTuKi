@@ -78,7 +78,8 @@ export const AuthProvider = ({ children }) => {
         setToken(storedToken);
         api.defaults.headers.common["Authorization"] = `Bearer ${storedToken}`;
 
-        const response = await api.get("/api/users/me");
+        // ✅ SỬA LỖI: Sử dụng đúng endpoint /api/auth/me để lấy thông tin user đầy đủ
+        const response = await api.get("/api/auth/me");
 
         if (response.data && response.data.data && response.data.data.user) {
           setUser(response.data.data.user);
@@ -108,28 +109,37 @@ export const AuthProvider = ({ children }) => {
 
   // Hàm đăng nhập trong AuthContext
   const login = async (email, password) => {
+    // ✅ SỬA LỖI: Trả về toàn bộ response.data để Login.js có thể truy cập
+    // `result.data.user` và các thông tin về chuỗi.
     try {
       // Gọi API đăng nhập
       const response = await api.post("/api/auth/login", {
         email,
         password,
       });
+      if (response.data.success) {
+        // Lưu thông tin user và token
+        const { user, token } = response.data.data;
+        const milestone = response.data.data.milestone; // Lấy riêng để tránh lỗi
 
-      // Lưu thông tin user và token
-      const { user, token, milestone } = response.data.data;
-      localStorage.setItem("token", token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+        localStorage.setItem("token", token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      setUser(user);
-      setToken(token);
+        setUser(user);
+        setToken(token);
 
-        // ✅ HIỂN THỊ POPUP NẾU ĐẠT MỐC (từ response.data.data.milestone)
-      showMilestonePopup(response.data.data.milestone);
+        // Hiển thị popup nếu đạt mốc
+        if (milestone) {
+          showMilestonePopup(milestone);
+        }
 
-      return { success: true, token };
+        // Trả về toàn bộ data để Login.js xử lý popup mất chuỗi
+        return response.data;
+      }
+      // Nếu API trả về success: false
+      return response.data;
     } catch (error) {
       console.error("Login error:", error);
-
       // Xử lý các loại lỗi khác nhau
       let errorMessage = "Đăng nhập thất bại";
 
@@ -162,7 +172,8 @@ export const AuthProvider = ({ children }) => {
       api.defaults.headers.common["Authorization"] = `Bearer ${newToken}`;
 
       // 2. Lấy thông tin user ngay lập tức (giống checkAuth)
-      const response = await api.get("/api/users/me");
+      // ✅ SỬA LỖI: Sử dụng đúng endpoint /api/auth/me
+      const response = await api.get("/api/auth/me");
 
       if (response.data && response.data.data && response.data.data.user) {
         setUser(response.data.data.user);
@@ -178,10 +189,16 @@ export const AuthProvider = ({ children }) => {
         throw new Error("Invalid user data structure");
       }
     } catch (error) {
-      console.error("❌ handleSocialLogin failed:", error);
+      console.error("❌ handleSocialLogin failed:", {
+        message: error.message,
+        response: error.response?.data,
+      });
       // Nếu thất bại, đăng xuất
       logout();
-      return { success: false };
+      return {
+        success: false,
+        message: error.response?.data?.message || "Đăng nhập mạng xã hội thất bại",
+      };
     }
   };
 
@@ -191,21 +208,25 @@ export const AuthProvider = ({ children }) => {
       // Gọi API đăng ký
       const response = await api.post("/api/auth/register", userData);
 
-      // Lưu thông tin user và token
-      const { user, token, milestone } = response.data.data;
-      localStorage.setItem("token", token);
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
+      if (response.data.success) {
+        // Lưu thông tin user và token
+        const { user, token } = response.data.data;
+        const milestone = response.data.data.milestone;
 
-      setUser(user);
-      setToken(token);
+        localStorage.setItem("token", token);
+        api.defaults.headers.common["Authorization"] = `Bearer ${token}`;
 
-      // ✅ HIỂN THỊ POPUP NẾU ĐẠT MỐC (từ response.data.data.milestone)
-      showMilestonePopup(response.data.data.milestone);
+        setUser(user);
+        setToken(token);
 
-      return { success: true };
+        if (milestone) {
+          showMilestonePopup(milestone);
+        }
+      }
+      return response.data;
     } catch (error) {
       console.error("Đăng ký lỗi:", error);
-      return {
+      return { // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
         success: false,
         message: error.response?.data?.message || "Đăng ký thất bại" + error,
       };
@@ -261,10 +282,11 @@ export const AuthProvider = ({ children }) => {
       });
       return response.data;
     } catch (error) {
-      console.error("Đăng ký lỗi:", error);
+      console.error("Lỗi reset password:", error);
+      // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
       return {
         success: false,
-        message: error.response?.data?.message || "Đăng ký thất bại" + error,
+        message: error.response?.data?.message || "Đặt lại mật khẩu thất bại",
       };
     }
   };
@@ -275,10 +297,10 @@ export const AuthProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       console.error("Forgot lỗi:", error);
+      // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
       return {
         success: false,
-        message:
-          error.response?.data?.message || "forgotPassword thất bại" + error,
+        message: error.response?.data?.message || "Yêu cầu đặt lại mật khẩu thất bại",
       };
     }
   };
@@ -321,6 +343,7 @@ export const AuthProvider = ({ children }) => {
     register,
     handleSocialLogin,
     logout,
+    setUser, // ✅ Export setUser để ProfileView có thể cập nhật user sau khi khôi phục chuỗi
     loadUserChats,
     resetPassword,
     forgotPassword,

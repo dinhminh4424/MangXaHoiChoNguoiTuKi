@@ -16,8 +16,8 @@ const checkLostStreaks = () => {
             // Điều này có nghĩa là họ đã không hoạt động vào ngày hôm qua
             const result = await User.updateMany(
                 {
-                    current_streak: { $gt: 0 },
-                    last_activity_date: { $lt: startOfYesterday }
+                    checkInStreak: { $gt: 0 }, // Chỉ kiểm tra user có chuỗi
+                    lastCheckInDate: { $lt: startOfYesterday }
                 },
                 {
                     $set: { has_lost_streak: true }
