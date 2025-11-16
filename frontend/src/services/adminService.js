@@ -258,3 +258,22 @@ export const updateGroupViolationStatus = async (violationId, updateData) => {
   );
   return res.data;
 };
+
+// Quản lý kháng nghị
+export const getAllAppeals = async (params = {}) => {
+  const res = await api.get("/api/admin/appeals", { params });
+  return res.data;
+};
+
+export const getAppealById = async (appealId) => {
+  const res = await api.get(`/api/admin/appeals/${appealId}`);
+  return res.data;
+};
+
+export const updateAppealStatus = async (appealId, updateData) => {
+  const res = await api.put(
+    `/api/admin/appeals/${appealId}/status`,
+    updateData
+  );
+  return res.data;
+};

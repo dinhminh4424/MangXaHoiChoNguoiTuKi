@@ -4,6 +4,7 @@ const adminController = require("../controllers/adminController");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const adminAuth = require("../middleware/adminAuth");
+const imageRoutes = require("./imageRoutes");
 const User = require("../models/User");
 
 // Middleware kiểm tra đăng nhập trước, sau đó kiểm tra quyền admin
@@ -93,6 +94,14 @@ router.get("/violation/posts", adminController.getPostViolation);
 router.get("/violation/comments", adminController.getCommentViolation);
 router.get("/violation/users", adminController.getUserViolation);
 router.get("/violation/groups", adminController.getGroupViolation);
+
+// Quản lý kháng nghị
+router.get("/appeals", adminController.getAllAppeals);
+router.get("/appeals/:appealId", adminController.getAppealById);
+router.put("/appeals/:appealId/status", adminController.updateAppealStatus);
+
+// hình ảnh
+router.use("/images", imageRoutes);
 
 module.exports = router;
 

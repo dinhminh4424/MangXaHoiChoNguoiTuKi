@@ -18,7 +18,7 @@ class GroupController {
       if (!checkUser.profile.idCard.verified) {
         res.status(400).json({
           success: false,
-          message: "Bạn chưa Xác Minh Danh tính" + err.message,
+          message: "Bạn chưa Xác Minh Danh tính",
         });
       }
 
@@ -1133,8 +1133,10 @@ class GroupController {
 
       await newViolation.save();
 
-      let reportCount = group.reportCount || 0 + 1;
+      let reportCount = group.reportCount + 1;
+
       group.reportCount = reportCount;
+
       if (reportCount >= 10) {
         group.active = false;
 

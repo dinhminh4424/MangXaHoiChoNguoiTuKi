@@ -17,7 +17,9 @@ export const ProfileProvider = ({ children }) => {
   const [updateSuccess, setUpdateSuccess] = useState(false);
 
   // Load user profile khi currentUser thay đổi
+
   useEffect(() => {
+    console.log("currentUser: ", currentUser);
     if (isAuthenticated && currentUser) {
       setViewedUser(currentUser);
     }

@@ -1889,7 +1889,7 @@ import * as faceapi from "face-api.js";
 import { Modal, Button } from "react-bootstrap";
 
 const FaceLogin = () => {
-  const USER_DISTANCE = 0.25;
+  const USER_DISTANCE = 0.29;
   const MAX_ATTEMPTS = 1;
   const DETECTION_PER_ATTEMPT = 10;
 

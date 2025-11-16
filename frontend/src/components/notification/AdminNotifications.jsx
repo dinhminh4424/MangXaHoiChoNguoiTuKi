@@ -185,7 +185,6 @@ const AdminNotifications = () => {
     setSosNotification(null);
   };
 
-
   const getPriorityIcon = (priority, type) => {
     // Đặc biệt cho SOS Emergency
     if (type === "SOS_EMERGENCY") {
@@ -464,12 +463,15 @@ const AdminNotifications = () => {
             </div>
 
             <div className="sos-popup-footer">
-              <button className="btn btn-primary sos-popup-action-btn" onClick={closeSosPopup}>
+              <button
+                className="btn btn-primary sos-popup-action-btn"
+                onClick={closeSosPopup}
+              >
                 <i className="ri-check-line me-2"></i>
                 Đã xem
               </button>
               {sosNotification.data?.phoneNumber && (
-                <a 
+                <a
                   href={`tel:${sosNotification.data.phoneNumber}`}
                   className="btn btn-success sos-popup-action-btn"
                 >

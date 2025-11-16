@@ -12,6 +12,7 @@ const NotificationService = require("../services/notificationService");
 const Friend = require("../models/Friend");
 const Follow = require("../models/Follow");
 const mailService = require("../services/mailService");
+const ImageBackground = require("../models/ImageBackground");
 const { logUserActivity } = require("../logging/userActivityLogger");
 
 class UserController {
@@ -490,12 +491,48 @@ class UserController {
         }),
       ]);
 
+      // Lấy Danh Sách BẠN  BÈ
+
+      const isFriend = await Friend.find({
+        $or: [
+          { userA: req.user.userId, userB: user._id },
+          { userA: user._id, userB: req.user.userId },
+        ],
+      });
+      // console.log("isFriend: ", isFriend);
+
+      let checkViewProfile = true;
+      if (user.settings.profileVisibility === "private") {
+        checkViewProfile = false;
+      } else if (user.settings.profileVisibility === "friends") {
+        if (req.user.userId !== req.params.userId && !(isFriend.length > 0)) {
+          checkViewProfile = false;
+        }
+      }
+
+      // console.log("checkViewProfile: ", checkViewProfile);
+
       const userDoc = user.toObject();
       userDoc.countPost = countPost;
       userDoc.countChat = countChat;
       userDoc.countFriends = countFriends;
       userDoc.countFollowers = countFollowers;
       userDoc.countFollowing = countFollowing;
+
+      userDoc.isFriend = isFriend.length > 0;
+
+      userDoc.checkViewProfile = checkViewProfile;
+
+      if (!user.profile.coverPhoto) {
+        const imageCover = await ImageBackground.findOne({
+          active: true,
+          category: "BannerUser",
+        });
+
+        // console.log(imageCover);
+        userDoc.banner = imageCover.file.path;
+      }
+
       userDoc.checkInStreak = user.checkInStreak; // ✅ SỬA
       userDoc.journalStreak = user.journalStreak; // ✅ THÊM
 
@@ -1043,8 +1080,14 @@ async function AddViolationUserByID(
     }
     const newCount = (user.violationCount || 0) + 1;
     let isActive = newCount <= 5;
-    if (banUser) {
+    if (banUser || !isActive) {
       isActive = false;
+      const vio = await Violation.findById(violation._id);
+
+      vio.status = "auto";
+      vio.actionTaken = "auto_baned";
+
+      await vio.save();
     }
 
     await User.findByIdAndUpdate(userId, {

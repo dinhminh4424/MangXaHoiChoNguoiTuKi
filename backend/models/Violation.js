@@ -46,6 +46,7 @@ const violationSchema = new mongoose.Schema(
         "warning",
         "block_post",
         "block_comment",
+        "block_group",
         "ban_user",
         "auto_blocked",
         "auto_warned",
@@ -72,6 +73,65 @@ const violationSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       default: null, // admin/mod xử lý
+    },
+
+    // Thông tin kháng cáo
+    appeal: {
+      isAppealed: {
+        // check kháng cáo
+        type: Boolean,
+        default: false,
+      },
+      appealReason: {
+        // lý do kháng cáo
+        type: String,
+        trim: true,
+      },
+      appealAt: {
+        type: Date,
+      },
+      appealStatus: {
+        // trạng thái kháng cáo
+        type: String,
+        enum: ["pending", "approved", "rejected", "cancelled"],
+        default: "pending",
+      },
+      appealReviewedBy: {
+        type: mongoose.Schema.Types.ObjectId, // dc sử lý bởi
+        ref: "User",
+        default: null,
+      },
+      appealReviewedAt: {
+        type: Date, // ngày sử lý
+      },
+      appealNotes: {
+        type: String, // ghi chú kháng cáo
+        trim: true,
+      },
+      files: [
+        // mảng file đính kèm (nếu có)
+        {
+          type: {
+            type: String,
+            enum: ["text", "image", "file", "video", "audio"],
+          },
+          fileUrl: String,
+          fileName: String,
+          fileSize: Number,
+        },
+      ],
+      actionTakenAppeal: {
+        type: String,
+        enum: [
+          "none",
+          "unblock_warning",
+          "unblock_post",
+          "unblock_comment",
+          "unban_user",
+          "unblock_group",
+        ],
+        default: "none",
+      },
     },
     reviewedAt: Date,
   },

@@ -51,6 +51,8 @@ const UserNotifications = () => {
       "SUPPORT_TICKET_CREATED",
       "SUPPORT_TICKET_UPDATED",
       "SUPPORT_TICKET_RESOLVED",
+      "APPEAL_RESOLVED",
+      "APPEAL_CREATE",
     ];
     return systemTypes.includes(type);
   };
@@ -544,11 +546,7 @@ const UserNotifications = () => {
                     <i className="ri-notification-line me-1"></i>
                     Tất cả
                     {allCount > 0 && (
-                      <span
-                        className="badge bg-primary ms-1"
-                      >
-                        {allCount}
-                      </span>
+                      <span className="badge bg-primary ms-1">{allCount}</span>
                     )}
                   </button>
                 </li>
@@ -562,11 +560,7 @@ const UserNotifications = () => {
                     <i className="ri-article-line me-1"></i>
                     Bài viết
                     {postsCount > 0 && (
-                      <span
-                        className="badge bg-info ms-1"
-                      >
-                        {postsCount}
-                      </span>
+                      <span className="badge bg-info ms-1">{postsCount}</span>
                     )}
                   </button>
                 </li>
@@ -580,9 +574,7 @@ const UserNotifications = () => {
                     <i className="ri-user-add-line me-1"></i>
                     Kết bạn
                     {friendsCount > 0 && (
-                      <span
-                        className="badge bg-primary ms-1"
-                      >
+                      <span className="badge bg-primary ms-1">
                         {friendsCount}
                       </span>
                     )}
@@ -598,9 +590,7 @@ const UserNotifications = () => {
                     <i className="ri-settings-line me-1"></i>
                     Hệ thống
                     {systemCount > 0 && (
-                      <span
-                        className="badge bg-warning ms-1"
-                      >
+                      <span className="badge bg-warning ms-1">
                         {systemCount}
                       </span>
                     )}
@@ -859,7 +849,6 @@ const UserNotifications = () => {
         </Modal>
       )}
       {/* === KẾT THÚC SỬA LỖI MODAL === */}
-
 
       {/* SOS Emergency Popup */}
       {isSosPopupOpen && sosNotification && (

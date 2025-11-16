@@ -129,25 +129,25 @@ const GroupsPage = () => {
     const isMember = myGroups.some((g) => g._id === group._id);
 
     return (
-      <div class="card mb-0">
-        <div class="top-bg-image">
+      <div className="card mb-0">
+        <div className="top-bg-image">
           <img
             src={
               group?.coverPhoto || "../assets/images/page-img/profile-bg1.jpg"
             }
-            class="img-fluid w-100"
+            className="img-fluid w-100"
             alt="group-bg"
           />
         </div>
-        <div class="card-body text-center">
-          <div class="group-icon">
+        <div className="card-body text-center">
+          <div className="group-icon">
             <img
               src={group?.avatar || "../assets/images/page-img/gi-1.jpg"}
               alt="profile-img"
-              class=" img-fluid rounded-circle avatar-120"
+              className=" img-fluid rounded-circle avatar-120"
             />
           </div>
-          <div class="group-info pt-3 pb-3 d-flex justify-content-center align-items-center">
+          <div className="group-info pt-3 pb-3 d-flex justify-content-center align-items-center">
             <div>
               <h4>
                 <a
@@ -165,18 +165,18 @@ const GroupsPage = () => {
             </div>
           </div>
 
-          <div class="group-details d-inline-block pb-3">
-            <ul class="d-flex align-items-center justify-content-between list-inline m-0 p-0">
-              <li class="pe-3 ps-3">
-                <p class="mb-0">Post</p>
+          <div className="group-details d-inline-block pb-3">
+            <ul className="d-flex align-items-center justify-content-between list-inline m-0 p-0">
+              <li className="pe-3 ps-3">
+                <p className="mb-0">Post</p>
                 <h6>600</h6>
               </li>
-              <li class="pe-3 ps-3">
-                <p class="mb-0">Member</p>
+              <li className="pe-3 ps-3">
+                <p className="mb-0">Member</p>
                 <h6>{group.members || "899"}</h6>
               </li>
-              <li class="pe-3 ps-3">
-                <p class="mb-0">Visit</p>
+              <li className="pe-3 ps-3">
+                <p className="mb-0">Visit</p>
                 <h6>1.2k</h6>
               </li>
             </ul>
@@ -199,46 +199,46 @@ const GroupsPage = () => {
               ))}
             </div>
           )}
-          <div class="group-member mb-3">
-            <div class="iq-media-group">
-              <a href="#" class="iq-media">
+          <div className="group-member mb-3">
+            <div className="iq-media-group">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/05.jpg"
                   alt=""
                 />
               </a>
-              <a href="#" class="iq-media">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/06.jpg"
                   alt=""
                 />
               </a>
-              <a href="#" class="iq-media">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/07.jpg"
                   alt=""
                 />
               </a>
-              <a href="#" class="iq-media">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/08.jpg"
                   alt=""
                 />
               </a>
-              <a href="#" class="iq-media">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/09.jpg"
                   alt=""
                 />
               </a>
-              <a href="#" class="iq-media">
+              <a href="#" className="iq-media">
                 <img
-                  class="img-fluid avatar-40 rounded-circle"
+                  className="img-fluid avatar-40 rounded-circle"
                   src="../assets/images/user/10.jpg"
                   alt=""
                 />
@@ -341,9 +341,13 @@ const GroupsPage = () => {
             </div>
           ) : groups.length > 0 ? (
             <div className="d-grid gap-3 d-grid-template-1fr-19">
-              {groups.map((group) => (
+              {groups.map((group, index) => (
                 // <Col key={group._id} lg={4} md={6} className="mb-4">
-                <GroupCard group={group} showJoinButton={true} />
+                <GroupCard
+                  key={group._id + "-" + index}
+                  group={group}
+                  showJoinButton={true}
+                />
                 // </Col>
               ))}
             </div>

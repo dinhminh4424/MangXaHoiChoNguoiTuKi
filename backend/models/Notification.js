@@ -26,6 +26,7 @@ const notificationSchema = new mongoose.Schema(
         "REPORT_CREATED", // Có báo cáo mới
         "REPORT_RESOLVED", // Báo cáo đã xử lý
         "REPORT_REJECTED", // Báo cáo bị từ chối
+
         "POST_BLOCKED", // Bài viết bị chặn
         "POST_COMMENT_BLOCKED", // Bài viết bị khoá bình luận
         "COMMENT_BLOCKED", //  Khoá bình luận
@@ -33,6 +34,16 @@ const notificationSchema = new mongoose.Schema(
         "USER_WARNED", // User bị cảnh báo
         "GROUP_BLOCKED", // Group bị chặn
         "GROUP_WARNED", //  Group bị cảnh báo
+
+        "POST_UN_BLOCKED", // Bài viết bị chặn
+        "POST_COMMENT_UN_BLOCKED", // Bài viết bị khoá bình luận
+        "COMMENT_UN_BLOCKED", //  Khoá bình luận
+        "USER_UN_BANNED", // User bị ban
+        "USER_UN_WARNED", // User bị cảnh báo
+        "GROUP_UN_BLOCKED", // Group bị chặn
+        "GROUP_UN_WARNED", //  Group bị cảnh báo
+
+        "APPEAL_RESOLVED_ADMIN",
 
         // Bài viết và tương tác
         "POST_LIKED", // Bài viết được like
@@ -67,6 +78,10 @@ const notificationSchema = new mongoose.Schema(
         "SUPPORT_TICKET_CREATED", // Ticket hỗ trợ được tạo
         "SUPPORT_TICKET_UPDATED", // Ticket hỗ trợ được cập nhật
         "SUPPORT_TICKET_RESOLVED", // Ticket hỗ trợ đã giải quyết
+
+        // Kháng nghị
+        "APPEAL_RESOLVED",
+        "APPEAL_CREATE",
 
         // Khẩn cấp
         "SOS_EMERGENCY", // Tín hiệu SOS khẩn cấp
