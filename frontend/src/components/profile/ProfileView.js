@@ -17,6 +17,7 @@ import { X, Image } from "lucide-react";
 import NotificationService from "../../services/notificationService";
 
 import "./profileView.css";
+import { useEffect, useRef } from "react";
 
 const ProfileView = ({ userId }) => {
   const navigate = useNavigate();
