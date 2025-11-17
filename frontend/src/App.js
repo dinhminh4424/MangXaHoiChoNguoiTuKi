@@ -74,6 +74,9 @@ import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
 import AppealManagement from "./pages/admin/appeals/AppealManagement";
 
+import BackupLogs from "./pages/admin/backup/BackupLogs";
+import BackupManagement from "./pages/admin/backup/BackupManagement";
+
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
@@ -273,6 +276,19 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   }, // ImageManager
+
+  {
+    path: "/admin/backup",
+    component: BackupManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/backup/logs",
+    component: BackupLogs,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
 ];
 
 /**

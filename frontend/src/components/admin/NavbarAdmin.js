@@ -90,22 +90,44 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
     {
       path: "/admin/system",
       icon: "ri-settings-3-line",
-      label: "Cài đặt hệ thống",
+
+      label: "Cài Đặt Hệ Thống",
       children: [
         {
-          path: "/admin/system/general",
-          icon: "ri-settings-line",
-          label: "Cài đặt chung",
+          path: "/admin/imagemanager",
+          icon: "ri-image-line",
+          label: "Hình Ảnh",
         },
         {
           path: "/admin/system/security",
           icon: "ri-shield-line",
           label: "Bảo mật",
         },
+        // {
+        //   path: "/admin/system/backup",
+        //   icon: "ri-database-2-line",
+        //   label: "Backup & Restore",
+        // },
+
         {
-          path: "/admin/system/backup",
+          label: "Backup & Restore", // <-- SỬA: "title" đổi thành "label"
           icon: "ri-database-2-line",
+
           label: "Sao lưu & Khôi phục",
+
+          children: [
+            // <-- Component của bạn có thể tìm "items" hoặc "children"
+            {
+              label: "Quản lý Backup", // <-- SỬA: "title" đổi thành "label"
+              path: "/admin/backup",
+              icon: "ri-save-3-line",
+            },
+            {
+              label: "Lịch sử Backup", // <-- SỬA: "title" đổi thành "label"
+              path: "/admin/backup/logs",
+              icon: "ri-history-line",
+            },
+          ],
         },
       ],
     },
@@ -158,12 +180,14 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                   </div>
                   <span className="ms-3">
                     <h6 className="mb-0 text">Admin Panel</h6>
-                    <small className="text-secondary-50">Quản trị hệ thống</small>
+                    <small className="text-secondary-50">
+                      Quản trị hệ thống
+                    </small>
                   </span>
                 </a>
               </li>
 
-              {adminNavItems.map((item) => {
+              {/* {adminNavItems.map((item) => {
                 const hasChildren =
                   Array.isArray(item.children) && item.children.length > 0;
                 const isActive = hasChildren
@@ -229,6 +253,173 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                     )}
                   </li>
                 );
+              })} */}
+              {adminNavItems.map((item, idx) => {
+                const childrenArr = Array.isArray(item.children)
+                  ? item.children
+                  : [];
+                const hasChildren = childrenArr.length > 0;
+                const isActive = hasChildren
+                  ? isActiveParent(childrenArr.map((child) => child.path))
+                  : isActiveRoute(item.path);
+                const isExpanded = hasChildren && isActive;
+
+                const rawId =
+                  (item.path && String(item.path)) ||
+                  (item.label && String(item.label)) ||
+                  `menu-${idx}`;
+                const submenuId =
+                  rawId.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") ||
+                  `menu-${idx}`;
+
+                return (
+                  <li
+                    key={rawId || submenuId || idx}
+                    className={isActive ? "active" : ""}
+                  >
+                    {hasChildren ? (
+                      <>
+                        <a
+                          href={`#${submenuId}`}
+                          data-bs-toggle="collapse"
+                          className={isExpanded ? "" : "collapsed"}
+                          aria-expanded={isExpanded}
+                          aria-controls={submenuId}
+                        >
+                          <i className={item.icon}></i>
+                          <span>{item.label}</span>
+                          <i className="ri-arrow-right-s-line iq-arrow-right"></i>
+                        </a>
+
+                        <ul
+                          id={submenuId}
+                          className={`iq-submenu ${
+                            isExpanded ? "show" : "collapse"
+                          }`}
+                          data-bs-parent="#iq-sidebar-toggle"
+                        >
+                          {(childrenArr || []).map((child, cidx) => {
+                            const grandChildrenArr = Array.isArray(
+                              child.children
+                            )
+                              ? child.children
+                              : [];
+                            const childHasChildren =
+                              grandChildrenArr.length > 0;
+
+                            const childRawId =
+                              (child.path && String(child.path)) ||
+                              (child.label && String(child.label)) ||
+                              `${submenuId}-child-${cidx}`;
+                            const childSubmenuId =
+                              childRawId
+                                .replace(/[^a-z0-9]+/gi, "-")
+                                .replace(/^-|-$/g, "") ||
+                              `${submenuId}-child-${cidx}`;
+
+                            if (childHasChildren) {
+                              const childActive = isActiveParent(
+                                grandChildrenArr.map((gc) => gc.path)
+                              );
+                              return (
+                                <li
+                                  key={childRawId}
+                                  className={childActive ? "active" : ""}
+                                >
+                                  <a
+                                    href={`#${childSubmenuId}`}
+                                    data-bs-toggle="collapse"
+                                    className={childActive ? "" : "collapsed"}
+                                    aria-expanded={childActive}
+                                    aria-controls={childSubmenuId}
+                                  >
+                                    <i className={child.icon}></i>
+                                    <span>{child.label}</span>
+                                    <i className="ri-arrow-right-s-line iq-arrow-right"></i>
+                                  </a>
+
+                                  <ul
+                                    id={childSubmenuId}
+                                    className={`iq-submenu ${
+                                      childActive ? "show" : "collapse"
+                                    }`}
+                                  >
+                                    {(grandChildrenArr || []).map(
+                                      (grand, gidx) => {
+                                        const grandKey =
+                                          grand.path ||
+                                          grand.label ||
+                                          `${childRawId}-grand-${gidx}`;
+                                        return (
+                                          <li
+                                            key={grandKey}
+                                            className={
+                                              isActiveRoute(grand.path)
+                                                ? "active"
+                                                : ""
+                                            }
+                                          >
+                                            <Link
+                                              to={grand.path || "#"}
+                                              className={
+                                                isActiveRoute(grand.path)
+                                                  ? "active"
+                                                  : ""
+                                              }
+                                            >
+                                              <i className={grand.icon}></i>
+                                              <span>{grand.label}</span>
+                                            </Link>
+                                          </li>
+                                        );
+                                      }
+                                    )}
+                                  </ul>
+                                </li>
+                              );
+                            }
+
+                            // regular child (no grandchildren)
+                            const childKey =
+                              child.path ||
+                              child.label ||
+                              `${rawId}-child-${cidx}`;
+                            return (
+                              <li
+                                key={childKey}
+                                className={
+                                  isActiveRoute(child.path) ? "active" : ""
+                                }
+                              >
+                                <Link
+                                  to={child.path || "#"}
+                                  className={
+                                    isActiveRoute(child.path) ? "active" : ""
+                                  }
+                                >
+                                  <i className={child.icon}></i>
+                                  <span>{child.label}</span>
+                                </Link>
+                              </li>
+                            );
+                          })}
+                        </ul>
+                      </>
+                    ) : (
+                      <TooltipWrapper title={item.label} placement="right">
+                        <Link
+                          to={item.path || "#"}
+                          className={`nav-link ${
+                            isActiveRoute(item.path) ? "active" : ""
+                          }`}
+                        >
+                          <i className={item.icon}></i>
+                          <span>{item.label}</span>
+                        </Link>
+                      </TooltipWrapper>
+                    )}
+                  </li>
+                );
               })}
 
               {/* Footer actions */}
@@ -275,7 +466,10 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                 />
                 <span>Connect Admin</span>
               </Link>
-              <div className="iq-menu-bt align-self-center" onClick={onToggleSidebar}>
+              <div
+                className="iq-menu-bt align-self-center"
+                onClick={onToggleSidebar}
+              >
                 <div className="wrapper-menu">
                   <div className="main-circle">
                     <i className="ri-menu-line"></i>
@@ -368,55 +562,6 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                   </div>
                 </li>
 
-                {/* Notifications Dropdown */}
-                {/* <li className="nav-item dropdown">
-                  <a
-                    href="#"
-                    className="search-toggle dropdown-toggle"
-                    id="notification-drop"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i className="ri-notification-4-line"></i>
-                    <span className="badge bg-danger notification-badge">
-                      5
-                    </span>
-                  </a>
-                  <div
-                    className="sub-drop dropdown-menu dropdown-menu-end"
-                    aria-labelledby="notification-drop"
-                  >
-                    <div className="card shadow-none m-0">
-                      <div className="card-header d-flex justify-content-between bg-primary">
-                        <div className="header-title bg-primary">
-                          <h5 className="mb-0 text-white">Admin Alerts</h5>
-                        </div>
-                        <small className="badge bg-light text-dark">5</small>
-                      </div>
-                      <div className="card-body p-0">
-                        <div className="p-3">
-                          <div className="alert alert-warning p-2 mb-2">
-                            <small>3 users reported</small>
-                          </div>
-                          <div className="alert alert-danger p-2 mb-2">
-                            <small>System backup required</small>
-                          </div>
-                          <div className="alert alert-info p-2">
-                            <small>New version available</small>
-                          </div>
-                        </div>
-                        <div className="text-center p-2 border-top">
-                          <Link
-                            to="/admin/notifications"
-                            className="btn text-primary"
-                          >
-                            View All Alerts
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li> */}
-
                 <AdminNotifications />
 
                 {/* System Status */}
@@ -438,7 +583,9 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                     <div className="card shadow-none m-0">
                       <div className="card-header d-flex justify-content-between bg-primary">
                         <div className="header-title">
-                          <h5 className="mb-0 text-white">Trạng thái hệ thống</h5>
+                          <h5 className="mb-0 text-white">
+                            Trạng thái hệ thống
+                          </h5>
                         </div>
                         <small className="badge bg-success">Healthy</small>
                       </div>

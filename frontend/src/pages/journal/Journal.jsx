@@ -127,16 +127,87 @@ const Journal = () => {
 
   if (!todayJournal) {
     return (
-      <div className="container mt-4">
-        <div className="alert alert-info text-center">
-          <Calendar size={48} className="mb-3 text-primary" />
-          <h3>Hôm nay bạn chưa ghi nhật ký</h3>
-          <p>
-            Hãy bắt đầu ghi lại những trải nghiệm và cảm xúc của bạn ngay bây
-            giờ
+      // <div className="container mt-4">
+      //   <div className="alert alert-info text-center">
+      //     <Calendar size={48} className="mb-3 text-primary" />
+      //     <h3 className="">Hôm nay bạn chưa ghi nhật ký</h3>
+      //     <br />
+      //     <div className="row">
+      //       <p>
+      //         Hãy bắt đầu ghi lại những trải nghiệm và cảm xúc của bạn ngay bây
+      //         giờ
+      //       </p>
+      //     </div>
+
+      //     <button
+      //       className="btn btn-primary d-flex align-items-center gap-2 mx-auto"
+      //       onClick={() => navigate("/journal/create")}
+      //     >
+      //       <Edit size={18} />
+      //       Ghi nhật ký mới
+      //     </button>
+      //   </div>
+      // </div>
+      <div className="container-sm mt-4 " style={{ maxWidth: "720px" }}>
+        <div
+          className="card text-center shadow-sm p-5"
+          style={{
+            borderRadius: "26px",
+            background: "linear-gradient(135deg, #e8f3ff 0%, #ffffff 80%)",
+            border: "none",
+            minHeight: "380px",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "center",
+          }}
+        >
+          {/* Icon */}
+          <div className="d-flex justify-content-center mb-4">
+            <div
+              style={{
+                width: "90px",
+                height: "90px",
+                background: "#e1edff",
+                borderRadius: "20px",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                boxShadow: "0 4px 12px rgba(0,0,0,0.08)",
+              }}
+            >
+              <Calendar size={48} className="text-primary" />
+            </div>
+          </div>
+
+          {/* Title */}
+          <h2 className="fw-bold mb-3" style={{ color: "#0d6efd" }}>
+            Hôm nay bạn chưa ghi nhật ký
+          </h2>
+
+          {/* Description */}
+          <p
+            className="mx-auto"
+            style={{
+              maxWidth: "550px",
+              fontSize: "17px",
+              color: "#555",
+              lineHeight: "1.6",
+            }}
+          >
+            Mỗi ngày đều mang theo những câu chuyện, cảm xúc và khoảnh khắc đáng
+            nhớ. Hãy viết lại để giữ trọn vẹn hành trình của chính bạn. Đây là
+            nơi bạn có thể thả lỏng tâm hồn và suy nghĩ một cách chân thật nhất.
           </p>
+
+          {/* Button */}
           <button
-            className="btn btn-primary d-flex align-items-center gap-2 mx-auto"
+            className="btn btn-primary d-flex align-items-center gap-2 mx-auto mt-4 px-4 py-2"
+            style={{
+              borderRadius: "30px",
+              fontSize: "16px",
+              paddingLeft: "24px",
+              paddingRight: "24px",
+            }}
             onClick={() => navigate("/journal/create")}
           >
             <Edit size={18} />
