@@ -6,6 +6,7 @@ const upload = require("../middleware/upload");
 const adminAuth = require("../middleware/adminAuth");
 const imageRoutes = require("./imageRoutes");
 const securityRoutes = require("./admin/securityRoutes");
+const adminAnalyticsRoutes = require("./admin/analytics");
 const User = require("../models/User");
 
 // Middleware kiểm tra đăng nhập trước, sau đó kiểm tra quyền admin
@@ -103,6 +104,7 @@ router.put("/appeals/:appealId/status", adminController.updateAppealStatus);
 
 // hình ảnh
 router.use("/images", imageRoutes);
+router.use("/analytics", adminAnalyticsRoutes);
 
 // security
 router.use("/security", securityRoutes);

@@ -868,7 +868,9 @@ exports.reportPost = async (req, res) => {
       );
 
       // lougout user
-      await AuthService.notifyForceLogout(post.userCreateID);
+      await AuthService.notifyForceLogout(post.userCreateID, {
+        reason: "Bài viết của bạn bị báo cáo quá nhiều",
+      });
     }
 
     await post.save();

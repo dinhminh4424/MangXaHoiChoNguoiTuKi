@@ -64,6 +64,9 @@ import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import AdminGroupManagement from "./pages/admin/groups/AdminGroupManagement";
 import AdminJournalManagement from "./pages/admin/journals/AdminJournalManagement";
+import AnalyticsOverview from "./pages/admin/analytic/AnalyticsOverview";
+import UserAnalytics from "./pages/admin/analytic/UserAnalytics";
+import ContentAnalytics from "./pages/admin/analytic/ContentAnalytics";
 
 import ImageManager from "./pages/admin/imagesManager/ImageManager";
 
@@ -71,6 +74,7 @@ import LogUserManager from "./pages/admin/logs/LogUserManager";
 
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
+
 import ReportUser from "./pages/admin/reports/ReportUser";
 import ReportGroup from "./pages/admin/reports/ReportGroup";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
@@ -251,6 +255,24 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   },
+  {
+    path: "/admin/analytics/overview",
+    component: AnalyticsOverview,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // AnalyticsOverview
+  {
+    path: "/admin/analytics/users",
+    component: UserAnalytics,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // UserAnalytics
+  {
+    path: "/admin/analytics/content",
+    component: ContentAnalytics,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // ContentAnalytics
   {
     path: "/admin/groups/reports",
     component: ReportGroup, // ReportGroup

@@ -134,22 +134,22 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
     {
       path: "/admin/analytics",
       icon: "ri-bar-chart-line",
-      label: "Analytics",
+      label: "Phân tích",
       children: [
         {
           path: "/admin/analytics/overview",
           icon: "ri-dashboard-line",
-          label: "Overview",
+          label: "Tổng quan",
         },
         {
           path: "/admin/analytics/users",
           icon: "ri-user-heart-line",
-          label: "User Analytics",
+          label: "Người dùng",
         },
         {
           path: "/admin/analytics/content",
           icon: "ri-line-chart-line",
-          label: "Content Analytics",
+          label: "Nội dung",
         },
       ],
     },
