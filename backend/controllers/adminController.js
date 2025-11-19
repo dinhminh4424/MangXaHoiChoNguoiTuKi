@@ -8,6 +8,8 @@ const Notification = require("../models/Notification");
 const Message = require("../models/Message");
 const MoodLog = require("../models/MoodLog");
 const Violation = require("../models/Violation");
+const AccessLog = require("../models/AccessLog");
+const ClientLog = require("../models/ClientLog");
 const NotificationService = require("../services/notificationService");
 
 /**
@@ -675,7 +677,7 @@ const getUserById = async (req, res) => {
     const user = await User.findById(userId).select("-password");
 
     if (!user) {
-      return res.status(404).json({
+      return res.status(405).json({
         success: false,
         message: "Không tìm thấy người dùng",
       });
@@ -4495,6 +4497,639 @@ const getTargetTypeText = (targetType) => {
   return typeMap[targetType] || targetType;
 };
 
+// Thêm các hàm controller mới vào adminController.js
+
+// Lấy danh sách client logs
+const getSystemLogs = async (req, res) => {
+  try {
+    const {
+      page = 1,
+      limit = 20,
+      level = "",
+      type = "", // Thêm bộ lọc type
+      userId = "",
+      event = "",
+      startDate = "",
+      endDate = "",
+      search = "",
+      sortBy = "timestamp",
+      sortOrder = "desc",
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    // Query chỉ cho ClientLog
+    const clientQuery = {};
+
+    // Đảm bảo timestamp tồn tại
+    clientQuery.timestamp = { $exists: true, $ne: null };
+
+    // Lọc theo level
+    if (level) {
+      clientQuery.level = level;
+    }
+
+    // Lọc theo type - THÊM ĐOẠN NÀY
+    if (type) {
+      clientQuery.event = { $regex: type, $options: "i" };
+    }
+
+    // Lọc theo userId
+    if (userId) {
+      clientQuery.userId = userId;
+    }
+
+    // Lọc theo event
+    if (event) {
+      clientQuery.event = { $regex: event, $options: "i" };
+    }
+
+    // Lọc theo thời gian
+    if (startDate || endDate) {
+      clientQuery.timestamp = { ...clientQuery.timestamp };
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        clientQuery.timestamp.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        clientQuery.timestamp.$lte = end;
+      }
+    }
+
+    // Tìm kiếm
+    if (search) {
+      clientQuery.$or = [
+        { event: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+        { ip: { $regex: search, $options: "i" } },
+        { url: { $regex: search, $options: "i" } },
+        { userAgent: { $regex: search, $options: "i" } },
+        { correlationId: { $regex: search, $options: "i" } },
+        { type: { $regex: search, $options: "i" } }, // Thêm tìm kiếm theo type
+      ];
+    }
+
+    // Sắp xếp
+    const sort = {};
+    sort[sortBy] = sortOrder === "asc" ? 1 : -1;
+
+    console.log("Client Log Query:", clientQuery); // Debug query
+
+    const [logs, total] = await Promise.all([
+      ClientLog.find(clientQuery).sort(sort).skip(skip).limit(parseInt(limit)),
+      ClientLog.countDocuments(clientQuery),
+    ]);
+
+    // Populate thông tin user
+    const logsWithUsers = await Promise.all(
+      logs.map(async (log) => {
+        // Đảm bảo log có timestamp
+        if (!log.timestamp) {
+          log.timestamp = new Date();
+        }
+
+        let userInfo = null;
+        if (log.userId) {
+          try {
+            userInfo = await User.findById(log.userId).select(
+              "username email profile.avatar fullName role"
+            );
+          } catch (error) {
+            console.error("Error fetching user info:", error);
+          }
+        }
+
+        return {
+          ...log.toObject(),
+          userInfo,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        logs: logsWithUsers,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          totalLogs: total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get client logs error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy danh sách client logs",
+    });
+  }
+};
+// Lấy client logs của user cụ thể
+const getUserLogs = async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { page = 1, limit = 20, startDate = "", endDate = "" } = req.query;
+
+    const skip = (page - 1) * limit;
+
+    // Kiểm tra user tồn tại
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy người dùng",
+      });
+    }
+
+    // Query cho ClientLog
+    const clientQuery = { userId };
+
+    // Lọc theo thời gian
+    if (startDate || endDate) {
+      const timeFilter = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        timeFilter.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        timeFilter.$lte = end;
+      }
+      clientQuery.timestamp = timeFilter;
+    }
+
+    const [logs, total] = await Promise.all([
+      ClientLog.find(clientQuery)
+        .sort({ timestamp: -1 })
+        .skip(skip)
+        .limit(parseInt(limit)),
+      ClientLog.countDocuments(clientQuery),
+    ]);
+
+    res.json({
+      success: true,
+      data: {
+        user: {
+          id: user._id,
+          username: user.username,
+          email: user.email,
+          fullName: user.fullName,
+          avatar: user.profile?.avatar,
+          role: user.role,
+          createdAt: user.createdAt,
+        },
+        logs,
+        pagination: {
+          current: parseInt(page),
+          total: Math.ceil(total / limit),
+          totalLogs: total,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get user client logs error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy client logs người dùng",
+    });
+  }
+};
+
+// Thống kê client logs
+const getLogStats = async (req, res) => {
+  try {
+    const { period = "7d" } = req.query;
+
+    const now = new Date();
+    let startDate = new Date();
+
+    switch (period) {
+      case "24h":
+        startDate.setDate(now.getDate() - 1);
+        break;
+      case "7d":
+        startDate.setDate(now.getDate() - 7);
+        break;
+      case "30d":
+        startDate.setDate(now.getDate() - 30);
+        break;
+      default:
+        startDate.setDate(now.getDate() - 7);
+    }
+
+    const [
+      totalClientLogs,
+      errorLogs,
+      warningLogs,
+      infoLogs,
+      topUsers,
+      topEvents,
+      hourlyActivity,
+    ] = await Promise.all([
+      // Tổng số client logs
+      ClientLog.countDocuments({ timestamp: { $gte: startDate } }),
+
+      // Logs theo level
+      ClientLog.countDocuments({
+        timestamp: { $gte: startDate },
+        level: "error",
+      }),
+      ClientLog.countDocuments({
+        timestamp: { $gte: startDate },
+        level: "warn",
+      }),
+      ClientLog.countDocuments({
+        timestamp: { $gte: startDate },
+        level: "info",
+      }),
+
+      // Top users có nhiều activity nhất
+      ClientLog.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: startDate },
+            userId: { $exists: true, $ne: null },
+          },
+        },
+        {
+          $group: {
+            _id: "$userId",
+            count: { $sum: 1 },
+            lastActivity: { $max: "$timestamp" },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+
+      // Top events
+      ClientLog.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: startDate },
+            event: { $exists: true, $ne: null },
+          },
+        },
+        {
+          $group: {
+            _id: "$event",
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { count: -1 } },
+        { $limit: 10 },
+      ]),
+
+      // Activity theo giờ
+      ClientLog.aggregate([
+        {
+          $match: {
+            timestamp: { $gte: startDate },
+          },
+        },
+        {
+          $group: {
+            _id: {
+              hour: { $hour: "$timestamp" },
+              date: {
+                $dateToString: {
+                  format: "%Y-%m-%d",
+                  date: "$timestamp",
+                },
+              },
+            },
+            count: { $sum: 1 },
+          },
+        },
+        { $sort: { "_id.date": 1, "_id.hour": 1 } },
+      ]),
+    ]);
+
+    // Populate user info cho top users
+    const topUsersWithInfo = await Promise.all(
+      topUsers.map(async (user) => {
+        const userInfo = await User.findById(user._id).select(
+          "username email profile.avatar fullName role"
+        );
+        return {
+          ...user,
+          userInfo,
+        };
+      })
+    );
+
+    res.json({
+      success: true,
+      data: {
+        summary: {
+          totalClientLogs,
+          errorLogs,
+          warningLogs,
+          infoLogs,
+          errorRate:
+            totalClientLogs > 0
+              ? ((errorLogs / totalClientLogs) * 100).toFixed(2)
+              : 0,
+        },
+        topUsers: topUsersWithInfo,
+        topEvents,
+        hourlyActivity,
+        period: {
+          start: startDate,
+          end: now,
+          label: period,
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get client log stats error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy thống kê client logs",
+    });
+  }
+};
+
+// Hàm lấy thông tin target
+const getTargetInfo = async (targetType, targetId) => {
+  try {
+    switch (targetType) {
+      case "Post":
+        const post = await Post.findById(targetId).select(
+          "content userCreateID createdAt likesCount commentCount"
+        );
+        if (post) {
+          const author = await User.findById(post.userCreateID).select(
+            "username profile.avatar"
+          );
+          return {
+            type: "Post",
+            id: post._id,
+            content:
+              post.content?.substring(0, 100) +
+              (post.content?.length > 100 ? "..." : ""),
+            author: author
+              ? {
+                  username: author.username,
+                  avatar: author.profile?.avatar,
+                }
+              : null,
+            createdAt: post.createdAt,
+            stats: {
+              likes: post.likesCount || 0,
+              comments: post.commentCount || 0,
+            },
+          };
+        }
+        break;
+
+      case "Comment":
+        const comment = await Comment.findById(targetId).select(
+          "content userID postID createdAt"
+        );
+        if (comment) {
+          const author = await User.findById(comment.userID).select(
+            "username profile.avatar"
+          );
+          const post = await Post.findById(comment.postID).select("content");
+          return {
+            type: "Comment",
+            id: comment._id,
+            content:
+              comment.content?.substring(0, 100) +
+              (comment.content?.length > 100 ? "..." : ""),
+            author: author
+              ? {
+                  username: author.username,
+                  avatar: author.profile?.avatar,
+                }
+              : null,
+            post: post
+              ? {
+                  id: post._id,
+                  content:
+                    post.content?.substring(0, 50) +
+                    (post.content?.length > 50 ? "..." : ""),
+                }
+              : null,
+            createdAt: comment.createdAt,
+          };
+        }
+        break;
+
+      case "User":
+        const user = await User.findById(targetId).select(
+          "username email profile.avatar fullName role"
+        );
+        if (user) {
+          return {
+            type: "User",
+            id: user._id,
+            username: user.username,
+            email: user.email,
+            fullName: user.fullName,
+            avatar: user.profile?.avatar,
+            role: user.role,
+          };
+        }
+        break;
+
+      case "Group":
+        const group = await Group.findById(targetId).select(
+          "name description avatar memberCount"
+        );
+        if (group) {
+          return {
+            type: "Group",
+            id: group._id,
+            name: group.name,
+            description: group.description,
+            avatar: group.avatar,
+            memberCount: group.memberCount,
+          };
+        }
+        break;
+
+      default:
+        return null;
+    }
+  } catch (error) {
+    console.error(`Error getting target info for ${targetType}:`, error);
+    return null;
+  }
+};
+
+// Hàm lấy thống kê nhanh
+const getQuickStats = async (filters) => {
+  try {
+    const { startDate = "", endDate = "" } = filters;
+
+    const timeFilter = {};
+    if (startDate || endDate) {
+      if (startDate) {
+        const start = new Date(startDate);
+        start.setHours(0, 0, 0, 0);
+        timeFilter.$gte = start;
+      }
+      if (endDate) {
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+        timeFilter.$lte = end;
+      }
+    }
+
+    const baseQuery = timeFilter.$gte ? { timestamp: timeFilter } : {};
+
+    const [
+      totalClient,
+      clientErrors,
+      clientWarnings,
+      clientInfo,
+      topEvents,
+      recentActivity,
+    ] = await Promise.all([
+      // Tổng số client logs
+      ClientLog.countDocuments(baseQuery),
+
+      // Client logs lỗi
+      ClientLog.countDocuments({
+        ...baseQuery,
+        level: "error",
+      }),
+
+      // Client logs cảnh báo
+      ClientLog.countDocuments({
+        ...baseQuery,
+        level: "warn",
+      }),
+
+      // Client logs info
+      ClientLog.countDocuments({
+        ...baseQuery,
+        level: "info",
+      }),
+
+      // Top events
+      ClientLog.aggregate([
+        { $match: baseQuery },
+        { $group: { _id: "$event", count: { $sum: 1 } } },
+        { $sort: { count: -1 } },
+        { $limit: 5 },
+      ]),
+
+      // Recent activity (24h)
+      ClientLog.countDocuments({
+        timestamp: {
+          $gte: new Date(Date.now() - 24 * 60 * 60 * 1000),
+        },
+      }),
+    ]);
+
+    return {
+      totalClient,
+      clientErrors,
+      clientWarnings,
+      clientInfo,
+      topEvents: topEvents.map((item) => ({
+        event: item._id,
+        count: item.count,
+      })),
+      recentActivity24h: recentActivity,
+      errorRate:
+        totalClient > 0 ? ((clientErrors / totalClient) * 100).toFixed(1) : 0,
+    };
+  } catch (error) {
+    console.error("Error getting quick stats:", error);
+    return {
+      totalClient: 0,
+      clientErrors: 0,
+      clientWarnings: 0,
+      clientInfo: 0,
+      topEvents: [],
+      recentActivity24h: 0,
+      errorRate: 0,
+    };
+  }
+};
+
+// Lấy chi tiết client log
+const getLogDetail = async (req, res) => {
+  try {
+    const { logId } = req.params;
+
+    const log = await ClientLog.findById(logId);
+
+    if (!log) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy client log",
+      });
+    }
+
+    // Lấy thông tin user nếu có
+    let userInfo = null;
+    let targetInfo = null;
+    let relatedLogs = [];
+
+    if (log.userId) {
+      userInfo = await User.findById(log.userId).select(
+        "username email profile.avatar fullName role createdAt lastLogin violationCount active"
+      );
+    }
+
+    // Lấy thông tin target cho client logs
+    if (log.targetType && log.targetId) {
+      targetInfo = await getTargetInfo(log.targetType, log.targetId);
+    }
+
+    // Lấy related logs (cùng user)
+    if (log.userId) {
+      relatedLogs = await ClientLog.find({
+        userId: log.userId,
+        _id: { $ne: log._id },
+        timestamp: {
+          $gte: new Date(log.timestamp.getTime() - 30 * 60 * 1000), // 30 phút trước
+          $lte: new Date(log.timestamp.getTime() + 30 * 60 * 1000), // 30 phút sau
+        },
+      })
+        .sort({ timestamp: 1 })
+        .limit(10)
+        .select("timestamp event level description");
+    }
+
+    res.json({
+      success: true,
+      data: {
+        log,
+        logType: "client",
+        userInfo,
+        targetInfo,
+        relatedLogs,
+        metadata: {
+          logSize: JSON.stringify(log).length,
+          hasError: log.level === "error",
+          isRecent:
+            Date.now() - new Date(log.timestamp).getTime() <
+            24 * 60 * 60 * 1000, // 24h
+        },
+      },
+    });
+  } catch (error) {
+    console.error("Get client log detail error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi khi lấy chi tiết client log",
+      error: process.env.NODE_ENV === "development" ? error.message : undefined,
+    });
+  }
+};
+
 module.exports = {
   getDashboardStats,
   getAllUsers,
@@ -4543,4 +5178,11 @@ module.exports = {
   getAllAppeals,
   getAppealById,
   updateAppealStatus,
+
+  // log user
+  getSystemLogs,
+  getLogDetail,
+  getUserLogs,
+  getLogStats,
+  getQuickStats,
 };

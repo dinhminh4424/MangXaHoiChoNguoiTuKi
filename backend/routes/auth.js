@@ -1,7 +1,7 @@
 // Khai Báo
 const express = require("express");
 const jwt = require("jsonwebtoken");
-const bcrypt = require('bcryptjs'); // Ví dụ dùng bcrypt để so sánh mật khẩu
+const bcrypt = require("bcryptjs"); // Ví dụ dùng bcrypt để so sánh mật khẩu
 const User = require("../models/User");
 const mailService = require("../services/mailService");
 const auth = require("../middleware/auth");
@@ -50,9 +50,9 @@ const handleCheckInStreak = (user) => {
   // Lấy thời gian hiện tại theo múi giờ của server
   const now = new Date();
   // Chuẩn hóa 'hôm nay' về 00:00:00 để so sánh ngày
-  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate()); 
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
   let milestoneReached = null;
- 
+
   const lastCheckIn = user.lastCheckInDate
     ? new Date(user.lastCheckInDate)
     : null;
@@ -60,7 +60,11 @@ const handleCheckInStreak = (user) => {
   // Nếu chưa từng điểm danh
   if (lastCheckIn) {
     // Chuẩn hóa ngày điểm danh cuối cùng về 00:00:00 để so sánh
-    const lastCheckInDay = new Date(lastCheckIn.getFullYear(), lastCheckIn.getMonth(), lastCheckIn.getDate());
+    const lastCheckInDay = new Date(
+      lastCheckIn.getFullYear(),
+      lastCheckIn.getMonth(),
+      lastCheckIn.getDate()
+    );
 
     // *** FIX: Nếu người dùng bị mất chuỗi, không cho điểm danh ***
     if (user.has_lost_streak) {
@@ -96,7 +100,11 @@ const handleCheckInStreak = (user) => {
 
   user.lastCheckInDate = now;
 
-  return { milestone: milestoneReached, alreadyCheckedIn: false, streakLost: false };
+  return {
+    milestone: milestoneReached,
+    alreadyCheckedIn: false,
+    streakLost: false,
+  };
 };
 
 // Middleware xác thực
@@ -439,7 +447,8 @@ router.post("/check-in", authMiddleware, async (req, res) => {
     const user = req.user;
 
     // Gọi hàm xử lý chuỗi điểm danh
-    const { milestone, alreadyCheckedIn, streakLost } = handleCheckInStreak(user);
+    const { milestone, alreadyCheckedIn, streakLost } =
+      handleCheckInStreak(user);
 
     if (alreadyCheckedIn) {
       return res.status(400).json({
@@ -454,7 +463,8 @@ router.post("/check-in", authMiddleware, async (req, res) => {
     if (streakLost) {
       return res.status(400).json({
         success: false,
-        message: "Bạn đã mất chuỗi! Vui lòng khôi phục hoặc bỏ qua để tiếp tục.",
+        message:
+          "Bạn đã mất chuỗi! Vui lòng khôi phục hoặc bỏ qua để tiếp tục.",
         data: {
           checkInStreak: user.checkInStreak,
         },
@@ -508,7 +518,9 @@ router.post("/streaks/restore", authMiddleware, async (req, res) => {
 
     await user.save();
 
-    const milestone = isMilestone(user.checkInStreak) ? { type: "check-in", days: user.checkInStreak } : null;
+    const milestone = isMilestone(user.checkInStreak)
+      ? { type: "check-in", days: user.checkInStreak }
+      : null;
 
     // 3. Trả về trạng thái mới
     res.json({
@@ -582,6 +594,7 @@ router.get("/me", authMiddleware, async (req, res) => {
           ...user.toObject(),
           canRestore: (user.weekly_recovery_uses || 0) < 2,
           streakToRestore: user.checkInStreak,
+          id: user._id, // địt mẹ sửa phải nhìn nào có sảu sửa lỗi hệ thống
         },
       },
     });
@@ -648,26 +661,112 @@ router.get("/face-users", async (req, res) => {
 });
 
 // ĐĂNG NHẬP BẰNG KHUÔN MẶT
+// router.post("/face-login", async (req, res) => {
+//   try {
+//     const { userId } = req.body;
+//     const user = await User.findById(userId);
+
+//     if (!user || !user.profile.idCard?.verified) {
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Tài khoản chưa xác minh khuôn mặt" });
+//     }
+
+//     const token = jwt.sign(
+//       { userId: user._id },
+//       process.env.JWT_SECRET || "autism_support_secret",
+//       { expiresIn: "7d" }
+//     );
+
+//     // Cập nhật trạng thái online
+//     user.isOnline = true;
+//     await user.save();
+
+//     const responsePayload = {
+//       success: true,
+//       message: "Đăng nhập bằng khuôn mặt thành công",
+//       data: {
+//         user: {
+//           id: user._id,
+//           username: user.username,
+//           email: user.email,
+//           fullName: user.fullName,
+//           role: user.role,
+//           profile: user.profile,
+//           checkInStreak: user.checkInStreak,
+//           journalStreak: user.journalStreak,
+//         },
+//         token,
+//       },
+//     };
+
+//     res.status(200);
+//     logUserActivity({
+//       action: "auth.face_login",
+//       req,
+//       res,
+//       userId: user._id.toString(),
+//       role: user.role,
+//       target: { type: "user", id: user._id.toString() },
+//       description: "Người dùng đăng nhập bằng khuôn mặt",
+//     });
+
+//     return res.json(responsePayload); // Sửa: trả về responsePayload thay vì { success: true, token }
+//   } catch (error) {
+//     res.status(500).json({ success: false, message: "Lỗi server" });
+//   }
+// });
+
+// ĐĂNG NHẬP BẰNG KHUÔN MẶT
 router.post("/face-login", async (req, res) => {
   try {
     const { userId } = req.body;
-    const user = await User.findById(userId);
 
-    if (!user || !user.profile.idCard?.verified) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Tài khoản chưa xác minh khuôn mặt" });
+    console.log("userId:  ===========", userId);
+
+    if (!userId) {
+      console.log("Thiếu userId: ", userId);
+      return res.status(400).json({
+        success: false,
+        message: "Thiếu userId",
+      });
     }
 
-    const token = jwt.sign(
-      { userId: user._id },
-      process.env.JWT_SECRET || "autism_support_secret",
-      { expiresIn: "7d" }
-    );
+    const user = await User.findById(userId);
+
+    if (!user) {
+      console.log("Người dùng không tồn tại: ", userId);
+      return res.status(400).json({
+        success: false,
+        message: "Người dùng không tồn tại",
+      });
+    }
+
+    if (!user.profile?.idCard?.verified || !user.profile?.faceDescriptor) {
+      return res.status(400).json({
+        success: false,
+        message: "Tài khoản chưa xác minh khuôn mặt",
+      });
+    }
+
+    // Kiểm tra hoạt động
+    if (user.active == false) {
+      return res.status(401).json({
+        success: false,
+        message: "Tài Khoản Đã Bị Khoá",
+      });
+    }
+
+    const token = generateToken(user._id);
 
     // Cập nhật trạng thái online
     user.isOnline = true;
     await user.save();
+
+    console.log("Profile:", user.profile);
+    console.log("ID Card verified:", user.profile?.idCard?.verified);
+    console.log("Face descriptor exists:", !!user.profile?.faceDescriptor);
+    console.log("User active:", user.active);
 
     const responsePayload = {
       success: true,
@@ -687,7 +786,6 @@ router.post("/face-login", async (req, res) => {
       },
     };
 
-    res.status(200);
     logUserActivity({
       action: "auth.face_login",
       req,
@@ -698,9 +796,14 @@ router.post("/face-login", async (req, res) => {
       description: "Người dùng đăng nhập bằng khuôn mặt",
     });
 
-    return res.json(responsePayload); // Sửa: trả về responsePayload thay vì { success: true, token }
+    return res.json(responsePayload);
   } catch (error) {
-    res.status(500).json({ success: false, message: "Lỗi server" });
+    console.error("Lỗi đăng nhập khuôn mặt:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+      error: error.message,
+    });
   }
 });
 

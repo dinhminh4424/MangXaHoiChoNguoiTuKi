@@ -1889,7 +1889,7 @@ import * as faceapi from "face-api.js";
 import { Modal, Button } from "react-bootstrap";
 
 const FaceLogin = () => {
-  const USER_DISTANCE = 0.29;
+  const USER_DISTANCE = 0.6;
   const MAX_ATTEMPTS = 1;
   const DETECTION_PER_ATTEMPT = 10;
 
@@ -2239,9 +2239,12 @@ const FaceLogin = () => {
       const res = await api.post("/api/auth/face-login", { userId });
 
       if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
+        localStorage.setItem("token", res.data.data.token);
+
         setStatus("🎉 Đăng nhập thành công!");
         setIsScanning(false);
+
+        console.log(res.data);
 
         setTimeout(() => {
           window.location.href = "/profile";

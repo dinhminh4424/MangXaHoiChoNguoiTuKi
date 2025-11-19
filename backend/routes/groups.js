@@ -42,6 +42,10 @@ router.get("/:groupId", ensureGroupExists, groupController.infoGroup);
 // Cập nhật thông tin nhóm
 router.put(
   "/:groupId",
+  upload.fields([
+    { name: "avatar", maxCount: 1 },
+    { name: "coverPhoto", maxCount: 1 },
+  ]),
   ensureGroupExists,
   ensureGroupAdmin,
   groupController.updateGroup

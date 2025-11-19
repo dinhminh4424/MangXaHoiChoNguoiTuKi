@@ -381,3 +381,36 @@ export const backupService = {
     }
   },
 };
+
+// Quản lý logs
+export const getSystemLogs = async (params = {}) => {
+  const res = await api.get("/api/admin/logs", { params });
+  return res.data;
+};
+
+export const getLogDetail = async (logId, params = {}) => {
+  const res = await api.get(`/api/admin/logs/${logId}`, { params });
+  return res.data;
+};
+
+export const getUserLogs = async (userId, params = {}) => {
+  const res = await api.get(`/api/admin/logs/user/${userId}`, { params });
+  return res.data;
+};
+
+export const getLogStats = async (params = {}) => {
+  const res = await api.get("/api/admin/logs/stats", { params });
+  return res.data;
+};
+
+export const getQuickStats = async (filters = {}) => {
+  try {
+    const res = await api.get("/api/admin/logs/quick-stats", {
+      params: filters,
+    });
+    return res.data;
+  } catch (error) {
+    console.error("Error fetching quick stats:", error);
+    throw error;
+  }
+};

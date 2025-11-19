@@ -7,10 +7,8 @@ const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");
+const AuthService = require("../services/authService");
 const { logUserActivity } = require("../logging/userActivityLogger");
-
-// ... (Các hàm createPost, updatePost, deletePost, block, unblock... giữ nguyên)
-// ... (Tôi sẽ chỉ dán các hàm bị ảnh hưởng)
 
 // thêm bài viết
 exports.createPost = async (req, res) => {
@@ -318,11 +316,14 @@ exports.getPostDetails = async (req, res) => {
       action: "post.view",
       req,
       res,
-      userId,
+      userId: currentUserId,
       role: req.user.role,
       target: { type: "post", id: id },
       description: "Xem chi tiết bài viết",
-      payload: { postId: id, isOwner: post.userCreateID.toString() === userId },
+      payload: {
+        postId: id,
+        isOwner: post.userCreateID.toString() === currentUserId,
+      },
     });
 
     return res.status(200).json({
@@ -865,6 +866,9 @@ exports.reportPost = async (req, res) => {
         req.user.userId,
         false
       );
+
+      // lougout user
+      await AuthService.notifyForceLogout(post.userCreateID);
     }
 
     await post.save();

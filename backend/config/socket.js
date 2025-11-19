@@ -614,6 +614,8 @@ const configureSocket = (server) => {
         socket.emit("error", { message: "Lỗi khi đánh dấu thông báo đã đọc" });
       }
     });
+
+    // đăng xuất tai khoản do vi system
   });
 
   return io;

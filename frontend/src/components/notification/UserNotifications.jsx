@@ -17,7 +17,7 @@ const UserNotifications = () => {
   const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
   const socketRef = useRef(null);
   const dropdownRef = useRef(null);
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
 
   // Định nghĩa các hàm helper trước khi sử dụng
   const isPostNotification = (type) => {
@@ -53,6 +53,7 @@ const UserNotifications = () => {
       "SUPPORT_TICKET_RESOLVED",
       "APPEAL_RESOLVED",
       "APPEAL_CREATE",
+      "FORCE_LOGOUT",
     ];
     return systemTypes.includes(type);
   };
@@ -243,7 +244,8 @@ const UserNotifications = () => {
 
       if (
         notification.type === "SOS_EMERGENCY" ||
-        notification.type === "SOS_ALERT"
+        notification.type === "SOS_ALERT" ||
+        notification.type === "FORCE_LOGOUT"
       ) {
         setSosNotification(notification);
         setIsSosPopupOpen(true);
@@ -343,7 +345,8 @@ const UserNotifications = () => {
   const handleNotificationClick = (notification) => {
     if (
       notification.type === "SOS_EMERGENCY" ||
-      notification.type === "SOS_ALERT"
+      notification.type === "SOS_ALERT" ||
+      notification.type === "FORCE_LOGOUT"
     ) {
       setSosNotification(notification);
       setIsSosPopupOpen(true);
@@ -368,6 +371,13 @@ const UserNotifications = () => {
     if (sosNotification && !sosNotification.read) {
       markAsRead(sosNotification._id);
     }
+
+    // Nếu là thông báo FORCE_LOGOUT thì đăng xuất
+    if (sosNotification && sosNotification.type === "FORCE_LOGOUT") {
+      // Gọi hàm logout từ AuthContext
+      logout(sosNotification.message || "Bạn đã bị đăng xuất khỏi hệ thống");
+    }
+
     setIsSosPopupOpen(false);
     setSosNotification(null);
   };
@@ -851,7 +861,7 @@ const UserNotifications = () => {
       {/* === KẾT THÚC SỬA LỖI MODAL === */}
 
       {/* SOS Emergency Popup */}
-      {isSosPopupOpen && sosNotification && (
+      {/* {isSosPopupOpen && sosNotification && (
         <div className="sos-emergency-popup-overlay" onClick={closeSosPopup}>
           <div
             className="sos-emergency-popup"
@@ -962,6 +972,165 @@ const UserNotifications = () => {
                   Gọi ngay
                 </a>
               )}
+            </div>
+          </div>
+        </div>
+      )} */}
+      {/* SOS Emergency Popup */}
+      {/* SOS & Force Logout Popup */}
+      {isSosPopupOpen && sosNotification && (
+        <div className="sos-emergency-popup-overlay" onClick={closeSosPopup}>
+          <div
+            className="sos-emergency-popup"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="sos-popup-header">
+              <div className="sos-popup-icon-container">
+                <i
+                  className={
+                    sosNotification.type === "FORCE_LOGOUT"
+                      ? "ri-logout-box-r-line"
+                      : "ri-alarm-warning-fill"
+                  }
+                ></i>
+              </div>
+              <h3 className="sos-popup-title">
+                {sosNotification.type === "FORCE_LOGOUT"
+                  ? "🚨 Đăng xuất bắt buộc"
+                  : "🚨 Tín hiệu SOS khẩn cấp"}
+              </h3>
+              <button className="sos-popup-close" onClick={closeSosPopup}>
+                <i className="ri-close-line"></i>
+              </button>
+            </div>
+
+            <div className="sos-popup-body">
+              <div className="sos-info-section">
+                {/* Hiển thị thông tin khác nhau tùy loại thông báo */}
+                {sosNotification.type === "FORCE_LOGOUT" ? (
+                  <>
+                    <div className="sos-info-item">
+                      <div className="sos-info-label">
+                        <i className="ri-information-line"></i>
+                        <span>Thông báo</span>
+                      </div>
+                      <div className="sos-info-value">
+                        {sosNotification.message ||
+                          "Bạn đã bị đăng xuất khỏi hệ thống"}
+                      </div>
+                    </div>
+
+                    {sosNotification.data?.reason && (
+                      <div className="sos-info-item">
+                        <div className="sos-info-label">
+                          <i className="ri-alert-line"></i>
+                          <span>Lý do</span>
+                        </div>
+                        <div className="sos-info-value">
+                          {sosNotification.data.reason}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <div className="sos-info-item">
+                      <div className="sos-info-label">
+                        <i className="ri-user-line"></i>
+                        <span>Tên người dùng</span>
+                      </div>
+                      <div className="sos-info-value">
+                        {sosNotification.data?.userName || "Không xác định"}
+                      </div>
+                    </div>
+
+                    <div className="sos-info-item">
+                      <div className="sos-info-label">
+                        <i className="ri-map-pin-line"></i>
+                        <span>Địa chỉ</span>
+                      </div>
+                      <div className="sos-info-value">
+                        {sosNotification.data?.address || "Không xác định"}
+                      </div>
+                      {sosNotification.data?.mapUrl && (
+                        <a
+                          href={sosNotification.data.mapUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="sos-map-link"
+                        >
+                          <i className="ri-map-2-line me-1"></i>
+                          Xem trên bản đồ
+                        </a>
+                      )}
+                    </div>
+
+                    <div className="sos-info-item">
+                      <div className="sos-info-label">
+                        <i className="ri-phone-line"></i>
+                        <span>Số điện thoại</span>
+                      </div>
+                      <div className="sos-info-value">
+                        {sosNotification.data?.phoneNumber ? (
+                          <a
+                            href={`tel:${sosNotification.data.phoneNumber}`}
+                            className="sos-phone-link"
+                          >
+                            {sosNotification.data.phoneNumber}
+                          </a>
+                        ) : (
+                          "Không có"
+                        )}
+                      </div>
+                    </div>
+
+                    {sosNotification.data?.message && (
+                      <div className="sos-info-item">
+                        <div className="sos-info-label">
+                          <i className="ri-message-line"></i>
+                          <span>Tin nhắn</span>
+                        </div>
+                        <div className="sos-info-value">
+                          {sosNotification.data.message}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                )}
+
+                <div className="sos-info-item">
+                  <div className="sos-info-label">
+                    <i className="ri-time-line"></i>
+                    <span>Thời gian</span>
+                  </div>
+                  <div className="sos-info-value">
+                    {new Date(sosNotification.createdAt).toLocaleString(
+                      "vi-VN"
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sos-popup-footer">
+              <button
+                className="btn btn-primary sos-popup-action-btn"
+                onClick={closeSosPopup}
+              >
+                <i className="ri-check-line me-2"></i>
+                {sosNotification.type === "FORCE_LOGOUT" ? "Đồng ý" : "Đã xem"}
+              </button>
+
+              {sosNotification.type !== "FORCE_LOGOUT" &&
+                sosNotification.data?.phoneNumber && (
+                  <a
+                    href={`tel:${sosNotification.data.phoneNumber}`}
+                    className="btn btn-success sos-popup-action-btn"
+                  >
+                    <i className="ri-phone-line me-2"></i>
+                    Gọi ngay
+                  </a>
+                )}
             </div>
           </div>
         </div>

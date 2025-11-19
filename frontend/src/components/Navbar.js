@@ -39,45 +39,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         { path: "/journal/history", icon: "las la-history", label: "Lịch sử" },
       ],
     },
-    // { path: "/calendar", icon: "las la-calendar", label: "Calendar" },
-    // {
-    //   path: "/email",
-    //   icon: "ri-mail-line",
-    //   label: "Email",
-    //   children: [
-    //     { path: "/email/inbox", icon: "ri-inbox-line", label: "Inbox" },
-    //     {
-    //       path: "/email/compose",
-    //       icon: "ri-edit-line",
-    //       label: "Email Compose",
-    //     },
-    //   ],
-    // },
-    // {
-    //   path: "/ui-elements",
-    //   icon: "ri-focus-2-line",
-    //   label: "UI Elements",
-    //   children: [
-    //     { path: "/ui/colors", icon: "ri-font-color", label: "Colors" },
-    //     { path: "/ui/typography", icon: "ri-text", label: "Typography" },
-    //     {
-    //       path: "/ui/buttons",
-    //       icon: "ri-checkbox-blank-line",
-    //       label: "Buttons",
-    //     },
-    //     { path: "/ui/cards", icon: "ri-bank-card-line", label: "Cards" },
-    //   ],
-    // },
-    // {
-    //   path: "/pages",
-    //   icon: "ri-pages-line",
-    //   label: "Pages",
-    //   children: [
-    //     { path: "/login", icon: "ri-login-box-line", label: "Login" },
-    //     { path: "/register", icon: "ri-login-circle-line", label: "Register" },
-    //     { path: "/pricing", icon: "ri-price-tag-line", label: "Pricing" },
-    //   ],
-    // },
+
     {
       path: "/notifications",
       icon: "ri-pages-line",
@@ -294,77 +256,6 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                 ) : (
                   <p>Tắt tính năng thông báo</p>
                 )}
-
-                {/* Notifications Dropdown */}
-                {/* <li className="nav-item dropdown ">
-                  <a
-                    href="#"
-                    className="search-toggle dropdown-toggle"
-                    id="notification-drop"
-                    data-bs-toggle="dropdown"
-                  >
-                    <i className="ri-notification-4-line"></i>
-                  </a>
-                  <div
-                    className="sub-drop dropdown-menu dropdown-menu-end"
-                    aria-labelledby="notification-drop"
-                  >
-                    <div className="card shadow-none m-0">
-                      <div className="card-header d-flex justify-content-between bg-primary">
-                        <div className="header-title bg-primary">
-                          <h5 className="mb-0 text-white">All Notifications</h5>
-                        </div>
-                        <small className="badge bg-light text-dark">100</small>
-                      </div>
-                      <div className="card-body p-0">
-                        <div className="text-center p-3">
-                          <p className="mb-2">No new notifications</p>
-                          <Link
-                            to="/notifications"
-                            className="btn text-primary"
-                          >
-                            View All Notifications
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li> */}
-
-                {/* Messages Dropdown */}
-                {/* <li className="nav-item dropdown">
-                  <a
-                    href="#"
-                    className="dropdown-toggle"
-                    id="mail-drop"
-                    data-bs-toggle="dropdown"
-                    aria-haspopup="true"
-                    aria-expanded="false"
-                  >
-                    <i className="ri-mail-line"></i>
-                  </a>
-                  <div
-                    className="sub-drop dropdown-menu dropdown-menu-end"
-                    aria-labelledby="mail-drop"
-                  >
-                    <div className="card shadow-none m-0">
-                      <div className="card-header d-flex justify-content-between bg-primary">
-                        <div className="header-title bg-primary">
-                          <h5 className="mb-0 text-white">All Messages</h5>
-                        </div>
-                        <small className="badge bg-light text-dark">10</small>
-                      </div>
-                      <div className="card-body p-0">
-                        <div className="text-center p-3">
-                          <p className="mb-2">No new messages</p>
-                          <Link to="/chat" className="btn text-primary">
-                            View All Messages
-                          </Link>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </li> */}
 
                 {/* User Profile Dropdown */}
                 <li className="nav-item dropdown">

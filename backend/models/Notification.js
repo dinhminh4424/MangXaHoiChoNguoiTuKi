@@ -73,6 +73,7 @@ const notificationSchema = new mongoose.Schema(
         "LOGIN_ATTEMPT", // Đăng nhập mới
         "PASSWORD_CHANGED", // Mật khẩu thay đổi
         "EMAIL_VERIFIED", // Email đã xác thực
+        "FORCE_LOGOUT", // Buộc đăng xuất bởi hệ thống/quản trị viên
 
         // Hỗ trợ
         "SUPPORT_TICKET_CREATED", // Ticket hỗ trợ được tạo

@@ -99,7 +99,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
           label: "Hình Ảnh",
         },
         {
-          path: "/admin/system/security",
+          path: "/admin/security",
           icon: "ri-shield-line",
           label: "Bảo mật",
         },

@@ -25,6 +25,9 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
     files: [],
   });
 
+  console.log("isMember: ", isMember);
+  console.log("userRole: ", userRole);
+
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
 
@@ -273,14 +276,16 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                             </span>
                           )}
 
-                          <Button
-                            variant="primary"
-                            size="lg"
-                            className="leave-btn"
-                            onClick={onLeave}
-                          >
-                            Rời nhóm
-                          </Button>
+                          {userRole !== "moderator" && userRole !== "owner" && (
+                            <Button
+                              variant="primary"
+                              size="lg"
+                              className="leave-btn"
+                              onClick={onLeave}
+                            >
+                              Rời nhóm
+                            </Button>
+                          )}
                         </div>
                       )}
 
