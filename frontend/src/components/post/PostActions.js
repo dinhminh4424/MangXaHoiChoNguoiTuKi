@@ -34,10 +34,18 @@ const PostActions = ({
     handleLikeMouseLeave,
     handlePickerMouseEnter,
     handlePickerMouseLeave,
+    handleLikeTouchStart,
+    handleLikeTouchEnd,
+    handleLikeTouchMove,
+    handlePickerTouchEnd,
+    isLongPress,
   } = useEmotionPicker(onEmotionSelect);
 
   const handleLikeClick = () => {
-    onLike?.();
+    // Chỉ gọi like thông thường nếu không phải là long press
+    if (!isLongPress) {
+      onLike?.();
+    }
   };
 
   const formatLikeCount = (count) => {
@@ -74,7 +82,7 @@ const PostActions = ({
   const getLikeButtonClass = () => {
     return `action-btn like-btn ${isLiked ? "liked" : ""} ${
       isLiked && userEmotion ? `emotion-${userEmotion}` : ""
-    }`;
+    } ${isLongPress ? "long-press" : ""}`;
   };
 
   const getLikeButtonStyle = () => {
@@ -99,21 +107,6 @@ const PostActions = ({
 
   return (
     <div className="post-actions" style={{ padding: "8px" }}>
-      {/* <div className="post-stats-bar">
-        {likeCount > 0 && (
-          <div className="stat-item">
-            <span className="stat-icon">👍</span>
-            <span className="stat-count">{formatLikeCount(likeCount)}</span>
-          </div>
-        )}
-        {commentCount > 0 && (
-          <div className="stat-item">
-            <span className="stat-icon">💬</span>
-            <span className="stat-count">{formatLikeCount(commentCount)}</span>
-          </div>
-        )}
-      </div> */}
-
       <div className="actions-container">
         <div className="action-group">
           <button
@@ -122,7 +115,10 @@ const PostActions = ({
             onClick={handleLikeClick}
             onMouseEnter={handleLikeMouseEnter}
             onMouseLeave={handleLikeMouseLeave}
-            onMouseDown={handleLikeMouseLeave}
+            onTouchStart={handleLikeTouchStart}
+            onTouchEnd={handleLikeTouchEnd}
+            onTouchMove={handleLikeTouchMove}
+            onTouchCancel={handleLikeTouchMove} // Thêm touch cancel để cleanup
             disabled={isLiking}
             style={getLikeButtonStyle()}
             title={
@@ -144,6 +140,12 @@ const PostActions = ({
                 <div className="loading-spinner"></div>
               </div>
             )}
+            {/* Long press indicator */}
+            {isLongPress && (
+              <div className="long-press-indicator">
+                <div className="pulse-ring"></div>
+              </div>
+            )}
           </button>
 
           <EmotionPicker
@@ -155,6 +157,7 @@ const PostActions = ({
             pickerRef={pickerRef}
             onMouseEnter={handlePickerMouseEnter}
             onMouseLeave={handlePickerMouseLeave}
+            onTouchEnd={handlePickerTouchEnd} // Thêm touch support cho picker
             position="top-right"
           />
         </div>

@@ -6,6 +6,7 @@ const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");
+const { logUserActivity } = require("../logging/userActivityLogger");
 
 class GroupController {
   async createGroup(req, res) {
@@ -16,7 +17,7 @@ class GroupController {
 
       const checkUser = await User.findById(owner);
       if (!checkUser.profile.idCard.verified) {
-        res.status(400).json({
+        return res.status(400).json({
           success: false,
           message: "Bạn chưa Xác Minh Danh tính",
         });
@@ -83,6 +84,26 @@ class GroupController {
         userId: owner,
         role: "owner",
         status: "active",
+      });
+
+      // GHI LOG TẠO Group
+      logUserActivity({
+        action: "group.create",
+        req,
+        res,
+        userId: owner,
+        role: req.user.role,
+        target: { type: "post", id: group._id.toString() },
+        description: "Tạo group mới",
+        payload: {
+          groupId: group._id.toString(),
+          visibility,
+          tags,
+          emotionTags,
+          category,
+          avatarUrl,
+          coverPhotoUrl,
+        },
       });
 
       res.json({
@@ -382,6 +403,7 @@ class GroupController {
   }
 
   // Cập nhật thông tin nhóm
+  // Cập nhật thông tin nhóm
   async updateGroup(req, res) {
     try {
       const group = req.group;
@@ -402,24 +424,56 @@ class GroupController {
         });
       }
 
-      const {
-        name,
-        description,
-        visibility,
-        tags,
-        emotionTags,
-        avatar,
-        category,
-      } = req.body;
+      const { name, description, visibility, tags, emotionTags, category } =
+        req.body;
 
-      // Cập nhật các trường
+      // === XỬ LÝ UPLOAD ẢNH ===
+      let avatarUrl = group.avatar;
+      let coverPhotoUrl = group.coverPhoto;
+
+      if (req.files) {
+        // Xử lý avatar
+        if (req.files.avatar && req.files.avatar[0]) {
+          avatarUrl = `/api/uploads/images/${req.files.avatar[0].filename}`;
+        }
+
+        // Xử lý cover photo
+        if (req.files.coverPhoto && req.files.coverPhoto[0]) {
+          coverPhotoUrl = `/api/uploads/images/${req.files.coverPhoto[0].filename}`;
+        }
+      }
+
+      // === XỬ LÝ TAGS & EMOTIONTAGS ===
+      const parseTags = (input) => {
+        if (!input) return [];
+        if (Array.isArray(input)) {
+          return input.map((tag) => tag.trim()).filter((tag) => tag);
+        }
+        if (typeof input === "string") {
+          return input
+            .split(",")
+            .map((tag) => tag.trim())
+            .filter((tag) => tag);
+        }
+        return [];
+      };
+
+      const tagsArray = tags ? parseTags(tags) : group.tags;
+      const emotionTagsArray = emotionTags
+        ? parseTags(emotionTags)
+        : group.emotionTags;
+
+      // === CẬP NHẬT CÁC TRƯỜNG ===
       if (name) group.name = name;
       if (description !== undefined) group.description = description;
       if (visibility) group.visibility = visibility;
-      if (tags) group.tags = tags;
-      if (emotionTags) group.emotionTags = emotionTags;
-      if (avatar) group.avatar = avatar;
-      if (category) group.category = category;
+      if (tags) group.tags = tagsArray;
+      if (emotionTags) group.emotionTags = emotionTagsArray;
+      if (category) group.category = [category].filter((cat) => cat);
+
+      // Cập nhật ảnh
+      group.avatar = avatarUrl;
+      group.coverPhoto = coverPhotoUrl;
 
       // Tạo slug mới nếu tên thay đổi
       if (name && name !== group.name) {
@@ -430,6 +484,25 @@ class GroupController {
       }
 
       await group.save();
+
+      // GHI LOG CẬP NHẬT GROUP
+      logUserActivity({
+        action: "group.update",
+        req,
+        res,
+        userId: userId,
+        role: req.user.role,
+        target: { type: "group", id: group._id.toString() },
+        description: "Cập nhật thông tin group",
+        payload: {
+          groupId: group._id.toString(),
+          name,
+          visibility,
+          tags: tagsArray,
+          emotionTags: emotionTagsArray,
+          category,
+        },
+      });
 
       res.json({
         success: true,

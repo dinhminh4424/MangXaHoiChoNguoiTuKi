@@ -271,3 +271,69 @@
     font-size: 9px;
   }
 }
+
+/* Thêm vào PostActions.css */
+
+.like-btn.long-press {
+  position: relative;
+  z-index: 10;
+}
+
+.long-press-indicator {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+}
+
+.pulse-ring {
+  width: 40px;
+  height: 40px;
+  border: 2px solid #1877f2;
+  border-radius: 50%;
+  animation: pulse-ring 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-ring {
+  0% {
+    transform: scale(0.8);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Cải thiện responsive cho mobile */
+@media (max-width: 768px) {
+  .actions-container {
+    gap: 8px;
+  }
+
+  .action-btn {
+    padding: 8px 12px;
+    font-size: 14px;
+  }
+
+  .like-button-content {
+    min-height: 20px;
+    display: flex;
+    align-items: center;
+  }
+}
+
+/* Đảm bảo emotion picker hiển thị tốt trên mobile */
+.emotion-picker {
+  touch-action: none; /* Ngăn chặn scroll khi tương tác với picker */
+}
+
+.emotion-option {
+  padding: 12px; /* Tăng kích thước touch target trên mobile */
+  min-width: 44px; /* Kích thước touch target tối thiểu theo tiêu chuẩn */
+  min-height: 44px;
+}

@@ -1292,24 +1292,54 @@ const ImageManagement = () => {
   const editFileInputRef = useRef(null);
 
   const categories = [
-    { value: "all", label: "Tất cả", icon: "📁", color: "#6c757d" },
+    {
+      value: "all",
+      label: "Tất cả",
+      icon: <i className="fas fa-folder"></i>,
+      color: "#6c757d",
+    },
     {
       value: "BannerGroup",
       label: "Banner Nhóm",
-      icon: "🏢",
+      icon: <i className="fas fa-building"></i>,
       color: "#007bff",
     },
     {
       value: "AvartarGroup",
       label: "Avatar Nhóm",
-      icon: "👥",
+      icon: <i className="fas fa-users"></i>,
       color: "#28a745",
     },
-    { value: "AvatarUser", label: "Avatar User", icon: "👤", color: "#e83e8c" },
-    { value: "BannerUser", label: "Banner User", icon: "🎨", color: "#ffc107" },
-    { value: "Feed", label: "Feed", icon: "📰", color: "#17a2b8" },
-    { value: "Journal", label: "Journal", icon: "📔", color: "#6f42c1" },
-    { value: "Other", label: "Khác", icon: "📄", color: "#fd7e14" },
+    {
+      value: "AvatarUser",
+      label: "Avatar User",
+      icon: <i className="fas fa-user"></i>,
+      color: "#e83e8c",
+    },
+    {
+      value: "BannerUser",
+      label: "Banner User",
+      icon: <i className="fas fa-paint-brush"></i>,
+      color: "#ffc107",
+    },
+    {
+      value: "Feed",
+      label: "Feed",
+      icon: <i className="fas fa-newspaper"></i>,
+      color: "#17a2b8",
+    },
+    {
+      value: "Journal",
+      label: "Journal",
+      icon: <i className="fas fa-book"></i>,
+      color: "#6f42c1",
+    },
+    {
+      value: "Other",
+      label: "Khác",
+      icon: <i className="fas fa-file-alt"></i>,
+      color: "#fd7e14",
+    },
   ];
 
   // Filter and sort images
@@ -1707,17 +1737,19 @@ const ImageManagement = () => {
       )}
 
       {/* Header */}
-      <div className="management-header">
-        <Row className="align-items-center">
+      <div className="management-header ">
+        <Row className="align-items-center container">
           <Col>
             <div className="header-content">
-              <h1>
-                <i className="fas fa-images me-3 text-primary"></i>
-                Quản lý Hình ảnh
-              </h1>
-              <p className="text-muted mb-0">
-                Quản lý hình ảnh mặc định cho các phần của trang web
-              </p>
+              <div>
+                <h1>
+                  <i className="fas fa-images me-3 text-primary"></i>
+                  Quản lý Hình ảnh
+                </h1>
+                <p className="text-muted mb-0">
+                  Quản lý hình ảnh mặc định cho các phần của trang web
+                </p>
+              </div>
             </div>
           </Col>
           <Col xs="auto">

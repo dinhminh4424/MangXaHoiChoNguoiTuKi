@@ -4,9 +4,33 @@ function Quote() {
   const [quote, setQuote] = useState(null);
   const [loading, setLoading] = useState(true);
   const [visible, setVisible] = useState(true); // quản lý hiển thị
+  // useEffect(() => {
+  //   // lấy câu trích dẫn ngẫu nhiên từ backend
+  //   fetch(`http://localhost:5000/api/quote/random`, {
+  //     method: "GET",
+  //   })
+  //     .then((res) => {
+  //       return res.json();
+  //     })
+  //     .then((data) => {
+  //       if (data.success) {
+  //         setQuote(data.data);
+  //         setLoading(false);
+  //       } else {
+  //         console.error("Lỗi khi lấy câu trích dẫn:", data.message);
+  //       }
+  //     })
+  //     .catch((err) => {
+  //       console.error("Lỗi khi lấy câu trích dẫn:", err);
+  //     })
+  //     .finally(() => {
+  //       setLoading(false);
+  //     });
+  // }, []);
+
   useEffect(() => {
     // lấy câu trích dẫn ngẫu nhiên từ backend
-    fetch("http://localhost:5000/api/quote/random", {
+    fetch(`${process.env.REACT_APP_API_URL}/api/quote/random`, {
       method: "GET",
     })
       .then((res) => {
@@ -31,9 +55,9 @@ function Quote() {
   if (!visible) return null; // Nếu đã bấm X thì ẩn luôn
 
   return (
-    <div className="container mt-3">
+    <div className="container mt-3 ">
       <div
-        className="alert alert-info alert-dismissible fade show shadow-sm"
+        className="alert alert-dismissible fade show shadow-sm bg-info-subtle"
         style={{
           position: "relative",
           padding: "20px",
@@ -49,7 +73,7 @@ function Quote() {
         ) : (
           <>
             {quote ? (
-              <>
+              <div className="text-center container">
                 <strong style={{ fontStyle: "italic", marginBottom: "10px" }}>
                   "{quote.content}"
                 </strong>
@@ -63,7 +87,7 @@ function Quote() {
                 >
                   -- {quote.author || "Khuyết Danh"} --
                 </small>
-              </>
+              </div>
             ) : (
               <p>Không có câu trích dẫn nào để hiển thị.</p>
             )}

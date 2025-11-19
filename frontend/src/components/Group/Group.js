@@ -44,19 +44,21 @@ const Group = () => {
 
   const checkUserMembership = async () => {
     if (!user) return;
+    setIsMember(false);
 
     try {
       const response = await groupService.getGroupMembers(groupId, {
         limit: 100,
       });
 
-      console.log("response: ", response);
+      // console.log("response: ", response);
 
+      // console.log("user:", user);
       const currentUserMember = response.members.find(
-        (member) => member.userId._id === (user.userId || user.id)
+        (member) => member.userId._id === (user.userId || user._id)
       );
 
-      console.log("currentUserMember: ", currentUserMember);
+      // console.log("currentUserMember: ", currentUserMember);
 
       if (currentUserMember) {
         setIsMember(true);

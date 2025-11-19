@@ -4,7 +4,7 @@ import * as faceapi from "face-api.js";
 import { Modal, Button } from "react-bootstrap";
 
 const FaceLogin = () => {
-  const USER_DISTANCE = 0.22;
+  const USER_DISTANCE = 0.25;
 
   const videoRef = useRef(null);
   const canvasRef = useRef(null);
@@ -250,7 +250,8 @@ const FaceLogin = () => {
       const res = await api.post("/api/auth/face-login", { userId });
 
       if (res.data.success) {
-        localStorage.setItem("token", res.data.token);
+        const token = res.data.data.token;
+        localStorage.setItem("token", token);
         setStatus("🎉 Đăng nhập thành công!");
 
         setTimeout(() => {

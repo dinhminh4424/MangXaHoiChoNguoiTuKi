@@ -42,6 +42,7 @@ import Explore from "./pages/social/Explore";
 import Contact from "./pages/support/Contact";
 import Resources from "./pages/support/Resources";
 import Emotion from "./pages/emotions/emotion";
+import MoodHistory from "./pages/emotions/MoodHistory";
 import Group from "./pages/social/Group";
 import GroupDetailPage from "./pages/social/GroupDetailPage";
 import CreateGroupPage from "./pages/social/CreateGroupPage";
@@ -66,6 +67,8 @@ import AdminJournalManagement from "./pages/admin/journals/AdminJournalManagemen
 
 import ImageManager from "./pages/admin/imagesManager/ImageManager";
 
+import LogUserManager from "./pages/admin/logs/LogUserManager";
+
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
 import ReportUser from "./pages/admin/reports/ReportUser";
@@ -76,6 +79,8 @@ import AppealManagement from "./pages/admin/appeals/AppealManagement";
 
 import BackupLogs from "./pages/admin/backup/BackupLogs";
 import BackupManagement from "./pages/admin/backup/BackupManagement";
+
+import AdminSecurity from "./pages/admin/security/AdminSecurity";
 
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
@@ -174,6 +179,7 @@ const routeConfigs = [
 
   // Protected User Routes - Emotion
   { path: "/nhandien", component: Emotion, layout: UserLayout },
+  { path: "/mood-history", component: MoodHistory, layout: UserLayout }, // MoodHistory
 
   // Protected User Setting
   { path: "/settings", component: SettingsDashboard, layout: UserLayout },
@@ -272,11 +278,16 @@ const routeConfigs = [
   }, // ImageManager
   {
     path: "/admin/imageManager",
-    component: ImageManager, // Kháng Nghị
+    component: ImageManager,
     layout: AdminLayout,
     isAdmin: true,
-  }, // ImageManager
-
+  }, // LogUserManager
+  {
+    path: "/admin/logs",
+    component: LogUserManager,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
   {
     path: "/admin/backup",
     component: BackupManagement,
@@ -289,6 +300,12 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   },
+  {
+    path: "/admin/security",
+    component: AdminSecurity,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // AdminSecurity
 ];
 
 /**

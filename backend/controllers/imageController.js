@@ -287,7 +287,7 @@ const getImagesByCategoryActive = async (req, res) => {
       active: true,
     });
 
-    console.log("imagesCategory: ", imagesCategory);
+    // console.log("imagesCategory: ", imagesCategory);
     res.json({
       success: true,
       image: imagesCategory,

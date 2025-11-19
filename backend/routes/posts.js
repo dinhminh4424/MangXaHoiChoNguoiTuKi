@@ -3,6 +3,18 @@ const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
 const postController = require("../controllers/postController");
 
+// const {
+//   postCreationLimiter,
+//   searchLimiter,
+//   reportLimiter,
+// } = require("../middleware/rateLimitMiddleware");
+
+const {
+  postCreationLimiter,
+  searchLimiter,
+  reportLimiter,
+} = require("../middleware/dynamicRateLimitMiddleware");
+
 const router = express.Router();
 
 // Tất cả routes đều cần xác thực
@@ -11,7 +23,12 @@ router.use(auth);
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Post
 
 // Tạo bài viết mới
-router.post("/create", upload.array("files"), postController.createPost);
+router.post(
+  "/create",
+  postCreationLimiter,
+  upload.array("files"),
+  postController.createPost
+);
 
 // like
 router.post("/:id/like", postController.likePost);
@@ -20,7 +37,12 @@ router.post("/:id/like", postController.likePost);
 router.post("/:id/unlike", postController.unLikePost);
 
 // báo cáo bài viết
-router.post("/:id/report", upload.array("files"), postController.reportPost);
+router.post(
+  "/:id/report",
+  reportLimiter,
+  upload.array("files"),
+  postController.reportPost
+);
 
 // +++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ put - patch
 
@@ -39,7 +61,7 @@ router.get("/images", postController.getImagePosts);
 router.get("/:id", postController.getPostDetails);
 
 // Lấy danh sách bài viết với phân trang và lọc
-router.get("/", postController.getPosts);
+router.get("/", searchLimiter, postController.getPosts);
 
 // ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++ Admin
 //  Routes cho admin
