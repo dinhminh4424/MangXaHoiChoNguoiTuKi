@@ -3,7 +3,7 @@ const Comment = require("../models/Comment");
 const User = require("../models/User");
 const Friend = require("../models/Friend"); // Đảm bảo đã import Friend
 
-const FileManager = require("../utils/fileManager");
+const FileManager = require("../utils/FileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");
@@ -868,7 +868,9 @@ exports.reportPost = async (req, res) => {
       );
 
       // lougout user
-      await AuthService.notifyForceLogout(post.userCreateID);
+      await AuthService.notifyForceLogout(post.userCreateID, {
+        reason: "Bài viết của bạn bị báo cáo quá nhiều",
+      });
     }
 
     await post.save();

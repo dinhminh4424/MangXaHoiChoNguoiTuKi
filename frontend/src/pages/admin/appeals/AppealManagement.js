@@ -516,7 +516,7 @@ const AppealManagement = () => {
   };
 
   return (
-    <div className="container mt-4">
+    <div className=" mt-4">
       {/* Header với thống kê */}
       <div className="row mb-4">
         <div className="col-12">

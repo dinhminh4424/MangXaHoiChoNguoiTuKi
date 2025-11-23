@@ -4,7 +4,7 @@ const User = require("../models/User");
 
 async function notifyForceLogout(
   userId,
-  { reason = "force_logout", actorId = null } = {}
+  { reason = "force_logout", actorId = null, ratelimit = "search" } = {}
 ) {
   try {
     await User.findByIdAndUpdate(userId, {
@@ -18,7 +18,7 @@ async function notifyForceLogout(
       type: "FORCE_LOGOUT",
       title: "Bạn đã bị đăng xuất",
       message: "Tài khoản của bạn đã bị đăng xuất do vi phạm quy định.",
-      data: { reason },
+      data: { reason, ratelimit },
       priority: "high",
       url: "/login",
     });

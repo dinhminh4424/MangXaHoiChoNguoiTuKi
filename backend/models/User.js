@@ -7,7 +7,7 @@ const getStartOfWeek = (date) => {
   const day = d.getDay(); // 0 (CN) đến 6 (T7)
   const diff = d.getDate() - day + (day === 0 ? -6 : 1);
   return new Date(d.setDate(diff));
-}
+};
 const userSchema = new mongoose.Schema(
   {
     username: {
@@ -117,6 +117,10 @@ const userSchema = new mongoose.Schema(
       default: false,
     },
     lastSeen: {
+      type: Date,
+      default: Date.now,
+    },
+    lastLogin: {
       type: Date,
       default: Date.now,
     },

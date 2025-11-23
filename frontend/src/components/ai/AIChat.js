@@ -360,6 +360,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import SpeechToTextButton from "../voice/SpeechToText";
 import TextReaderTwoButtons from "../voice/TextReaderAdvanced";
+import { useAuth } from "../../contexts/AuthContext";
 import "./AIChat.css";
 
 // Component để render text với định dạng Markdown cơ bản
@@ -388,6 +389,8 @@ const FormattedMessage = ({ text }) => {
 };
 
 const AIChat = () => {
+  const { user } = useAuth();
+
   const [messages, setMessages] = useState([
     {
       text: "Chào bạn, tôi là người bạn AI đây. Bạn có muốn chia sẻ điều gì hôm nay không?",
@@ -450,10 +453,11 @@ const AIChat = () => {
       // Địa chỉ webhook của bạn
       const webhookUrl =
         "http://localhost:5678/webhook/7d3bc223-c78a-44c6-aa2f-2444c00a3303";
-
+      // "https://dinhcongminh.app.n8n.cloud/webhoo/ai-anh";
       const dataToSend = {
         action: "chat",
         scenario: "Trò chuyện với người bạn AI thấu cảm",
+        userId: user.id,
         history: [],
         newMessage: message,
       };

@@ -256,7 +256,12 @@ const AdminUserManagement = () => {
   };
 
   const handleDeleteUser = async (userId, username) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa người dùng "${username}"?`)) {
+    let check = await NotificationService.confirm({
+      title: `Bạn có chắc chắn muốn xóa người dùng "${username}"?`,
+      confirmText: "Chắc chắn xoá",
+      cancelText: "Huỷ xoá",
+    });
+    if (check.isConfirmed) {
       try {
         await deleteUser(userId);
         setUsers(users.filter((user) => user._id !== userId));
@@ -264,7 +269,7 @@ const AdminUserManagement = () => {
           title: "Thành công",
           text: "Đã xóa người dùng thành công",
         });
-      } catch (err) {
+      } catch (error) {
         NotificationService.error({
           title: "Lỗi",
           text: "Không thể xóa người dùng",

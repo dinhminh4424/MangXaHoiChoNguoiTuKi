@@ -167,6 +167,9 @@ router.post("/register", async (req, res) => {
       role: role || "user",
     });
 
+    user.active = true;
+    user.lastLogin = new Date();
+
     await user.save();
 
     // GỬI EMAIL CHÀO MỪNG ĐĂNG KÝ THÀNH CÔNG
@@ -388,6 +391,7 @@ router.post("/login", async (req, res) => {
     }
     // Cập nhật trạng thái online
     user.isOnline = true;
+    user.lastLogin = new Date();
     await user.save();
 
     // Tạo token
@@ -594,7 +598,7 @@ router.get("/me", authMiddleware, async (req, res) => {
           ...user.toObject(),
           canRestore: (user.weekly_recovery_uses || 0) < 2,
           streakToRestore: user.checkInStreak,
-          id: user._id, // địt mẹ sửa phải nhìn nào có sảu sửa lỗi hệ thống
+          id: user._id, // địt mẹ sửa phải nhìn nào có sải, sửa lỗi hệ thống
         },
       },
     });
@@ -761,6 +765,7 @@ router.post("/face-login", async (req, res) => {
 
     // Cập nhật trạng thái online
     user.isOnline = true;
+    user.lastLogin = new Date();
     await user.save();
 
     console.log("Profile:", user.profile);

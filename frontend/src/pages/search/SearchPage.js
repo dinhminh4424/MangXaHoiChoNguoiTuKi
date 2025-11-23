@@ -62,16 +62,29 @@ const SearchPage = () => {
         const [usersResponse, postsResponse, groupsResponse, journalsResponse] =
           await Promise.all([
             api.get("/api/users", { params: { search: query, limit: 20 } }),
-            api.get("/api/posts", { params: { search: query, limit: 10, privacy: "public" } }),
+            api.get("/api/posts", {
+              params: { search: query, limit: 10, privacy: "public" },
+            }),
             api.get("/api/groups", { params: { search: query, limit: 10 } }),
-            api.get("/api/journals", { params: { search: query, limit: 10 } }),
+            api.get("/api/journals", {
+              params: { search: query, limit: 10, isPrivate: false },
+            }),
           ]);
+
+        //   console.log("groupsResponse: ", groupsResponse);
+
+        // setResults({
+        //   people: usersResponse.data.data || [],
+        //   posts: postsResponse.data.posts || [],
+        //   groups: groupsResponse.data.groups || [],
+        //   journals: journalsResponse.data.data || [],
+        // });
 
         setResults({
           people: usersResponse.data.data || [],
-          posts: postsResponse.data.data || [],
-          groups: groupsResponse.data.data || [],
-          journals: journalsResponse.data.data || [],
+          posts: postsResponse.data.posts || [],
+          groups: groupsResponse.data.groups || [],
+          journals: journalsResponse.data.journals || [],
         });
       } catch (error) {
         console.error(
@@ -265,7 +278,7 @@ const SearchPage = () => {
                       </small>
                     </div>
                   </div>
-                  <p className="mb-0 text-truncate">{item.content}</p>
+                  <p className="mb-0 text-truncate">{item.userId?.username}</p>
                 </div>
               );
 

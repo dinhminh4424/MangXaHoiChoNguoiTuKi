@@ -2,7 +2,7 @@ const Group = require("../models/Group");
 const GroupMember = require("../models/GroupMember");
 const Post = require("../models/Post");
 const User = require("../models/User");
-const FileManager = require("../utils/fileManager");
+const FileManager = require("../utils/FileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");
@@ -402,7 +402,6 @@ class GroupController {
     }
   }
 
-  // Cập nhật thông tin nhóm
   // Cập nhật thông tin nhóm
   async updateGroup(req, res) {
     try {
@@ -917,7 +916,7 @@ class GroupController {
       if (search) {
         query.$or = [
           { name: { $regex: search, $options: "i" } },
-          { description: { $regex: search, $options: "i" } },
+          // { description: { $regex: search, $options: "i" } },
           { tags: { $in: [new RegExp(search, "i")] } },
         ];
       }

@@ -64,6 +64,9 @@ import AdminUserManagement from "./pages/admin/users/AdminUserManagement";
 import AdminContentManagement from "./pages/admin/contens/AdminContentManagement";
 import AdminGroupManagement from "./pages/admin/groups/AdminGroupManagement";
 import AdminJournalManagement from "./pages/admin/journals/AdminJournalManagement";
+import AnalyticsOverview from "./pages/admin/analytic/AnalyticsOverview";
+import UserAnalytics from "./pages/admin/analytic/UserAnalytics";
+import ContentAnalytics from "./pages/admin/analytic/ContentAnalytics";
 
 import ImageManager from "./pages/admin/imagesManager/ImageManager";
 
@@ -71,9 +74,12 @@ import LogUserManager from "./pages/admin/logs/LogUserManager";
 
 import ReportContent from "./pages/admin/reports/ReportContent";
 import ReportComment from "./pages/admin/reports/ReportComment";
+
 import ReportUser from "./pages/admin/reports/ReportUser";
 import ReportGroup from "./pages/admin/reports/ReportGroup";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
+
+import AdminChatManagement from "./components/admin/chat/AdminChatManagement";
 
 import AppealManagement from "./pages/admin/appeals/AppealManagement";
 
@@ -85,12 +91,12 @@ import AdminSecurity from "./pages/admin/security/AdminSecurity";
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
-import Navbar from "./components/Navbar";
 import ErrorPage from "./components/error/pages-error";
 
 import Test from "./pages/test";
 
 import AIChat from "./components/ai/AIChat";
+import AiChatScreen from "./components/ai/AiChatScreen";
 // import 'animate.css';
 
 /**
@@ -132,6 +138,7 @@ const routeConfigs = [
 
   { path: "/test", component: Test, layout: UserLayout },
   { path: "/aiChat", component: AIChat, layout: UserLayout },
+  { path: "/aiChatScreen", component: AiChatScreen, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },
@@ -252,8 +259,26 @@ const routeConfigs = [
     isAdmin: true,
   },
   {
+    path: "/admin/analytics/overview",
+    component: AnalyticsOverview,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // AnalyticsOverview
+  {
+    path: "/admin/analytics/users",
+    component: UserAnalytics,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // UserAnalytics
+  {
+    path: "/admin/analytics/content",
+    component: ContentAnalytics,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // ContentAnalytics
+  {
     path: "/admin/groups/reports",
-    component: ReportGroup, // ReportGroup
+    component: ReportGroup,
     layout: AdminLayout,
     isAdmin: true,
   },
@@ -262,7 +287,13 @@ const routeConfigs = [
     component: ReportGroup, // ReportGroup
     layout: AdminLayout,
     isAdmin: true,
-  },
+  }, //
+  {
+    path: "/admin/chats",
+    component: AdminChatManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, //
 
   {
     path: "/admin/appeals",

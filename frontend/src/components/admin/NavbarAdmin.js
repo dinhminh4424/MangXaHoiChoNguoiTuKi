@@ -83,6 +83,11 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       label: "Quản Lý Nhật Kí",
     },
     {
+      path: "/admin/chats",
+      icon: "ri-chat-1-line",
+      label: "Chats",
+    },
+    {
       path: "/admin/appeals",
       icon: "ri-file-list-3-line", //kháng nghị
       label: "Quản Lý Kháng Nghị",
@@ -134,22 +139,22 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
     {
       path: "/admin/analytics",
       icon: "ri-bar-chart-line",
-      label: "Analytics",
+      label: "Phân tích",
       children: [
         {
           path: "/admin/analytics/overview",
           icon: "ri-dashboard-line",
-          label: "Overview",
+          label: "Tổng quan",
         },
         {
           path: "/admin/analytics/users",
           icon: "ri-user-heart-line",
-          label: "User Analytics",
+          label: "Người dùng",
         },
         {
           path: "/admin/analytics/content",
           icon: "ri-line-chart-line",
-          label: "Content Analytics",
+          label: "Nội dung",
         },
       ],
     },

@@ -19,14 +19,29 @@ import {
 } from "react-bootstrap";
 import moodService from "../../services/moodService";
 
+import {
+  Smile,
+  Frown,
+  Angry,
+  Zap,
+  AlertTriangle,
+  ThumbsDown,
+  Circle,
+  Search,
+  Download,
+  Calendar,
+  BarChart2,
+  TrendingUp,
+} from "lucide-react";
+
 const EMOJI_MAP = {
-  happy: "😊",
-  sad: "😢",
-  angry: "😠",
-  surprised: "😲",
-  fearful: "😨",
-  disgusted: "🤢",
-  neutral: "😐",
+  happy: <Smile className="w-5 h-5 text-yellow-500" />,
+  sad: <Frown className="w-5 h-5 text-blue-500" />,
+  angry: <Angry className="w-5 h-5 text-red-600" />,
+  surprised: <Zap className="w-5 h-5 text-purple-500" />,
+  fearful: <AlertTriangle className="w-5 h-5 text-orange-500" />,
+  disgusted: <ThumbsDown className="w-5 h-5 text-green-600" />,
+  neutral: <Circle className="w-5 h-5 text-gray-500" />,
 };
 
 const EMOTION_LABELS = {
@@ -51,11 +66,11 @@ const EMOTION_COLORS = {
 
 // Custom icons thay thế react-feather
 const CustomIcons = {
-  Filter: () => <span>🔍</span>,
-  Download: () => <span>📥</span>,
-  Calendar: () => <span>📅</span>,
-  BarChart: () => <span>📊</span>,
-  TrendingUp: () => <span>📈</span>,
+  Filter: () => <Search className="w-5 h-5" />,
+  Download: () => <Download className="w-5 h-5" />,
+  Calendar: () => <Calendar className="w-5 h-5" />,
+  BarChart: () => <BarChart2 className="w-5 h-5" />,
+  TrendingUp: () => <TrendingUp className="w-5 h-5" />,
 };
 
 const MoodHistory = () => {
@@ -139,8 +154,10 @@ const MoodHistory = () => {
         moodService.getMoodTrends(30),
       ]);
 
-      if (statsData.success) setStats(statsData);
-      if (trendsData.success) setTrends(trendsData.trends || []);
+      console.log(statsData.data);
+
+      if (statsData.data.success) setStats(statsData.data);
+      if (trendsData.data.success) setTrends(trendsData.data.trends || []);
     } catch (err) {
       console.error("Lỗi tải thống kê:", err);
     }
@@ -342,7 +359,7 @@ const MoodHistory = () => {
           <div className="d-flex justify-content-between align-items-center">
             <div>
               <h1 className="h3 fw-bold text-primary mb-1">
-                📊 Lịch sử Tâm trạng
+                <BarChart2 className="w-5 h-5" /> Lịch sử Tâm trạng
               </h1>
               <p className="text-muted mb-0">
                 Theo dõi và phân tích cảm xúc của bạn theo thời gian
@@ -370,7 +387,9 @@ const MoodHistory = () => {
             <Col md={3}>
               <Card className="border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
-                  <div className="fs-2">📈</div>
+                  <div className="fs-2">
+                    <TrendingUp className="w-5 h-5" />
+                  </div>
                   <h4 className="fw-bold text-primary">
                     {pagination.totalItems}
                   </h4>
@@ -381,7 +400,9 @@ const MoodHistory = () => {
             <Col md={3}>
               <Card className="border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
-                  <div className="fs-2">😊</div>
+                  <div className="fs-2">
+                    <Smile className="w-5 h-5 text-yellow-500" />
+                  </div>
                   <h4 className="fw-bold text-success">
                     {stats.stats?.find((s) => s._id === "happy")?.count || 0}
                   </h4>
@@ -392,7 +413,9 @@ const MoodHistory = () => {
             <Col md={3}>
               <Card className="border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
-                  <div className="fs-2">😢</div>
+                  <div className="fs-2">
+                    <Frown className="w-5 h-5 text-blue-500" />
+                  </div>
                   <h4 className="fw-bold text-info">
                     {stats.stats?.find((s) => s._id === "sad")?.count || 0}
                   </h4>
@@ -403,7 +426,9 @@ const MoodHistory = () => {
             <Col md={3}>
               <Card className="border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
-                  <div className="fs-2">📅</div>
+                  <div className="fs-2">
+                    <Calendar className="w-5 h-5" />
+                  </div>
                   <h4 className="fw-bold text-warning">
                     {stats.period || "Tháng"}
                   </h4>
@@ -532,7 +557,7 @@ const MoodHistory = () => {
                 </Alert>
               ) : moodLogs.length === 0 ? (
                 <div className="text-center py-5">
-                  <div className="fs-1 mb-3">📝</div>
+                  <div className="fs-1 mb-3"></div>
                   <h5 className="text-muted">Chưa có dữ liệu</h5>
                   <p className="text-muted">
                     {Object.values(filters).some((f) => f)
@@ -669,19 +694,7 @@ const MoodHistory = () => {
 
                   {/* Pagination */}
                   {pagination.totalPages > 1 && (
-                    <div className="d-flex justify-content-between align-items-center p-3 border-top">
-                      <small className="text-muted">
-                        Hiển thị{" "}
-                        {(pagination.currentPage - 1) *
-                          pagination.itemsPerPage +
-                          1}
-                        -
-                        {Math.min(
-                          pagination.currentPage * pagination.itemsPerPage,
-                          pagination.totalItems
-                        )}
-                        của {pagination.totalItems} bản ghi
-                      </small>
+                    <div className="d-flex justify-content-around align-items-center p-3 border-top">
                       <Pagination className="mb-0">
                         {renderPaginationItems()}
                       </Pagination>
@@ -768,7 +781,7 @@ const MoodHistory = () => {
               <Col md={6}>
                 <Card className="border-0 bg-light">
                   <Card.Body>
-                    <h6 className="fw-bold mb-3">📝 Chi tiết bổ sung</h6>
+                    <h6 className="fw-bold mb-3"> Chi tiết bổ sung</h6>
                     <div className="space-y-3">
                       <div>
                         <small className="text-muted">Mô tả:</small>
@@ -840,7 +853,7 @@ const MoodHistory = () => {
                 <Col xs={12}>
                   <Card className="border-0 bg-light">
                     <Card.Body>
-                      <h6 className="fw-bold mb-3">🖼️ Hình ảnh đính kèm</h6>
+                      <h6 className="fw-bold mb-3"> Hình ảnh đính kèm</h6>
                       <div className="text-center">
                         <img
                           src={selectedLog.imageData}

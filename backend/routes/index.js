@@ -24,6 +24,7 @@ const settingsRoute = require("./settings");
 const violationsRoute = require("./violations");
 
 const imageRoutes = require("./imageRoutes");
+const aiChatRoutes = require("./aiChat");
 
 const backupRestoreRoutes = require("./backupRestore");
 
@@ -50,7 +51,8 @@ router.use("/violations", violationsRoute);
 router.use("/images", imageRoutes);
 router.use("/backup", backupRestoreRoutes);
 
-router.use("/client-logs", clientLogsRouter);
+router.use("/client-logs", clientLogsRouter); // aiChatRoutes
+router.use("/ai-chat", aiChatRoutes); // aiChatRoutes
 
 // Health check endpoint
 router.get("/health", (req, res) => {

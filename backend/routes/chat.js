@@ -208,6 +208,7 @@ router.post("/conversation", auth, async (req, res) => {
       members: sortedMembers,
       isGroup,
       createdBy: currentUserId,
+      userUnBlock: [...allMembers],
     };
 
     if (isGroup) {
@@ -625,6 +626,61 @@ router.put("/:chatId/pin", auth, async (req, res) => {
     });
   } catch (error) {
     console.error("Lỗi khi ghim/bỏ ghim hộp thoại:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi khi cập nhật ghim hộp thoại",
+      error: error.message,
+    });
+  }
+});
+
+// Mở ẨN DANH
+// put
+router.put("/conversation/:chatId/unblock", auth, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { chatId } = req.params;
+    const { checkUnBlock } = req.body;
+
+    console.log("chatId: ", chatId, " - checkUnBlock: ", checkUnBlock);
+
+    // 1) Kiểm tra chat tồn tại và user là thành viên
+    const chat = await Chat.findOne({ _id: chatId, members: userId });
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message:
+          "Không tìm thấy cuộc trò chuyện hoặc bạn không phải thành viên.",
+      });
+    }
+
+    // 2) Kiểm tra xem user đã ghim chưa (dùng String(...) để an toàn khi là ObjectId)
+    const isPinned =
+      Array.isArray(chat.userUnBlock) &&
+      chat.userUnBlock.some((id) => String(id) === String(userId));
+
+    // 3) Chuẩn bị update: nếu đang ghim thì pull, chưa ghim thì addToSet
+    // nếu checkUnBlock = true thì xoá, ko thì thêm
+    const update = checkUnBlock
+      ? { $pull: { userUnBlock: userId } }
+      : { $addToSet: { userUnBlock: userId } };
+
+    await Chat.updateOne({ _id: chatId }, update);
+
+    // 4) Lấy lại chat đã cập nhật (populate nếu cần) để trả về client
+    const updatedChat = await Chat.findById(chatId)
+      .populate("members", "username fullName profile.avatar isOnline lastSeen")
+      .populate("lastMessage")
+      .populate("createdBy", "username fullName")
+      .lean();
+
+    return res.json({
+      success: true,
+      message: isPinned ? "Đã bỏ block trò chuyện" : "Đã block cuộc trò chuyện",
+      chat: updatedChat,
+    });
+  } catch (error) {
+    console.error("Lỗi khi bỏ block hộp thoại:", error);
     return res.status(500).json({
       success: false,
       message: "Lỗi khi cập nhật ghim hộp thoại",

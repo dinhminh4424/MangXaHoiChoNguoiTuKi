@@ -39,9 +39,7 @@ router.get("/streaks/status", async (req, res) => {
 
     // 1. Reset lượt khôi phục hàng tuần nếu cần
     const lastMissWeekStart = user.last_journal_miss_week_start || new Date(0);
-    if (
-      lastMissWeekStart.getTime() < currentWeekStart.getTime()
-    ) {
+    if (lastMissWeekStart.getTime() < currentWeekStart.getTime()) {
       user.weekly_journal_miss_uses = 0;
       user.last_journal_miss_week_start = currentWeekStart;
       user.has_lost_journal_streak = false; // Reset cờ mất chuỗi khi sang tuần mới
@@ -49,13 +47,19 @@ router.get("/streaks/status", async (req, res) => {
 
     // 2. Kiểm tra xem chuỗi đã bị mất chưa
     const todayMidnight = new Date(new Date().setHours(0, 0, 0, 0));
-    const yesterdayMidnight = new Date(new Date().setDate(todayMidnight.getDate() - 1));
+    const yesterdayMidnight = new Date(
+      new Date().setDate(todayMidnight.getDate() - 1)
+    );
     yesterdayMidnight.setHours(0, 0, 0, 0);
 
     let isPaused = false; // Biến để theo dõi trạng thái tạm dừng
 
     // Chỉ kiểm tra nếu user đã có chuỗi và chưa bị đánh dấu là mất chuỗi trong tuần
-    if (user.journalStreak > 0 && user.lastJournalDate && !user.has_lost_journal_streak) {
+    if (
+      user.journalStreak > 0 &&
+      user.lastJournalDate &&
+      !user.has_lost_journal_streak
+    ) {
       const lastJournalDay = new Date(user.lastJournalDate);
       lastJournalDay.setHours(0, 0, 0, 0);
 
@@ -154,6 +158,8 @@ router.get("/user/:userId", async (req, res) => {
 
 // // xem nhật ký theo idJournal
 router.get("/:journalId", journalController.getJournalById);
+
+router.get("/", journalController.getJournal);
 
 // // xóa nhật ký
 // router.delete("/:id", journalController.deleteJournal);

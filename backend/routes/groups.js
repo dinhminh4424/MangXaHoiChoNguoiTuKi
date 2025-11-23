@@ -7,7 +7,7 @@ const upload = require("../middleware/upload");
 const groupController = require("../controllers/groupController");
 
 // Các routes không cần auth
-router.get("/", groupController.getAllGroups); // Lấy tất cả groups
+
 router.get("/popular", groupController.getPopularGroups); // Groups phổ biến
 router.get("/search", groupController.searchGroups); // Tìm kiếm groups
 
@@ -128,5 +128,7 @@ router.post(
   ensureGroupOwner,
   groupController.manageModerator
 );
+
+router.get("/", groupController.getAllGroups); // Lấy tất cả groups
 
 module.exports = router;

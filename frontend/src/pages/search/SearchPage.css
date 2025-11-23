@@ -1,6 +1,5 @@
 .search-page {
   padding: 20px;
-  margin-left: 260px; /* Match the width of your sidebar */
   background: #f8f9fa;
   min-height: calc(100vh - 60px); /* Subtract header height */
 }

@@ -317,7 +317,60 @@ const createSimpleLimiter = (config) => {
     // Thông báo force logout cho search
     if (config.key === "search" && req.user?.userId) {
       try {
-        await AuthService.notifyForceLogout(req.user.userId);
+        await AuthService.notifyForceLogout(req.user.userId, {
+          reason:
+            config.customMessage ||
+            "Bạn đã bị out vì nghi ngờ phá hoại hệ thống: Tìm kiếm quá nhiều",
+          ratelimit: config.key,
+        });
+      } catch (err) {
+        console.error("notifyForceLogout failed:", err);
+      }
+    }
+    if (config.key === "postCreation" && req.user?.userId) {
+      try {
+        await AuthService.notifyForceLogout(req.user.userId, {
+          reason:
+            config.customMessage ||
+            "Bạn đã bị out vì nghi ngờ phá hoại hệ thống: Đăng bài quá nhiều",
+          ratelimit: config.key,
+        });
+      } catch (err) {
+        console.error("notifyForceLogout failed:", err);
+      }
+    }
+    if (config.key === "report" && req.user?.userId) {
+      try {
+        await AuthService.notifyForceLogout(req.user.userId, {
+          reason:
+            config.customMessage ||
+            "Bạn đã bị out vì nghi ngờ phá hoại hệ thống: Report quá nhiều",
+          ratelimit: config.key,
+        });
+      } catch (err) {
+        console.error("notifyForceLogout failed:", err);
+      }
+    }
+    if (config.key === "comment" && req.user?.userId) {
+      try {
+        await AuthService.notifyForceLogout(req.user.userId, {
+          reason:
+            config.customMessage ||
+            "Bạn đã bị out vì nghi ngờ phá hoại hệ thống: Comment quá nhiều",
+          ratelimit: config.key,
+        });
+      } catch (err) {
+        console.error("notifyForceLogout failed:", err);
+      }
+    }
+    if (config.key === "login" && req.user?.userId) {
+      try {
+        await AuthService.notifyForceLogout(req.user.userId, {
+          reason:
+            config.customMessage ||
+            "Bạn đã bị out vì nghi ngờ phá hoại hệ thống: login quá nhiều",
+          ratelimit: config.key,
+        });
       } catch (err) {
         console.error("notifyForceLogout failed:", err);
       }
