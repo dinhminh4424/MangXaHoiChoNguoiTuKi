@@ -408,8 +408,11 @@ const AdminContentManagement = () => {
   const renderPosts = () => (
     <div className="content-list">
       <div className="row g-3">
-        {posts.map((post) => (
-          <div key={post._id} className="col-12 col-md-6 col-lg-4 col-xl-3">
+        {posts.map((post, index) => (
+          <div
+            key={post._id + "-" + index}
+            className="col-12 col-md-6 col-lg-4 col-xl-3"
+          >
             <div
               className={`card h-100 shadow-sm ${
                 post.isBlocked ? "border-danger" : ""
@@ -643,7 +646,7 @@ const AdminContentManagement = () => {
   );
 
   return (
-    <div className="admin-content-management container">
+    <div className="admin-content-management">
       <div className="page-header">
         <h1>Quản lý bài viết</h1>
         <p>Quản lý và kiểm duyệt tất cả bài viết trong hệ thống</p>

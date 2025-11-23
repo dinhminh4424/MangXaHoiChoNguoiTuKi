@@ -223,6 +223,7 @@ export const ChatProvider = ({ children }) => {
   const selectChat = useCallback(async (chat) => {
     if (!chat || !chat._id) return;
 
+    // chat.check = !chat.userUnBlock?.length;
     // Reset state khi chọn chat mới
     setSelectedChat(chat);
     setMessages([]);
@@ -570,6 +571,30 @@ export const ChatProvider = ({ children }) => {
     }
   };
 
+  const unBlockConversation = async (chatId, checkUnBlock = true) => {
+    try {
+      const res = await api.put(`/api/chat/conversation/${chatId}/unblock`, {
+        checkUnBlock,
+      });
+      if (res?.data.success) {
+        console.log("THÀNH CÔNG");
+        setConversations((prev) =>
+          prev.map((conv) => {
+            if (conv._id === res?.data.chat._id) {
+              return res?.data.chat;
+            }
+            return conv;
+          })
+        );
+        setSelectedChat(res?.data.chat);
+      }
+      return res.data;
+    } catch (err) {
+      console.error("Error loading more messages:", err);
+      setError("Không thể xoá hộp thoại này: ", err.toString());
+    }
+  };
+
   const pinConversation = async (chatId) => {
     try {
       const res = await api.put(`/api/chat/${chatId}/pin`);
@@ -627,6 +652,7 @@ export const ChatProvider = ({ children }) => {
     replyToMessage,
     deleteConversation,
     pinConversation,
+    unBlockConversation,
 
     // Setters (nếu cần)
     setSelectedChat,

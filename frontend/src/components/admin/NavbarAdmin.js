@@ -83,6 +83,11 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       label: "Quản Lý Nhật Kí",
     },
     {
+      path: "/admin/chats",
+      icon: "ri-chat-1-line",
+      label: "Chats",
+    },
+    {
       path: "/admin/appeals",
       icon: "ri-file-list-3-line", //kháng nghị
       label: "Quản Lý Kháng Nghị",

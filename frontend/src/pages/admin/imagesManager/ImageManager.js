@@ -1,11 +1,7 @@
 import ImageManager from "../../../components/admin/ManagerImage/ImageManager";
 
 const ImageManagement = () => {
-  return (
-    <>
-      <ImageManager />
-    </>
-  );
+  return <ImageManager />;
 };
 
 export default ImageManagement;

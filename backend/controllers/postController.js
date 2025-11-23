@@ -3,7 +3,7 @@ const Comment = require("../models/Comment");
 const User = require("../models/User");
 const Friend = require("../models/Friend"); // Đảm bảo đã import Friend
 
-const FileManager = require("../utils/fileManager");
+const FileManager = require("../utils/FileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");

@@ -360,7 +360,12 @@ const AdminGroupManagement = () => {
   };
 
   const handleDeleteGroup = async (groupId, groupName) => {
-    if (window.confirm(`Bạn có chắc chắn muốn xóa nhóm "${groupName}"?`)) {
+    let check = await NotificationService.confirm({
+      title: `Bạn có chắc chắn muốn xóa hội nhóm "${groupName}"?`,
+      confirmText: "Chắc chắn xoá",
+      cancelText: "Huỷ xoá",
+    });
+    if (check.isConfirmed) {
       try {
         await deleteGroup(groupId);
         setGroups(groups.filter((group) => group._id !== groupId));
@@ -368,8 +373,7 @@ const AdminGroupManagement = () => {
           title: "Thành công",
           text: "Đã xóa nhóm thành công",
         });
-        fetchStats();
-      } catch (err) {
+      } catch (error) {
         NotificationService.error({
           title: "Lỗi",
           text: "Không thể xóa nhóm",
@@ -479,7 +483,7 @@ const AdminGroupManagement = () => {
   };
 
   return (
-    <div className="admin-group-management container">
+    <div className="admin-group-management">
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 mb-1">Quản lý nhóm</h1>

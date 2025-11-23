@@ -392,7 +392,7 @@ const ReportGroup = () => {
   };
 
   return (
-    <div className="container mt-4">
+    <div className=" mt-4">
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="h4 mb-0">

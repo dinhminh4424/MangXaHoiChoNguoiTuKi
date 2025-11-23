@@ -1482,7 +1482,7 @@ const AdminJournalManagement = () => {
   };
 
   return (
-    <div className="admin-journal-management container">
+    <div className="admin-journal-management">
       <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 mb-1">Quản lý Nhật ký</h1>

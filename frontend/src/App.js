@@ -79,6 +79,8 @@ import ReportUser from "./pages/admin/reports/ReportUser";
 import ReportGroup from "./pages/admin/reports/ReportGroup";
 import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 
+import AdminChatManagement from "./components/admin/chat/AdminChatManagement";
+
 import AppealManagement from "./pages/admin/appeals/AppealManagement";
 
 import BackupLogs from "./pages/admin/backup/BackupLogs";
@@ -89,12 +91,12 @@ import AdminSecurity from "./pages/admin/security/AdminSecurity";
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
-import Navbar from "./components/Navbar";
 import ErrorPage from "./components/error/pages-error";
 
 import Test from "./pages/test";
 
 import AIChat from "./components/ai/AIChat";
+import AiChatScreen from "./components/ai/AiChatScreen";
 // import 'animate.css';
 
 /**
@@ -136,6 +138,7 @@ const routeConfigs = [
 
   { path: "/test", component: Test, layout: UserLayout },
   { path: "/aiChat", component: AIChat, layout: UserLayout },
+  { path: "/aiChatScreen", component: AiChatScreen, layout: UserLayout },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },
@@ -275,7 +278,7 @@ const routeConfigs = [
   }, // ContentAnalytics
   {
     path: "/admin/groups/reports",
-    component: ReportGroup, // ReportGroup
+    component: ReportGroup,
     layout: AdminLayout,
     isAdmin: true,
   },
@@ -284,7 +287,13 @@ const routeConfigs = [
     component: ReportGroup, // ReportGroup
     layout: AdminLayout,
     isAdmin: true,
-  },
+  }, //
+  {
+    path: "/admin/chats",
+    component: AdminChatManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  }, //
 
   {
     path: "/admin/appeals",

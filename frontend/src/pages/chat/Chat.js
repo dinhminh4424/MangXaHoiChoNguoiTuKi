@@ -33,9 +33,9 @@ const Chat = () => {
     loadingMore,
     deleteMessage,
     recallMessage,
-    replyToMessage,
     pinConversation,
     deleteConversation,
+    unBlockConversation,
   } = useChat();
 
   const [newMessage, setNewMessage] = useState("");
@@ -44,8 +44,6 @@ const Chat = () => {
   const [filePreview, setFilePreview] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [showUserDetails, setShowUserDetails] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-  const [typingUser, setTypingUser] = useState("");
 
   // State cho popups
   const [showUserDetailPopup, setShowUserDetailPopup] = useState(false);
@@ -56,6 +54,8 @@ const Chat = () => {
   const [replyingTo, setReplyingTo] = useState(null);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(null);
   const [showDeleteConversationConfirm, setShowDeleteConversationConfirm] =
+    useState(null);
+  const [showUnblockConversationConfirm, setShowUnblockConversationConfirm] =
     useState(null);
   const [showSuccess, setShowSuccess] = useState(null);
   const [showRecallConfirm, setShowRecallConfirm] = useState(null);
@@ -91,7 +91,6 @@ const Chat = () => {
     }
   });
 
-  const groupConversations = filteredConversations.filter((c) => c.isGroup);
   const directConversations = filteredConversations.filter((c) => !c.isGroup);
 
   // Hàm xử lý hiển thị tên với "..." khi quá dài
@@ -208,6 +207,17 @@ const Chat = () => {
     }
   };
 
+  const handleShowUnBlockConversation = async (conversationId) => {
+    try {
+      const result = await unBlockConversation(conversationId);
+      if (result.success) {
+        setShowUnblockConversationConfirm(false);
+      }
+    } catch (error) {
+      console.error("Lỗi khi xoá hộp thoại tin nhắn:", error);
+    }
+  };
+
   // Reset scroll state khi chọn chat mới
   useEffect(() => {
     setIsNearTop(false);
@@ -248,6 +258,18 @@ const Chat = () => {
   // Hàm huỷ trả lời
   const handleCancelReply = () => {
     setReplyingTo(null);
+  };
+  const handleSubmitUnBlock = async (conversationId) => {
+    try {
+      console.log(conversationId);
+      const result = await unBlockConversation(conversationId, true);
+      if (result.success) {
+        setReplyingTo(null);
+        alert("Thành Công");
+      }
+    } catch (error) {
+      console.error("Lỗi mở khoá hộp thoại tin nhắn:", error);
+    }
   };
 
   // Hàm xoá tin nhắn
@@ -401,18 +423,6 @@ const Chat = () => {
     }
   };
 
-  const handleDeleteChat = (chatId) => {
-    console.log(`Xóa cuộc trò chuyện: ${chatId}`);
-  };
-
-  const handleBlockUser = (userId) => {
-    console.log(`Chặn người dùng: ${userId}`);
-  };
-
-  const handleLogout = () => {
-    logout();
-  };
-
   const truncateText = (text, maxLength = 50) => {
     if (!text) return "";
     return text.length > maxLength
@@ -521,327 +531,396 @@ const Chat = () => {
                   <div className="row">
                     <div className="col-lg-3 chat-data-left scroller">
                       {/* Sidebar code remains the same */}
-                      <div className="chat-search pt-3 ps-3">
-                        <div className="d-flex align-items-center">
+                      <div className="chat-search pt-4 ps-4 pe-4 pb-2">
+                        {/* --- Header User Profile & Close Button --- */}
+                        <div className="d-flex align-items-center justify-content-between">
                           <div
-                            className="chat-profile me-3 cursor-pointer"
+                            className="d-flex align-items-center cursor-pointer profile-trigger"
                             onClick={() => setShowUserDetailPopup(true)}
                           >
-                            {user.profile?.avatar ? (
-                              <img
-                                src={user.profile.avatar}
-                                alt="chat-user"
-                                className="avatar-60 rounded-circle"
-                              />
-                            ) : (
-                              <img
-                                src="/assets/images/default-avatar.png"
-                                alt="chat-user"
-                                className="avatar-60 rounded-circle"
-                              />
-                            )}
+                            <div className="position-relative me-3">
+                              {user.profile?.avatar ? (
+                                <img
+                                  src={user.profile.avatar}
+                                  alt="chat-user"
+                                  className="avatar-50 rounded-circle object-cover shadow-sm"
+                                />
+                              ) : (
+                                <img
+                                  src="/assets/images/default-avatar.png"
+                                  alt="chat-user"
+                                  className="avatar-50 rounded-circle object-cover shadow-sm"
+                                />
+                              )}
+                              {/* Online status dot (optional) */}
+                              <span className="position-absolute bottom-0 start-100 translate-middle p-1 bg-success border border-light rounded-circle"></span>
+                            </div>
+
+                            <div className="chat-caption overflow-hidden">
+                              <h6
+                                className="mb-0 fw-bold text-truncate"
+                                style={{ maxWidth: "150px" }}
+                              >
+                                {user.fullName}
+                              </h6>
+                              <small
+                                className="text-muted text-truncate d-block"
+                                style={{ maxWidth: "150px" }}
+                              >
+                                {user.email}
+                              </small>
+                            </div>
                           </div>
-                          <div className="chat-caption">
-                            <h5 className="mb-0">
-                              {truncateName(user.fullName, 15)}
-                            </h5>
-                            <p className="m-0">
-                              {truncateName(user.email, 15)}
-                            </p>
-                          </div>
-                          <button type="submit" className="close-btn-res p-3">
-                            <i className="ri-close-fill"></i>
+
+                          <button
+                            type="button"
+                            className="btn btn-icon btn-light rounded-circle shadow-sm close-btn-res"
+                          >
+                            <i className="ri-close-line fs-5"></i>
                           </button>
                         </div>
 
-                        {/* Modal thông tin người dùng */}
-                        <Modal
-                          show={showUserDetailPopup}
-                          onHide={() => setShowUserDetailPopup(false)}
-                          scrollable
-                          centered
-                        >
-                          <Modal.Header closeButton>
-                            <Modal.Title>Thông tin người dùng</Modal.Title>
-                          </Modal.Header>
-                          <Modal.Body>
-                            <div className="user text-center mb-4">
-                              <a className="avatar m-0">
-                                {user.profile?.avatar ? (
-                                  <img
-                                    src={user.profile.avatar}
-                                    alt="avatar"
-                                    className="w-100"
-                                  />
-                                ) : (
-                                  <img
-                                    src="/assets/images/default-avatar.png"
-                                    alt="avatar"
-                                    className="w-100"
-                                  />
-                                )}
-                              </a>
-                              <div className="user-name mt-4">
-                                <h4 className="text-center">{user.fullName}</h4>
-                              </div>
-                              <div className="user-desc">
-                                <p className="text-center">{user.email}</p>
-                              </div>
-                            </div>
-                            <hr />
-                            <div className="user-detail text-left mt-4 ps-4 pe-4">
-                              <h5 className="mt-4 mb-4">About</h5>
-                              <p>
-                                It is long established fact that a reader will
-                                be distracted bt the reddable.
-                              </p>
-                              <h5 className="mt-3 mb-3">Status</h5>
-                              <ul className="user-status p-0">
-                                <li className="mb-1">
-                                  <i className="ri-checkbox-blank-circle-fill text-success pe-1"></i>
-                                  <span>Online</span>
-                                </li>
-                                <li className="mb-1">
-                                  <i className="ri-checkbox-blank-circle-fill text-warning pe-1"></i>
-                                  <span>Away</span>
-                                </li>
-                                <li className="mb-1">
-                                  <i className="ri-checkbox-blank-circle-fill text-danger pe-1"></i>
-                                  <span>Do Not Disturb</span>
-                                </li>
-                                <li className="mb-1">
-                                  <i className="ri-checkbox-blank-circle-fill text-light pe-1"></i>
-                                  <span>Offline</span>
-                                </li>
-                              </ul>
-                            </div>
-                          </Modal.Body>
-                          <Modal.Footer>
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => setShowUserDetailPopup(false)}
-                            >
-                              Close
-                            </button>
-                            <button
-                              type="button"
-                              className="btn btn-secondary"
-                              onClick={() => {
-                                handleRandomChat();
-                                setShowUserDetailPopup(false);
-                              }}
-                            >
-                              Nhắn tin ngẫu nhiên
-                            </button>
-                          </Modal.Footer>
-                        </Modal>
-
+                        {/* --- Search Bar (Viên thuốc) --- */}
                         <div className="chat-searchbar mt-4">
-                          <div className="form-group chat-search-data m-0">
+                          <div className="form-group position-relative mb-0">
                             <input
                               type="text"
-                              className="form-control round"
+                              className="form-control rounded-pill bg-light border-0 py-2 ps-5"
                               id="chat-search"
-                              placeholder="Tìm kiếm..."
+                              placeholder="Tìm kiếm bạn bè, tin nhắn..."
                               value={searchTerm}
                               onChange={handleSearchChange}
                             />
-                            <i className="ri-search-line"></i>
+                            <i className="ri-search-line position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
                           </div>
                         </div>
+
+                        {/* --- Modal Thông tin người dùng (Modern Style) --- */}
+                        <Modal
+                          show={showUserDetailPopup}
+                          onHide={() => setShowUserDetailPopup(false)}
+                          centered
+                          contentClassName="border-0 shadow-lg rounded-4 overflow-hidden"
+                        >
+                          {/* --- HEADER: ẢNH BÌA (COVER PHOTO) --- */}
+                          <div
+                            className="modal-header-custom position-relative p-4 text-center"
+                            style={{
+                              height: "150px",
+                              // Nếu có coverPhoto thì dùng ảnh, không thì dùng gradient tím/xanh
+                              backgroundImage: user.profile?.coverPhoto
+                                ? `url(${user.profile?.coverPhoto})`
+                                : "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                              backgroundSize: "cover",
+                              backgroundPosition: "center",
+                            }}
+                          >
+                            {/* Nút đóng modal */}
+                            <button
+                              className="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow-sm bg-white opacity-100"
+                              onClick={() => setShowUserDetailPopup(false)}
+                              style={{ padding: "0.5rem" }}
+                            ></button>
+                          </div>
+
+                          <Modal.Body className="pt-0 px-4 pb-4">
+                            {/* --- AVATAR & MAIN INFO --- */}
+                            <div
+                              className="text-center"
+                              style={{ marginTop: "-65px" }}
+                            >
+                              <div className="d-inline-block position-relative">
+                                <img
+                                  src={
+                                    user.profile?.avatar ||
+                                    "/assets/images/default-avatar.png"
+                                  }
+                                  alt="avatar"
+                                  className="rounded-circle border border-4 border-white shadow-sm bg-white"
+                                  style={{
+                                    width: "130px",
+                                    height: "130px",
+                                    objectFit: "cover",
+                                  }}
+                                />
+                                {/* Icon tích xanh ngay cạnh avatar (nếu muốn) */}
+                                {user.profile?.idCard?.verified && (
+                                  <span
+                                    className="position-absolute bottom-0 end-0 bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                    style={{
+                                      width: "32px",
+                                      height: "32px",
+                                      border: "2px solid white",
+                                    }}
+                                  >
+                                    <i className="ri-verified-badge-fill text-primary fs-5"></i>
+                                  </span>
+                                )}
+                              </div>
+
+                              {/* Tên & Role */}
+                              <div className="mt-3">
+                                <h4 className="mb-1 fw-bold d-flex align-items-center justify-content-center gap-2">
+                                  {user.fullName}
+                                </h4>
+
+                                {/* Role Badges */}
+                                <div className="mb-2">
+                                  {user.role === "admin" && (
+                                    <span className="badge bg-danger rounded-pill me-1">
+                                      Admin
+                                    </span>
+                                  )}
+                                  {user.role === "doctor" && (
+                                    <span className="badge bg-primary rounded-pill me-1">
+                                      Bác sĩ
+                                    </span>
+                                  )}
+                                  {user.role === "supporter" && (
+                                    <span className="badge bg-warning text-dark rounded-pill me-1">
+                                      Hỗ trợ viên
+                                    </span>
+                                  )}
+                                  <span className="text-muted small">
+                                    {user.email}
+                                  </span>
+                                </div>
+                              </div>
+
+                              {/* Buttons */}
+                              <div className="d-flex justify-content-center gap-2 mb-4 mt-3">
+                                <button
+                                  className="btn btn-primary rounded-pill px-4 shadow-sm fw-medium"
+                                  onClick={() => {
+                                    handleRandomChat();
+                                    setShowUserDetailPopup(false);
+                                  }}
+                                >
+                                  <i className="ri-chat-smile-2-line me-2"></i>
+                                  Nhắn tin ngẫu nhiên
+                                </button>
+                                <a
+                                  href="/profile"
+                                  className="btn btn-light rounded-circle shadow-sm text-secondary"
+                                >
+                                  <i className="ri-user-add-line"></i>
+                                </a>
+                              </div>
+                            </div>
+
+                            {/* --- BIO & LOCATION --- */}
+                            <div className="bg-light rounded-3 p-3 mb-3">
+                              {/* Location */}
+                              {user.profile?.location && (
+                                <div className="d-flex align-items-center text-muted mb-2 small">
+                                  <i className="ri-map-pin-line me-2 text-primary"></i>
+                                  <span>
+                                    Sống tại <b>{user.profile.location}</b>
+                                  </span>
+                                </div>
+                              )}
+
+                              {/* Bio */}
+                              <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2 mt-3">
+                                Giới thiệu
+                              </h6>
+                              <p
+                                className="mb-0 text-secondary small"
+                                style={{ lineHeight: "1.6" }}
+                              >
+                                {user.profile?.bio ||
+                                  "Người dùng này chưa cập nhật tiểu sử."}
+                              </p>
+                            </div>
+
+                            {/* --- SKILLS & INTERESTS (Thay thế cho Status cũ) --- */}
+                            <div className="row g-3">
+                              {/* Cột Kỹ năng */}
+                              <div className="col-12">
+                                <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2">
+                                  Kỹ năng
+                                </h6>
+                                <div className="d-flex flex-wrap gap-2">
+                                  {user.profile?.skills &&
+                                  user.profile?.skills.length > 0 ? (
+                                    user.profile?.skills.map((skill, index) => (
+                                      <span
+                                        key={index}
+                                        className="badge bg-soft-primary text-primary border border-primary-subtle rounded-pill fw-normal px-3 py-2"
+                                      >
+                                        {skill}
+                                      </span>
+                                    ))
+                                  ) : (
+                                    <span className="text-muted small fst-italic">
+                                      Chưa cập nhật
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+
+                              {/* Cột Sở thích */}
+                              <div className="col-12">
+                                <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2">
+                                  Sở thích
+                                </h6>
+                                <div className="d-flex flex-wrap gap-2">
+                                  {user.profile?.interests &&
+                                  user.profile?.interests.length > 0 ? (
+                                    user.profile?.interests.map(
+                                      (interest, index) => (
+                                        <span
+                                          key={index}
+                                          className="badge bg-light text-dark border rounded-pill fw-normal px-3 py-2"
+                                        >
+                                          # {interest}
+                                        </span>
+                                      )
+                                    )
+                                  ) : (
+                                    <span className="text-muted small fst-italic">
+                                      Chưa cập nhật
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          </Modal.Body>
+                        </Modal>
                       </div>
 
                       <div className="chat-sidebar-channel scroller mt-4 ps-3">
-                        <h5 className="">Public Channels</h5>
-                        <ul className="iq-chat-ui nav flex-column nav-pills">
-                          {groupConversations.length > 0 ? (
-                            groupConversations.map((item) => (
-                              <li key={item._id}>
-                                <button
-                                  className={`nav-link w-100 text-start p-0 border-0   ${
-                                    selectedChat?._id === item._id
-                                      ? "bg-primary active "
-                                      : "bg-transparent"
-                                  }`}
-                                  onClick={() => {
-                                    selectChat(item);
-                                  }}
-                                >
-                                  <div className="d-flex align-items-center p-2">
-                                    <div className="avatar me-2">
-                                      <div className="avatar-50 bg-primary d-flex align-items-center justify-content-center text-white rounded-circle">
-                                        {item.name?.charAt(0) || "G"}
-                                      </div>
-                                      <span className="avatar-status">
-                                        <i className="ri-checkbox-blank-circle-fill text-success"></i>
-                                      </span>
-                                    </div>
-                                    <div className="chat-sidebar-name flex-grow-1">
-                                      <h6 className="mb-0">
-                                        {truncateName(item.name)}
-                                      </h6>
-                                      <span className="text-muted d-block">
-                                        {/* {item.lastMessage?.content ||
-                                          "Chưa có tin nhắn"} */}
-                                        {truncateText(
-                                          item.lastMessage?.content ||
-                                            "Chưa có tin nhắn",
-                                          150
-                                        )}
-                                        {item.lastMessage?.file && " 📎"}
-                                      </span>
-                                    </div>
-                                    {item.unreadCount > 0 && (
-                                      <div className="chat-meta text-center me-1">
-                                        <div className="chat-msg-counter bg-primary text-white">
-                                          {item.unreadCount}
-                                        </div>
-                                        <span className="text-nowrap small">
-                                          {item.lastMessage?.createdAt
-                                            ? formatTime(
-                                                item.lastMessage.createdAt
-                                              )
-                                            : ""}
-                                        </span>
-                                      </div>
-                                    )}
-                                  </div>
-                                </button>
-                              </li>
-                            ))
-                          ) : (
-                            <div className="text-center text-muted p-3">
-                              Không có group nào
-                            </div>
-                          )}
-                        </ul>
-                        <h5 className="mt-3">Direct Message</h5>
+                        <h5 className="mt-3">Hộp Thoại Tin Nhắn</h5>
                         <ul className="iq-chat-ui nav flex-column nav-pills">
                           {directConversations.length > 0 ? (
-                            directConversations.map((item) => (
-                              <li key={item._id}>
-                                <button
-                                  className={`nav-link w-100 text-start p-0 border-0  ${
-                                    selectedChat?._id === item._id
-                                      ? "active bg-primary"
-                                      : "bg-transparent"
-                                  }`}
-                                  onClick={() => selectChat(item)}
-                                >
-                                  <div className="d-flex align-items-center p-2">
-                                    <div className="avatar me-2">
-                                      <img
-                                        src={
-                                          item.members?.find(
-                                            (m) => m._id !== user.id
-                                          )?.profile?.avatar ||
-                                          "/assets/images/default-avatar.png"
-                                        }
-                                        alt="chatuserimage"
-                                        className="rounded-circle w-100 "
-                                      />
-                                      {/* Trạng thái */}
-                                      {/* <span className="avatar-status">
-                                        <i className="ri-checkbox-blank-circle-fill text-success"></i>
-                                      </span> */}
-                                    </div>
-                                    {item.isPinned && (
-                                      <PinIcon className="text-yellow-500" />
-                                    )}
-                                    <div></div>
-                                    <div className="chat-sidebar-name flex-grow-1">
-                                      <h6 className="mb-0">
-                                        {truncateName(
-                                          item.members?.find(
-                                            (m) => m._id !== user.id
-                                          )?.fullName || "Unknown User"
-                                        )}
-                                      </h6>
-                                      <span className="text-muted d-block">
-                                        {/* {item.lastMessage?.content ||
-                                          "Chưa có tin nhắn"} */}
-                                        {truncateText(
-                                          item.lastMessage?.content ||
-                                            "Chưa có tin nhắn",
-                                          30
-                                        )}
-
-                                        <div
-                                          className={
-                                            "truncate-text flex items-center gap-1" +
-                                              selectedChat?._id ===
-                                            item._id
-                                              ? "active"
-                                              : "text-gray-600"
+                            directConversations.map((item) => {
+                              return (
+                                <li key={item._id}>
+                                  <button
+                                    className={`nav-link w-100 text-start p-0 border-0  ${
+                                      selectedChat?._id === item._id
+                                        ? "active bg-primary"
+                                        : "bg-transparent"
+                                    }`}
+                                    onClick={() => selectChat(item)}
+                                  >
+                                    <div className="d-flex align-items-center p-2">
+                                      <div className="avatar me-2">
+                                        <img
+                                          src={
+                                            !item.userUnBlock?.length
+                                              ? item.members?.find(
+                                                  (m) => m._id !== user.id
+                                                )?.profile?.avatar ||
+                                                "/assets/images/default-avatar.png"
+                                              : "/assets/images/andanh.jpg"
                                           }
-                                        >
-                                          {item.lastMessage?.messageType ===
-                                            "file" && (
-                                            <>
-                                              <File size={16} />
-                                              <span>
+                                          alt="chatuserimage"
+                                          className="rounded-circle w-100 "
+                                        />
+                                      </div>
+                                      {item.isPinned && (
+                                        <PinIcon className="text-yellow-500" />
+                                      )}
+                                      <div></div>
+                                      <div className="chat-sidebar-name flex-grow-1">
+                                        <h6 className="mb-0">
+                                          {!item.userUnBlock?.length
+                                            ? truncateName(
+                                                item.members?.find(
+                                                  (m) => m._id !== user.id
+                                                )?.fullName || "Unknown User"
+                                              )
+                                            : truncateName(
+                                                item.members?.find(
+                                                  (m) => m._id !== user.id
+                                                )?._id
+                                              )}
+                                        </h6>
+                                        <span className="text-muted d-block">
+                                          {truncateText(
+                                            item.lastMessage?.content ||
+                                              "Chưa có tin nhắn",
+                                            30
+                                          )}
+
+                                          <div
+                                            className={
+                                              "truncate-text flex items-center gap-1" +
+                                                selectedChat?._id ===
+                                              item._id
+                                                ? "active"
+                                                : "text-gray-600"
+                                            }
+                                          >
+                                            {item.lastMessage?.messageType ===
+                                              "file" && (
+                                              <>
+                                                <File size={16} />
+                                                <span>
+                                                  {truncateText(
+                                                    item.lastMessage
+                                                      ?.fileName ||
+                                                      "Đã gửi một file"
+                                                  )}
+                                                </span>
+                                              </>
+                                            )}
+
+                                            {item.lastMessage?.messageType ===
+                                              "image" && (
+                                              <>
+                                                <Image size={16} />
                                                 {truncateText(
                                                   item.lastMessage?.fileName ||
-                                                    "Đã gửi một file"
+                                                    "Đã gửi một hình ảnh"
                                                 )}
-                                              </span>
-                                            </>
-                                          )}
+                                              </>
+                                            )}
 
-                                          {item.lastMessage?.messageType ===
-                                            "image" && (
-                                            <>
-                                              <Image size={16} />
-                                              {truncateText(
-                                                item.lastMessage?.fileName ||
-                                                  "Đã gửi một hình ảnh"
-                                              )}
-                                            </>
-                                          )}
+                                            {item.lastMessage?.messageType ===
+                                              "video" && (
+                                              <>
+                                                <Video size={16} />
+                                                {truncateText(
+                                                  item.lastMessage?.fileName ||
+                                                    "Đã gửi một video"
+                                                )}
+                                              </>
+                                            )}
 
-                                          {item.lastMessage?.messageType ===
-                                            "video" && (
-                                            <>
-                                              <Video size={16} />
-                                              {truncateText(
-                                                item.lastMessage?.fileName ||
-                                                  "Đã gửi một video"
-                                              )}
-                                            </>
-                                          )}
-
-                                          {item.lastMessage?.messageType ===
-                                            "audio" && (
-                                            <>
-                                              <Music size={16} />
-                                              {truncateText(
-                                                item.lastMessage?.fileName ||
-                                                  "Đã gửi một đoạn âm thanh"
-                                              )}
-                                            </>
-                                          )}
-                                        </div>
-                                      </span>
-                                    </div>
-                                    {item.unreadCount > 0 && (
-                                      <div className="chat-meta text-center me-1">
-                                        <div className="chat-msg-counter bg-primary text-white">
-                                          {item.unreadCount}
-                                        </div>
-                                        <span className="text-nowrap small">
-                                          {item.lastMessage?.createdAt
-                                            ? formatTime(
-                                                item.lastMessage.createdAt
-                                              )
-                                            : ""}
+                                            {item.lastMessage?.messageType ===
+                                              "audio" && (
+                                              <>
+                                                <Music size={16} />
+                                                {truncateText(
+                                                  item.lastMessage?.fileName ||
+                                                    "Đã gửi một đoạn âm thanh"
+                                                )}
+                                              </>
+                                            )}
+                                          </div>
                                         </span>
                                       </div>
-                                    )}
-                                  </div>
-                                </button>
-                              </li>
-                            ))
+                                      {item.unreadCount > 0 && (
+                                        <div className="chat-meta text-center me-1">
+                                          <div className="chat-msg-counter bg-primary text-white">
+                                            {item.unreadCount}
+                                          </div>
+                                          <span className="text-nowrap small">
+                                            {item.lastMessage?.createdAt
+                                              ? formatTime(
+                                                  item.lastMessage.createdAt
+                                                )
+                                              : ""}
+                                          </span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </button>
+                                </li>
+                              );
+                            })
                           ) : (
                             <div className="text-center text-muted p-3">
                               Không có cuộc trò chuyện nào
@@ -903,8 +982,10 @@ const Chat = () => {
                                     ) : (
                                       <img
                                         src={
-                                          otherUser?.profile?.avatar ||
-                                          "/assets/images/default-avatar.png"
+                                          !selectedChat.userUnBlock?.length > 0
+                                            ? otherUser?.profile?.avatar ||
+                                              "/assets/images/default-avatar.png"
+                                            : "/assets/images/andanh.jpg"
                                         }
                                         alt="avatar"
                                         className="avatar-50 rounded-circle w-100"
@@ -917,96 +998,212 @@ const Chat = () => {
                                   <h5 className="mb-0">
                                     {selectedChat.isGroup
                                       ? truncateName(selectedChat.name)
-                                      : truncateName(otherUser?.fullName)}
+                                      : !selectedChat.userUnBlock?.length > 0
+                                      ? truncateName(otherUser?.fullName)
+                                      : otherUser._id}
                                   </h5>
                                 </div>
                                 {/* Modal thông tin người đối diện */}
+
                                 <Modal
                                   show={showChatDetailPopup}
-                                  onHide={() => setShowChatDetailPopup(false)}
-                                  scrollable
+                                  onHide={() => setShowUserDetailPopup(false)}
                                   centered
+                                  contentClassName="border-0 shadow-lg rounded-4 overflow-hidden"
                                 >
-                                  <Modal.Header closeButton>
-                                    <Modal.Title>
-                                      Thông tin người dùng
-                                    </Modal.Title>
-                                  </Modal.Header>
-                                  <Modal.Body>
+                                  {/* --- HEADER: ẢNH BÌA (COVER PHOTO) --- */}
+                                  <div
+                                    className="modal-header-custom position-relative p-4 text-center"
+                                    style={{
+                                      height: "150px",
+                                      // Nếu có coverPhoto thì dùng ảnh, không thì dùng gradient tím/xanh
+                                      backgroundImage: otherUser.profile
+                                        ?.coverPhoto
+                                        ? `url(${otherUser.profile?.coverPhoto})`
+                                        : "linear-gradient(135deg, #a8edea 0%, #fed6e3 100%)",
+                                      backgroundSize: "cover",
+                                      backgroundPosition: "center",
+                                    }}
+                                  >
+                                    {/* Nút đóng modal */}
+                                    <button
+                                      className="btn-close btn-close-white position-absolute top-0 end-0 m-3 shadow-sm bg-white opacity-100"
+                                      onClick={() =>
+                                        setShowChatDetailPopup(false)
+                                      }
+                                      style={{ padding: "0.5rem" }}
+                                    ></button>
+                                  </div>
+
+                                  <Modal.Body className="pt-0 px-4 pb-4">
+                                    {/* --- AVATAR & MAIN INFO --- */}
                                     <div
-                                      className="user mb-4 text-center"
-                                      style={{ textAlign: "center" }}
+                                      className="text-center"
+                                      style={{ marginTop: "-65px" }}
                                     >
-                                      <a className="avatar m-0">
+                                      <div className="d-inline-block position-relative">
                                         <img
                                           src={
-                                            otherUser?.profile?.avatar ||
+                                            otherUser.profile?.avatar ||
                                             "/assets/images/default-avatar.png"
                                           }
                                           alt="avatar"
-                                          className="w-100 img-fluid"
+                                          className="rounded-circle border border-4 border-white shadow-sm bg-white"
+                                          style={{
+                                            width: "130px",
+                                            height: "130px",
+                                            objectFit: "cover",
+                                          }}
                                         />
-                                      </a>
-                                      <div className="user-name mt-4">
-                                        <h4>{otherUser?.fullName}</h4>
+                                        {/* Icon tích xanh ngay cạnh avatar (nếu muốn) */}
+                                        {otherUser.profile?.idCard
+                                          ?.verified && (
+                                          <span
+                                            className="position-absolute bottom-0 end-0 bg-white rounded-circle d-flex align-items-center justify-content-center shadow-sm"
+                                            style={{
+                                              width: "32px",
+                                              height: "32px",
+                                              border: "2px solid white",
+                                            }}
+                                          >
+                                            <i className="ri-verified-badge-fill text-primary fs-5"></i>
+                                          </span>
+                                        )}
                                       </div>
-                                      <div className="user-desc">
-                                        <p>{otherUser?.email}</p>
+
+                                      {/* Tên & Role */}
+                                      <div className="mt-3">
+                                        <h4 className="mb-1 fw-bold d-flex align-items-center justify-content-center gap-2">
+                                          {otherUser.fullName}
+                                        </h4>
+
+                                        {/* Role Badges */}
+                                        <div className="mb-2">
+                                          {otherUser.role === "admin" && (
+                                            <span className="badge bg-danger rounded-pill me-1">
+                                              Admin
+                                            </span>
+                                          )}
+                                          {otherUser.role === "doctor" && (
+                                            <span className="badge bg-primary rounded-pill me-1">
+                                              Bác sĩ
+                                            </span>
+                                          )}
+                                          {otherUser.role === "supporter" && (
+                                            <span className="badge bg-warning text-dark rounded-pill me-1">
+                                              Hỗ trợ viên
+                                            </span>
+                                          )}
+                                          <span className="text-muted small">
+                                            {otherUser.email}
+                                          </span>
+                                        </div>
                                       </div>
                                     </div>
-                                    <hr />
-                                    <div className="chatuser-detail text-left mt-4">
-                                      <div className="row">
-                                        <div className="col-6 col-md-6 title">
-                                          Name:
+
+                                    {/* --- BIO & LOCATION --- */}
+                                    <div className="bg-light rounded-3 p-3 mb-3">
+                                      {/* Location */}
+                                      {otherUser.profile?.location && (
+                                        <div className="d-flex align-items-center text-muted mb-2 small">
+                                          <i className="ri-map-pin-line me-2 text-primary"></i>
+                                          <span>
+                                            Sống tại{" "}
+                                            <b>{otherUser.profile.location}</b>
+                                          </span>
                                         </div>
-                                        <div className="col-6 col-md-6 text-right">
-                                          {otherUser?.fullName}
+                                      )}
+
+                                      {/* Bio */}
+                                      <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2 mt-3">
+                                        Giới thiệu
+                                      </h6>
+                                      <p
+                                        className="mb-0 text-secondary small"
+                                        style={{ lineHeight: "1.6" }}
+                                      >
+                                        {user.profile?.bio ||
+                                          "Người dùng này chưa cập nhật tiểu sử."}
+                                      </p>
+                                    </div>
+
+                                    {/* --- SKILLS & INTERESTS (Thay thế cho Status cũ) --- */}
+                                    <div className="row g-3">
+                                      {/* Cột Kỹ năng */}
+                                      <div className="col-12">
+                                        <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2">
+                                          Kỹ năng
+                                        </h6>
+                                        <div className="d-flex flex-wrap gap-2">
+                                          {otherUser.profile?.skills &&
+                                          otherUser.profile?.skills.length >
+                                            0 ? (
+                                            otherUser.profile?.skills.map(
+                                              (skill, index) => (
+                                                <span
+                                                  key={index}
+                                                  className="badge bg-soft-primary text-primary border border-primary-subtle rounded-pill fw-normal px-3 py-2"
+                                                >
+                                                  {skill}
+                                                </span>
+                                              )
+                                            )
+                                          ) : (
+                                            <span className="text-muted small fst-italic">
+                                              Chưa cập nhật
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
-                                      <hr />
-                                      <div className="row">
-                                        <div className="col-6 col-md-6 title">
-                                          Email:
-                                        </div>
-                                        <div className="col-6 col-md-6 text-right">
-                                          {otherUser?.email}
+
+                                      {/* Cột Sở thích */}
+                                      <div className="col-12">
+                                        <h6 className="fw-bold text-uppercase text-secondary fs-7 mb-2">
+                                          Sở thích
+                                        </h6>
+                                        <div className="d-flex flex-wrap gap-2">
+                                          {otherUser.profile?.interests &&
+                                          otherUser.profile?.interests.length >
+                                            0 ? (
+                                            otherUser.profile?.interests.map(
+                                              (interest, index) => (
+                                                <span
+                                                  key={index}
+                                                  className="badge bg-light text-dark border rounded-pill fw-normal px-3 py-2"
+                                                >
+                                                  # {interest}
+                                                </span>
+                                              )
+                                            )
+                                          ) : (
+                                            <span className="text-muted small fst-italic">
+                                              Chưa cập nhật
+                                            </span>
+                                          )}
                                         </div>
                                       </div>
-                                      <hr />
                                     </div>
                                   </Modal.Body>
-                                  <Modal.Footer>
+                                  <Modal.Footer className="border-0 justify-content-center pb-4">
                                     <button
                                       type="button"
-                                      className="btn btn-secondary"
+                                      className="btn btn-light rounded-pill px-4 fw-medium"
                                       onClick={() =>
                                         setShowChatDetailPopup(false)
                                       }
                                     >
-                                      tắt
+                                      Đóng
                                     </button>
                                     <a
-                                      className="btn btn-secondary"
-                                      href={`/profile/${otherUser._id}`}
+                                      className="btn btn-primary rounded-pill px-4 shadow-sm fw-medium"
+                                      href={`/profile/${otherUser?._id}`}
                                     >
-                                      Trang Cá Nhân
+                                      Xem Trang Cá Nhân{" "}
+                                      <i className="ri-arrow-right-line ms-1"></i>
                                     </a>
                                   </Modal.Footer>
                                 </Modal>
                                 <div className="chat-header-icons d-flex">
-                                  {/* <a
-                                    href="#"
-                                    className="chat-icon-phone bg-soft-primary"
-                                  >
-                                    <i className="ri-phone-line"></i>
-                                  </a>
-                                  <a
-                                    href="#"
-                                    className="chat-icon-video bg-soft-primary"
-                                  >
-                                    <i className="ri-vidicon-line"></i>
-                                  </a> */}
                                   <a
                                     onClick={() =>
                                       setShowDeleteConversationConfirm(true)
@@ -1048,63 +1245,81 @@ const Chat = () => {
                                         <i className="ri-delete-bin-6-line me-1 h5"></i>
                                         Xóa cuộc trò chuyện
                                       </a>
-                                      <a
-                                        className="dropdown-item"
-                                        href="#"
-                                        onClick={() =>
-                                          handleBlockUser(otherUser?._id)
-                                        }
-                                      >
-                                        <i className="ri-time-line me-1 h5"></i>
-                                        Chặn
-                                      </a>
+                                      {/* {console.log(selectedChat)} */}
+                                      {selectedChat.userUnBlock?.length > 0 && (
+                                        <a
+                                          className="dropdown-item"
+                                          href="#"
+                                          onClick={() =>
+                                            setShowUnblockConversationConfirm(
+                                              true
+                                            )
+                                          }
+                                        >
+                                          <i className="ri-earth-line me-1 h5"></i>
+                                          Công Khai
+                                        </a>
+                                      )}
                                     </span>
                                   </span>
                                 </div>
                               </header>
                             </div>
 
-                            {/* Hiển thị tin nhắn đang trả lời */}
-                            {replyingTo && (
-                              <div className="reply-preview bg-light p-2 border-bottom">
-                                <div className="d-flex justify-content-between align-items-center">
-                                  <div>
-                                    <small className="text-muted">
-                                      Đang trả lời{" "}
-                                      <strong>
-                                        {replyingTo.sender?.fullName}
-                                      </strong>
-                                    </small>
-                                    <div
-                                      className="text-truncate"
-                                      style={{ maxWidth: "300px" }}
-                                    >
-                                      <small>
-                                        {replyingTo.content ||
-                                          (replyingTo.fileUrl
-                                            ? replyingTo.messageType === "image"
-                                              ? "📷 Hình ảnh"
-                                              : replyingTo.messageType ===
-                                                "video"
-                                              ? "🎬 Video"
-                                              : replyingTo.messageType ===
-                                                "audio"
-                                              ? "🎵 Audio"
-                                              : "📎 File"
-                                            : "Tin nhắn")}
-                                      </small>
+                            {/* Hiển thị lời mời mở khóa hộp thoại */}
+                            {selectedChat &&
+                              selectedChat.userUnBlock?.length > 0 &&
+                              selectedChat.userUnBlock.length !==
+                                (selectedChat.members ?? []).length && (
+                                <div className="reply-preview bg-light p-3 border-bottom rounded shadow-sm">
+                                  <div className="d-flex justify-content-between align-items-start">
+                                    <div>
+                                      <p className="text-muted">
+                                        {selectedChat.userUnBlock.includes(
+                                          user.id
+                                        )
+                                          ? "Có thành viên muốn mở khóa hộp thoại. Bạn có đồng ý không?"
+                                          : "Đang chờ thành viên khác xác nhận mở khóa..."}
+                                      </p>
+
+                                      <div
+                                        className="text-truncate mt-1"
+                                        style={{ maxWidth: "300px" }}
+                                      >
+                                        <small></small>
+                                      </div>
+                                    </div>
+
+                                    <div className="d-flex gap-2">
+                                      {/* Nút Đồng ý */}
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-success d-flex align-items-center"
+                                        onClick={() => {
+                                          console.log(
+                                            "selectedChat: ",
+                                            selectedChat
+                                          );
+                                          handleSubmitUnBlock(selectedChat._id);
+                                        }}
+                                        title="Đồng ý mở khóa"
+                                      >
+                                        <i className="ri-check-line"></i>
+                                      </button>
+
+                                      {/* Nút Từ chối */}
+                                      <button
+                                        type="button"
+                                        className="btn btn-sm btn-outline-danger d-flex align-items-center"
+                                        onClick={handleCancelReply}
+                                        title="Từ chối mở khóa"
+                                      >
+                                        <i className="ri-close-line"></i>
+                                      </button>
                                     </div>
                                   </div>
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-outline-secondary"
-                                    onClick={handleCancelReply}
-                                  >
-                                    <i className="ri-close-line"></i>
-                                  </button>
                                 </div>
-                              </div>
-                            )}
+                              )}
 
                             {/* Danh sách tin nhắn */}
                             <div
@@ -1450,7 +1665,47 @@ const Chat = () => {
                               ))}
                               <div ref={messagesEndRef} />
                             </div>
-
+                            {/* Hiển thị tin nhắn đang trả lời */}
+                            {replyingTo && (
+                              <div className="reply-preview bg-light p-2 border-bottom">
+                                <div className="d-flex justify-content-between align-items-center">
+                                  <div>
+                                    <small className="text-muted">
+                                      Đang trả lời{" "}
+                                      <strong>
+                                        {replyingTo.sender?.fullName}
+                                      </strong>
+                                    </small>
+                                    <div
+                                      className="text-truncate"
+                                      style={{ maxWidth: "300px" }}
+                                    >
+                                      <small>
+                                        {replyingTo.content ||
+                                          (replyingTo.fileUrl
+                                            ? replyingTo.messageType === "image"
+                                              ? "📷 Hình ảnh"
+                                              : replyingTo.messageType ===
+                                                "video"
+                                              ? "🎬 Video"
+                                              : replyingTo.messageType ===
+                                                "audio"
+                                              ? "🎵 Audio"
+                                              : "📎 File"
+                                            : "Tin nhắn")}
+                                      </small>
+                                    </div>
+                                  </div>
+                                  <button
+                                    type="button"
+                                    className="btn btn-sm btn-outline-secondary"
+                                    onClick={handleCancelReply}
+                                  >
+                                    <i className="ri-close-line"></i>
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                             {/* File Preview Area */}
                             {selectedFile && (
                               <div className="p-3 border-bottom bg-warning bg-opacity-10">
@@ -1738,6 +1993,55 @@ const Chat = () => {
                   onClick={() => handleDeleteConversation(selectedChat._id)}
                 >
                   Xoá tin nhắn
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* modal xác nhận mở khoá */}
+      {showUnblockConversationConfirm && (
+        <div
+          className="modal fade show d-block position-fixed top-0 start-0 w-100 h-100 bg-dark bg-opacity-50"
+          tabIndex="-1"
+          role="dialog"
+          style={{ zIndex: 1050 }}
+        >
+          <div className="modal-dialog modal-dialog-centered" role="document">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  Xác nhận mở khoá hộp thoại tin nhắn
+                </h5>
+                <button
+                  type="button"
+                  className="btn-close"
+                  onClick={() => setShowDeleteConversationConfirm(null)}
+                ></button>
+              </div>
+              <div className="modal-body">
+                <p>Bạn có chắc chắn muốn mở khoá hộp thoại tin nhắn này?</p>
+                <small className="text-muted">
+                  sẽ phải chờ các thành viên đồng ý
+                </small>
+              </div>
+              <div className="modal-footer">
+                <button
+                  type="button"
+                  className="btn btn-secondary"
+                  onClick={() => setShowUnblockConversationConfirm(null)}
+                >
+                  Huỷ
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-danger"
+                  onClick={() =>
+                    handleShowUnBlockConversation(selectedChat._id, true)
+                  }
+                >
+                  Mở khoá hộp thoại tin nhắn
                 </button>
               </div>
             </div>

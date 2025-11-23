@@ -3,7 +3,7 @@ const mongoose = require("mongoose"); // ✅ THÊM: Cần mongoose để xử l�
 const Journal = require("../models/Journal");
 const User = require("../models/User"); // ✅ THÊM: Import User model
 const Notification = require("../models/Notification");
-const FileManager = require("../utils/fileManager");
+const FileManager = require("../utils/FileManager");
 const { logUserActivity } = require("../logging/userActivityLogger");
 
 /**
@@ -51,7 +51,9 @@ exports.createJournal = async (req, res) => {
     ]);
 
     if (!user) {
-      return res.status(404).json({ success: false, message: "Không tìm thấy người dùng." });
+      return res
+        .status(404)
+        .json({ success: false, message: "Không tìm thấy người dùng." });
     }
 
     if (existingJournal) {
@@ -63,7 +65,11 @@ exports.createJournal = async (req, res) => {
 
     // --- LOGIC XỬ LÝ CHUỖI (STREAK) ĐÃ CẢI TIẾN ---
     const now = new Date();
-    const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const todayMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate()
+    );
     const yesterdayMidnight = new Date(todayMidnight);
     yesterdayMidnight.setDate(yesterdayMidnight.getDate() - 1);
 
@@ -75,48 +81,50 @@ exports.createJournal = async (req, res) => {
     const currentWeekStart = getStartOfWeek(now);
     const lastMissWeekStart = user.last_journal_miss_week_start || new Date(0);
     if (lastMissWeekStart.getTime() < currentWeekStart.getTime()) {
-        user.weekly_journal_miss_uses = 0;
-        user.last_journal_miss_week_start = currentWeekStart;
-        user.has_lost_journal_streak = false; // Reset cờ khi sang tuần mới
+      user.weekly_journal_miss_uses = 0;
+      user.last_journal_miss_week_start = currentWeekStart;
+      user.has_lost_journal_streak = false; // Reset cờ khi sang tuần mới
     }
 
     // 2. Xử lý chuỗi
     if (user.has_lost_journal_streak) {
-        // Nếu chuỗi đã bị mất trong tuần, reset về 1
-        user.journalStreak = 1;
-        user.has_lost_journal_streak = false; // Reset cờ sau khi bắt đầu chuỗi mới
+      // Nếu chuỗi đã bị mất trong tuần, reset về 1
+      user.journalStreak = 1;
+      user.has_lost_journal_streak = false; // Reset cờ sau khi bắt đầu chuỗi mới
     } else if (lastJournalDay) {
-        if (lastJournalDay.getTime() === yesterdayMidnight.getTime()) {
-            // Viết liên tiếp -> tăng chuỗi
-            user.journalStreak = (user.journalStreak || 0) + 1;
-        } else if (lastJournalDay.getTime() < yesterdayMidnight.getTime()) {
-            // Bỏ lỡ ngày, kiểm tra lượt bỏ lỡ
-            if (user.weekly_journal_miss_uses < 2) {
-                // Còn lượt bỏ lỡ -> dùng 1 lượt, chuỗi tiếp tục
-                user.weekly_journal_miss_uses += 1;
-                user.journalStreak = (user.journalStreak || 0) + 1; // Tiếp tục chuỗi
-            } else {
-                // Hết lượt bỏ lỡ -> reset chuỗi
-                user.journalStreak = 1;
-            }
+      if (lastJournalDay.getTime() === yesterdayMidnight.getTime()) {
+        // Viết liên tiếp -> tăng chuỗi
+        user.journalStreak = (user.journalStreak || 0) + 1;
+      } else if (lastJournalDay.getTime() < yesterdayMidnight.getTime()) {
+        // Bỏ lỡ ngày, kiểm tra lượt bỏ lỡ
+        if (user.weekly_journal_miss_uses < 2) {
+          // Còn lượt bỏ lỡ -> dùng 1 lượt, chuỗi tiếp tục
+          user.weekly_journal_miss_uses += 1;
+          user.journalStreak = (user.journalStreak || 0) + 1; // Tiếp tục chuỗi
+        } else {
+          // Hết lượt bỏ lỡ -> reset chuỗi
+          user.journalStreak = 1;
         }
-        // Nếu viết lại trong ngày (lastJournalDay.getTime() === todayMidnight.getTime()), không làm gì cả
+      }
+      // Nếu viết lại trong ngày (lastJournalDay.getTime() === todayMidnight.getTime()), không làm gì cả
     } else {
-        // Lần đầu tiên viết nhật ký
-        user.journalStreak = 1;
+      // Lần đầu tiên viết nhật ký
+      user.journalStreak = 1;
     }
 
     user.lastJournalDate = now;
     // --- KẾT THÚC LOGIC XỬ LÝ CHUỖI ---
 
     // Xử lý media files nếu có
-    const mediaFiles = req.files ? req.files.map((file) => {
-      let fileFolder = "documents";
-      if (file.mimetype.startsWith("image/")) fileFolder = "images";
-      else if (file.mimetype.startsWith("video/")) fileFolder = "videos";
-      else if (file.mimetype.startsWith("audio/")) fileFolder = "audio";
-      return `/api/uploads/${fileFolder}/${file.filename}`;
-    }) : [];
+    const mediaFiles = req.files
+      ? req.files.map((file) => {
+          let fileFolder = "documents";
+          if (file.mimetype.startsWith("image/")) fileFolder = "images";
+          else if (file.mimetype.startsWith("video/")) fileFolder = "videos";
+          else if (file.mimetype.startsWith("audio/")) fileFolder = "audio";
+          return `/api/uploads/${fileFolder}/${file.filename}`;
+        })
+      : [];
 
     // Tạo nhật ký mới
     const newJournal = new Journal({
@@ -634,5 +642,122 @@ exports.deleteJournal = async (req, res) => {
       success: false,
       message: "Lỗi server khi xoá nhật kí: " + error.message,
     });
+  }
+};
+
+// lấy danh sách Nhật kí
+exports.getJournal = async (req, res) => {
+  try {
+    let {
+      page = 1,
+      limit = 10,
+      emotions,
+      tags,
+      sortBy = "createdAt",
+      search = "",
+      isPrivate,
+    } = req.query;
+
+    page = Math.max(1, parseInt(page, 10) || 1);
+    limit = Math.min(100, Math.max(1, parseInt(limit, 10) || 10)); // giới hạn max 100
+    const skip = (page - 1) * limit;
+
+    const currentUserId = req.user?.userId;
+
+    // Normalize filters
+    const query = {};
+
+    if (typeof isPrivate !== "undefined") {
+      // hỗ trợ "true"/"false" string từ query
+      query.isPrivate = String(isPrivate) === "true";
+    }
+
+    if (emotions) {
+      // nếu truyền chuỗi csv -> chuyển thành mảng
+      const emArr = Array.isArray(emotions)
+        ? emotions
+        : String(emotions).split(",");
+      query.emotions = { $in: emArr.map((e) => e.trim()).filter(Boolean) };
+    }
+
+    if (tags) {
+      const tagArr = Array.isArray(tags) ? tags : String(tags).split(",");
+      query.tags = { $in: tagArr.map((t) => t.trim()).filter(Boolean) };
+    }
+
+    // Search: tìm trong title, emotions, tags cùng lúc
+    if (search && String(search).trim().length > 0) {
+      const re = new RegExp(escapeRegex(String(search).trim()), "i");
+      // Với emotions/tags là mảng string, dùng $in với RegExp để match phần tử mảng
+      query.$or = [
+        { title: { $regex: re } },
+        { emotions: { $in: [re] } },
+        { tags: { $in: [re] } },
+      ];
+    }
+
+    // Sorting: bạn có thể thêm các option khác nếu muốn
+    let sortOption = { createdAt: -1 };
+    if (sortBy === "createdAt") sortOption = { createdAt: -1 };
+    else if (sortBy === "title") sortOption = { title: 1 };
+    // thêm sortBy khác nếu cần
+
+    const journals = await Journal.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limit)
+      .populate("userId", "username _id profile.avatar fullName")
+      .lean();
+
+    const total = await Journal.countDocuments(query);
+    const totalPages = Math.ceil(total / limit);
+
+    const responsePayload = {
+      success: true,
+      page,
+      totalPages,
+      totalJournal: total,
+      journals,
+    };
+
+    // log (giữ nguyên logic log của bạn)
+    logUserActivity({
+      action: "journal.fetch",
+      req,
+      res,
+      userId: req.user?.userId,
+      role: req.user?.role,
+      target: { type: "feed", owner: req.user?.userId },
+      description: "Người dùng lấy danh sách nhật kí",
+      payload: {
+        page,
+        limit,
+        filters: {
+          currentUserId: currentUserId || null,
+          emotions: emotions || null,
+          tags: tags || null,
+          search,
+          success: true,
+        },
+        resultCount: journals.length,
+        total,
+      },
+      meta: {
+        totalPages,
+      },
+    });
+
+    return res.status(200).json(responsePayload);
+  } catch (err) {
+    console.error("getJournal error:", err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    });
+  }
+
+  // helper: escape regex special chars
+  function escapeRegex(text) {
+    return text.replace(/[-[\]{}()*+?.,\\^$|#\s]/g, "\\$&");
   }
 };

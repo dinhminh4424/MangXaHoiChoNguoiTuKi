@@ -154,8 +154,10 @@ const MoodHistory = () => {
         moodService.getMoodTrends(30),
       ]);
 
-      if (statsData.success) setStats(statsData);
-      if (trendsData.success) setTrends(trendsData.trends || []);
+      console.log(statsData.data);
+
+      if (statsData.data.success) setStats(statsData.data);
+      if (trendsData.data.success) setTrends(trendsData.data.trends || []);
     } catch (err) {
       console.error("Lỗi tải thống kê:", err);
     }
@@ -555,7 +557,7 @@ const MoodHistory = () => {
                 </Alert>
               ) : moodLogs.length === 0 ? (
                 <div className="text-center py-5">
-                  <div className="fs-1 mb-3">📝</div>
+                  <div className="fs-1 mb-3"></div>
                   <h5 className="text-muted">Chưa có dữ liệu</h5>
                   <p className="text-muted">
                     {Object.values(filters).some((f) => f)
@@ -779,7 +781,7 @@ const MoodHistory = () => {
               <Col md={6}>
                 <Card className="border-0 bg-light">
                   <Card.Body>
-                    <h6 className="fw-bold mb-3">📝 Chi tiết bổ sung</h6>
+                    <h6 className="fw-bold mb-3"> Chi tiết bổ sung</h6>
                     <div className="space-y-3">
                       <div>
                         <small className="text-muted">Mô tả:</small>
@@ -851,7 +853,7 @@ const MoodHistory = () => {
                 <Col xs={12}>
                   <Card className="border-0 bg-light">
                     <Card.Body>
-                      <h6 className="fw-bold mb-3">🖼️ Hình ảnh đính kèm</h6>
+                      <h6 className="fw-bold mb-3"> Hình ảnh đính kèm</h6>
                       <div className="text-center">
                         <img
                           src={selectedLog.imageData}
