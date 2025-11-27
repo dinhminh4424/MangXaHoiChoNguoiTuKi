@@ -130,8 +130,6 @@ const ProfileView = ({ userId }) => {
       setUploading(true); // ✅ THÊM: Loading state
       const result = await updateImageCover(file);
 
-      console.log("🔄 Update result:", result);
-
       if (result && result.success) {
         // ✅ FIX: Đóng modal và reset
         setShowModalUpdateCoverPhoto(false);
@@ -145,22 +143,20 @@ const ProfileView = ({ userId }) => {
           timer: 3000,
           showConfirmButton: false,
         });
-
-        console.log("✅ Cover updated successfully!");
       } else {
         throw new Error(result?.message || "Cập nhật thất bại");
       }
     } catch (error) {
       console.error("❌ Error in handleSubmit:", error);
-      // ✅ FIX: Hiển thị lỗi cho user
+
       NotificationService.error({
-        title: "Lỗi! 😞",
+        title: "Lỗi! ",
         text: error.message || "Có lỗi xảy ra khi cập nhật ảnh bìa",
         timer: 5000,
         showConfirmButton: true,
       });
     } finally {
-      setUploading(false); // ✅ FIX: Tắt loading
+      setUploading(false);
     }
   };
 
@@ -230,7 +226,6 @@ const ProfileView = ({ userId }) => {
     }
   }, [userId, viewUserProfile]);
 
-  // ✅ NEW: Kiểm tra xem người dùng đã điểm danh hôm nay chưa
   React.useEffect(() => {
     if (isOwnProfile && currentUser?.lastCheckInDate) {
       const lastCheckIn = new Date(currentUser.lastCheckInDate);
@@ -378,13 +373,11 @@ const ProfileView = ({ userId }) => {
     };
   }, [currentUser, viewedUser, isOwnProfile]);
 
-  // ✅ ==================== LOGIC HIỂN THỊ POPUP KHÔI PHỤC CHUỖI ====================
   // Hàm hiển thị popup khôi phục chuỗi
   const showRestoreStreakPopup = (user) => {
     const canRestore = user.canRestore;
     const streakToRestore = user.streakToRestore || 0;
 
-    // ✅ SỬA LỖI: Sử dụng `confirm` thay vì `fire` để khớp với notificationService
     NotificationService.confirm({
       title: "🔥 Bạn đã mất chuỗi điểm danh!",
       html: `
@@ -485,7 +478,6 @@ const ProfileView = ({ userId }) => {
     }
   };
 
-  // ✅ NEW: Hàm xử lý khi nhấn nút điểm danh
   const handleCheckIn = async () => {
     setCheckInLoading(true);
     try {
@@ -497,7 +489,7 @@ const ProfileView = ({ userId }) => {
           timer: 3000,
           showConfirmButton: false,
         });
-        setHasCheckedInToday(true); // ✅ Cập nhật trạng thái đã điểm danh
+        setHasCheckedInToday(true);
       } else {
         NotificationService.warning({
           title: "Không thể điểm danh",
@@ -506,7 +498,7 @@ const ProfileView = ({ userId }) => {
           showConfirmButton: false,
         });
         if (result.message.includes("Bạn đã điểm danh hôm nay rồi")) {
-          setHasCheckedInToday(true); // ✅ Đồng bộ lại trạng thái nếu API báo đã điểm danh
+          setHasCheckedInToday(true);
         }
       }
     } catch (error) {
@@ -597,14 +589,14 @@ const ProfileView = ({ userId }) => {
     return user?.profile?.coverPhoto
       ? {
           backgroundImage: `url("${user.profile.coverPhoto}")`,
-          backgroundSize: "100% 100%", // 👉 Kéo ảnh phủ toàn vùng
+          backgroundSize: "100% 100%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }
       : imageCover
       ? {
           backgroundImage: `url("${imageCover}")`,
-          backgroundSize: "100% 100%", // 👉 Kéo ảnh phủ toàn vùng
+          backgroundSize: "100% 100%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
         }

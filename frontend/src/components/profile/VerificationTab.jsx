@@ -43,11 +43,21 @@ const VerificationTab = () => {
 
   // Xác minh thành công
   const handleVerificationSuccess = async (verificationData) => {
+    console.log("verificationData: ", verificationData);
     const { fullName, number, dob, address, cccdFile, selfieBlob } =
       verificationData;
 
-    const cccdURL = await fileToDataURL(cccdFile);
-    const selfieURL = await blobToDataURL(selfieBlob);
+    // const cccdURL = await fileToDataURL(cccdFile);
+    // const selfieURL = await blobToDataURL(selfieBlob);
+
+    // setVerifiedData({
+    //   verified: true,
+    //   fullName,
+    //   number,
+    //   dob,
+    //   address,
+    //   cccdImage: cccdURL,
+    //   selfieImage: selfieURL,
 
     setVerifiedData({
       verified: true,
@@ -55,8 +65,8 @@ const VerificationTab = () => {
       number,
       dob,
       address,
-      cccdImage: cccdURL,
-      selfieImage: selfieURL,
+      cccdImage: cccdFile,
+      selfieImage: selfieBlob,
     });
     setEditMode(false);
   };

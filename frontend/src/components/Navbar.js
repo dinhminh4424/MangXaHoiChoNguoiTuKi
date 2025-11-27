@@ -39,7 +39,6 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         { path: "/journal/history", icon: "las la-history", label: "Lịch sử" },
       ],
     },
-
     {
       path: "/notifications",
       icon: "ri-pages-line",
@@ -51,7 +50,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
       label: "AI",
       children: [
         { path: "/nhandien", icon: "ri-emotion-happy-line", label: "Cảm xúc" }, // icon mới
-        { path: "/aiChat", icon: "ri-chat-1-line", label: "AI Chat" }, // icon mới
+        { path: "/aiChatScreen", icon: "ri-chat-1-line", label: "AI Chat" }, // icon mới
       ],
     },
     {
@@ -63,6 +62,11 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
       path: "/profile/dashboard",
       icon: "ri-dashboard-line",
       label: "Dashboard",
+    },
+    {
+      path: "/homeContact",
+      icon: "ri-contacts-line",
+      label: "Liên hệ",
     },
   ];
 

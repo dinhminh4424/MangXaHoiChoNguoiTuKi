@@ -8,6 +8,7 @@ const imageRoutes = require("./imageRoutes");
 const securityRoutes = require("./admin/securityRoutes");
 const adminAnalyticsRoutes = require("./admin/analytics");
 const adminChatRoutes = require("./admin/chat");
+const appealsRoutes = require("./admin/appeals");
 const User = require("../models/User");
 
 const UserRouter = require("./admin/user");
@@ -118,7 +119,8 @@ router.use("/images", imageRoutes);
 router.use("/analytics", adminAnalyticsRoutes);
 
 // adminChatRoutes
-router.use("/chats", adminChatRoutes);
+router.use("/chats", adminChatRoutes); // appeals
+router.use("/appealsForUser", appealsRoutes); // appeals
 
 // security
 router.use("/security", securityRoutes);

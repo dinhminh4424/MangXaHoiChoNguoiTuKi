@@ -1,0 +1,227 @@
+/* AppealForm.css - Custom styles for Appeal Form */
+.appeal-form-container {
+  padding: 2rem 0;
+  min-height: 100vh;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+}
+
+.appeal-form-header-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.appeal-form-title {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.appeal-form-subtitle {
+  color: #6c757d;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+}
+
+.appeal-form-main-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.appeal-form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.appeal-form-input {
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.appeal-form-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.appeal-form-help-text {
+  color: #6c757d;
+  font-size: 0.875rem;
+  margin-top: 0.5rem;
+}
+
+/* Files Section */
+.appeal-form-files-card {
+  border: 2px solid #007bff !important;
+  border-radius: 15px;
+}
+
+.appeal-form-files-header {
+  background: #007bff !important;
+  color: white;
+  font-weight: 600;
+  border-radius: 13px 13px 0 0 !important;
+}
+
+.appeal-form-file-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.appeal-form-file-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px;
+  background: #f8f9fa;
+  border-radius: 12px;
+  border: 1px solid #e9ecef;
+  transition: all 0.3s ease;
+}
+
+.appeal-form-file-item:hover {
+  background: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.appeal-form-file-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.appeal-form-file-details {
+  flex: 1;
+}
+
+.appeal-form-file-name {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 4px;
+  word-break: break-word;
+}
+
+.appeal-form-file-size {
+  font-size: 12px;
+  color: #6c757d;
+}
+
+.appeal-form-file-preview-image {
+  width: 60px;
+  height: 60px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid #dee2e6;
+}
+
+.appeal-form-file-preview-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.appeal-form-remove-btn {
+  border-radius: 8px;
+  padding: 8px 12px;
+  transition: all 0.3s ease;
+}
+
+.appeal-form-remove-btn:hover {
+  transform: scale(1.05);
+}
+
+/* Submit Button */
+.appeal-form-submit-btn {
+  border-radius: 12px;
+  padding: 16px;
+  font-weight: 600;
+  font-size: 18px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  border: none;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  width: 100%;
+}
+
+.appeal-form-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.appeal-form-submit-btn:disabled {
+  transform: none;
+  box-shadow: none;
+  background: #6c757d;
+}
+
+/* Info Card */
+.appeal-form-info-card {
+  border: none;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+.appeal-form-info-header {
+  background: #17a2b8 !important;
+  color: white;
+  font-weight: 600;
+  border-radius: 18px 18px 0 0 !important;
+}
+
+.appeal-form-info-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.appeal-form-info-list li {
+  padding: 8px 0;
+  color: #495057;
+  font-size: 1rem;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .appeal-form-container {
+    padding: 1rem;
+  }
+
+  .appeal-form-file-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .appeal-form-remove-btn {
+    align-self: flex-end;
+  }
+}
+
+@media (max-width: 576px) {
+  .appeal-form-title {
+    font-size: 1.5rem;
+  }
+
+  .appeal-form-input {
+    padding: 10px 14px;
+  }
+
+  .appeal-form-submit-btn {
+    padding: 14px;
+    font-size: 16px;
+  }
+}

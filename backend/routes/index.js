@@ -21,12 +21,14 @@ const clientLogsRouter = require("./clientLogs");
 const todosRouter = require("./todos");
 const accountRoute = require("./account");
 const settingsRoute = require("./settings");
-const violationsRoute = require("./violations");
+const violationsRoute = require("./violations"); //Appeal
+const appealRoute = require("./appeal"); //Appeal
 
 const imageRoutes = require("./imageRoutes");
 const aiChatRoutes = require("./aiChat");
 
 const backupRestoreRoutes = require("./backupRestore");
+const contactRoutes = require("./contact");
 
 // Sử dụng các routes
 router.use("/auth", authRoutes);
@@ -50,6 +52,9 @@ router.use("/settings", settingsRoute);
 router.use("/violations", violationsRoute);
 router.use("/images", imageRoutes);
 router.use("/backup", backupRestoreRoutes);
+
+router.use("/appeals", appealRoute); //
+router.use("/contact", contactRoutes); //
 
 router.use("/client-logs", clientLogsRouter); // aiChatRoutes
 router.use("/ai-chat", aiChatRoutes); // aiChatRoutes

@@ -100,7 +100,7 @@ const ProfileFriends = ({ userId }) => {
 
   return (
     <div>
-      <div className="card border-0 shadow-sm mb-3">
+      {/* <div className="card border-0 shadow-sm mb-3">
         <div className="card-body">
           <h5 className="mb-0">
             <i className="fas fa-users me-2"></i>
@@ -112,8 +112,17 @@ const ProfileFriends = ({ userId }) => {
             )}
           </h5>
         </div>
-      </div>
+      </div> */}
+      {!loading && friends.length > 0 && (
+        <div className="image-profile-header p-5">
+          <div className="header-content">
+            <h3>Bạn bè</h3>
+            <p>Tất cả Bạn bè</p>
 
+            <span className="image-count-badge">{friends.length} bạn bè</span>
+          </div>
+        </div>
+      )}
       <div className="friends-grid">
         {friends.map((friend) => (
           <Link

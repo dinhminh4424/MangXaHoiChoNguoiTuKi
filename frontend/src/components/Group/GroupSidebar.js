@@ -26,12 +26,12 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
       icon: <Users size={18} />,
       visible: true,
     },
-    {
-      id: "events",
-      label: "Sự kiện",
-      icon: <Calendar size={18} />,
-      visible: isMember,
-    },
+    // {
+    //   id: "events",
+    //   label: "Sự kiện",
+    //   icon: <Calendar size={18} />,
+    //   visible: isMember,
+    // },
     {
       id: "images",
       label: "Ảnh & Video",

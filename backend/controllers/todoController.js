@@ -147,14 +147,24 @@ exports.createTodo = async (req, res) => {
       estimatedTime,
       category,
       subtasks = [],
+      createdBy,
     } = req.body;
 
+    const userId = createdBy || (req.user ? req.user.userId : null);
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Không tìm thấy User ID. Vui lòng gửi kèm 'createdBy' hoặc đăng nhập.",
+      });
+    }
     const hasCalendarEvent = !!(start && end);
 
     const todoData = {
       title,
       description,
-      createdBy: req.user.userId,
+      createdBy: userId,
+      // createdBy: req.user.userId,
       type,
       color,
       location,
@@ -207,6 +217,127 @@ exports.createTodo = async (req, res) => {
       role: req.user.role,
       target: { type: "todo", id: newTodo._id.toString() },
       description: "Tạo todo mới",
+      payload: {
+        todoId: newTodo._id.toString(),
+        title,
+        type,
+        priority,
+        hasCalendarEvent,
+        isImportant,
+        attendeesCount: attendees.length,
+        subtasksCount: subtasks.length,
+        hasDueDate: !!dueDate,
+        hasReminder: !!reminder,
+      },
+    });
+
+    return res.status(201).json({
+      success: true,
+      message: "Tạo todo thành công",
+      todo: newTodo,
+    });
+  } catch (error) {
+    console.error("Lỗi tạo todo:", error);
+    return res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.createTodoAI = async (req, res) => {
+  try {
+    let {
+      title,
+      description,
+      start,
+      end,
+      type = "Task",
+      color,
+      location,
+      attendees = [],
+      isAllDay = false,
+      reminder,
+      priority = "medium",
+      dueDate,
+      tags = [],
+      isImportant = false,
+      estimatedTime,
+      category,
+      subtasks = [],
+      createdBy,
+    } = req.body;
+
+    console.log("req.body: ", req.body);
+
+    if (type == "Object") {
+      type = "Task";
+    }
+
+    const userId = createdBy || (req.user ? req.user.userId : null);
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message:
+          "Không tìm thấy User ID. Vui lòng gửi kèm 'createdBy' hoặc đăng nhập.",
+      });
+    }
+    const hasCalendarEvent = !!(start && end);
+
+    const todoData = {
+      title,
+      description,
+      createdBy: userId,
+      // createdBy: req.user.userId,
+      type,
+      color,
+      location,
+      attendees,
+      isAllDay,
+      reminder: reminder ? new Date(reminder) : undefined,
+      priority,
+      dueDate: dueDate ? new Date(dueDate) : undefined,
+      tags: Array.isArray(tags)
+        ? tags
+        : tags.split(",").map((tag) => tag.trim()),
+      isImportant,
+      category,
+      subtasks: Array.isArray(subtasks) ? subtasks : [],
+      hasCalendarEvent,
+    };
+
+    // Thêm calendar fields nếu có
+    if (hasCalendarEvent) {
+      todoData.start = new Date(start);
+      todoData.end = new Date(end);
+    }
+
+    // Xử lý estimatedTime
+    if (estimatedTime) {
+      if (typeof estimatedTime === "object") {
+        todoData.estimatedTime = estimatedTime;
+      } else if (typeof estimatedTime === "string") {
+        try {
+          todoData.estimatedTime = JSON.parse(estimatedTime);
+        } catch {
+          // Giữ nguyên default
+        }
+      }
+    }
+
+    const newTodo = new Todo(todoData);
+    await newTodo.save();
+
+    // Populate thông tin user
+    await newTodo.populate("createdBy", "username fullName profile.avatar");
+    await newTodo.populate("attendees", "username fullName profile.avatar");
+
+    // GHI LOG TẠO TODO
+    logUserActivity({
+      action: "todo.create",
+      req,
+      res,
+      userId: userId,
+      role: userId,
+      target: { type: "todo", id: newTodo._id.toString() },
+      description: "AI TẠO  todo mới",
       payload: {
         todoId: newTodo._id.toString(),
         title,

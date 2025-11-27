@@ -6,7 +6,8 @@ import Swal from "sweetalert2";
 
 const AuthContext = createContext();
 
-export const useAuth = () => { // ✅ Export useAuth
+export const useAuth = () => {
+  // ✅ Export useAuth
   return useContext(AuthContext);
 };
 
@@ -61,10 +62,6 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     const checkAuth = async () => {
       const storedToken = localStorage.getItem("token");
-      console.log(
-        "🔄 checkAuth started, token:",
-        storedToken ? "✅ Present" : "❌ Missing"
-      );
 
       if (!storedToken) {
         setUser(null);
@@ -197,7 +194,8 @@ export const AuthProvider = ({ children }) => {
       logout();
       return {
         success: false,
-        message: error.response?.data?.message || "Đăng nhập mạng xã hội thất bại",
+        message:
+          error.response?.data?.message || "Đăng nhập mạng xã hội thất bại",
       };
     }
   };
@@ -226,7 +224,8 @@ export const AuthProvider = ({ children }) => {
       return response.data;
     } catch (error) {
       console.error("Đăng ký lỗi:", error);
-      return { // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
+      return {
+        // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
         success: false,
         message: error.response?.data?.message || "Đăng ký thất bại" + error,
       };
@@ -260,7 +259,6 @@ export const AuthProvider = ({ children }) => {
       return updatedUser;
     });
   };
-
 
   // Hàm tải các cuộc trò chuyện của người dùng
   const loadUserChats = async () => {
@@ -300,7 +298,8 @@ export const AuthProvider = ({ children }) => {
       // ✅ SỬA LỖI: Cung cấp thông báo lỗi chi tiết hơn
       return {
         success: false,
-        message: error.response?.data?.message || "Yêu cầu đặt lại mật khẩu thất bại",
+        message:
+          error.response?.data?.message || "Yêu cầu đặt lại mật khẩu thất bại",
       };
     }
   };
@@ -329,7 +328,12 @@ export const AuthProvider = ({ children }) => {
       return response.data; // Trả về toàn bộ response để component xử lý
     } catch (error) {
       console.error("Lỗi khi điểm danh:", error);
-      return error.response?.data || { success: false, message: "Lỗi server không xác định" };
+      return (
+        error.response?.data || {
+          success: false,
+          message: "Lỗi server không xác định",
+        }
+      );
     }
   };
 
