@@ -87,8 +87,15 @@ const ProfilePosts = ({ userId }) => {
 
   return (
     <div className="profile-posts">
+      {!loading && userPosts.length > 0 && (
+        <div className="image-profile-header p-5">
+          <div className="header-content">
+            <h3>Bài viết</h3>
+          </div>
+        </div>
+      )}
       {/* Header với refresh button */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      {/* <div className="d-flex justify-content-between align-items-center mb-4">
         <h5 className="mb-0"> Bài viết</h5>
         <button
           className="btn btn-outline-primary btn-sm"
@@ -98,7 +105,7 @@ const ProfilePosts = ({ userId }) => {
           <RefreshCw size={16} className={refreshing ? "spinning" : ""} />
           <span className="ms-2">Làm mới</span>
         </button>
-      </div>
+      </div> */}
 
       {/* Loading State */}
       {loading && userPosts.length === 0 && (

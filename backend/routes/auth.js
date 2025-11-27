@@ -3,6 +3,9 @@ const express = require("express");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcryptjs"); // Ví dụ dùng bcrypt để so sánh mật khẩu
 const User = require("../models/User");
+const Post = require("../models/Post");
+const Follow = require("../models/Follow");
+const Friend = require("../models/Friend");
 const mailService = require("../services/mailService");
 const auth = require("../middleware/auth");
 const upload = require("../middleware/upload");
@@ -361,7 +364,7 @@ router.post("/login", async (req, res) => {
     // Kiểm tra password
     const isPasswordValid = await user.comparePassword(password);
     if (!isPasswordValid) {
-      return res.status(401).json({
+      return res.json({
         success: false,
         message: "Email hoặc mật khẩu không đúng",
       });
@@ -369,7 +372,7 @@ router.post("/login", async (req, res) => {
 
     // Kiểm tra hoạt động
     if (user.active == false) {
-      return res.status(401).json({
+      return res.json({
         success: false,
         message: "Tài Khoản Đã Bị Khoá",
       });
@@ -590,6 +593,14 @@ router.get("/me", authMiddleware, async (req, res) => {
       await user.save();
     }
 
+    const post = await Post.find({ userCreateID: user._id });
+    const countFriends = await Friend.countDocuments({
+      $or: [{ userA: user._id }, { userB: user._id }],
+    });
+    const countFollowers = await Follow.countDocuments({
+      following: user._id,
+    });
+
     // Trả về dữ liệu user đầy đủ, bao gồm cả thông tin khôi phục
     res.json({
       success: true,
@@ -599,6 +610,9 @@ router.get("/me", authMiddleware, async (req, res) => {
           canRestore: (user.weekly_recovery_uses || 0) < 2,
           streakToRestore: user.checkInStreak,
           id: user._id, // địt mẹ sửa phải nhìn nào có sải, sửa lỗi hệ thống
+          countPost: post.length,
+          countFriends,
+          countFollowers,
         },
       },
     });

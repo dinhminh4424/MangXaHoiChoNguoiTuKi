@@ -16,6 +16,7 @@ const ProfileJournal = ({ userId }) => {
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
   const [currentPage, setCurrentPage] = useState(1);
+  const [loading, setLoading] = useState(false);
 
   const isOwnProfile = !userId || userId === currentUser?.id;
 
@@ -92,10 +93,18 @@ const ProfileJournal = ({ userId }) => {
 
   return (
     <div className="space-y-4">
-      <div className="d-flex justify-content-between align-items-center">
-        <h5 className="mb-0"> Nhật ký {!isOwnProfile && "của người dùng"}</h5>
-        <span className="text-muted">{journalUserHistory.length} bài</span>
-      </div>
+      {!loading && journalUserHistory.length > 0 && (
+        <div className="image-profile-header p-5">
+          <div className="header-content">
+            <h3>Bộ sưu tập nhật kí</h3>
+            <p>Tất cả nhật kí</p>
+
+            <span className="image-count-badge">
+              {journalUserHistory.length} Nhật kí
+            </span>
+          </div>
+        </div>
+      )}
 
       <div className="row g-3">
         {journalUserHistory.map((journal) => (

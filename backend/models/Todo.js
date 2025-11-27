@@ -1,5 +1,3 @@
-
-
 // models/Todo.js
 const mongoose = require("mongoose");
 

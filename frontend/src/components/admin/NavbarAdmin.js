@@ -3,6 +3,7 @@ import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 import TooltipWrapper from "../TooltipWrapper";
 import AdminNotifications from "../notification/AdminNotifications";
+import "./NavbarAdmin.css";
 
 function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
   const { logout, user } = useAuth();
@@ -159,6 +160,11 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       ],
     },
     { path: "/admin/logs", icon: "ri-file-list-3-line", label: "System Logs" },
+    {
+      path: "/admin/appealsForUser",
+      icon: "ri-question-answer-line", //kháng nghị
+      label: "Quản lý hỗ trợ",
+    },
   ];
 
   return (
@@ -169,7 +175,17 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
           isCollapsed ? "sidebar-mini" : ""
         }`}
       >
-        <div id="sidebar-scrollbar">
+        <div
+          id="sidebar-scrollbar"
+          style={{
+            overflowY: "auto",
+            scrollbarWidth: "none", // Firefox
+            msOverflowStyle: "none", // IE/Edge
+          }}
+          onScroll={(e) => {
+            e.currentTarget.style.scrollbarWidth = "none";
+          }}
+        >
           <nav className="iq-sidebar-menu">
             <ul id="iq-sidebar-toggle" className="iq-menu">
               {/* Admin Header trong sidebar */}
@@ -192,73 +208,6 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                 </a>
               </li>
 
-              {/* {adminNavItems.map((item) => {
-                const hasChildren =
-                  Array.isArray(item.children) && item.children.length > 0;
-                const isActive = hasChildren
-                  ? isActiveParent(item.children.map((child) => child.path))
-                  : isActiveRoute(item.path);
-                const isExpanded = hasChildren && isActive;
-
-                return (
-                  <li key={item.path} className={isActive ? "active" : ""}>
-                    {hasChildren ? (
-                      <>
-                        <a
-                          href={`#${item.path.replace("/admin/", "")}`}
-                          data-bs-toggle="collapse"
-                          className={`collapsed ${
-                            isExpanded ? "" : "collapsed"
-                          }`}
-                          aria-expanded={isExpanded}
-                        >
-                          <i className={item.icon}></i>
-                          <span>{item.label}</span>
-                          <i className="ri-arrow-right-s-line iq-arrow-right"></i>
-                        </a>
-                        <ul
-                          id={item.path.replace("/admin/", "")}
-                          className={`iq-submenu ${
-                            isExpanded ? "show" : "collapse"
-                          }`}
-                          data-bs-parent="#iq-sidebar-toggle"
-                        >
-                          {item.children.map((child) => (
-                            <li
-                              key={child.path}
-                              className={
-                                isActiveRoute(child.path) ? "active" : ""
-                              }
-                            >
-                              <Link
-                                to={child.path}
-                                className={
-                                  isActiveRoute(child.path) ? "active" : ""
-                                }
-                              >
-                                <i className={child.icon}></i>
-                                <span>{child.label}</span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : (
-                      <TooltipWrapper title={item.label} placement="right">
-                        <Link
-                          to={item.path}
-                          className={`nav-link ${
-                            isActiveRoute(item.path) ? "active" : ""
-                          }`}
-                        >
-                          <i className={item.icon}></i>
-                          <span>{item.label}</span>
-                        </Link>
-                      </TooltipWrapper>
-                    )}
-                  </li>
-                );
-              })} */}
               {adminNavItems.map((item, idx) => {
                 const childrenArr = Array.isArray(item.children)
                   ? item.children

@@ -17,7 +17,7 @@ const Profile = () => {
   const { isOwnProfile, viewMyProfile, viewedUser } = useProfile();
   const { user: currentUser } = useAuth();
   const navigate = useNavigate();
-  const [activeTab, setActiveTab] = useState("posts");
+  const [activeTab, setActiveTab] = useState("edit");
   const [isVerified, setIsVerified] = useState(false);
   const [checkViewProfile, setCheckViewProfile] = useState(true);
 
@@ -32,7 +32,6 @@ const Profile = () => {
         //  const res = await api.get(`/api/users/${userIdParam}`);
         const res = await api.get(`/api/users/${userId}`);
 
-        console.log("res: ", res);
         const verified = res.data.success && res.data.data.checkViewProfile;
 
         setCheckViewProfile(verified);

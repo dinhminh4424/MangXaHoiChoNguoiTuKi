@@ -2,6 +2,7 @@ const Post = require("../models/Post");
 const Comment = require("../models/Comment");
 const User = require("../models/User");
 const Friend = require("../models/Friend"); // Đảm bảo đã import Friend
+const GroupMember = require("../models/GroupMember"); // Đảm bảo đã import Friend
 
 const FileManager = require("../utils/FileManager");
 const Violation = require("../models/Violation");
@@ -55,6 +56,19 @@ exports.createPost = async (req, res) => {
           fileSize: file.size,
         };
       });
+    }
+
+    if (groupId) {
+      const check = await GroupMember.find({
+        groupId: groupId,
+        userId: userCreateID,
+      });
+      if (check.length == 0) {
+        return res.status(504).json({
+          success: false,
+          message: "Bạn ko phải là thành viên của Group",
+        });
+      }
     }
 
     const newPost = new Post({

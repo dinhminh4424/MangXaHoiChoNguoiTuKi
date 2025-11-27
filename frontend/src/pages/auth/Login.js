@@ -103,10 +103,10 @@ const Login = () => {
         // Hiển thị lỗi bằng SweetAlert2
         notificationService.error({
           title: "Đăng nhập thất bại",
-          text: result.message,
+          text: result.message?.toString(),
           confirmButtonText: "Thử lại",
         });
-        setError(result.message);
+        setError(result.message?.toString());
       }
     } catch (error) {
       console.error("Login error:", error);
@@ -248,12 +248,12 @@ const Login = () => {
                   <label className="form-label" htmlFor="password">
                     Mật Khẩu
                   </label>
-                  <Link
-                    to="/forgot-password"
+                  <a
+                    href="/forgot-password"
                     className="float-end text-decoration-none"
                   >
                     Quên mật khẩu?
-                  </Link>
+                  </a>
                   <input
                     type="password"
                     className="form-control mb-0"
@@ -278,9 +278,10 @@ const Login = () => {
                     </label>
                   </div>
                   <button
-                    type="submit"
+                    // type="submit"
                     className="btn btn-primary float-end py-2"
                     disabled={loading}
+                    onClick={handleSubmit}
                   >
                     {loading ? (
                       <>

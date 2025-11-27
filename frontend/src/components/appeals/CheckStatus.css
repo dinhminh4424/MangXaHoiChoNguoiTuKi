@@ -1,0 +1,353 @@
+/* CheckStatus.css - Modern & Professional */
+.status-check-container {
+  padding: 2rem 0;
+  min-height: 100vh;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  background-attachment: fixed;
+}
+
+/* Hero Section */
+.status-check-hero {
+  /* color: white; */
+}
+
+.status-check-hero-icon {
+  margin-bottom: 1.5rem;
+}
+
+.status-check-title {
+  font-weight: 800;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  /* background: linear-gradient(135deg, #fff 0%, #e3f2fd 100%); */
+  /* -webkit-background-clip: text; */
+  /* -webkit-text-fill-color: transparent; */
+  background-clip: text;
+}
+
+.status-check-subtitle {
+  font-size: 1.2rem;
+  opacity: 0.9;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Search Card */
+.status-check-search-card {
+  border: none;
+  border-radius: 20px;
+  /* background: rgba(255, 255, 255, 0.95); */
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.status-check-search-title {
+  font-weight: 700;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+}
+
+.status-check-search-subtitle {
+  font-size: 0.95rem;
+}
+
+.status-check-form-label {
+  font-weight: 600;
+  color: #2c3e50;
+  margin-bottom: 0.5rem;
+  font-size: 0.95rem;
+}
+
+.status-check-form-input {
+  border-radius: 12px;
+  border: 2px solid #e9ecef;
+  padding: 12px 16px;
+  font-size: 16px;
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.status-check-form-input:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.15);
+  transform: translateY(-1px);
+}
+
+.status-check-search-btn {
+  border-radius: 12px;
+  padding: 14px 20px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  transition: all 0.3s ease;
+  border: none;
+  background: linear-gradient(135deg, #28a745, #20c997);
+  box-shadow: 0 4px 15px rgba(40, 167, 69, 0.3);
+}
+
+.status-check-search-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(40, 167, 69, 0.4);
+}
+
+.status-check-search-btn:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+/* Quick Actions */
+.status-check-quick-actions {
+  border-top-color: rgba(0, 0, 0, 0.1) !important;
+}
+
+.status-check-action-btn {
+  border-radius: 10px;
+  padding: 10px 16px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: 2px solid;
+}
+
+.status-check-action-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Results Section */
+.status-check-results-section {
+  animation: fadeInUp 0.6s ease;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.status-check-loading-card {
+  border: none;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.status-check-results-card {
+  border: none;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.status-check-results-header {
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
+  color: white;
+  padding: 1.5rem 2rem;
+  border: none;
+}
+
+.status-check-results-header h4 {
+  margin: 0;
+  font-weight: 700;
+}
+
+/* Appeal Items */
+.status-check-appeals-list {
+  background: #fff;
+}
+
+.status-check-appeal-item {
+  transition: all 0.3s ease;
+  background: #fff;
+}
+
+.status-check-appeal-item:hover {
+  background: #f8f9fa;
+}
+
+.status-check-appeal-content {
+  transition: all 0.3s ease;
+}
+
+.status-check-appeal-main {
+  flex: 1;
+}
+
+.status-check-appeal-reason {
+  font-weight: 700;
+  color: #2c3e50;
+  font-size: 1.1rem;
+}
+
+/* Status Badge */
+.status-check-badge-container {
+  text-align: right;
+  min-width: 180px;
+}
+
+.status-check-badge {
+  padding: 8px 16px;
+  border-radius: 25px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border: 2px solid transparent;
+}
+
+.status-check-badge-description {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.75rem;
+  color: #6c757d;
+  max-width: 180px;
+}
+
+/* Detail Items */
+.status-check-detail-item {
+  display: flex;
+  align-items: center;
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border-radius: 8px;
+  margin-bottom: 8px;
+}
+
+.status-check-detail-item strong {
+  color: #2c3e50;
+  min-width: 120px;
+  font-size: 0.9rem;
+}
+
+.status-check-detail-item span {
+  color: #495057;
+  font-size: 0.9rem;
+}
+
+/* Message Container */
+.status-check-message-container {
+  background: #f8f9fa;
+  border-radius: 10px;
+  padding: 1rem;
+  border-left: 4px solid #007bff;
+}
+
+.status-check-message-label {
+  color: #2c3e50;
+  font-size: 0.9rem;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.status-check-message-content {
+  color: #495057;
+  line-height: 1.6;
+  font-size: 0.95rem;
+}
+
+/* Admin Notes */
+.status-check-admin-notes {
+  border: none;
+  border-radius: 10px;
+  border-left: 4px solid #17a2b8;
+  background: #e8f4f8;
+}
+
+.status-check-admin-notes-title {
+  font-size: 0.95rem;
+  color: #0c5460;
+  margin-bottom: 0.5rem;
+}
+
+.status-check-admin-notes-text {
+  color: #0c5460;
+  line-height: 1.6;
+  font-size: 0.9rem;
+}
+
+.status-check-admin-notes-time {
+  font-size: 0.8rem;
+}
+
+/* Empty State */
+.status-check-empty-card {
+  border: none;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.status-check-new-appeal-btn {
+  border-radius: 10px;
+  padding: 10px 24px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.status-check-new-appeal-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 123, 255, 0.3);
+}
+
+/* Info Card */
+.status-check-info-card {
+  border: none;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(10px);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .status-check-container {
+    padding: 1rem;
+  }
+
+  .status-check-title {
+    font-size: 2rem;
+  }
+
+  .status-check-subtitle {
+    font-size: 1rem;
+  }
+
+  .status-check-search-card {
+    margin: 0 -1rem;
+    border-radius: 0;
+  }
+
+  .status-check-badge-container {
+    text-align: left;
+    margin-top: 1rem;
+  }
+
+  .status-check-detail-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .status-check-detail-item strong {
+    min-width: auto;
+    margin-bottom: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .status-check-title {
+    font-size: 1.75rem;
+  }
+
+  .status-check-hero-icon svg {
+    width: 60px;
+    height: 60px;
+  }
+
+  .status-check-appeal-content {
+    padding: 1rem !important;
+  }
+
+  .status-check-results-header {
+    padding: 1rem 1.5rem;
+  }
+}

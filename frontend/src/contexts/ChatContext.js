@@ -380,12 +380,13 @@ export const ChatProvider = ({ children }) => {
 
   // Create new conversation
   const createConversation = useCallback(
-    async (memberIds, isGroup = false, groupName = null) => {
+    async (memberIds, isGroup = false, groupName = null, isHidden = false) => {
       try {
         const response = await api.post("/api/chat/conversation", {
           members: memberIds,
           isGroup,
           name: groupName,
+          isHidden,
         });
 
         if (response.data.success) {
@@ -406,12 +407,19 @@ export const ChatProvider = ({ children }) => {
 
   // Trong ChatContext.js - sửa hàm startConversation
   const startConversation = useCallback(
-    async (otherUserId) => {
+    async (otherUserId, isHidden = true) => {
       try {
+        console.log("isHidden: ", isHidden);
+
         console.log("🚀 Bắt đầu conversation với:", otherUserId);
         console.log("👤 User hiện tại:", user.id);
 
-        const result = await createConversation([otherUserId], false);
+        const result = await createConversation(
+          [otherUserId],
+          false,
+          "",
+          isHidden
+        );
 
         console.log("📋 Kết quả createConversation:", {
           success: result.success,

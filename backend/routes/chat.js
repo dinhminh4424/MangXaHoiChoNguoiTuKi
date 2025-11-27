@@ -162,7 +162,16 @@ const router = express.Router();
 
 router.post("/conversation", auth, async (req, res) => {
   try {
-    const { members, isGroup = false, name, description } = req.body;
+    const {
+      members,
+      isGroup = false,
+      name,
+      description,
+      isHidden = false,
+    } = req.body;
+
+    console.log("isHidden: ", isHidden);
+
     const currentUserId = req.user.userId;
 
     // 1. Tạo danh sách thành viên + loại trùng + SẮP XẾP THEO ID
@@ -208,7 +217,7 @@ router.post("/conversation", auth, async (req, res) => {
       members: sortedMembers,
       isGroup,
       createdBy: currentUserId,
-      userUnBlock: [...allMembers],
+      userUnBlock: !isHidden ? [] : [...allMembers],
     };
 
     if (isGroup) {

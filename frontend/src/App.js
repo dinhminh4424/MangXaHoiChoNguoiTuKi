@@ -26,6 +26,8 @@ import Register from "./pages/auth/Register";
 import ForgotPassword from "./pages/auth/ForgotPassword";
 
 import Home from "./pages/Home";
+import HomeContact from "./pages/social/HomeContact";
+import About from "./pages/social/About";
 import Chat from "./pages/chat/Chat";
 import Feed from "./pages/social/Feed";
 import Profile from "./pages/social/Profile";
@@ -88,6 +90,10 @@ import BackupManagement from "./pages/admin/backup/BackupManagement";
 
 import AdminSecurity from "./pages/admin/security/AdminSecurity";
 
+import AppealForm from "./components/appeals/AppealForm";
+import CheckStatusAppeal from "./components/appeals/CheckStatus";
+import AdminAppeals from "./components/admin/appeals/AdminAppeals";
+
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
@@ -135,6 +141,8 @@ const routeConfigs = [
   { path: "/faceLoginImage", component: FaceLoginImage, isPublic: true },
   { path: "/register", component: Register, isPublic: true },
   { path: "/forgot-password", component: ForgotPassword, isPublic: true },
+  { path: "/AppealForm", component: AppealForm, isPublic: true },
+  { path: "/appealCheckStatus", component: CheckStatusAppeal, isPublic: true },
 
   { path: "/test", component: Test, layout: UserLayout },
   { path: "/aiChat", component: AIChat, layout: UserLayout },
@@ -155,6 +163,8 @@ const routeConfigs = [
   { path: "/posts/createPost", component: CreatePost, layout: UserLayout },
   { path: "/posts/edit/:postId", component: UpdatePost, layout: UserLayout },
   { path: "/explore", component: Explore, layout: UserLayout },
+  { path: "/homeContact", component: HomeContact, layout: UserLayout },
+  { path: "/about", component: About, layout: UserLayout },
 
   // Protected User Routes - Group
   { path: "/group", component: Group, layout: UserLayout },
@@ -198,9 +208,16 @@ const routeConfigs = [
   { path: "/violations", component: ViolationHistory, layout: UserLayout },
 
   // Admin Routes
+
   {
     path: "/admin",
     component: AdminDashboard,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/appealsForUser",
+    component: AdminAppeals,
     layout: AdminLayout,
     isAdmin: true,
   },

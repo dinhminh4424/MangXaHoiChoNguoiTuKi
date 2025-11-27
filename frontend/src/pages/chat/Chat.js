@@ -105,18 +105,43 @@ const Chat = () => {
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     const now = new Date();
-    const diffInHours = (now - date) / (1000 * 60 * 60);
 
-    if (diffInHours < 24) {
+    const diffInMs = now - date;
+    const diffInHours = diffInMs / (1000 * 60 * 60);
+
+    // Tạo các giá trị cho so sánh ngày
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+    const dateDay = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+
+    // Nếu là hôm nay
+    if (dateDay.getTime() === today.getTime()) {
       return date.toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       });
-    } else if (diffInHours < 48) {
-      return "Hôm qua";
-    } else {
-      return date.toLocaleDateString();
     }
+
+    // Nếu là hôm qua
+    if (dateDay.getTime() === yesterday.getTime()) {
+      return (
+        "Hôm qua, " +
+        date.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+      );
+    }
+
+    // Nếu cách hơn 2 ngày thì hiển thị ngày đầy đủ
+    const datePart = date.toLocaleDateString(); // VD: "26/11/2025"
+    const timePart = date.toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+    }); // VD: "14:32"
+    return `${timePart}, ${datePart} `;
   };
 
   const hasStartedConversation = useRef(false);
@@ -148,7 +173,7 @@ const Chat = () => {
           await selectChat(existingConv);
         } else {
           console.log("🆕 Tạo conversation mới");
-          await startConversation(chatUserId);
+          await startConversation(chatUserId, false);
         }
       } catch (error) {
         console.error("Lỗi khi bắt đầu chat:", error);
@@ -1423,8 +1448,7 @@ const Chat = () => {
                                               setShowDeleteConfirm(message._id)
                                             }
                                           >
-                                            <i className="ri-delete-bin-line"></i>{" "}
-                                            Xoá
+                                            <i className="ri-delete-bin-line"></i>
                                           </button>
                                           <TextReaderAdvanced
                                             text={message.content || "Khác"}
@@ -1441,8 +1465,7 @@ const Chat = () => {
                                                 )
                                               }
                                             >
-                                              <i className="ri-time-line"></i>{" "}
-                                              Thu hồi
+                                              <i className="ri-time-line"></i>
                                             </button>
                                           )}
                                         </div>

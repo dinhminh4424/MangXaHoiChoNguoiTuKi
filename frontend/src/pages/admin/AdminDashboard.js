@@ -143,75 +143,90 @@ const DashboardFilters = ({
 
   return (
     <div className="dashboard-filters">
-      <div className="filters-group">
-        <div className="filter-control">
-          <label>Khoảng thời gian</label>
-          <select
-            value={filters.range}
-            onChange={(event) => onFilterChange("range", event.target.value)}
-          >
-            {RANGE_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
-        {filters.range === "custom" && (
-          <>
-            <div className="filter-control">
-              <label>Từ ngày</label>
-              <input
-                type="date"
-                value={filters.startDate}
-                onChange={(event) =>
-                  onFilterChange("startDate", event.target.value)
-                }
-              />
-            </div>
-            <div className="filter-control">
-              <label>Đến ngày</label>
-              <input
-                type="date"
-                value={filters.endDate}
-                onChange={(event) =>
-                  onFilterChange("endDate", event.target.value)
-                }
-              />
-            </div>
-          </>
-        )}
-
-        <div className="filter-control">
-          <label>Nhóm theo</label>
-          <select
-            value={filters.groupBy}
-            onChange={(event) => onFilterChange("groupBy", event.target.value)}
-          >
-            {GROUP_OPTIONS.map((option) => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
+      <div className="filters-header">
+        <h2>Bộ lọc dữ liệu</h2>
+        <div className="filters-meta">
+          <div className="meta-info">
+            <span className="meta-label">Khoảng dữ liệu:</span>
+            <span className="meta-value">
+              {rangeStartLabel} - {rangeEndLabel}
+            </span>
+          </div>
+          <div className="meta-info">
+            <span className="meta-label">Cập nhật lần cuối:</span>
+            <span className="meta-value">
+              {lastUpdated
+                ? dayjs(lastUpdated).format("HH:mm:ss DD/MM/YYYY")
+                : "Chưa có"}
+            </span>
+          </div>
         </div>
       </div>
 
-      <div className="filters-meta">
-        <div className="meta-row">
-          <span>
-            Khoảng dữ liệu: {rangeStartLabel} - {rangeEndLabel}
-          </span>
-          <span>
-            Cập nhật lần cuối:
-            {lastUpdated
-              ? ` ${dayjs(lastUpdated).format("HH:mm:ss DD/MM/YYYY")}`
-              : " Chưa có"}
-          </span>
+      <div className="filters-content">
+        <div className="filters-group">
+          <div className="filter-control">
+            <label className="filter-label">Khoảng thời gian</label>
+            <select
+              className="filter-select"
+              value={filters.range}
+              onChange={(event) => onFilterChange("range", event.target.value)}
+            >
+              {RANGE_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {filters.range === "custom" && (
+            <>
+              <div className="filter-control">
+                <label className="filter-label">Từ ngày</label>
+                <input
+                  type="date"
+                  className="filter-input"
+                  value={filters.startDate}
+                  onChange={(event) =>
+                    onFilterChange("startDate", event.target.value)
+                  }
+                />
+              </div>
+              <div className="filter-control">
+                <label className="filter-label">Đến ngày</label>
+                <input
+                  type="date"
+                  className="filter-input"
+                  value={filters.endDate}
+                  onChange={(event) =>
+                    onFilterChange("endDate", event.target.value)
+                  }
+                />
+              </div>
+            </>
+          )}
+
+          <div className="filter-control">
+            <label className="filter-label">Nhóm theo</label>
+            <select
+              className="filter-select"
+              value={filters.groupBy}
+              onChange={(event) =>
+                onFilterChange("groupBy", event.target.value)
+              }
+            >
+              {GROUP_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
         </div>
+
         <button
-          className="btn btn-outline-primary"
+          className="refresh-btn"
           onClick={onRefresh}
           disabled={isRefreshing}
         >
@@ -235,6 +250,47 @@ const DashboardFilters = ({
     </div>
   );
 };
+
+const MetricCard = ({
+  title,
+  value,
+  description,
+  icon,
+  trend,
+  className = "",
+}) => (
+  <div className={`metric-card ${className}`}>
+    <div className="metric-header">
+      <div className="metric-icon">
+        <i className={icon}></i>
+      </div>
+      <div className="metric-trend">
+        {trend && (
+          <span className={`trend-indicator ${trend.direction}`}>
+            {trend.direction === "up" ? "↗" : "↘"} {trend.value}
+          </span>
+        )}
+      </div>
+    </div>
+    <div className="metric-content">
+      <h3 className="metric-value">{value}</h3>
+      <p className="metric-title">{title}</p>
+      {description && <p className="metric-description">{description}</p>}
+    </div>
+  </div>
+);
+
+const ChartContainer = ({ title, subtitle, children, className = "" }) => (
+  <div className={`chart-container ${className}`}>
+    <div className="chart-header">
+      <div>
+        <h3 className="chart-title">{title}</h3>
+        {subtitle && <p className="chart-subtitle">{subtitle}</p>}
+      </div>
+    </div>
+    <div className="chart-content">{children}</div>
+  </div>
+);
 
 const AdminDashboard = () => {
   const { user } = useAuth();
@@ -336,6 +392,10 @@ const AdminDashboard = () => {
         total: totals.totalUsers,
         period: period.users,
         icon: SUMMARY_ICONS.users,
+        trend: {
+          direction: period.users > 0 ? "up" : "neutral",
+          value: `+${formatNumber(period.users || 0)}`,
+        },
       },
       {
         key: "activeUsers",
@@ -350,6 +410,10 @@ const AdminDashboard = () => {
         total: totals.totalPosts,
         period: period.posts,
         icon: SUMMARY_ICONS.posts,
+        trend: {
+          direction: period.posts > 0 ? "up" : "neutral",
+          value: `+${formatNumber(period.posts || 0)}`,
+        },
       },
       {
         key: "comments",
@@ -357,6 +421,10 @@ const AdminDashboard = () => {
         total: totals.totalComments,
         period: period.comments,
         icon: SUMMARY_ICONS.comments,
+        trend: {
+          direction: period.comments > 0 ? "up" : "neutral",
+          value: `+${formatNumber(period.comments || 0)}`,
+        },
       },
       {
         key: "messages",
@@ -385,6 +453,10 @@ const AdminDashboard = () => {
         total: totals.totalLikes,
         period: period.likes,
         icon: SUMMARY_ICONS.likes,
+        trend: {
+          direction: period.likes > 0 ? "up" : "neutral",
+          value: `+${formatNumber(period.likes || 0)}`,
+        },
       },
       {
         key: "violations",
@@ -489,15 +561,16 @@ const AdminDashboard = () => {
 
   return (
     <div className="admin-dashboard">
-      <div className="dashboard-heading">
-        <div>
-          <h1>Dashboard Admin</h1>
-          <p>
-            Chào mừng, {user?.username || "Admin"}! Theo dõi sức khỏe hệ thống
-            và các chỉ số quan trọng.
+      <div className="dashboard-header">
+        <div className="header-content">
+          <h1 className="dashboard-title">Quản trị hệ thống</h1>
+          <p className="dashboard-subtitle">
+            Chào mừng, <strong>{user?.username || "Admin"}</strong>! Theo dõi
+            sức khỏe hệ thống và các chỉ số quan trọng.
           </p>
         </div>
       </div>
+
       <DashboardFilters
         filters={filters}
         onFilterChange={handleFilterChange}
@@ -508,77 +581,85 @@ const AdminDashboard = () => {
       />
 
       {error && (
-        <div className="dashboard-alert alert alert-warning" role="alert">
-          {error}
-          <button
-            className="btn btn-link ms-3 p-0 align-baseline"
-            onClick={() =>
-              queryParams &&
-              fetchDashboardStats({ silent: false, params: queryParams })
-            }
-          >
-            Thử lại
-          </button>
+        <div className="alert-container">
+          <div className="alert alert-warning" role="alert">
+            <div className="alert-content">
+              <i className="ri-alert-line alert-icon"></i>
+              <span>{error}</span>
+            </div>
+            <button
+              className="btn btn-link alert-action"
+              onClick={() =>
+                queryParams &&
+                fetchDashboardStats({ silent: false, params: queryParams })
+              }
+            >
+              Thử lại
+            </button>
+          </div>
         </div>
       )}
 
       {loading && !hasStats ? (
         <div className="loading-container">
-          <div className="spinner-border text-primary" role="status">
-            <span className="visually-hidden">Loading...</span>
+          <div className="loading-spinner">
+            <div className="spinner-border text-primary" role="status">
+              <span className="visually-hidden">Loading...</span>
+            </div>
           </div>
-          <p>Đang tải thống kê...</p>
+          <p className="loading-text">Đang tải thống kê...</p>
         </div>
       ) : hasStats ? (
         <>
-          <div className="overview-grid">
+          <div className="metrics-grid">
             {overviewCards.map((card) => (
-              <div key={card.key} className="overview-card">
-                <div className="overview-icon">
-                  <i className={card.icon}></i>
-                </div>
-                <div className="overview-content">
-                  <h3>{card.label}</h3>
-                  <div className="overview-metric">
-                    <span className="total">{formatNumber(card.total)}</span>
-                    <span className="period">
-                      +{formatNumber(card.period || 0)} kỳ này
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <MetricCard
+                key={card.key}
+                title={card.label}
+                value={formatNumber(card.total)}
+                icon={card.icon}
+                trend={card.trend}
+                className={card.key}
+              />
             ))}
           </div>
 
           {growthCards.length > 0 && (
-            <div className="growth-grid">
-              {growthCards.map((item) => (
-                <div key={item.key} className="growth-card">
-                  <span className="label">{item.label}</span>
-                  <div className="value">{formatNumber(item.delta)}</div>
-                  <span
-                    className={`trend ${item.growthRate >= 0 ? "up" : "down"}`}
-                  >
-                    {item.growthRate >= 0 ? "▲" : "▼"}{" "}
-                    {Math.abs(item.growthRate).toFixed(2)}%
-                  </span>
-                </div>
-              ))}
+            <div className="growth-section">
+              <h3 className="section-title">Tăng trưởng</h3>
+              <div className="growth-grid">
+                {growthCards.map((item) => (
+                  <div key={item.key} className="growth-card">
+                    <span className="growth-label">{item.label}</span>
+                    <div className="growth-value">
+                      {formatNumber(item.delta)}
+                    </div>
+                    <span
+                      className={`growth-trend ${
+                        item.growthRate >= 0 ? "up" : "down"
+                      }`}
+                    >
+                      {item.growthRate >= 0 ? "↗" : "↘"}{" "}
+                      {Math.abs(item.growthRate).toFixed(2)}%
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
-          <div className="analytics-grid">
-            <div className="chart-card wide">
-              <div className="card-header">
-                <h2>Xu hướng nội dung</h2>
-                <span className="range-label">
-                  {requestedRange?.periodDays
-                    ? `${requestedRange.periodDays} ngày`
-                    : ""}
-                </span>
-              </div>
+          <div className="charts-grid">
+            <ChartContainer
+              title="Xu hướng nội dung"
+              subtitle={`${
+                requestedRange?.periodDays
+                  ? `${requestedRange.periodDays} ngày`
+                  : ""
+              }`}
+              className="wide"
+            >
               {timelineData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <AreaChart
                     data={timelineData}
                     margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
@@ -657,7 +738,7 @@ const AdminDashboard = () => {
                         />
                       </linearGradient>
                     </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e9f2" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="date"
                       tickFormatter={(value) =>
@@ -668,7 +749,14 @@ const AdminDashboard = () => {
                       }
                     />
                     <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend />
                     <Area
                       type="monotone"
@@ -705,21 +793,21 @@ const AdminDashboard = () => {
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">Chưa có dữ liệu cho biểu đồ.</div>
+                <div className="empty-state">
+                  <i className="ri-bar-chart-line empty-icon"></i>
+                  <p>Chưa có dữ liệu cho biểu đồ</p>
+                </div>
               )}
-            </div>
+            </ChartContainer>
 
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Người dùng & Tương tác</h2>
-              </div>
+            <ChartContainer title="Người dùng & Tương tác">
               {timelineData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <LineChart
                     data={timelineData}
                     margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e9f2" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="date"
                       tickFormatter={(value) =>
@@ -730,7 +818,14 @@ const AdminDashboard = () => {
                       }
                     />
                     <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend />
                     <Line
                       type="monotone"
@@ -751,24 +846,31 @@ const AdminDashboard = () => {
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">Chưa có dữ liệu cho biểu đồ.</div>
+                <div className="empty-state">
+                  <i className="ri-line-chart-line empty-icon"></i>
+                  <p>Chưa có dữ liệu cho biểu đồ</p>
+                </div>
               )}
-            </div>
+            </ChartContainer>
 
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Vi phạm theo trạng thái</h2>
-              </div>
+            <ChartContainer title="Vi phạm theo trạng thái">
               {violationStatusData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <BarChart
                     data={violationStatusData}
                     margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e4e9f2" />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis dataKey="label" />
                     <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Bar
                       dataKey="count"
                       fill={AREA_COLORS.violations}
@@ -778,17 +880,15 @@ const AdminDashboard = () => {
                 </ResponsiveContainer>
               ) : (
                 <div className="empty-state">
-                  Không có báo cáo vi phạm trong giai đoạn này.
+                  <i className="ri-bar-chart-line empty-icon"></i>
+                  <p>Không có báo cáo vi phạm</p>
                 </div>
               )}
-            </div>
+            </ChartContainer>
 
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Phân bổ vi phạm theo đối tượng</h2>
-              </div>
+            <ChartContainer title="Phân bổ vi phạm theo đối tượng">
               {violationTargetData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={violationTargetData}
@@ -805,21 +905,28 @@ const AdminDashboard = () => {
                         />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">Không có dữ liệu vi phạm.</div>
+                <div className="empty-state">
+                  <i className="ri-pie-chart-line empty-icon"></i>
+                  <p>Không có dữ liệu vi phạm</p>
+                </div>
               )}
-            </div>
+            </ChartContainer>
 
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Phân bổ cảm xúc</h2>
-              </div>
+            <ChartContainer title="Phân bổ cảm xúc">
               {moodPieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={moodPieData}
@@ -835,21 +942,28 @@ const AdminDashboard = () => {
                         />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">Chưa có dữ liệu cảm xúc.</div>
+                <div className="empty-state">
+                  <i className="ri-pie-chart-line empty-icon"></i>
+                  <p>Chưa có dữ liệu cảm xúc</p>
+                </div>
               )}
-            </div>
+            </ChartContainer>
 
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Phân bổ nội dung</h2>
-              </div>
+            <ChartContainer title="Phân bổ nội dung">
               {contentPieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={contentPieData}
@@ -866,67 +980,44 @@ const AdminDashboard = () => {
                         />
                       ))}
                     </Pie>
-                    <Tooltip formatter={(value) => formatNumber(value)} />
+                    <Tooltip
+                      formatter={(value) => formatNumber(value)}
+                      contentStyle={{
+                        borderRadius: "8px",
+                        border: "none",
+                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
+                      }}
+                    />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">Không có dữ liệu nội dung.</div>
+                <div className="empty-state">
+                  <i className="ri-pie-chart-line empty-icon"></i>
+                  <p>Không có dữ liệu nội dung</p>
+                </div>
               )}
-            </div>
-
-            <div className="chart-card">
-              <div className="card-header">
-                <h2>Tương tác nổi bật</h2>
-              </div>
-              {interactionPieData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={320}>
-                  <PieChart>
-                    <Pie
-                      data={interactionPieData}
-                      dataKey="value"
-                      nameKey="name"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
-                    >
-                      {interactionPieData.map((entry, index) => (
-                        <Cell
-                          key={`interaction-${entry.name}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(value) => formatNumber(value)} />
-                    <Legend />
-                  </PieChart>
-                </ResponsiveContainer>
-              ) : (
-                <div className="empty-state">Chưa có dữ liệu tương tác.</div>
-              )}
-            </div>
+            </ChartContainer>
           </div>
 
-          <div className="dashboard-sections">
-            <div className="section">
-              <h2>Người dùng mới</h2>
-              <div className="recent-list">
+          <div className="activity-sections">
+            <div className="activity-section">
+              <h3 className="section-title">Người dùng mới</h3>
+              <div className="activity-list">
                 {recentUsers.length ? (
                   recentUsers.map((recentUser) => (
-                    <div key={recentUser._id} className="recent-item">
-                      <div className="user-info">
-                        <div className="avatar">
-                          <i className="ri-user-line"></i>
-                        </div>
-                        <div className="details">
-                          <h4>{recentUser.username}</h4>
-                          <p>{recentUser.email}</p>
-                          <small>
-                            {recentUser.createdAt
-                              ? dayjs(recentUser.createdAt).format("DD/MM/YYYY")
-                              : ""}
-                          </small>
-                        </div>
+                    <div key={recentUser._id} className="activity-item">
+                      <div className="activity-avatar">
+                        <i className="ri-user-line"></i>
+                      </div>
+                      <div className="activity-content">
+                        <h4 className="activity-name">{recentUser.username}</h4>
+                        <p className="activity-meta">{recentUser.email}</p>
+                        <span className="activity-date">
+                          {recentUser.createdAt
+                            ? dayjs(recentUser.createdAt).format("DD/MM/YYYY")
+                            : ""}
+                        </span>
                       </div>
                       <span className={`role-badge role-${recentUser.role}`}>
                         {recentUser.role}
@@ -934,39 +1025,44 @@ const AdminDashboard = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">Không có người dùng mới.</div>
+                  <div className="empty-state">
+                    <i className="ri-user-line empty-icon"></i>
+                    <p>Không có người dùng mới</p>
+                  </div>
                 )}
               </div>
             </div>
 
-            <div className="section">
-              <h2>Bài viết gần đây</h2>
-              <div className="recent-list">
+            <div className="activity-section">
+              <h3 className="section-title">Bài viết gần đây</h3>
+              <div className="activity-list">
                 {recentPosts.length ? (
                   recentPosts.map((post) => (
-                    <div key={post._id} className="recent-item">
-                      <div className="post-info">
-                        <div className="avatar">
-                          <i className="ri-file-text-line"></i>
-                        </div>
-                        <div className="details">
-                          <h4>{post.userCreateID?.username || "Ẩn danh"}</h4>
-                          <p>{trimText(post.content, 80)}</p>
-                          <small>
-                            {post.createdAt
-                              ? dayjs(post.createdAt).format("DD/MM/YYYY")
-                              : ""}
-                          </small>
-                        </div>
+                    <div key={post._id} className="activity-item">
+                      <div className="activity-avatar">
+                        <i className="ri-file-text-line"></i>
                       </div>
-                      <div className="post-stats">
-                        <span>
+                      <div className="activity-content">
+                        <h4 className="activity-name">
+                          {post.userCreateID?.username || "Ẩn danh"}
+                        </h4>
+                        <p className="activity-text">
+                          {trimText(post.content, 80)}
+                        </p>
+                        <span className="activity-date">
+                          {post.createdAt
+                            ? dayjs(post.createdAt).format("DD/MM/YYYY")
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="activity-stats">
+                        <span className="stat">
                           <i className="ri-heart-line"></i>{" "}
                           {formatNumber(
                             post.likeCount || post.likes?.length || 0
                           )}
                         </span>
-                        <span>
+                        <span className="stat">
                           <i className="ri-chat-3-line"></i>{" "}
                           {formatNumber(
                             post.commentCount || post.comments?.length || 0
@@ -976,60 +1072,69 @@ const AdminDashboard = () => {
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">Không có bài viết mới.</div>
+                  <div className="empty-state">
+                    <i className="ri-article-line empty-icon"></i>
+                    <p>Không có bài viết mới</p>
+                  </div>
                 )}
               </div>
             </div>
-          </div>
 
-          <div className="dashboard-sections single">
-            <div className="section">
-              <h2>Bài viết nổi bật</h2>
-              <div className="recent-list">
+            <div className="activity-section">
+              <h3 className="section-title">Bài viết nổi bật</h3>
+              <div className="activity-list">
                 {topPosts.length ? (
                   topPosts.map((post) => (
-                    <div key={post._id} className="recent-item">
-                      <div className="post-info">
-                        <div className="avatar">
-                          <i className="ri-star-line"></i>
-                        </div>
-                        <div className="details">
-                          <h4>{post.userCreateID?.username || "Ẩn danh"}</h4>
-                          <p>{trimText(post.content, 100)}</p>
-                          <small>
-                            {post.createdAt
-                              ? dayjs(post.createdAt).format("DD/MM/YYYY")
-                              : ""}
-                          </small>
-                        </div>
+                    <div key={post._id} className="activity-item featured">
+                      <div className="activity-avatar">
+                        <i className="ri-star-line"></i>
                       </div>
-                      <div className="post-stats">
-                        <span>
+                      <div className="activity-content">
+                        <h4 className="activity-name">
+                          {post.userCreateID?.username || "Ẩn danh"}
+                        </h4>
+                        <p className="activity-text">
+                          {trimText(post.content, 100)}
+                        </p>
+                        <span className="activity-date">
+                          {post.createdAt
+                            ? dayjs(post.createdAt).format("DD/MM/YYYY")
+                            : ""}
+                        </span>
+                      </div>
+                      <div className="activity-stats">
+                        <span className="stat">
                           <i className="ri-heart-line"></i>{" "}
                           {formatNumber(post.likeCount || 0)}
                         </span>
-                        <span>
+                        <span className="stat">
                           <i className="ri-chat-3-line"></i>{" "}
                           {formatNumber(post.commentCount || 0)}
                         </span>
                         {post.warningCount > 0 && (
-                          <span className="badge bg-warning text-dark">
-                            {post.warningCount} cảnh báo
+                          <span className="stat warning">
+                            <i className="ri-alert-line"></i>{" "}
+                            {post.warningCount}
                           </span>
                         )}
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">Chưa có bài viết nổi bật.</div>
+                  <div className="empty-state">
+                    <i className="ri-star-line empty-icon"></i>
+                    <p>Chưa có bài viết nổi bật</p>
+                  </div>
                 )}
               </div>
             </div>
           </div>
         </>
       ) : (
-        <div className="empty-state">
-          Chưa có dữ liệu trong khoảng thời gian này.
+        <div className="empty-state large">
+          <i className="ri-database-2-line empty-icon"></i>
+          <h3>Chưa có dữ liệu</h3>
+          <p>Không có dữ liệu trong khoảng thời gian này</p>
         </div>
       )}
     </div>
