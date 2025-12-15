@@ -17,6 +17,38 @@ router.use(authenticate);
 router.get("/recommendations", groupController.getRecommendedGroups); // Groups đề xuất
 router.get("/user/my-groups", groupController.getUserGroups); // Groups của user
 
+router.get(
+  "/:groupId/statistics",
+
+  groupController.getGroupStatistics
+);
+router.get(
+  "/:groupId/analytics/members",
+
+  groupController.getMemberAnalytics
+);
+router.get(
+  "/:groupId/analytics/content",
+
+  groupController.getContentAnalytics
+);
+router.get(
+  "/:groupId/report/export",
+
+  groupController.exportGroupReport
+);
+router.get(
+  "/:groupId/statistics/public",
+
+  groupController.getPublicStatistics
+);
+
+router.get("/:groupId/violation", groupController.GetViolationGroupByID);
+
+router.get("/:groupId/qr", groupController.getUserQR);
+
+router.put("/:groupId/qr", groupController.updateUserQR);
+
 // Tạo nhóm
 router.post(
   "/",
@@ -29,11 +61,11 @@ router.post(
 
 // Các routes với groupId
 const {
-  ensureGroupExists,
-  ensureMemberOrPublic,
-  ensureCanPost,
-  ensureGroupAdmin,
-  ensureGroupOwner,
+  ensureGroupExists, // Middleware kiểm tra nhóm tồn tại
+  ensureMemberOrPublic, // Middleware kiểm tra user là thành viên hoặc nhóm công khai
+  ensureCanPost, // Middleware kiểm tra user có quyền đăng bài
+  ensureGroupAdmin, // Middleware kiểm tra user là admin nhóm
+  ensureGroupOwner, // Middleware kiểm tra user là chủ sở hữu nhóm
 } = require("../middleware/groupAuth");
 
 // Lấy thông tin nhóm

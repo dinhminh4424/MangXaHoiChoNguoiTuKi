@@ -15,6 +15,9 @@ const UserNotifications = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sosNotification, setSosNotification] = useState(null);
   const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
+
+  const [toasts, setToasts] = useState([]);
+
   const socketRef = useRef(null);
   const dropdownRef = useRef(null);
   const { user, logout } = useAuth();
@@ -447,41 +450,60 @@ const UserNotifications = () => {
     }
   };
 
-  const showToast = (notification) => {
-    let toastContainer = document.getElementById("toast-container");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toast-container";
-      toastContainer.className =
-        "toast-container position-fixed top-0 end-0 p-3";
-      document.body.appendChild(toastContainer);
-    }
+  // const showToast = (notification) => {
+  //   let toastContainer = document.getElementById("toast-container");
+  //   if (!toastContainer) {
+  //     toastContainer = document.createElement("div");
+  //     toastContainer.id = "toast-container";
+  //     toastContainer.className =
+  //       "toast-container position-fixed top-0 end-0 p-3";
+  //     document.body.appendChild(toastContainer);
+  //   }
 
-    const toast = document.createElement("div");
-    toast.className = `notification-toast alert-${getNotificationColor(
-      notification.type
-    )}`;
-    toast.innerHTML = `
-      <div class="toast-header">
-        <i class="${getNotificationIcon(notification.type)} me-2"></i>
-        <strong class="me-auto">${notification.title}</strong>
-        <small class="text-muted">${getNotificationCategory(
-          notification.type
-        )}</small>
-        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-      </div>
-      <div class="toast-body">
-        ${notification.message}
-        <small class="text-muted d-block mt-1">${new Date(
-          notification.createdAt
-        ).toLocaleTimeString()}</small>
-      </div>
-    `;
-    toastContainer.appendChild(toast);
+  //   const toast = document.createElement("div");
+  //   toast.className = `notification-toast alert-${getNotificationColor(
+  //     notification.type
+  //   )}`;
+  //   toast.innerHTML = `
+  //     <div class="toast-header">
+  //       <i class="${getNotificationIcon(notification.type)} me-2"></i>
+  //       <strong class="me-auto">${notification.title}</strong>
+  //       <small class="text-muted">${getNotificationCategory(
+  //         notification.type
+  //       )}</small>
+  //       <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+  //     </div>
+  //     <div class="toast-body">
+  //       ${notification.message}
+  //       <small class="text-muted d-block mt-1">${new Date(
+  //         notification.createdAt
+  //       ).toLocaleTimeString()}</small>
+  //     </div>
+  //   `;
+  //   toastContainer.appendChild(toast);
+
+  //   setTimeout(() => {
+  //     if (toast.parentElement) toast.remove();
+  //   }, 5000);
+  // };
+
+  const showToast = (notification, duration = 5000) => {
+    const id = Date.now();
+
+    setToasts((prev) => [
+      ...prev,
+      {
+        id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        createdAt: notification.createdAt,
+      },
+    ]);
 
     setTimeout(() => {
-      if (toast.parentElement) toast.remove();
-    }, 5000);
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
   };
 
   const getEmptyMessage = () => {
@@ -693,6 +715,39 @@ const UserNotifications = () => {
           </div>
         </div>
       </li>
+
+      {/* ===== TOAST UI ===== */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`toast-card toast-${getNotificationColor(toast.type)}`}
+          >
+            <div className="toast-icon">
+              <i className={getNotificationIcon(toast.type)} />
+            </div>
+
+            <div className="toast-content">
+              <div className="toast-title">{toast.title}</div>
+              <div className="toast-message">{toast.message}</div>
+              <div className="toast-time">
+                {new Date(toast.createdAt).toLocaleTimeString()}
+              </div>
+            </div>
+
+            <button
+              className="toast-close border-3 bg-transparent"
+              onClick={() =>
+                setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+              }
+            >
+              <i className="ri-close-line" />
+            </button>
+          </div>
+        ))}
+      </div>
+
+      {/* ===== END TOAST ===== */}
 
       {/* === SỬA LỖI MODAL: Bỏ các modal lỗi, chỉ giữ lại 1 modal react-bootstrap === */}
       {selectedNotification && (

@@ -9,7 +9,7 @@ const AuditLog = require("../../models/AuditLog");
 const Violation = require("../../models/Violation");
 
 const GroupMember = require("../../models/GroupMember");
-const FileManager = require("../../utils/FileManager"); // Import FileManager utility
+const FileManager = require("../../utils/fileManager"); // Import FileManager utility
 
 const GroupDeletionService = require("../../services/GroupDeletionService");
 

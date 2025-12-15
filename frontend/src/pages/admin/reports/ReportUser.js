@@ -29,7 +29,7 @@ const Report = () => {
     dateFrom: "",
     dateTo: "",
     search: "",
-    reportId: "",
+    reportId: "" || id,
   });
 
   const limit = 10;
@@ -75,7 +75,7 @@ const Report = () => {
           dateTo: filterParams.dateTo,
           search: filterParams.search,
           reportId: filterParams.reportId,
-          id: id || "",
+          // id: id || "",
         };
 
         const res = await getUsersViolation(params);
@@ -433,7 +433,7 @@ const Report = () => {
       {/* Header */}
       <div className="d-flex justify-content-between align-items-center mb-4">
         <h2 className="h4 mb-0">
-          <i className="bi bi-flag me-2"></i>Quản lý báo cáo bài viết
+          <i className="bi bi-flag me-2"></i>Quản lý báo cáo người dùng
         </h2>
         <div className="text-muted small">
           <i className="bi bi-list-ul me-1"></i>Tổng số: {postReports.length}{" "}

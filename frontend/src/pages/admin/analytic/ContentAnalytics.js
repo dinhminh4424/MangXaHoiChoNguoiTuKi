@@ -122,7 +122,7 @@ const ContentAnalytics = () => {
   return (
     <Container fluid className="py-4">
       {/* Header */}
-      <Row className="mb-4">
+      <Row className="page-header mb-4">
         <Col>
           <div className="d-flex justify-content-between align-items-center">
             <div>

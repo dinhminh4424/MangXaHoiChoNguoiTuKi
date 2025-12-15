@@ -21,7 +21,6 @@ import {
   XCircle,
   Clock,
   CheckCircle,
-  X,
   FileEarmark,
   ArrowLeft,
   ArrowRight,
@@ -56,7 +55,7 @@ const AdminAppeals = () => {
   const fetchAppeals = async () => {
     try {
       setError("");
-      const token = localStorage.getItem("token");
+      // const token = localStorage.getItem("token");
       const params = new URLSearchParams({
         status: filters.status,
         page: pagination.currentPage,
@@ -161,11 +160,11 @@ const AdminAppeals = () => {
 
   return (
     <div
-      className="container-fluid py-4"
+      className="container py-4"
       style={{ backgroundColor: "#f8f9fa", minHeighteight: "100vh" }}
     >
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <div>
           <h1 className="h3 mb-1">Quản lý Kháng nghị</h1>
           <p className="text-muted mb-0">
@@ -180,8 +179,8 @@ const AdminAppeals = () => {
       <Row className="mb-4">
         <Col>
           <h5 className="mb-3">Tổng quan</h5>
-          <Row>
-            <Col xl={2} lg={4} md={6} className="mb-3">
+          <Row className="d-flex justify-content-center align-items-center">
+            {/* <Col xl={2} lg={4} md={6} className="mb-3">
               <Card className="stat-card border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
                   <div className="stat-icon text-primary mb-2">
@@ -191,8 +190,8 @@ const AdminAppeals = () => {
                   <p className="stat-label text-muted mb-0">Tổng số</p>
                 </Card.Body>
               </Card>
-            </Col>
-            <Col xl={2} lg={4} md={6} className="mb-3">
+            </Col> */}
+            <Col xl={3} lg={4} md={6} className="mb-3">
               <Card className="stat-card border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
                   <div className="stat-icon text-warning mb-2">
@@ -203,36 +202,36 @@ const AdminAppeals = () => {
                 </Card.Body>
               </Card>
             </Col>
-            <Col xl={2} lg={4} md={6} className="mb-3">
+            <Col xl={3} lg={4} md={6} className="mb-3">
               <Card className="stat-card border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
                   <div className="stat-icon text-info mb-2">
                     <Eye size={24} />
                   </div>
                   <h3 className="stat-number">{statistics.reviewing || 0}</h3>
-                  <p className="stat-label text-muted mb-0">Đang xem xét</p>
+                  <p className="stat-label text-muted mb-0"> Xem xét</p>
                 </Card.Body>
               </Card>
             </Col>
-            <Col xl={2} lg={4} md={6} className="mb-3">
+            <Col xl={3} lg={4} md={6} className="mb-3">
               <Card className="stat-card border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
                   <div className="stat-icon text-success mb-2">
                     <CheckCircle size={24} />
                   </div>
                   <h3 className="stat-number">{statistics.resolved || 0}</h3>
-                  <p className="stat-label text-muted mb-0">Đã giải quyết</p>
+                  <p className="stat-label text-muted mb-0">Giải quyết</p>
                 </Card.Body>
               </Card>
             </Col>
-            <Col xl={2} lg={4} md={6} className="mb-3">
+            <Col xl={3} lg={4} md={6} className="mb-3">
               <Card className="stat-card border-0 shadow-sm h-100">
                 <Card.Body className="text-center">
                   <div className="stat-icon text-danger mb-2">
                     <XCircle size={24} />
                   </div>
                   <h3 className="stat-number">{statistics.rejected || 0}</h3>
-                  <p className="stat-label text-muted mb-0">Đã từ chối</p>
+                  <p className="stat-label text-muted mb-0">Từ chối</p>
                 </Card.Body>
               </Card>
             </Col>

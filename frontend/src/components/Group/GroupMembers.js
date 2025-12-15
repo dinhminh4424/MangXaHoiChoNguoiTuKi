@@ -53,14 +53,14 @@ const GroupMembers = ({ groupId, isAdmin, onMembersUpdate }) => {
     }
   };
 
-  const handlePromoteToModerator = async (memberId) => {
+  const handlePromoteToModerator = async (memberId, action = "add") => {
     try {
       setActionLoading(memberId);
 
       const response = await groupService.manageModerator(
         groupId,
         memberId,
-        "add"
+        action
       );
 
       if (response.success) {
@@ -169,7 +169,7 @@ const GroupMembers = ({ groupId, isAdmin, onMembersUpdate }) => {
                 <div className="d-flex align-items-center gap-3">
                   <img
                     src={
-                      member.userId.avatar ||
+                      member.userId.profile?.avatar ||
                       "/assets/images/default-avatar.png"
                     }
                     alt={member.userId.fullName}
@@ -219,7 +219,7 @@ const GroupMembers = ({ groupId, isAdmin, onMembersUpdate }) => {
                         variant="outline-warning"
                         size="sm"
                         onClick={() =>
-                          handleManageMember(member.userId._id, "remove")
+                          handlePromoteToModerator(member.userId._id, "remove")
                         }
                         disabled={actionLoading === member.userId._id}
                       >
@@ -231,20 +231,38 @@ const GroupMembers = ({ groupId, isAdmin, onMembersUpdate }) => {
                       </Button>
                     )}
 
-                    <Button
-                      variant="outline-danger"
-                      size="sm"
-                      onClick={() =>
-                        handleManageMember(member.userId._id, "ban")
-                      }
-                      disabled={actionLoading === member.userId._id}
-                    >
-                      {actionLoading === member.userId._id ? (
-                        <Spinner animation="border" size="sm" />
-                      ) : (
-                        "Cấm"
-                      )}
-                    </Button>
+                    {member.status === "active" && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() =>
+                          handleManageMember(member.userId._id, "ban")
+                        }
+                        disabled={actionLoading === member.userId._id}
+                      >
+                        {actionLoading === member.userId._id ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : (
+                          "Cấm"
+                        )}
+                      </Button>
+                    )}
+                    {member.status === "banned" && (
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={() =>
+                          handleManageMember(member.userId._id, "unban")
+                        }
+                        disabled={actionLoading === member.userId._id}
+                      >
+                        {actionLoading === member.userId._id ? (
+                          <Spinner animation="border" size="sm" />
+                        ) : (
+                          "Gỡ Ban"
+                        )}
+                      </Button>
+                    )}
                   </div>
                 )}
               </div>

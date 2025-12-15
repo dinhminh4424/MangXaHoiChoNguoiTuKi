@@ -145,7 +145,7 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
       </Card>
 
       {/* Admin Tools */}
-      {isAdmin && (
+      {/* {isAdmin && (
         <Card>
           <Card.Header>
             <h6 className="mb-0">Công cụ quản trị</h6>
@@ -176,7 +176,7 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
             </ListGroup>
           </Card.Body>
         </Card>
-      )}
+      )} */}
     </div>
   );
 };

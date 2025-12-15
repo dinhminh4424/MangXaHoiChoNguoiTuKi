@@ -7,14 +7,7 @@ import notificationService from "../../services/notificationService";
 
 import { getImagesByCategoryActive } from "../../services/imageService";
 
-import {
-  Plus,
-  Filter,
-  Search,
-  RefreshCw,
-  TrendingUp,
-  Earth,
-} from "lucide-react";
+import { Plus, Filter, Search, RefreshCw, Earth } from "lucide-react";
 import Post from "../../components/Post/Post";
 import "./Feed.css";
 
@@ -126,6 +119,8 @@ const Feed = () => {
 
         // Truyền thêm tham số append để biết có nối dữ liệu không
         const response = await fetchPosts(params, append);
+
+        console.log("Fetched posts:", response.posts);
 
         // Kiểm tra xem còn dữ liệu không
         if (response.posts && response.posts.length > 0) {
@@ -287,41 +282,6 @@ const Feed = () => {
   return (
     <div className="feed-container">
       {/* Header */}
-      {/* <div
-        className="feed-header"
-        style={imageBanner ? { backgroundImage: `url(${imageBanner})` } : {}}
-      >
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col">
-              <h1 className="feed-title">Bảng tin</h1>
-              <p className="feed-subtitle">Cập nhật mới nhất từ cộng đồng</p>
-            </div>
-            <div className="col-auto">
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline-primary btn-refresh"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  <RefreshCw
-                    size={18}
-                    className={refreshing ? "spinning" : ""}
-                  />
-                </button>
-                <button
-                  className="btn btn-primary btn-create-post"
-                  onClick={() => navigate("/posts/createPost")}
-                >
-                  <Earth size={18} className="me-2" />
-                  Tạo bài viết
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-      {/* Header */}
       <div className="feed-header">
         <div
           className="feed-header-bg"
@@ -383,10 +343,10 @@ const Feed = () => {
         <div className="row">
           {/* Sidebar - Filters */}
           <div className="col-lg-3 col-md-4">
-            <div className="feed-sidebar">
+            <div className="feed-sidebar ">
               {/* Search */}
               <div className="filter-card">
-                <div className="filter-header">
+                <div className="filter-header bg-primary">
                   <Search size={18} />
                   <span>Tìm kiếm</span>
                 </div>
@@ -403,7 +363,7 @@ const Feed = () => {
 
               {/* Filters */}
               <div className="filter-card">
-                <div className="filter-header">
+                <div className="filter-header bg-primary">
                   <Filter size={18} />
                   <span>Bộ lọc</span>
                   {hasActiveFilters && (

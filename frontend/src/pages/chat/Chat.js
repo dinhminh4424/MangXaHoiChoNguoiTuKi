@@ -546,8 +546,8 @@ const Chat = () => {
   }
 
   return (
-    <div id="content-page" className="content-page">
-      <div className="container">
+    <div id="content-page" className="content-page container-fluid">
+      <div className="container-fluid">
         <div className="row">
           <div className="col-sm-12">
             <div className="card">
@@ -1811,28 +1811,6 @@ const Chat = () => {
                                 className="d-flex align-items-center"
                                 onSubmit={handleSendMessage}
                               >
-                                <div className="chat-attagement d-flex">
-                                  <a href="#" className="pe-3">
-                                    <i
-                                      className="far fa-smile"
-                                      aria-hidden="true"
-                                    ></i>
-                                  </a>
-                                  <button
-                                    type="button"
-                                    className="btn btn-link text-muted p-0"
-                                    onClick={() =>
-                                      fileInputRef.current?.click()
-                                    }
-                                    disabled={isUploading}
-                                  >
-                                    <i
-                                      className="fa fa-paperclip pe-3"
-                                      aria-hidden="true"
-                                    ></i>
-                                  </button>
-                                </div>
-
                                 <input
                                   type="file"
                                   ref={fileInputRef}
@@ -1856,12 +1834,29 @@ const Chat = () => {
                                   }
                                   disabled={isUploading}
                                 />
+
+                                <div className="chat-attagement d-flex me-1">
+                                  <button
+                                    type="button"
+                                    className="btn btn-link text-muted p-0 me-1"
+                                    onClick={() =>
+                                      fileInputRef.current?.click()
+                                    }
+                                    disabled={isUploading}
+                                  >
+                                    <i
+                                      className="fa fa-paperclip pe-3"
+                                      aria-hidden="true"
+                                    ></i>
+                                  </button>
+                                </div>
+
                                 <SpeechToText
                                   onTextChange={setVoiceNewMessage}
                                 />
                                 <button
                                   type="submit"
-                                  className="btn btn-primary d-flex align-items-center p-2"
+                                  className="btn btn-primary d-flex align-items-center m-2 p-2"
                                   disabled={
                                     (!newMessage.trim() && !selectedFile) ||
                                     isUploading

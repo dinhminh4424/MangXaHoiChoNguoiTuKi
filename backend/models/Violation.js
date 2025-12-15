@@ -8,7 +8,7 @@ const violationSchema = new mongoose.Schema(
       enum: ["Post", "Comment", "User", "Message", "Group", "Other"],
       required: true,
     },
-    // ID của đối tượng (bài viết, bình luận, người dùng, ...)
+    // ID của đối tượng (bài viết, bình luận, người dùng, hội nhóm ...)
     targetId: {
       type: mongoose.Schema.Types.ObjectId,
       required: true,

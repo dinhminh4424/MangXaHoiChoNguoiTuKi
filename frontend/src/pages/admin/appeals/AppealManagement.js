@@ -516,11 +516,11 @@ const AppealManagement = () => {
   };
 
   return (
-    <div className=" mt-4">
+    <div className=" container mt-4">
       {/* Header với thống kê */}
       <div className="row mb-4">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center mb-3">
+        <div className=" page-header col-12">
+          <div className=" d-flex justify-content-between align-items-center mb-3">
             <h2 className="h4 mb-0">
               <i className="bi bi-megaphone me-2"></i>Quản lý Kháng nghị
             </h2>

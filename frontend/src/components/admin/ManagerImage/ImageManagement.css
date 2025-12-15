@@ -6,8 +6,8 @@
 
 /* Header */
 .management-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  /* color: white; */
   padding: 2rem 0;
   margin-bottom: 2rem;
 }
@@ -18,15 +18,15 @@
 }
 
 .add-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  /* background: rgba(255, 255, 255, 0.2); */
+  /* border: 2px solid rgba(255, 255, 255, 0.3); */
   backdrop-filter: blur(10px);
   font-weight: 600;
 }
 
 .add-btn:hover {
-  background: rgba(255, 255, 255, 0.3);
-  border-color: rgba(255, 255, 255, 0.5);
+  /* background: rgba(255, 255, 255, 0.3); */
+  /* border-color: rgba(255, 255, 255, 0.5); */
 }
 
 /* Stats Cards */

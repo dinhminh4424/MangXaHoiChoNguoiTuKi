@@ -19,7 +19,6 @@ import {
   XCircle,
   InfoCircle,
   FileText,
-  ArrowRight,
   Send,
   Person,
 } from "react-bootstrap-icons";

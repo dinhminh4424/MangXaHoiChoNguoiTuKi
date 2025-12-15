@@ -373,7 +373,7 @@ const AdminChatManagement = () => {
   const enhancedStats = getEnhancedStats();
 
   return (
-    <div className="admin-chat-management container-fluid">
+    <div className="admin-chat-management m-3">
       {/* Header */}
       <div className="page-header">
         <div className="d-flex justify-content-between align-items-center">
@@ -1006,7 +1006,7 @@ const AdminChatManagement = () => {
       <Modal
         show={showDetailModal}
         onHide={() => setShowDetailModal(false)}
-        size="lg"
+        size="xl"
         centered
         className="modal-enhanced"
       >

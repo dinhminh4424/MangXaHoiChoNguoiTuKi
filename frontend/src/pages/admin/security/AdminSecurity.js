@@ -46,9 +46,9 @@ const AdminSecurity = () => {
   const totalCount = configs.length;
 
   return (
-    <div className="container-fluid py-4">
+    <div className=" container-fluid py-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <div className="d-flex align-items-center">
           <i className="bi bi-shield-lock fs-1 text-primary me-3"></i>
           <div>

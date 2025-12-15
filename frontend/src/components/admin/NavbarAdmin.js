@@ -94,6 +94,11 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       label: "Quản Lý Kháng Nghị",
     },
     {
+      path: "/admin/quotes",
+      icon: "ri-double-quotes-l", // icon câu trích dẫn / châm ngôn
+      label: "Châm Ngôn",
+    },
+    {
       path: "/admin/system",
       icon: "ri-settings-3-line",
 

@@ -23,13 +23,15 @@ const Report = () => {
   // Param từ URL
   const { id } = useParams();
 
+  console.log("ReportContent id param: ", id);
+
   // State cho bộ lọc
   const [filters, setFilters] = useState({
     status: "all",
     dateFrom: "",
     dateTo: "",
     search: "",
-    reportId: "",
+    reportId: "" || id,
   });
 
   const limit = 10;
@@ -89,7 +91,7 @@ const Report = () => {
           dateTo: filterParams.dateTo,
           search: filterParams.search,
           reportId: filterParams.reportId,
-          id: id || "",
+          // id: id || "",
         };
 
         const res = await getPostViolation(params);
@@ -443,9 +445,9 @@ const Report = () => {
   };
 
   return (
-    <div className=" mt-4">
+    <div className="container mt-4">
       {/* Header */}
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      <div className="page-header d-flex justify-content-between align-items-center mb-4">
         <h2 className="h4 mb-0">
           <i className="bi bi-flag me-2"></i>Quản lý báo cáo bài viết
         </h2>

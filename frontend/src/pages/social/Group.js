@@ -5,8 +5,6 @@ import { useAuth } from "../../contexts/AuthContext";
 import { getImagesByCategoryActive } from "../../services/imageService";
 import {
   Container,
-  Row,
-  Col,
   Card,
   Button,
   Spinner,
@@ -17,7 +15,7 @@ import {
 } from "react-bootstrap";
 import { Users, Plus, Search, Globe, Lock, Mail } from "lucide-react";
 import groupService from "../../services/groupService";
-// import './GroupsPage.css';
+import "./GroupsPage.css";
 
 const GroupsPage = () => {
   const navigate = useNavigate();
@@ -32,8 +30,7 @@ const GroupsPage = () => {
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
 
-  // load image default
-
+  // Load image default
   const loadImageDefault = React.useCallback(async () => {
     try {
       const resBanner = await getImagesByCategoryActive("BannerGroup");
@@ -57,18 +54,11 @@ const GroupsPage = () => {
   const loadAllGroups = async () => {
     try {
       setLoading(true);
-
       let response;
       if (searchTerm) {
-        // Nếu có search term, dùng search API
-        response = await groupService.searchGroups(searchTerm, {
-          limit: 20,
-        });
+        response = await groupService.searchGroups(searchTerm, { limit: 20 });
       } else {
-        // Nếu không, lấy tất cả groups
-        response = await groupService.getAllGroups({
-          limit: 20,
-        });
+        response = await groupService.getAllGroups({ limit: 20 });
       }
 
       if (response.success) {
@@ -84,7 +74,6 @@ const GroupsPage = () => {
   // Load groups của user
   const loadMyGroups = async () => {
     if (!user) return;
-
     try {
       const response = await groupService.getUserGroups();
       if (response.success) {
@@ -99,10 +88,8 @@ const GroupsPage = () => {
     try {
       const response = await groupService.joinGroup(groupId);
       if (response.success) {
-        // Refresh danh sách
         loadAllGroups();
         loadMyGroups();
-        // Hiển thị thông báo thành công
         alert("Đã tham gia nhóm thành công!");
       }
     } catch (err) {
@@ -137,222 +124,207 @@ const GroupsPage = () => {
     }
   };
 
-  const getPrivacyText = (visibility) => {
-    switch (visibility) {
-      case "public":
-        return "Công khai";
-      case "private":
-        return "Riêng tư";
-      case "invite":
-        return "Chỉ mời";
-      default:
-        return "Công khai";
-    }
-  };
-
+  // pages/GroupsPage.js (chỉnh sửa phần GroupCard)
   const GroupCard = ({ group, showJoinButton = true }) => {
     const isMember = myGroups.some((g) => g._id === group._id);
 
     return (
-      <div className="card mb-0">
-        <div className="top-bg-image">
+      <Card className="group-card h-100">
+        <div className="group-cover-container">
           <img
             src={
-              // group?.coverPhoto || "../assets/images/BannerGroup_default_2.jpg"
               group?.coverPhoto ||
               imageCover ||
               "../assets/images/default-cover.jpg"
             }
-            className="img-fluid w-100"
-            alt="group-bg"
+            className="group-cover-img"
+            alt="group cover"
+            loading="lazy"
+            onError={(e) => {
+              e.target.src = "../assets/images/default-cover.jpg";
+            }}
           />
-        </div>
-        <div className="card-body text-center">
-          <div className="group-icon">
+          <div className="group-avatar-overlay">
             <img
               src={
                 group?.avatar ||
                 imageAvatar ||
-                "../assets/images/AvartarGroup_default.jpg"
+                "../assets/images/default-avatar.jpg"
               }
-              alt="profile-img"
-              className=" img-fluid rounded-circle avatar-120"
+              alt="group avatar"
+              className="group-avatar-img"
+              loading="lazy"
+              onError={(e) => {
+                e.target.src = "../assets/images/default-avatar.jpg";
+              }}
             />
           </div>
-          <div className="group-info pt-3 pb-3 d-flex justify-content-center align-items-center">
-            <div>
-              <h4>
-                <a
-                  href="#"
-                  onClick={(e) => {
-                    e.preventDefault();
-                    navigate(`/group/${group._id}`);
-                  }}
-                  style={{ color: "inherit" }}
-                >
-                  {group.name}
-                </a>
-              </h4>
-              <p className="text-muted mb-0 ">{group.description}</p>
+        </div>
+
+        <Card.Body className="group-card-body">
+          <div className="group-header">
+            <h5 className="group-title mb-2">
+              <a
+                href="#"
+                onClick={(e) => {
+                  e.preventDefault();
+                  navigate(`/group/${group._id}`);
+                }}
+                className="group-title-link"
+              >
+                {group.name}
+              </a>
+            </h5>
+            <p className="group-description text-muted mb-3">
+              {group.description || "Chưa có mô tả"}
+            </p>
+          </div>
+
+          <div className="group-stats mb-3">
+            <div className="group-stat-item">
+              <span className="stat-label">Bài viết</span>
+              <span className="stat-value">{group.postCount || 0}</span>
+            </div>
+            <div className="group-stat-item">
+              <span className="stat-label">Thành viên</span>
+              <span className="stat-value">{group.memberCount || 0}</span>
+            </div>
+            <div className="group-stat-item">
+              <span className="stat-label">Hoạt động</span>
+              <span className="stat-value">
+                {group.reactionCount?.totalInteractions || 0}
+              </span>
             </div>
           </div>
 
-          <div className="group-details d-inline-block pb-3">
-            <ul className="d-flex align-items-center justify-content-between list-inline m-0 p-0">
-              <li className="pe-3 ps-3">
-                <p className="mb-0">Post</p>
-                <h6>600</h6>
-              </li>
-              <li className="pe-3 ps-3">
-                <p className="mb-0">Member</p>
-                <h6>{group.members || "899"}</h6>
-              </li>
-              <li className="pe-3 ps-3">
-                <p className="mb-0">Visit</p>
-                <h6>1.2k</h6>
-              </li>
-            </ul>
-          </div>
-          <div>
-            {group.category && group.category.length > 0 && (
-              <span className="badge bg-primary m-2">{group.category[0]}</span>
-            )}
-          </div>
+          {group.category && group.category.length > 0 && (
+            <div className="group-category text-center mb-3">
+              <span className="group-category-badge bg-info">
+                {group.category[0]}
+              </span>
+            </div>
+          )}
 
           {group.tags && group.tags.length > 0 && (
             <div className="group-tags mb-3">
               {group.tags.slice(0, 3).map((tag, index) => (
-                <span
-                  key={index}
-                  className="badge bg-light text-dark me-1 mb-1"
-                >
-                  {tag}
+                <span key={index} className="group-tag">
+                  #{tag}
                 </span>
               ))}
             </div>
           )}
-          <div className="group-member mb-3">
-            <div className="iq-media-group">
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/05.jpg"
-                  alt=""
-                />
-              </a>
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/06.jpg"
-                  alt=""
-                />
-              </a>
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/07.jpg"
-                  alt=""
-                />
-              </a>
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/08.jpg"
-                  alt=""
-                />
-              </a>
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/09.jpg"
-                  alt=""
-                />
-              </a>
-              <a href="#" className="iq-media">
-                <img
-                  className="img-fluid avatar-40 rounded-circle"
-                  src="../assets/images/user/10.jpg"
-                  alt=""
-                />
-              </a>
+
+          {group.membersPreview && group.membersPreview.length > 0 && (
+            <div className="group-members-preview mb-3">
+              <div className="members-list">
+                {group.membersPreview.slice(0, 5).map((member, index) => (
+                  <a
+                    key={index}
+                    href={`/profile/${member.userId._id}`}
+                    className="member-avatar-link"
+                    title={member.userId.username}
+                  >
+                    <img
+                      className="member-avatar"
+                      src={
+                        member.userId.profile?.avatar ||
+                        "/assets/images/default-avatar.png"
+                      }
+                      alt={member.userId.username || "thành viên"}
+                      loading="lazy"
+                      onError={(e) => {
+                        e.target.src = "/assets/images/default-avatar.png";
+                      }}
+                    />
+                  </a>
+                ))}
+                {group.memberCount > 5 && (
+                  <span className="more-members">+{group.memberCount - 5}</span>
+                )}
+              </div>
             </div>
-          </div>
+          )}
+        </Card.Body>
+
+        <Card.Footer className="group-card-footer">
           {showJoinButton ? (
             isMember ? (
               <Button
                 variant="outline-primary"
-                className="d-block w-100"
+                className="group-action-btn"
                 onClick={() => navigate(`/group/${group._id}`)}
               >
-                Xem Nhóm
+                Vào nhóm
               </Button>
             ) : (
               <Button
                 variant="primary"
-                className="d-block w-100"
-                // onClick={() => handleJoinGroup(group._id)}
-                onClick={() => navigate("/group/" + group._id)}
+                className="group-action-btn"
+                onClick={() => navigate(`/group/${group._id}`)}
               >
-                Vào Nhóm
+                Xem nhóm
               </Button>
             )
           ) : (
             <Button
               variant="outline-primary"
-              className="d-block w-100"
+              className="group-action-btn"
               onClick={() => navigate(`/group/${group._id}`)}
             >
               Quản lý
             </Button>
           )}
-        </div>
-      </div>
+        </Card.Footer>
+      </Card>
     );
   };
 
   return (
-    <Container className="groups-page py-4">
+    <Container className="groups-page-container py-4">
       {/* Header */}
       <div className="page-header mb-4">
-        <div className="d-flex justify-content-between align-items-center">
-          <div>
-            <h1 className="h2 mb-1">Các nhóm</h1>
-            <p className="text-muted mb-0">
+        <div className="header-content">
+          <div className="header-text">
+            <h1 className="page-title">Các nhóm</h1>
+            <p className="page-subtitle">
               Khám phá và tham gia các nhóm cùng sở thích
             </p>
           </div>
           <Button
             variant="primary"
-            className="d-flex align-items-center gap-2"
+            className="create-group-btn"
             onClick={handleCreateGroup}
           >
             <Plus size={20} />
-            Tạo nhóm
+            <span>Tạo nhóm</span>
           </Button>
         </div>
       </div>
 
       {error && (
-        <Alert variant="danger" dismissible onClose={() => setError(null)}>
+        <Alert
+          variant="danger"
+          dismissible
+          onClose={() => setError(null)}
+          className="mb-4"
+        >
           {error}
         </Alert>
       )}
 
       {/* Search */}
-      <Card className="mb-4">
-        <Card.Body>
+      <Card className="search-card mb-4">
+        <Card.Body className="search-card-body">
           <Form onSubmit={handleSearch}>
-            <div className="position-relative">
-              <Search
-                size={20}
-                className="position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"
-              />
+            <div className="search-input-container">
+              <Search size={20} className="search-icon" />
               <Form.Control
                 type="text"
-                placeholder="Tìm kiếm nhóm..."
+                placeholder="Tìm kiếm nhóm theo tên, mô tả..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                style={{ paddingLeft: "45px" }}
+                className="search-input"
               />
             </div>
           </Form>
@@ -363,53 +335,60 @@ const GroupsPage = () => {
       <Tabs
         activeKey={activeTab}
         onSelect={(tab) => setActiveTab(tab)}
-        className="mb-4"
+        className="groups-tabs mb-4"
       >
-        <Tab eventKey="discover" title="Khám phá">
+        <Tab
+          eventKey="discover"
+          title="Khám phá"
+          className="groups-tab-content"
+        >
           {loading ? (
-            <div className="text-center py-5">
+            <div className="loading-container">
               <Spinner animation="border" variant="primary" />
-              <p className="mt-2 text-muted">Đang tải nhóm...</p>
+              <p className="loading-text">Đang tải nhóm...</p>
             </div>
           ) : groups.length > 0 ? (
-            <div className="d-grid gap-3 d-grid-template-1fr-19">
+            <div className="groups-grid">
               {groups.map((group, index) => (
-                // <Col key={group._id} lg={4} md={6} className="mb-4">
-                <GroupCard
-                  key={group._id + "-" + index}
-                  group={group}
-                  showJoinButton={true}
-                />
-                // </Col>
+                <div key={group._id + "-" + index} className="group-grid-item">
+                  <GroupCard group={group} showJoinButton={true} />
+                </div>
               ))}
             </div>
           ) : (
-            <div className="text-center py-5">
-              <Users size={64} className="text-muted mb-3" />
-              <h5>Không tìm thấy nhóm nào</h5>
-              <p className="text-muted">Hãy thử tìm kiếm với từ khóa khác</p>
+            <div className="empty-state">
+              <Users size={64} className="empty-state-icon" />
+              <h5 className="empty-state-title">Không tìm thấy nhóm nào</h5>
+              <p className="empty-state-text">
+                Hãy thử tìm kiếm với từ khóa khác
+              </p>
             </div>
           )}
         </Tab>
 
-        <Tab eventKey="my-groups" title="Nhóm của tôi">
+        <Tab
+          eventKey="my-groups"
+          title="Nhóm của tôi"
+          className="groups-tab-content"
+        >
           {myGroups.length > 0 ? (
-            <Row>
+            <div className="groups-grid">
               {myGroups.map((group) => (
-                <Col key={group._id} lg={4} md={6} className="mb-4">
+                <div key={group._id} className="group-grid-item">
                   <GroupCard group={group} showJoinButton={false} />
-                </Col>
+                </div>
               ))}
-            </Row>
+            </div>
           ) : (
-            <div className="text-center py-5">
-              <Users size={64} className="text-muted mb-3" />
-              <h5>Bạn chưa tham gia nhóm nào</h5>
-              <p className="text-muted">
+            <div className="empty-state">
+              <Users size={64} className="empty-state-icon" />
+              <h5 className="empty-state-title">Bạn chưa tham gia nhóm nào</h5>
+              <p className="empty-state-text">
                 Hãy khám phá và tham gia các nhóm thú vị!
               </p>
               <Button
                 variant="primary"
+                className="explore-btn"
                 onClick={() => setActiveTab("discover")}
               >
                 Khám phá nhóm

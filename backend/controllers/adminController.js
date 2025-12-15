@@ -2610,6 +2610,8 @@ const getPostViolation = async (req, res) => {
       });
     }
 
+    console.log("id:", id);
+
     if (id) {
       searchConditions.push({
         $expr: {

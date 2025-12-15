@@ -65,6 +65,30 @@ router.put("/:id/read", auth, async (req, res) => {
   }
 });
 
+// Đánh dấu đã đọc
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const notification = await Notification.findByIdAndDelete(req.params.id);
+
+    if (!notification) {
+      return res.status(404).json({
+        success: false,
+        message: "Notification not found",
+      });
+    }
+
+    res.json({
+      success: true,
+      notification,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
+
 // Đánh dấu tất cả đã đọc
 router.put("/read-all", auth, async (req, res) => {
   try {

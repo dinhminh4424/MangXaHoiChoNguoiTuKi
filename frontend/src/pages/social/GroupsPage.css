@@ -1,0 +1,461 @@
+/* GroupsPage.css */
+
+/* Container */
+.groups-page-container {
+  max-width: 1200px;
+}
+
+/* Header */
+.page-header {
+  padding: 0 0.5rem;
+}
+
+.header-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+@media (min-width: 768px) {
+  .header-content {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: flex-start;
+  }
+}
+
+.header-text {
+  flex: 1;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.5rem;
+}
+
+.page-subtitle {
+  color: #6c757d;
+  font-size: 0.95rem;
+  margin-bottom: 0;
+}
+
+.create-group-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  min-width: 140px;
+}
+
+.create-group-btn span {
+  display: none;
+}
+
+@media (min-width: 576px) {
+  .create-group-btn span {
+    display: inline;
+  }
+}
+
+/* Search Card */
+.search-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.search-card-body {
+  padding: 1rem;
+}
+
+.search-input-container {
+  position: relative;
+}
+
+.search-icon {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6c757d;
+  z-index: 1;
+}
+
+.search-input {
+  padding-left: 3rem;
+  border-radius: 8px;
+  border: 1px solid #ddd;
+  height: 45px;
+}
+
+.search-input:focus {
+  border-color: #4a90e2;
+  box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
+}
+
+/* Tabs */
+.groups-tabs .nav-tabs {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.groups-tabs .nav-link {
+  color: #6c757d;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.groups-tabs .nav-link:hover {
+  color: #4a90e2;
+  background-color: transparent;
+}
+
+.groups-tabs .nav-link.active {
+  color: #4a90e2;
+  background-color: transparent;
+  border-bottom: 2px solid #4a90e2;
+  margin-bottom: -2px;
+}
+
+.groups-tab-content {
+  padding-top: 1.5rem;
+}
+
+/* Group Grid */
+.groups-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 576px) {
+  .groups-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 992px) {
+  .groups-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.group-grid-item {
+  transition: transform 0.2s;
+}
+
+.group-grid-item:hover {
+  transform: translateY(-4px);
+}
+
+/* GroupsPage.css - chỉnh sửa phần quan trọng */
+
+/* Group Card Container */
+.group-card {
+  border: 1px solid #e0e0e0;
+  border-radius: 12px;
+  overflow: visible; /* Thay đổi từ hidden thành visible */
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+/* Cover Container - TĂNG CHIỀU CAO */
+.group-cover-container {
+  position: relative;
+  height: 160px; /* Tăng từ 140px lên 160px */
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+}
+
+.group-cover-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+/* Avatar Position FIXED */
+.group-avatar-overlay {
+  position: absolute;
+  bottom: 0px; /* Điều chỉnh vị trí avatar */
+  left: 50%;
+  transform: translateX(-50%);
+  width: 80px;
+  height: 80px;
+  border: 4px solid white;
+  border-radius: 50%;
+  overflow: hidden;
+  background: white;
+  /* box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15); */
+  z-index: 10000000; /* Đảm bảo avatar nổi lên trên */
+}
+
+.group-avatar-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Card Body - THÊM PADDING TOP để chừa chỗ cho avatar */
+.group-card-body {
+  padding: 3.5rem 1.25rem 1.25rem; /* Tăng padding-top từ 3rem lên 3.5rem */
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 1; /* Đảm bảo nội dung nằm dưới avatar */
+  background: white;
+  margin-top: -20px; /* Kéo nội dung lên để chồng lên avatar */
+  border-radius: 12px;
+}
+
+/* Group Header - căn chỉnh text */
+.group-header {
+  text-align: center;
+  margin-top: 10px; /* Đẩy xuống dưới avatar */
+}
+
+.group-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #333;
+  margin-top: 1rem; /* Thêm margin top */
+}
+
+.group-title-link {
+  color: inherit;
+  text-decoration: none;
+  transition: color 0.2s;
+}
+
+.group-title-link:hover {
+  color: #4a90e2;
+  text-decoration: none;
+}
+
+.group-description {
+  font-size: 0.875rem;
+  line-height: 1.4;
+  color: #666;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 2.8em; /* Đảm bảo chiều cao tối thiểu */
+}
+
+/* Stats - sửa giao diện */
+.group-stats {
+  display: flex;
+  justify-content: space-around;
+  border-top: 1px solid #eee;
+  border-bottom: 1px solid #eee;
+  padding: 1rem 0;
+  margin: 1rem 0;
+  background: #fafafa;
+  border-radius: 8px;
+}
+
+.group-stat-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+}
+
+.stat-label {
+  font-size: 0.7rem;
+  color: #666;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+}
+
+.stat-value {
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #333;
+  margin-top: 0.25rem;
+}
+
+/* Category Badge */
+.group-category-badge {
+  display: inline-block;
+  padding: 0.4rem 1rem;
+  /* background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); */
+  color: white;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);
+}
+
+/* Tags */
+.group-tags {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 1rem 0;
+}
+
+.group-tag {
+  display: inline-block;
+  padding: 0.3rem 0.8rem;
+  background: #f0f4ff;
+  color: #4a6cf7;
+  border: 1px solid #d0d9ff;
+  border-radius: 15px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.group-tag:hover {
+  background: #4a6cf7;
+  color: white;
+  transform: translateY(-1px);
+}
+
+/* Members Preview */
+.group-members-preview {
+  margin-top: auto;
+  padding-top: 1rem;
+  border-top: 1px solid #eee;
+}
+
+.members-list {
+  /* display: flex; */
+  justify-content: center;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.member-avatar-link {
+  display: inline-block;
+  transition: transform 0.2s;
+  position: relative;
+}
+
+.member-avatar-link:hover {
+  transform: translateY(-2px);
+}
+
+.member-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 2px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  object-fit: cover;
+  background: #f5f5f5;
+}
+
+.more-members {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  background: #f0f0f0;
+  border-radius: 50%;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #666;
+  margin-left: 0.25rem;
+}
+
+/* Card Footer */
+.group-card-footer {
+  background-color: white;
+  border-top: 1px solid #e0e0e0;
+  padding: 1rem 1.25rem;
+  border-radius: 0 0 12px 12px;
+  z-index: 1;
+}
+
+.group-action-btn {
+  width: 100%;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+  border-width: 2px;
+}
+
+.group-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 575px) {
+  .group-cover-container {
+    height: 140px;
+  }
+
+  .group-avatar-overlay {
+    width: 70px;
+    height: 70px;
+    bottom: -35px;
+    border-width: 3px;
+  }
+
+  .group-card-body {
+    padding: 3rem 1rem 1rem;
+  }
+
+  .group-title {
+    font-size: 1rem;
+    margin-top: 0.8rem;
+  }
+
+  .stat-value {
+    font-size: 1rem;
+  }
+
+  .member-avatar {
+    width: 32px;
+    height: 32px;
+  }
+
+  .more-members {
+    width: 32px;
+    height: 32px;
+  }
+}
+
+/* Animation cho avatar khi hover */
+.group-avatar-overlay {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.group-card:hover .group-avatar-overlay {
+  transform: translateX(-50%) translateY(-5px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+}
+
+/* Fix cho trường hợp ảnh cover không load */
+.group-cover-img:before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  z-index: 1;
+}
+
+.group-cover-img[src*="default"]:before {
+  background: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+}

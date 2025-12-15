@@ -19,6 +19,7 @@ import { io } from "socket.io-client";
 import { useAuth } from "../../contexts/AuthContext";
 import api from "../../services/api";
 import friendService from "../../services/friendService";
+import NotificationService from "../../services/notificationService";
 import "./NotificationsPage.css";
 
 const NotificationsPage = () => {
@@ -386,11 +387,29 @@ const NotificationsPage = () => {
   };
 
   const deleteNotification = async (notificationId) => {
-    try {
-      await api.delete(`/api/notifications/${notificationId}`);
-      setNotifications((prev) => prev.filter((n) => n._id !== notificationId));
-    } catch (error) {
-      console.error("Error deleting notification:", error);
+    let check = await NotificationService.confirm({
+      title: "Bạn có chắc muốn xoá bài viết này?",
+      confirmText: "Chắc chắn xoá",
+      cancelText: "Huỷ xoá",
+    });
+    if (check.isConfirmed) {
+      try {
+        const res = await api.delete(`/api/notifications/${notificationId}`);
+        if (res.data.success) {
+          setNotifications((prev) =>
+            prev.filter((n) => n._id !== notificationId)
+          );
+          setNotifications((prev) =>
+            prev.filter((n) => n._id !== notificationId)
+          );
+          NotificationService.success({
+            title: "Xoá thong báo thành công",
+            text: "Thông báo đã được xoá khỏi hệ thống",
+          });
+        }
+      } catch (error) {
+        console.error("Error deleting notification:", error);
+      }
     }
   };
 
@@ -476,13 +495,13 @@ const NotificationsPage = () => {
         count: friendsCount,
         color: "primary",
       },
-      {
-        key: "messages",
-        label: "Tin nhắn",
-        icon: "ri-message-3-line",
-        count: messagesCount,
-        color: "success",
-      },
+      // {
+      //   key: "messages",
+      //   label: "Tin nhắn",
+      //   icon: "ri-message-3-line",
+      //   count: messagesCount,
+      //   color: "success",
+      // },
       {
         key: "system",
         label: "Hệ thống",
@@ -490,13 +509,13 @@ const NotificationsPage = () => {
         count: systemCount,
         color: "secondary",
       },
-      {
-        key: "emergency",
-        label: "Khẩn cấp",
-        icon: "ri-alarm-warning-line",
-        count: emergencyCount,
-        color: "danger",
-      },
+      // {
+      //   key: "emergency",
+      //   label: "Khẩn cấp",
+      //   icon: "ri-alarm-warning-line",
+      //   count: emergencyCount,
+      //   color: "danger",
+      // },
     ];
 
     return (
@@ -544,7 +563,7 @@ const NotificationsPage = () => {
             <div className="d-flex justify-content-between align-items-center">
               <div>
                 <h1 className="page-title mb-2">
-                  <i className="ri-notification-3-line me-2 text-primary"></i>
+                  <i className="ri-notification-3-line me-2 text-primary p-3"></i>
                   Quản lý thông báo
                 </h1>
                 <p className="text-muted mb-0">
@@ -640,7 +659,7 @@ const NotificationsPage = () => {
 
           {/* Category Tabs */}
           <Card className="mb-4">
-            <Card.Body className="p-3">
+            <Card.Body className="p-3 d-flex justify-content-center align-items-center">
               <div className="category-tabs-container">
                 {renderCategoryTabs()}
               </div>
@@ -758,9 +777,10 @@ const NotificationsPage = () => {
                             <li>
                               <button
                                 className="dropdown-item text-danger"
-                                onClick={() =>
-                                  deleteNotification(notification._id)
-                                }
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  deleteNotification(notification._id);
+                                }}
                               >
                                 <i className="ri-delete-bin-line me-2"></i> Xóa
                                 thông báo 123

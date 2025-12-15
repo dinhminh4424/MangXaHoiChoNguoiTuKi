@@ -1,10 +1,12 @@
 // components/Group/GroupHeader.js
-import React, { useState, useRef } from "react";
-import { Users, Settings, Share, MoreHorizontal } from "lucide-react";
+import React, { useState } from "react";
+import { Users, Settings, BarChart2 } from "lucide-react";
 import { Button, Dropdown, ButtonGroup, Modal } from "react-bootstrap";
 import NotificationService from "../../services/notificationService";
 import TiptapEditor from "../journal/TiptapEditor";
 import { X, Image } from "lucide-react";
+
+import api from "../../services/api";
 
 import { useAuth } from "../../contexts/AuthContext";
 import groupService from "../../services/groupService";
@@ -25,14 +27,122 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
     files: [],
   });
 
+  // report
+  const [showListReport, setShowListReport] = useState(false);
+  const [loadingListReports, setLoadingListReports] = useState(false);
+  const [errorListReports, setErrorListReports] = useState("");
+  const [listReports, setListReports] = useState([]);
+
   console.log("isMember: ", isMember);
   console.log("userRole: ", userRole);
 
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
 
-  // load image default
+  //  QR CODE
+  const [qrCode, setQrCode] = React.useState(null);
+  const [qrLoading, setQrLoading] = React.useState(false);
+  const [showQRModal, setShowQRModal] = React.useState(false);
+  const [qrError, setQrError] = React.useState(null);
 
+  // Hàm lấy QR code
+  const loadQRCode = async () => {
+    try {
+      setQrLoading(true);
+      setQrError(null);
+
+      const response = await api.get(`/api/groups/${group._id}/qr`);
+
+      if (response.data.success) {
+        const qrDataURL = response.data.data?.qrDataURL || response.data.data;
+        if (qrDataURL) {
+          setQrCode(qrDataURL);
+        } else {
+          throw new Error("Không tìm thấy QR code data");
+        }
+      } else {
+        throw new Error(response.data.message || "Không thể tải QR code");
+      }
+    } catch (error) {
+      console.error("Lỗi tải QR code:", error);
+      setQrError(
+        error.response?.data?.message ||
+          error.message ||
+          "Không thể tải QR code"
+      );
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  // Hàm mở modal và load QR code
+  const handleShowQRCode = async () => {
+    setShowQRModal(true);
+    await loadQRCode(); // Load QR khi mở modal
+  };
+
+  // Hàm cập nhật QR code
+  const updateQRCode = async () => {
+    try {
+      setQrLoading(true);
+      const response = await api.put(`/api/groups/${group._id}/qr`);
+
+      if (response.data.success) {
+        const qrDataURL = response.data.data?.qrDataURL || response.data.data;
+        if (qrDataURL) {
+          setQrCode(qrDataURL);
+          NotificationService.success({
+            title: "Thành công!",
+            text: "QR code đã được cập nhật",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật QR code:", error);
+      NotificationService.error({
+        title: "Lỗi",
+        text: error.response?.data?.message || "Không thể cập nhật QR code",
+      });
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  // Tải QR code khi component mount
+  React.useEffect(() => {
+    if (group._id) {
+      loadQRCode();
+    }
+  }, [group]);
+
+  const fetchListReports = React.useCallback(async () => {
+    try {
+      setLoadingListReports(true);
+      setErrorListReports("");
+
+      const res = await groupService.getGroupReports(group._id);
+      console.log("Báo cáo nhóm: ", res);
+
+      if (res.success) {
+        setListReports(res.violations || []);
+      }
+    } catch (error) {
+      console.error("Lỗi tải báo cáo nhóm:", error);
+      setErrorListReports(
+        "Loi tải báo cáo nhóm: " +
+          (error.response?.data?.message ||
+            error.message ||
+            "Lỗi không xác định")
+      );
+    }
+  }, [group._id]);
+
+  const loadingsListReportsGroup = async () => {
+    await fetchListReports();
+    setLoadingListReports(false);
+  };
+
+  // load image default
   const loadImageDefault = React.useCallback(async () => {
     try {
       const resBanner = await getImagesByCategoryActive("BannerGroup");
@@ -171,19 +281,6 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
     }
   };
 
-  const handleShare = () => {
-    if (navigator.share) {
-      navigator.share({
-        title: group.name,
-        text: group.description,
-        url: window.location.href,
-      });
-    } else {
-      navigator.clipboard.writeText(window.location.href);
-      // Hiển thị toast thông báo đã copy
-    }
-  };
-
   return (
     <div className="group-header ">
       <div className="group-cover">
@@ -201,7 +298,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
         <div className="cover-overlay">
           <div className="container">
             <div className="row align-items-end">
-              <div className="col-md-8">
+              <div className="col-md-6">
                 <div className="group-info">
                   <div className="group-avatar">
                     {group.avatar ? (
@@ -250,7 +347,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                 </div>
               </div>
 
-              <div className="col-md-4">
+              <div className="col-md-6">
                 <div className="group-actions">
                   {user && (
                     <>
@@ -280,7 +377,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                             <Button
                               variant="primary"
                               size="lg"
-                              className="leave-btn"
+                              className="leave-btn p-1"
                               onClick={onLeave}
                             >
                               Rời nhóm
@@ -289,30 +386,30 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                         </div>
                       )}
 
-                      <div className="d-flex gap-2 mt-2">
+                      <div className="d-flex gap-2 mt-2 p-4 d-flex align-items-center">
                         <a
-                          className="btn btn-primary "
+                          className="btn btn-primary d-flex align-items-center p-2"
                           href={`/group/createPost/${group._id}`}
                           title="Đăng bài"
                         >
+                          <i className="fas fa-plus me-2"></i>
                           Đăng bài
                         </a>
 
-                        <div
-                          className="btn btn-primary"
-                          size="md"
-                          onClick={handleShare}
-                          title="Chia sẻ nhóm"
+                        {/* Thêm nút QR Code vào đây */}
+                        <button
+                          className="btn btn-warning d-flex align-items-center p-2"
+                          onClick={handleShowQRCode}
                         >
-                          <Share size={20} />
-                          Chia sẻ
-                        </div>
+                          <i className="fas fa-qrcode me-2"></i>
+                          QR
+                        </button>
                         {userRole !== "owner" && userRole !== "moderator" ? (
                           <Dropdown as={ButtonGroup}>
                             <Dropdown.Toggle
                               variant="info"
                               size="md"
-                              className="text-white d-flex align-items-center"
+                              className=" text-white d-flex align-items-center p-2"
                             >
                               <Settings size={20} className="me-2" />
                               Báo cáo nhóm
@@ -331,7 +428,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                             <Dropdown.Toggle
                               variant="info"
                               size="md"
-                              className="text-white d-flex align-items-center"
+                              className="btn btn-primary d-flex align-items-center p-2"
                             >
                               <Settings size={20} className="me-2" />
                               Báo cáo & thống kê
@@ -339,15 +436,22 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
 
                             <Dropdown.Menu>
                               <Dropdown.Item
-                                onClick={() => alert("Báo cáo nhóm")}
+                                onClick={() => {
+                                  setShowListReport(true);
+                                  loadingsListReportsGroup();
+                                }}
                               >
                                 Xem lịch sử
                               </Dropdown.Item>
 
                               <Dropdown.Item
-                                onClick={() => alert("Thống kê nhóm")}
+                                onClick={() => {
+                                  // Thêm route hoặc modal hiển thị thống kê
+                                  window.location.href = `/group/${group._id}/statistics`;
+                                }}
                               >
-                                Thống kê
+                                <BarChart2 size={16} className="me-2" />
+                                Thống kê chi tiết
                               </Dropdown.Item>
                             </Dropdown.Menu>
                           </Dropdown>
@@ -361,6 +465,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
           </div>
         </div>
 
+        {/* báo cáo */}
         <Modal
           show={showReport}
           onHide={() => setShowReport(false)}
@@ -572,6 +677,214 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
               ) : (
                 "Gửi báo cáo"
               )}
+            </Button>
+          </Modal.Footer>
+        </Modal>
+
+        {/* Modal hiển thị QR Code lớn */}
+        <Modal
+          show={showQRModal}
+          onHide={() => setShowQRModal(false)}
+          centered
+          size="sm"
+        >
+          <Modal.Header closeButton className="bg-primary text-white">
+            <Modal.Title>
+              <i className="fas fa-qrcode me-2"></i>
+              QR Code Group
+            </Modal.Title>
+          </Modal.Header>
+          <Modal.Body className="text-center p-4">
+            {qrLoading ? (
+              <div className="py-4">
+                <div className="spinner-border text-primary mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="text-muted">Đang tải QR code...</p>
+              </div>
+            ) : qrError ? (
+              <div className="py-3">
+                <div className="alert alert-warning mb-3">
+                  <i className="fas fa-exclamation-triangle me-2"></i>
+                  {qrError}
+                </div>
+                <Button variant="primary" onClick={loadQRCode}>
+                  <i className="fas fa-redo me-2"></i>
+                  Thử lại
+                </Button>
+              </div>
+            ) : qrCode ? (
+              <>
+                <img
+                  src={qrCode}
+                  alt="QR Code Profile"
+                  className="img-fluid rounded shadow-sm mb-3"
+                  style={{
+                    maxWidth: "100%",
+                    border: "8px solid white",
+                    boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                  }}
+                />
+                <p className="text-muted mb-3">
+                  Quét QR code để xem group của <strong>{group?.name}</strong>
+                </p>
+                <div className="d-flex justify-content-center gap-2 flex-wrap">
+                  <Button
+                    variant="outline-primary"
+                    size="sm"
+                    onClick={() => {
+                      const link = document.createElement("a");
+                      link.href = qrCode;
+                      link.download = `qr-profile-${group?.name || "user"}.png`;
+                      document.body.appendChild(link);
+                      link.click();
+                      document.body.removeChild(link);
+                    }}
+                  >
+                    <i className="fas fa-download me-2"></i>
+                    Tải xuống
+                  </Button>
+                  <Button
+                    variant="primary"
+                    size="sm"
+                    onClick={() => {
+                      const profileUrl = `${process.env.REACT_APP_FRONTEND_URL}/group/${group._id}`;
+                      navigator.clipboard.writeText(profileUrl);
+                      NotificationService.success({
+                        title: "Đã sao chép!",
+                        text: "Đã sao chép link profile vào clipboard",
+                        timer: 2000,
+                      });
+                    }}
+                  >
+                    <i className="fas fa-link me-2"></i>
+                    Sao chép link
+                  </Button>
+                  {(userRole === "owner" || user.role === "admin") && (
+                    <Button
+                      variant="outline-secondary"
+                      size="sm"
+                      onClick={updateQRCode}
+                      disabled={qrLoading}
+                    >
+                      {qrLoading ? (
+                        <span className="spinner-border spinner-border-sm"></span>
+                      ) : (
+                        <>
+                          <i className="fas fa-refresh me-2"></i>
+                          Làm mới
+                        </>
+                      )}
+                    </Button>
+                  )}
+                </div>
+              </>
+            ) : (
+              <div className="py-3">
+                <p className="text-muted">Không thể tải QR code</p>
+                <Button variant="primary" onClick={loadQRCode}>
+                  <i className="fas fa-redo me-2"></i>
+                  Thử lại
+                </Button>
+              </div>
+            )}
+          </Modal.Body>
+        </Modal>
+
+        {/*danh sách báo cáo */}
+        <Modal
+          show={showListReport}
+          onHide={() => setShowListReport(false)}
+          centered
+          scrollable
+          animation
+          size="lg"
+        >
+          <Modal.Header closeButton className="bg-danger text-white">
+            <Modal.Title>Lịch sử báo cáo</Modal.Title>
+          </Modal.Header>
+
+          <Modal.Body>
+            {loadingListReports ? (
+              <div className="text-center my-4">
+                <div className="spinner-border text-danger" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+              </div>
+            ) : errorListReports ? (
+              <div className="alert alert-danger" role="alert">
+                {errorListReports}
+              </div>
+            ) : listReports.length === 0 ? (
+              <div className="alert alert-info" role="alert">
+                Chưa có báo cáo nào cho nhóm này.
+              </div>
+            ) : (
+              <div className="list-reports">
+                {listReports.map((report, index) => (
+                  <div key={index} className="card">
+                    <div className="card-header container-fluid">
+                      <div className="d-flex justify-content-center align-items-between">
+                        <div className="me-3 text-center">
+                          <strong>Lý do:</strong> {report.reason}
+                        </div>
+                        <div>
+                          Trạng thái:{" "}
+                          {/* "pending", "reviewed", "approved", "rejected", "auto" */}
+                          {report.status === "pending" && (
+                            <span className="badge bg-warning text-dark">
+                              Đang chờ xử lý
+                            </span>
+                          )}
+                          {report.status === "reviewed" && (
+                            <span className="badge bg-info text-dark">
+                              Đã xem xét
+                            </span>
+                          )}
+                          {report.status === "approved" && (
+                            <span className="badge bg-danger">Bị Vi Phạm</span>
+                          )}
+                          {report.status === "rejected" && (
+                            <span className="badge bg-success">
+                              Không vi phạm
+                            </span>
+                          )}
+                          {report.status === "auto" && (
+                            <span className="badge bg-secondary">Tự động</span>
+                          )}
+                        </div>
+                      </div>
+                      <p></p>
+                    </div>
+                    <div className="card-body">
+                      <h5>Mã báo cáo: {report._id}</h5>
+
+                      <p>
+                        <strong>Ghi chú:</strong>{" "}
+                        <span className="text-muted">{report.notes}</span>
+                      </p>
+
+                      <p>
+                        <strong>Ngày báo cáo:</strong>{" "}
+                        <span className="text-muted">
+                          {new Date(report.createdAt).toLocaleString()}
+                        </span>
+                      </p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Modal.Body>
+
+          <Modal.Footer>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setShowListReport(false)}
+              disabled={uploading}
+            >
+              Đóng
             </Button>
           </Modal.Footer>
         </Modal>

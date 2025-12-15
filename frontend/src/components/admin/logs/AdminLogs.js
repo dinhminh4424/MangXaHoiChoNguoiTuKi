@@ -518,8 +518,8 @@ const AdminLogs = () => {
 
   return (
     <div className="admin-logs">
-      <Card className="shadow-sm border-0">
-        <Card.Header className="bg-white border-bottom">
+      <Card className="shadow-sm border-0 mt-2">
+        <Card.Header className="page-header bg-white border-bottom">
           <div className="d-flex justify-content-between align-items-center">
             <h4 className="mb-0 fw-bold text-dark">
               <i className="fas fa-user-clock text-primary me-2"></i>

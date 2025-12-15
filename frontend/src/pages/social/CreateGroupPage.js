@@ -161,7 +161,7 @@ const CreateGroupPage = () => {
       const response = await groupService.createGroup(submitData);
       if (response.success) {
         alert("Tạo nhóm thành công!");
-        navigate(`/groups/${response.group._id}`);
+        navigate(`/group/${response.group._id}`);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Lỗi khi tạo nhóm");
@@ -294,7 +294,7 @@ const CreateGroupPage = () => {
                             <Button
                               variant="danger"
                               size="sm"
-                              className="position-absolute top-0 end-0"
+                              className="position-absolute top-50  end-0"
                               onClick={() => {
                                 setAvatarPreview("");
                                 setFormData((prev) => ({

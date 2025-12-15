@@ -6,7 +6,6 @@ import {
   Card,
   Form,
   Button,
-  Alert,
   Modal,
   ProgressBar,
 } from "react-bootstrap";
@@ -26,7 +25,6 @@ import {
   Telephone,
   ShieldCheck,
   Eye,
-  EyeSlash,
 } from "react-bootstrap-icons";
 import api from "../../services/api";
 import notificationService from "../../services/notificationService";
@@ -46,8 +44,6 @@ const AppealForm = () => {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [showPreview, setShowPreview] = useState(false);
   const [characterCount, setCharacterCount] = useState(0);
-  const [showPassword, setShowPassword] = useState(false);
-  const [tempPassword, setTempPassword] = useState("");
 
   const fileInputRef = useRef(null);
   const maxMessageLength = 2000;

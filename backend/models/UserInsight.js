@@ -17,17 +17,7 @@ const userInsightSchema = new mongoose.Schema({
   sensorySoothers: [String], // ["âm nhạc lo-fi", "đeo headphone", "ôm gối nặng"]
 
   // Communication style
-  preferredStyle: {
-    // AI sẽ tự điều chỉnh cách nói
-    type: String,
-    enum: [
-      "ngắn gọn",
-      "chi tiết",
-      "dùng emoji nhiều",
-      "không dùng ẩn dụ",
-      "dùng ví dụ thực tế",
-    ],
-  },
+  preferredStyle: [String],
 
   // Chủ đề yêu thích / cần tránh
   favoriteTopics: [String],

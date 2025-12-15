@@ -83,6 +83,8 @@ export const ChatProvider = ({ children }) => {
     //     )
     //   );
     // });
+
+    // Cập nhật hàm nhận tin nhắn để tránh duplicate và cập nhật đúng conversation
     socketRef.current.on("receive_message", (data) => {
       const incomingMessage = data?.message;
       const incomingChat = data?.chat;
@@ -360,7 +362,8 @@ export const ChatProvider = ({ children }) => {
       }
 
       // Cập nhật state local
-      setMessages((prev) => [...prev, fileMessage]);
+      // setMessages((prev) => [...prev, fileMessage]);
+
       setConversations((prev) =>
         prev.map((conv) =>
           conv._id === selectedChat._id
