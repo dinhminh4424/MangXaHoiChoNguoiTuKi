@@ -888,7 +888,7 @@ const AdminEmergencyManagement = () => {
                     <tr
                       key={emergency._id}
                       className={`fade-in ${
-                        emergency.priority === "critical" ? "table-danger" : ""
+                        emergency.priority === "critical" ? "" : "table-danger"
                       }`}
                     >
                       <td className="ps-4">
@@ -1560,21 +1560,63 @@ const AdminEmergencyManagement = () => {
                             <Users size={16} className="me-2" />
                             Chỉ định đội phản hồi
                           </Button>
+                          <Button
+                            variant="success"
+                            onClick={() =>
+                              handleStatusChange(
+                                selectedEmergency._id,
+                                "resolved"
+                              )
+                            }
+                          >
+                            <CheckCircle size={16} className="me-2" />
+                            Đánh dấu đã giải quyết
+                          </Button>
                         </>
                       )}
                       {selectedEmergency.status === "in_progress" && (
-                        <Button
-                          variant="success"
-                          onClick={() =>
-                            handleStatusChange(
-                              selectedEmergency._id,
-                              "resolved"
-                            )
-                          }
-                        >
-                          <CheckCircle size={16} className="me-2" />
-                          Đánh dấu đã giải quyết
-                        </Button>
+                        <>
+                          <Button
+                            variant="success"
+                            onClick={() =>
+                              handleStatusChange(
+                                selectedEmergency._id,
+                                "resolved"
+                              )
+                            }
+                          >
+                            <CheckCircle size={16} className="me-2" />
+                            Đánh dấu đã giải quyết
+                          </Button>
+                        </>
+                      )}
+                      {selectedEmergency.status === "responded" && (
+                        <>
+                          <Button
+                            variant="success"
+                            onClick={() =>
+                              handleStatusChange(
+                                selectedEmergency._id,
+                                "resolved"
+                              )
+                            }
+                          >
+                            <CheckCircle size={16} className="me-2" />
+                            Đánh dấu đã giải quyết
+                          </Button>
+                          <Button
+                            variant="primary"
+                            onClick={() =>
+                              handleStatusChange(
+                                selectedEmergency._id,
+                                "in_progress"
+                              )
+                            }
+                          >
+                            <Activity size={16} className="me-2" />
+                            Đánh dấu đang giải quyết
+                          </Button>
+                        </>
                       )}
                       <Button
                         variant="outline-primary"

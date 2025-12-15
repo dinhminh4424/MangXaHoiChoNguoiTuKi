@@ -39,7 +39,6 @@ import {
   FiAlertTriangle,
   FiHeart,
   FiTrendingUp,
-  FiTrendingDown,
   FiActivity,
   FiBarChart2,
   FiPieChart,
