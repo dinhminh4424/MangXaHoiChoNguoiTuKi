@@ -99,9 +99,14 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       label: "Châm Ngôn",
     },
     {
+      path: "/admin/emergencies",
+      icon: "ri-alarm-warning-line", // icon cảnh báo / khẩn cấp
+      label: "Khẩn Cấp",
+    },
+
+    {
       path: "/admin/system",
       icon: "ri-settings-3-line",
-
       label: "Cài Đặt Hệ Thống",
       children: [
         {

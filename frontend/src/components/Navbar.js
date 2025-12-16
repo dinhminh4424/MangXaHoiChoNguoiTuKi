@@ -27,9 +27,9 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
     { path: "/", icon: "fa-solid fa-house", label: "Trang chủ" },
     { path: "/feed", icon: "las la-newspaper", label: "Bài viết mới" },
     { path: "/profile", icon: "las la-user", label: "Trang cá nhân" },
-    { path: "/chat", icon: "las la-comments", label: "Chat" },
+    { path: "/chat", icon: "las la-comments", label: "Tin nhắn" },
     { path: "/group", icon: "las la-users", label: "Nhóm" },
-    { path: "/todo", icon: "las la-check-circle", label: "Todo" },
+    { path: "/todo", icon: "las la-check-circle", label: "Công việc" },
     {
       path: "/journal",
       icon: "las la-book",
@@ -61,7 +61,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
     {
       path: "/profile/dashboard",
       icon: "ri-dashboard-line",
-      label: "Dashboard",
+      label: "Thống kê",
     },
     {
       path: "/homeContact",

@@ -1353,9 +1353,7 @@ const ProfileView = ({ userId }) => {
                 <div className="col-md-4">
                   <div className="card border-0 bg-gradient-primary text-white text-center">
                     <div className="card-body py-3">
-                      <h5 className="mb-1">
-                        {viewedUser?.countPost || "Chưa cập nhật"}
-                      </h5>
+                      <h5 className="mb-1">{viewedUser?.countPost || "0"}</h5>
                       <small>Bài viết</small>
                     </div>
                   </div>

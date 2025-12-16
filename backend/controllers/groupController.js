@@ -382,7 +382,7 @@ class GroupController {
         .sort({ createdAt: -1 })
         .skip(skip)
         .limit(limit)
-        .populate("userCreateID", "username _id avatar fullName");
+        .populate("userCreateID", "username _id profile fullName");
 
       const total = await Post.countDocuments(query);
       const totalPages = Math.ceil(total / limit);

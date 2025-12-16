@@ -30,7 +30,7 @@ const ProfileEdit = () => {
   const fileInputRef = useRef(null);
   const dropAreaRef = useRef(null);
 
-  const defaultAvatar = "/images/default-avatar.png";
+  const defaultAvatar = "/assets/images/default-avatar.png";
 
   // Trong ProfileEdit component
   const [idVerifiedData, setIdVerifiedData] = useState(null);

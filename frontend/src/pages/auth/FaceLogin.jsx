@@ -2303,9 +2303,9 @@ const FaceLogin = () => {
                 <i className="fas fa-face-recognition fa-2x me-3"></i>
                 <div>
                   <h2 className="h3 mb-0">Đăng Nhập Bằng Khuôn Mặt</h2>
-                  <p className="mb-0 opacity-75">
+                  {/* <p className="mb-0 opacity-75">
                     Số lần thử: {currentAttempt}/{MAX_ATTEMPTS}
-                  </p>
+                  </p> */}
                 </div>
               </div>
             </div>
@@ -2421,7 +2421,10 @@ const FaceLogin = () => {
               scrollable
             >
               <Modal.Header closeButton className="bg-success text-white">
-                <Modal.Title>🎉 Đăng Nhập Thành Công</Modal.Title>
+                <Modal.Title className="text-white">
+                  {" "}
+                  Đăng Nhập Thành Công
+                </Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
@@ -2457,7 +2460,7 @@ const FaceLogin = () => {
                 )}
 
                 <div className="mt-3">
-                  <h6>📊 Kết quả so sánh với tất cả người dùng:</h6>
+                  <h6> Kết quả so sánh với tất cả người dùng:</h6>
                   <div className="table-responsive">
                     <table className="table table-sm table-striped">
                       <thead>
@@ -2473,7 +2476,7 @@ const FaceLogin = () => {
                           <tr
                             key={index}
                             className={
-                              match.status === "✅ Khớp" ? "table-success" : ""
+                              match.status === " Khớp" ? "table-success" : ""
                             }
                           >
                             <td>{match.username}</td>
@@ -2485,7 +2488,7 @@ const FaceLogin = () => {
                             </td>
                             <td>
                               {match.status ||
-                                (match.error && `❌ ${match.error}`)}
+                                (match.error && ` ${match.error}`)}
                             </td>
                           </tr>
                         ))}
@@ -2520,7 +2523,7 @@ const FaceLogin = () => {
               scrollable
             >
               <Modal.Header closeButton className="bg-danger text-white">
-                <Modal.Title>❌ Đăng Nhập Thất Bại</Modal.Title>
+                <Modal.Title> Đăng Nhập Thất Bại</Modal.Title>
               </Modal.Header>
 
               <Modal.Body>
@@ -2529,7 +2532,7 @@ const FaceLogin = () => {
                 </div>
 
                 <div className="mt-3">
-                  <h6>📊 Kết quả {MAX_ATTEMPTS} lần thử:</h6>
+                  <h6> Kết quả {MAX_ATTEMPTS} lần thử:</h6>
                   <div className="table-responsive">
                     <table className="table table-sm table-striped">
                       <thead>

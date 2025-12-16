@@ -77,6 +77,7 @@ const Feed = () => {
   }, [searchTerm]);
 
   // Infinite scroll observer
+  //////////////////////////////////////////////////////////////////////////
   useEffect(() => {
     if (loading || !hasMore) return;
 
@@ -100,6 +101,8 @@ const Feed = () => {
     };
   }, [loading, hasMore, posts.length]);
 
+  //////////////////////////////////////////////////////////////////////////
+
   // Load posts với debounce
   const loadPosts = useCallback(
     async (pageNum = 1, append = false) => {
@@ -109,7 +112,7 @@ const Feed = () => {
       try {
         const params = {
           page: pageNum,
-          limit: 10,
+          limit: 5,
           ...filters,
         };
 
@@ -438,28 +441,6 @@ const Feed = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Stats */}
-              {/* <div className="filter-card">
-                <div className="filter-header">
-                  <TrendingUp size={18} />
-                  <span>Thống kê</span>
-                </div>
-                <div className="filter-content">
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.totalPosts}</div>
-                    <div className="stats-label">Bài viết</div>
-                  </div>
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.publicPosts}</div>
-                    <div className="stats-label">Công khai</div>
-                  </div>
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.anonymousPosts}</div>
-                    <div className="stats-label">Ẩn danh</div>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
 

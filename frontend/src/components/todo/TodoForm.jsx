@@ -1,600 +1,50 @@
-// // components/todo/TodoForm.jsx
-// import React, { useState, useEffect } from "react";
-// import { useNavigate, useParams } from "react-router-dom";
-// import {
-//   Box,
-//   Card,
-//   CardContent,
-//   Typography,
-//   Button,
-//   TextField,
-//   FormControl,
-//   InputLabel,
-//   Select,
-//   MenuItem,
-//   Chip,
-//   Grid,
-//   FormControlLabel,
-//   Checkbox,
-//   Divider,
-//   Snackbar,
-//   Alert,
-//   Paper,
-//   IconButton,
-// } from "@mui/material";
-// import { Add, Delete, ArrowBack } from "@mui/icons-material";
-// import { todoService } from "../../services/todoService";
-
-// const TodoForm = ({ todoId }) => {
-//   const navigate = useNavigate();
-//   const { id } = useParams();
-//   const actualTodoId = todoId || id;
-
-//   const [loading, setLoading] = useState(false);
-//   const [isEditing, setIsEditing] = useState(!!actualTodoId);
-//   const [snackbar, setSnackbar] = useState({
-//     open: false,
-//     message: "",
-//     severity: "success",
-//   });
-
-//   const [formData, setFormData] = useState({
-//     title: "",
-//     description: "",
-//     start: "",
-//     end: "",
-//     type: "Task",
-//     priority: "medium",
-//     isAllDay: false,
-//     location: "",
-//     dueDate: "",
-//     tags: [],
-//     category: "",
-//     isImportant: false,
-//     status: "scheduled",
-//   });
-
-//   const [newTag, setNewTag] = useState("");
-//   const [subtasks, setSubtasks] = useState([]);
-//   const [newSubtask, setNewSubtask] = useState("");
-
-//   useEffect(() => {
-//     if (actualTodoId) {
-//       fetchTodoDetail();
-//     }
-//   }, [actualTodoId]);
-
-//   const fetchTodoDetail = async () => {
-//     try {
-//       setLoading(true);
-//       const response = await todoService.getTodoDetail(actualTodoId);
-//       const todo = response.todo;
-
-//       setFormData({
-//         title: todo.title,
-//         description: todo.description || "",
-//         start: todo.start
-//           ? new Date(todo.start).toISOString().slice(0, 16)
-//           : "",
-//         end: todo.end ? new Date(todo.end).toISOString().slice(0, 16) : "",
-//         type: todo.type || "Task",
-//         priority: todo.priority || "medium",
-//         isAllDay: todo.isAllDay || false,
-//         location: todo.location || "",
-//         dueDate: todo.dueDate
-//           ? new Date(todo.dueDate).toISOString().slice(0, 16)
-//           : "",
-//         tags: todo.tags || [],
-//         category: todo.category || "",
-//         isImportant: todo.isImportant || false,
-//         status: todo.status || "scheduled",
-//       });
-
-//       setSubtasks(todo.subtasks || []);
-//     } catch (error) {
-//       showSnackbar(error.message || "Lỗi tải chi tiết công việc", "error");
-//       navigate("/todo/list");
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const showSnackbar = (message, severity = "success") => {
-//     setSnackbar({ open: true, message, severity });
-//   };
-
-//   const handleSubmit = async (e) => {
-//     e.preventDefault();
-
-//     if (!formData.title.trim()) {
-//       showSnackbar("Vui lòng nhập tiêu đề công việc", "error");
-//       return;
-//     }
-
-//     try {
-//       setLoading(true);
-
-//       const submitData = {
-//         ...formData,
-//         subtasks: subtasks.map((st) => ({
-//           title: st.title,
-//           completed: st.completed || false,
-//         })),
-//       };
-
-//       if (isEditing) {
-//         await todoService.updateTodo(actualTodoId, submitData);
-//         showSnackbar("Cập nhật công việc thành công");
-//       } else {
-//         await todoService.createTodo(submitData);
-//         showSnackbar("Tạo công việc thành công");
-//       }
-
-//       setTimeout(() => {
-//         navigate("/todo/list");
-//       }, 1000);
-//     } catch (error) {
-//       showSnackbar(
-//         error.message || `Lỗi ${isEditing ? "cập nhật" : "tạo"} công việc`,
-//         "error"
-//       );
-//     } finally {
-//       setLoading(false);
-//     }
-//   };
-
-//   const handleAddTag = () => {
-//     if (newTag.trim() && !formData.tags.includes(newTag.trim())) {
-//       setFormData({
-//         ...formData,
-//         tags: [...formData.tags, newTag.trim()],
-//       });
-//       setNewTag("");
-//     }
-//   };
-
-//   const handleRemoveTag = (tagToRemove) => {
-//     setFormData({
-//       ...formData,
-//       tags: formData.tags.filter((tag) => tag !== tagToRemove),
-//     });
-//   };
-
-//   const handleAddSubtask = () => {
-//     if (newSubtask.trim()) {
-//       setSubtasks([
-//         ...subtasks,
-//         { title: newSubtask.trim(), completed: false },
-//       ]);
-//       setNewSubtask("");
-//     }
-//   };
-
-//   const handleRemoveSubtask = (index) => {
-//     setSubtasks(subtasks.filter((_, i) => i !== index));
-//   };
-
-//   const handleToggleSubtask = (index) => {
-//     const updatedSubtasks = [...subtasks];
-//     updatedSubtasks[index].completed = !updatedSubtasks[index].completed;
-//     setSubtasks(updatedSubtasks);
-//   };
-
-//   if (loading && isEditing) {
-//     return (
-//       <Typography textAlign="center" sx={{ p: 4 }}>
-//         Đang tải...
-//       </Typography>
-//     );
-//   }
-
-//   return (
-//     <Box sx={{ maxWidth: 800, margin: "0 auto", p: 3 }}>
-//       {/* Header */}
-//       <Box sx={{ display: "flex", alignItems: "center", mb: 3 }}>
-//         <IconButton onClick={() => navigate("/todo/list")} sx={{ mr: 2 }}>
-//           <ArrowBack />
-//         </IconButton>
-//         <Typography variant="h4">
-//           {isEditing ? "Chỉnh Sửa Công Việc" : "Tạo Công Việc Mới"}
-//         </Typography>
-//       </Box>
-
-//       <Card>
-//         <CardContent>
-//           <form onSubmit={handleSubmit}>
-//             <Grid container spacing={3}>
-//               {/* Basic Information */}
-//               <Grid item xs={12}>
-//                 <Typography variant="h6" gutterBottom color="primary">
-//                   Thông tin cơ bản
-//                 </Typography>
-//               </Grid>
-
-//               <Grid item xs={12}>
-//                 <TextField
-//                   fullWidth
-//                   label="Tiêu đề *"
-//                   value={formData.title}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, title: e.target.value })
-//                   }
-//                   required
-//                 />
-//               </Grid>
-
-//               <Grid item xs={12}>
-//                 <TextField
-//                   fullWidth
-//                   multiline
-//                   rows={4}
-//                   label="Mô tả"
-//                   value={formData.description}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, description: e.target.value })
-//                   }
-//                 />
-//               </Grid>
-
-//               {/* Type and Priority */}
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth>
-//                   <InputLabel>Loại công việc</InputLabel>
-//                   <Select
-//                     value={formData.type}
-//                     label="Loại công việc"
-//                     onChange={(e) =>
-//                       setFormData({ ...formData, type: e.target.value })
-//                     }
-//                   >
-//                     <MenuItem value="Meeting">Meeting</MenuItem>
-//                     <MenuItem value="Business travel">Công tác</MenuItem>
-//                     <MenuItem value="Personal Work">Cá nhân</MenuItem>
-//                     <MenuItem value="Team Project">Dự án nhóm</MenuItem>
-//                     <MenuItem value="Appointment">Cuộc hẹn</MenuItem>
-//                     <MenuItem value="Task">Công việc</MenuItem>
-//                     <MenuItem value="Other">Khác</MenuItem>
-//                   </Select>
-//                 </FormControl>
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth>
-//                   <InputLabel>Mức độ ưu tiên</InputLabel>
-//                   <Select
-//                     value={formData.priority}
-//                     label="Mức độ ưu tiên"
-//                     onChange={(e) =>
-//                       setFormData({ ...formData, priority: e.target.value })
-//                     }
-//                   >
-//                     <MenuItem value="low">Thấp</MenuItem>
-//                     <MenuItem value="medium">Trung bình</MenuItem>
-//                     <MenuItem value="high">Cao</MenuItem>
-//                   </Select>
-//                 </FormControl>
-//               </Grid>
-
-//               {/* Calendar Information */}
-//               <Grid item xs={12}>
-//                 <Divider sx={{ my: 2 }} />
-//                 <Typography variant="h6" gutterBottom color="primary">
-//                   Thông tin lịch
-//                 </Typography>
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <TextField
-//                   fullWidth
-//                   label="Bắt đầu"
-//                   type="datetime-local"
-//                   value={formData.start}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, start: e.target.value })
-//                   }
-//                   InputLabelProps={{ shrink: true }}
-//                 />
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <TextField
-//                   fullWidth
-//                   label="Kết thúc"
-//                   type="datetime-local"
-//                   value={formData.end}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, end: e.target.value })
-//                   }
-//                   InputLabelProps={{ shrink: true }}
-//                 />
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <TextField
-//                   fullWidth
-//                   label="Hạn hoàn thành"
-//                   type="datetime-local"
-//                   value={formData.dueDate}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, dueDate: e.target.value })
-//                   }
-//                   InputLabelProps={{ shrink: true }}
-//                 />
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <TextField
-//                   fullWidth
-//                   label="Địa điểm"
-//                   value={formData.location}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, location: e.target.value })
-//                   }
-//                 />
-//               </Grid>
-
-//               {/* Additional Information */}
-//               <Grid item xs={12}>
-//                 <Divider sx={{ my: 2 }} />
-//                 <Typography variant="h6" gutterBottom color="primary">
-//                   Thông tin bổ sung
-//                 </Typography>
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <TextField
-//                   fullWidth
-//                   label="Danh mục"
-//                   value={formData.category}
-//                   onChange={(e) =>
-//                     setFormData({ ...formData, category: e.target.value })
-//                   }
-//                 />
-//               </Grid>
-
-//               <Grid item xs={12} sm={6}>
-//                 <FormControl fullWidth>
-//                   <InputLabel>Trạng thái</InputLabel>
-//                   <Select
-//                     value={formData.status}
-//                     label="Trạng thái"
-//                     onChange={(e) =>
-//                       setFormData({ ...formData, status: e.target.value })
-//                     }
-//                   >
-//                     <MenuItem value="scheduled">Đã lên lịch</MenuItem>
-//                     <MenuItem value="in-progress">Đang thực hiện</MenuItem>
-//                     <MenuItem value="done">Hoàn thành</MenuItem>
-//                     <MenuItem value="cancelled">Đã hủy</MenuItem>
-//                   </Select>
-//                 </FormControl>
-//               </Grid>
-
-//               {/* Tags */}
-//               <Grid item xs={12}>
-//                 <Typography variant="subtitle1" gutterBottom>
-//                   Tags
-//                 </Typography>
-//                 <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
-//                   <TextField
-//                     size="small"
-//                     placeholder="Thêm tag..."
-//                     value={newTag}
-//                     onChange={(e) => setNewTag(e.target.value)}
-//                     onKeyPress={(e) =>
-//                       e.key === "Enter" && (e.preventDefault(), handleAddTag())
-//                     }
-//                   />
-//                   <Button onClick={handleAddTag} startIcon={<Add />}>
-//                     Thêm
-//                   </Button>
-//                 </Box>
-//                 <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
-//                   {formData.tags.map((tag, index) => (
-//                     <Chip
-//                       key={index}
-//                       label={tag}
-//                       onDelete={() => handleRemoveTag(tag)}
-//                       color="primary"
-//                       variant="outlined"
-//                     />
-//                   ))}
-//                 </Box>
-//               </Grid>
-
-//               {/* Subtasks */}
-//               <Grid item xs={12}>
-//                 <Typography variant="subtitle1" gutterBottom>
-//                   Công việc con
-//                 </Typography>
-//                 <Box sx={{ display: "flex", gap: 1, mb: 2 }}>
-//                   <TextField
-//                     fullWidth
-//                     size="small"
-//                     placeholder="Thêm công việc con..."
-//                     value={newSubtask}
-//                     onChange={(e) => setNewSubtask(e.target.value)}
-//                     onKeyPress={(e) =>
-//                       e.key === "Enter" &&
-//                       (e.preventDefault(), handleAddSubtask())
-//                     }
-//                   />
-//                   <Button onClick={handleAddSubtask} startIcon={<Add />}>
-//                     Thêm
-//                   </Button>
-//                 </Box>
-
-//                 {subtasks.map((subtask, index) => (
-//                   <Paper
-//                     key={index}
-//                     sx={{
-//                       p: 1,
-//                       mb: 1,
-//                       display: "flex",
-//                       alignItems: "center",
-//                       gap: 1,
-//                     }}
-//                   >
-//                     <Checkbox
-//                       checked={subtask.completed}
-//                       onChange={() => handleToggleSubtask(index)}
-//                     />
-//                     <Typography
-//                       sx={{
-//                         flex: 1,
-//                         textDecoration: subtask.completed
-//                           ? "line-through"
-//                           : "none",
-//                       }}
-//                     >
-//                       {subtask.title}
-//                     </Typography>
-//                     <IconButton
-//                       size="small"
-//                       onClick={() => handleRemoveSubtask(index)}
-//                       color="error"
-//                     >
-//                       <Delete fontSize="small" />
-//                     </IconButton>
-//                   </Paper>
-//                 ))}
-//               </Grid>
-
-//               {/* Options */}
-//               <Grid item xs={12}>
-//                 <Box sx={{ display: "flex", gap: 3 }}>
-//                   <FormControlLabel
-//                     control={
-//                       <Checkbox
-//                         checked={formData.isAllDay}
-//                         onChange={(e) =>
-//                           setFormData({
-//                             ...formData,
-//                             isAllDay: e.target.checked,
-//                           })
-//                         }
-//                       />
-//                     }
-//                     label="Sự kiện cả ngày"
-//                   />
-
-//                   <FormControlLabel
-//                     control={
-//                       <Checkbox
-//                         checked={formData.isImportant}
-//                         onChange={(e) =>
-//                           setFormData({
-//                             ...formData,
-//                             isImportant: e.target.checked,
-//                           })
-//                         }
-//                       />
-//                     }
-//                     label="Quan trọng"
-//                   />
-//                 </Box>
-//               </Grid>
-
-//               {/* Submit Buttons */}
-//               <Grid item xs={12}>
-//                 <Box
-//                   sx={{
-//                     display: "flex",
-//                     gap: 2,
-//                     justifyContent: "flex-end",
-//                     pt: 2,
-//                   }}
-//                 >
-//                   <Button
-//                     variant="outlined"
-//                     onClick={() => navigate("/todo/list")}
-//                     disabled={loading}
-//                   >
-//                     Hủy
-//                   </Button>
-//                   <Button
-//                     type="submit"
-//                     variant="contained"
-//                     disabled={loading || !formData.title.trim()}
-//                   >
-//                     {loading
-//                       ? "Đang xử lý..."
-//                       : isEditing
-//                       ? "Cập nhật"
-//                       : "Tạo công việc"}
-//                   </Button>
-//                 </Box>
-//               </Grid>
-//             </Grid>
-//           </form>
-//         </CardContent>
-//       </Card>
-
-//       {/* Snackbar */}
-//       <Snackbar
-//         open={snackbar.open}
-//         autoHideDuration={6000}
-//         onClose={() => setSnackbar({ ...snackbar, open: false })}
-//       >
-//         <Alert
-//           onClose={() => setSnackbar({ ...snackbar, open: false })}
-//           severity={snackbar.severity}
-//         >
-//           {snackbar.message}
-//         </Alert>
-//       </Snackbar>
-//     </Box>
-//   );
-// };
-
-// export default TodoForm;
-
 // components/todo/TodoForm.jsx
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import {
-  Box,
+  Container,
+  Row,
+  Col,
   Card,
-  CardContent,
-  Typography,
+  Form,
   Button,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip,
-  Grid,
-  FormControlLabel,
-  Checkbox,
-  Divider,
-  Snackbar,
   Alert,
-  Paper,
-  IconButton,
-  Stack,
-  CardHeader,
-  Avatar,
-  List,
-  ListItem,
-  ListItemIcon,
-  ListItemText,
-  ListItemSecondaryAction,
-} from "@mui/material";
+  Badge,
+  ListGroup,
+  InputGroup,
+  Modal,
+  Spinner,
+} from "react-bootstrap";
 import {
-  Add,
-  Delete,
-  ArrowBack,
-  Work,
-  Schedule,
+  ArrowLeft,
+  Save,
+  Plus,
+  Trash2,
+  Tag,
+  Calendar,
+  Clock,
+  MapPin,
   Flag,
-  Category,
-  LocalOffer,
-  Checklist,
-  Event,
-  Place,
-} from "@mui/icons-material";
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  CheckSquare,
+  Square,
+  X,
+  Folder,
+  Type,
+  AlignLeft,
+  CalendarDays,
+  Target,
+  Star,
+  Briefcase,
+  Users,
+  User,
+  Plane,
+  FileText,
+} from "lucide-react";
 import { todoService } from "../../services/todoService";
+import "./TodoForm.css";
 
 const TodoForm = ({ todoId }) => {
   const navigate = useNavigate();
@@ -603,10 +53,10 @@ const TodoForm = ({ todoId }) => {
 
   const [loading, setLoading] = useState(false);
   const [isEditing, setIsEditing] = useState(!!actualTodoId);
-  const [snackbar, setSnackbar] = useState({
-    open: false,
+  const [showAlert, setShowAlert] = useState({
+    show: false,
     message: "",
-    severity: "success",
+    variant: "success",
   });
 
   const [formData, setFormData] = useState({
@@ -623,11 +73,14 @@ const TodoForm = ({ todoId }) => {
     category: "",
     isImportant: false,
     status: "scheduled",
+    notes: "",
   });
 
   const [newTag, setNewTag] = useState("");
   const [subtasks, setSubtasks] = useState([]);
   const [newSubtask, setNewSubtask] = useState("");
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [subtaskToDelete, setSubtaskToDelete] = useState(null);
 
   useEffect(() => {
     if (actualTodoId) {
@@ -644,41 +97,50 @@ const TodoForm = ({ todoId }) => {
       setFormData({
         title: todo.title,
         description: todo.description || "",
-        start: todo.start
-          ? new Date(todo.start).toISOString().slice(0, 16)
-          : "",
-        end: todo.end ? new Date(todo.end).toISOString().slice(0, 16) : "",
+        start: todo.start ? formatDateTimeForInput(todo.start) : "",
+        end: todo.end ? formatDateTimeForInput(todo.end) : "",
         type: todo.type || "Task",
         priority: todo.priority || "medium",
         isAllDay: todo.isAllDay || false,
         location: todo.location || "",
-        dueDate: todo.dueDate
-          ? new Date(todo.dueDate).toISOString().slice(0, 16)
-          : "",
+        dueDate: todo.dueDate ? formatDateTimeForInput(todo.dueDate) : "",
         tags: todo.tags || [],
         category: todo.category || "",
         isImportant: todo.isImportant || false,
         status: todo.status || "scheduled",
+        notes: todo.notes || "",
       });
 
       setSubtasks(todo.subtasks || []);
     } catch (error) {
-      showSnackbar(error.message || "Lỗi tải chi tiết công việc", "error");
+      showAlertMessage(error.message || "Lỗi tải chi tiết công việc", "danger");
       navigate("/todo/list");
     } finally {
       setLoading(false);
     }
   };
 
-  const showSnackbar = (message, severity = "success") => {
-    setSnackbar({ open: true, message, severity });
+  const formatDateTimeForInput = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const localDate = new Date(
+      date.getTime() - date.getTimezoneOffset() * 60000
+    );
+    return localDate.toISOString().slice(0, 16);
+  };
+
+  const showAlertMessage = (message, variant = "success") => {
+    setShowAlert({ show: true, message, variant });
+    setTimeout(() => {
+      setShowAlert({ ...showAlert, show: false });
+    }, 3000);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
-      showSnackbar("Vui lòng nhập tiêu đề công việc", "error");
+      showAlertMessage("Vui lòng nhập tiêu đề công việc", "danger");
       return;
     }
 
@@ -695,19 +157,19 @@ const TodoForm = ({ todoId }) => {
 
       if (isEditing) {
         await todoService.updateTodo(actualTodoId, submitData);
-        showSnackbar("Cập nhật công việc thành công");
+        showAlertMessage("Cập nhật công việc thành công");
       } else {
         await todoService.createTodo(submitData);
-        showSnackbar("Tạo công việc thành công");
+        showAlertMessage("Tạo công việc thành công");
       }
 
       setTimeout(() => {
         navigate("/todo/list");
       }, 1000);
     } catch (error) {
-      showSnackbar(
+      showAlertMessage(
         error.message || `Lỗi ${isEditing ? "cập nhật" : "tạo"} công việc`,
-        "error"
+        "danger"
       );
     } finally {
       setLoading(false);
@@ -738,23 +200,33 @@ const TodoForm = ({ todoId }) => {
         {
           title: newSubtask.trim(),
           completed: false,
-          _id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `temp-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
         },
       ]);
       setNewSubtask("");
     }
   };
 
-  const handleRemoveSubtask = (index) => {
-    const updatedSubtasks = subtasks.filter((_, i) => i !== index);
-    setSubtasks(updatedSubtasks);
-    showSnackbar("Đã xóa công việc con", "info");
+  const handleToggleSubtask = (id) => {
+    setSubtasks(
+      subtasks.map((st) =>
+        st.id === id ? { ...st, completed: !st.completed } : st
+      )
+    );
   };
 
-  const handleToggleSubtask = (index) => {
-    const updatedSubtasks = [...subtasks];
-    updatedSubtasks[index].completed = !updatedSubtasks[index].completed;
-    setSubtasks(updatedSubtasks);
+  const confirmDeleteSubtask = (subtask) => {
+    setSubtaskToDelete(subtask);
+    setShowDeleteConfirm(true);
+  };
+
+  const handleDeleteSubtask = () => {
+    if (subtaskToDelete) {
+      setSubtasks(subtasks.filter((st) => st.id !== subtaskToDelete.id));
+      showAlertMessage("Đã xóa công việc con", "info");
+      setShowDeleteConfirm(false);
+      setSubtaskToDelete(null);
+    }
   };
 
   const handleClearAllSubtasks = () => {
@@ -762,659 +234,744 @@ const TodoForm = ({ todoId }) => {
 
     if (window.confirm("Bạn có chắc chắn muốn xóa tất cả công việc con?")) {
       setSubtasks([]);
-      showSnackbar("Đã xóa tất cả công việc con", "info");
+      showAlertMessage("Đã xóa tất cả công việc con", "info");
     }
   };
 
   const getPriorityColor = (priority) => {
     switch (priority) {
       case "high":
-        return "#ff4444";
+        return "danger";
       case "medium":
-        return "#ffaa00";
+        return "warning";
       case "low":
-        return "#00aa00";
+        return "success";
       default:
-        return "#666666";
+        return "secondary";
+    }
+  };
+
+  const getPriorityIcon = (priority) => {
+    switch (priority) {
+      case "high":
+        return <AlertCircle size={16} />;
+      case "medium":
+        return <Flag size={16} />;
+      case "low":
+        return <Clock size={16} />;
+      default:
+        return <Flag size={16} />;
     }
   };
 
   const getTypeIcon = (type) => {
     switch (type) {
       case "Meeting":
-        return "👥";
+        return <Users size={18} />;
       case "Business travel":
-        return "✈️";
+        return <Plane size={18} />;
       case "Personal Work":
-        return "👤";
+        return <User size={18} />;
       case "Team Project":
-        return "👨‍👩‍👧‍👦";
+        return <Briefcase size={18} />;
       case "Appointment":
-        return "📅";
+        return <Calendar size={18} />;
       case "Task":
-        return "📝";
-      case "Other":
-        return "📌";
+        return <FileText size={18} />;
       default:
-        return "📝";
+        return <FileText size={18} />;
     }
   };
 
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case "done":
+        return <CheckCircle size={16} />;
+      case "in-progress":
+        return <Clock size={16} />;
+      case "cancelled":
+        return <XCircle size={16} />;
+      default:
+        return <CalendarDays size={16} />;
+    }
+  };
+
+  const completedSubtasks = subtasks.filter((st) => st.completed).length;
+  const progressPercentage =
+    subtasks.length > 0
+      ? Math.round((completedSubtasks / subtasks.length) * 100)
+      : 0;
+
   if (loading && isEditing) {
     return (
-      <Box
-        display="flex"
-        justifyContent="center"
-        alignItems="center"
-        sx={{ p: 4 }}
-      >
-        <Typography variant="h6">Đang tải thông tin công việc...</Typography>
-      </Box>
+      <Container className="py-5">
+        <div className="text-center">
+          <Spinner animation="border" variant="primary" />
+          <p className="mt-3">Đang tải thông tin công việc...</p>
+        </div>
+      </Container>
     );
   }
 
   return (
-    <Box sx={{ maxWidth: 1000, margin: "0 auto", p: { xs: 2, md: 3 } }}>
+    <Container fluid className="todo-form-container py-4">
       {/* Header */}
-      <Stack direction="row" alignItems="center" spacing={2} sx={{ mb: 4 }}>
-        <IconButton
-          onClick={() => navigate("/todo/list")}
-          sx={{
-            bgcolor: "primary.main",
-            color: "white",
-            "&:hover": { bgcolor: "primary.dark" },
-          }}
+      <div className="todo-form-header mb-5">
+        <div className="d-flex align-items-center mb-4">
+          <Button
+            variant="outline-primary"
+            className="me-3 rounded-circle"
+            onClick={() => navigate("/todo/list")}
+          >
+            <ArrowLeft size={20} />
+          </Button>
+          <div>
+            <h1 className="h2 fw-bold mb-2">
+              {isEditing ? "Chỉnh Sửa Công Việc" : "Tạo Công Việc Mới"}
+            </h1>
+            <p className="text-muted mb-0">
+              {isEditing
+                ? "Cập nhật thông tin công việc của bạn"
+                : "Thêm công việc mới vào hệ thống"}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {showAlert.show && (
+        <Alert
+          variant={showAlert.variant}
+          className="mb-4 alert-fixed-top"
+          onClose={() => setShowAlert({ ...showAlert, show: false })}
+          dismissible
         >
-          <ArrowBack />
-        </IconButton>
-        <Box>
-          <Typography variant="h4" fontWeight="bold" gutterBottom>
-            {isEditing ? "Chỉnh Sửa Công Việc" : "Tạo Công Việc Mới"}
-          </Typography>
-          <Typography variant="body1" color="text.secondary">
-            {isEditing
-              ? "Cập nhật thông tin công việc của bạn"
-              : "Thêm công việc mới vào hệ thống"}
-          </Typography>
-        </Box>
-      </Stack>
+          {showAlert.message}
+        </Alert>
+      )}
 
-      <Grid container spacing={3}>
-        {/* Left Column - Main Form */}
-        <Grid item xs={12} md={8}>
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: "primary.main" }}>
-                  <Work />
-                </Avatar>
-              }
-              title="Thông tin cơ bản"
-              titleTypographyProps={{ variant: "h6", fontWeight: "bold" }}
-            />
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    label="Tiêu đề công việc *"
-                    value={formData.title}
-                    onChange={(e) =>
-                      setFormData({ ...formData, title: e.target.value })
-                    }
-                    required
-                    variant="outlined"
-                    size="small"
-                  />
-                </Grid>
+      <Form onSubmit={handleSubmit}>
+        <Row className="g-4">
+          {/* Left Column - Main Form */}
+          <Col lg={8}>
+            {/* Basic Information Card */}
+            <Card className="todo-form-card mb-4">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center">
+                  <div className="todo-card-icon bg-primary">
+                    <Type size={20} />
+                  </div>
+                  <h5 className="mb-0 ms-3">Thông tin cơ bản</h5>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <Row className="g-3">
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        Tiêu đề công việc <span className="text-danger">*</span>
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Nhập tiêu đề công việc..."
+                        value={formData.title}
+                        onChange={(e) =>
+                          setFormData({ ...formData, title: e.target.value })
+                        }
+                        required
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                  </Col>
 
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth
-                    multiline
-                    rows={3}
-                    label="Mô tả chi tiết"
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                    variant="outlined"
-                    size="small"
-                    placeholder="Mô tả chi tiết về công việc..."
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Loại công việc</InputLabel>
-                    <Select
-                      value={formData.type}
-                      label="Loại công việc"
-                      onChange={(e) =>
-                        setFormData({ ...formData, type: e.target.value })
-                      }
-                    >
-                      <MenuItem value="Meeting">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>👥</span> Meeting
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Business travel">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>✈️</span> Công tác
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Personal Work">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>👤</span> Cá nhân
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Team Project">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>👨‍👩‍👧‍👦</span> Dự án nhóm
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Appointment">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>📅</span> Cuộc hẹn
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Task">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>📝</span> Công việc
-                        </Box>
-                      </MenuItem>
-                      <MenuItem value="Other">
-                        <Box display="flex" alignItems="center" gap={1}>
-                          <span>📌</span> Khác
-                        </Box>
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel>Mức độ ưu tiên</InputLabel>
-                    <Select
-                      value={formData.priority}
-                      label="Mức độ ưu tiên"
-                      onChange={(e) =>
-                        setFormData({ ...formData, priority: e.target.value })
-                      }
-                      sx={{
-                        "& .MuiSelect-select": {
-                          color: getPriorityColor(formData.priority),
-                          fontWeight: "bold",
-                        },
-                      }}
-                    >
-                      <MenuItem
-                        value="low"
-                        sx={{ color: "#00aa00", fontWeight: "bold" }}
-                      >
-                        📍 Ưu tiên thấp
-                      </MenuItem>
-                      <MenuItem
-                        value="medium"
-                        sx={{ color: "#ffaa00", fontWeight: "bold" }}
-                      >
-                        🎯 Ưu tiên trung bình
-                      </MenuItem>
-                      <MenuItem
-                        value="high"
-                        sx={{ color: "#ff4444", fontWeight: "bold" }}
-                      >
-                        ⚠️ Ưu tiên cao
-                      </MenuItem>
-                    </Select>
-                  </FormControl>
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
-
-          {/* Calendar Information */}
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: "secondary.main" }}>
-                  <Event />
-                </Avatar>
-              }
-              title="Thông tin lịch trình"
-              titleTypographyProps={{ variant: "h6", fontWeight: "bold" }}
-            />
-            <CardContent>
-              <Grid container spacing={2}>
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Thời gian bắt đầu"
-                    type="datetime-local"
-                    value={formData.start}
-                    onChange={(e) =>
-                      setFormData({ ...formData, start: e.target.value })
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Thời gian kết thúc"
-                    type="datetime-local"
-                    value={formData.end}
-                    onChange={(e) =>
-                      setFormData({ ...formData, end: e.target.value })
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Hạn hoàn thành"
-                    type="datetime-local"
-                    value={formData.dueDate}
-                    onChange={(e) =>
-                      setFormData({ ...formData, dueDate: e.target.value })
-                    }
-                    InputLabelProps={{ shrink: true }}
-                    variant="outlined"
-                    size="small"
-                  />
-                </Grid>
-
-                <Grid item xs={12} sm={6}>
-                  <TextField
-                    fullWidth
-                    label="Địa điểm"
-                    value={formData.location}
-                    onChange={(e) =>
-                      setFormData({ ...formData, location: e.target.value })
-                    }
-                    variant="outlined"
-                    size="small"
-                    placeholder="Nhập địa điểm..."
-                    InputProps={{
-                      startAdornment: (
-                        <Place sx={{ mr: 1, color: "text.secondary" }} />
-                      ),
-                    }}
-                  />
-                </Grid>
-
-                <Grid item xs={12}>
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={formData.isAllDay}
+                  <Col md={12}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <AlignLeft className="me-2" size={16} />
+                        Mô tả chi tiết
+                      </Form.Label>
+                      <Form.Control
+                        as="textarea"
+                        rows={3}
+                        placeholder="Mô tả chi tiết về công việc..."
+                        value={formData.description}
                         onChange={(e) =>
                           setFormData({
                             ...formData,
-                            isAllDay: e.target.checked,
+                            description: e.target.value,
                           })
                         }
+                        className="form-control-lg"
                       />
-                    }
-                    label="Sự kiện cả ngày"
-                  />
-                </Grid>
-              </Grid>
-            </CardContent>
-          </Card>
+                    </Form.Group>
+                  </Col>
 
-          {/* Subtasks Section */}
-          <Card>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: "success.main" }}>
-                  <Checklist />
-                </Avatar>
-              }
-              title="Công việc con"
-              action={
-                subtasks.length > 0 && (
-                  <Button
-                    color="error"
-                    startIcon={<Delete />}
-                    onClick={handleClearAllSubtasks}
-                    size="small"
-                  >
-                    Xóa tất cả
-                  </Button>
-                )
-              }
-              titleTypographyProps={{ variant: "h6", fontWeight: "bold" }}
-            />
-            <CardContent>
-              <Stack spacing={2}>
-                {/* Add Subtask Input */}
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Nhập tên công việc con..."
-                    value={newSubtask}
-                    onChange={(e) => setNewSubtask(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" &&
-                      (e.preventDefault(), handleAddSubtask())
-                    }
-                    variant="outlined"
-                  />
-                  <Button
-                    variant="contained"
-                    onClick={handleAddSubtask}
-                    startIcon={<Add />}
-                    disabled={!newSubtask.trim()}
-                  >
-                    Thêm
-                  </Button>
-                </Box>
-
-                {/* Subtasks List */}
-                {subtasks.length > 0 ? (
-                  <List
-                    dense
-                    sx={{ bgcolor: "background.default", borderRadius: 1 }}
-                  >
-                    {subtasks.map((subtask, index) => (
-                      <ListItem
-                        key={subtask._id || index}
-                        sx={{
-                          border: "1px solid",
-                          borderColor: "divider",
-                          borderRadius: 1,
-                          mb: 1,
-                          bgcolor: subtask.completed
-                            ? "action.selected"
-                            : "background.paper",
-                        }}
+                  <Col md={6}>
+                    {/* Type Select with Custom Icons */}
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        <Briefcase className="me-2" size={16} />
+                        Loại công việc
+                      </Form.Label>
+                      <Form.Select
+                        value={formData.type}
+                        onChange={(e) =>
+                          setFormData({ ...formData, type: e.target.value })
+                        }
+                        className="form-control-lg todo-type-select"
                       >
-                        <ListItemIcon>
-                          <Checkbox
-                            checked={subtask.completed}
-                            onChange={() => handleToggleSubtask(index)}
-                            color="success"
-                          />
-                        </ListItemIcon>
-                        <ListItemText
-                          primary={
-                            <Typography
-                              sx={{
-                                textDecoration: subtask.completed
-                                  ? "line-through"
-                                  : "none",
-                                color: subtask.completed
-                                  ? "text.secondary"
-                                  : "text.primary",
-                                fontWeight: subtask.completed
-                                  ? "normal"
-                                  : "medium",
-                              }}
+                        {[
+                          {
+                            value: "Meeting",
+                            label: "Meeting",
+                            icon: <Users size={14} />,
+                          },
+                          {
+                            value: "BusinessTravel",
+                            label: "Công tác",
+                            icon: <Plane size={14} />,
+                          },
+                          {
+                            value: "PersonalWork",
+                            label: "Cá nhân",
+                            icon: <User size={14} />,
+                          },
+                          {
+                            value: "TeamProject",
+                            label: "Dự án nhóm",
+                            icon: <Briefcase size={14} />,
+                          },
+                          {
+                            value: "Appointment",
+                            label: "Cuộc hẹn",
+                            icon: <Calendar size={14} />,
+                          },
+                          {
+                            value: "Task",
+                            label: "Công việc",
+                            icon: <FileText size={14} />,
+                          },
+                          {
+                            value: "Other",
+                            label: "Khác",
+                            icon: <Tag size={14} />,
+                          },
+                        ].map((option) => (
+                          <option key={option.value} value={option.value}>
+                            {option.icon}
+                            {option.label}
+                          </option>
+                        ))}
+                      </Form.Select>
+
+                      {/* Display Icon next to select */}
+                      <div className="todo-type-icon-display">
+                        {getTypeIcon(formData.type)}
+                        <span className="ms-2">{formData.type}</span>
+                      </div>
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <Flag className="me-2" size={16} />
+                        Mức độ ưu tiên
+                      </Form.Label>
+                      <Form.Select
+                        value={formData.priority}
+                        onChange={(e) =>
+                          setFormData({ ...formData, priority: e.target.value })
+                        }
+                        className={`form-control-lg border-${getPriorityColor(
+                          formData.priority
+                        )}`}
+                      >
+                        <option value="low" className="text-success">
+                          📍 Ưu tiên thấp
+                        </option>
+                        <option value="medium" className="text-warning">
+                          🎯 Ưu tiên trung bình
+                        </option>
+                        <option value="high" className="text-danger">
+                          ⚠️ Ưu tiên cao
+                        </option>
+                      </Form.Select>
+                    </Form.Group>
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Calendar Information Card */}
+            <Card className="todo-form-card mb-4">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center">
+                  <div className="todo-card-icon bg-success">
+                    <Calendar size={20} />
+                  </div>
+                  <h5 className="mb-0 ms-3">Thông tin lịch trình</h5>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <Row className="g-3">
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <CalendarDays className="me-2" size={16} />
+                        Thời gian bắt đầu
+                      </Form.Label>
+                      <Form.Control
+                        type="datetime-local"
+                        value={formData.start}
+                        onChange={(e) =>
+                          setFormData({ ...formData, start: e.target.value })
+                        }
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <CalendarDays className="me-2" size={16} />
+                        Thời gian kết thúc
+                      </Form.Label>
+                      <Form.Control
+                        type="datetime-local"
+                        value={formData.end}
+                        onChange={(e) =>
+                          setFormData({ ...formData, end: e.target.value })
+                        }
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <Target className="me-2" size={16} />
+                        Hạn hoàn thành
+                      </Form.Label>
+                      <Form.Control
+                        type="datetime-local"
+                        value={formData.dueDate}
+                        onChange={(e) =>
+                          setFormData({ ...formData, dueDate: e.target.value })
+                        }
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={6}>
+                    <Form.Group>
+                      <Form.Label className="fw-semibold">
+                        <MapPin className="me-2" size={16} />
+                        Địa điểm
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Nhập địa điểm..."
+                        value={formData.location}
+                        onChange={(e) =>
+                          setFormData({ ...formData, location: e.target.value })
+                        }
+                        className="form-control-lg"
+                      />
+                    </Form.Group>
+                  </Col>
+
+                  <Col md={12}>
+                    <Form.Check
+                      type="checkbox"
+                      id="isAllDay"
+                      label={
+                        <span className="fw-medium">
+                          <Calendar className="me-2" size={16} />
+                          Sự kiện cả ngày
+                        </span>
+                      }
+                      checked={formData.isAllDay}
+                      onChange={(e) =>
+                        setFormData({ ...formData, isAllDay: e.target.checked })
+                      }
+                    />
+                  </Col>
+                </Row>
+              </Card.Body>
+            </Card>
+
+            {/* Subtasks Card */}
+            <Card className="todo-form-card">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center justify-content-between">
+                  <div className="d-flex align-items-center">
+                    <div className="todo-card-icon bg-info">
+                      <CheckSquare size={20} />
+                    </div>
+                    <h5 className="mb-0 ms-3">Công việc con</h5>
+                  </div>
+                  {subtasks.length > 0 && (
+                    <Button
+                      variant="outline-danger"
+                      size="sm"
+                      onClick={handleClearAllSubtasks}
+                    >
+                      <Trash2 size={16} className="me-1" />
+                      Xóa tất cả
+                    </Button>
+                  )}
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <div className="mb-4">
+                  <InputGroup className="mb-3">
+                    <Form.Control
+                      type="text"
+                      placeholder="Nhập tên công việc con..."
+                      value={newSubtask}
+                      onChange={(e) => setNewSubtask(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(), handleAddSubtask())
+                      }
+                      className="form-control-lg"
+                    />
+                    <Button
+                      variant="primary"
+                      onClick={handleAddSubtask}
+                      disabled={!newSubtask.trim()}
+                    >
+                      <Plus size={20} />
+                    </Button>
+                  </InputGroup>
+                </div>
+
+                {subtasks.length > 0 ? (
+                  <>
+                    <ListGroup className="mb-4">
+                      {subtasks.map((subtask) => (
+                        <ListGroup.Item
+                          key={subtask.id}
+                          className={`todo-subtask-item ${
+                            subtask.completed ? "completed" : ""
+                          }`}
+                        >
+                          <div className="d-flex align-items-center">
+                            <Button
+                              variant="link"
+                              className="p-0 me-3"
+                              onClick={() => handleToggleSubtask(subtask.id)}
                             >
-                              {subtask.title}
-                            </Typography>
-                          }
-                          secondary={
-                            subtask.completed && subtask.completedAt
-                              ? `Hoàn thành: ${new Date(
-                                  subtask.completedAt
-                                ).toLocaleString()}`
-                              : "Chưa hoàn thành"
-                          }
-                        />
-                        <ListItemSecondaryAction>
-                          <IconButton
-                            edge="end"
-                            onClick={() => handleRemoveSubtask(index)}
-                            color="error"
-                            size="small"
-                            sx={{
-                              "&:hover": {
-                                bgcolor: "error.light",
-                                color: "white",
-                              },
-                            }}
-                          >
-                            <Delete />
-                          </IconButton>
-                        </ListItemSecondaryAction>
-                      </ListItem>
-                    ))}
-                  </List>
+                              {subtask.completed ? (
+                                <CheckSquare
+                                  size={20}
+                                  className="text-success"
+                                />
+                              ) : (
+                                <Square size={20} className="text-secondary" />
+                              )}
+                            </Button>
+                            <div className="flex-grow-1">
+                              <span
+                                className={`todo-subtask-title ${
+                                  subtask.completed
+                                    ? "text-decoration-line-through text-muted"
+                                    : ""
+                                }`}
+                              >
+                                {subtask.title}
+                              </span>
+                            </div>
+                            <Button
+                              variant="link"
+                              className="text-danger p-0"
+                              onClick={() => confirmDeleteSubtask(subtask)}
+                            >
+                              <X size={18} />
+                            </Button>
+                          </div>
+                        </ListGroup.Item>
+                      ))}
+                    </ListGroup>
+
+                    {/* Progress Bar */}
+                    {subtasks.length > 0 && (
+                      <div className="todo-progress-container">
+                        <div className="d-flex justify-content-between mb-2">
+                          <span className="fw-medium">Tiến độ</span>
+                          <span className="fw-bold text-primary">
+                            {progressPercentage}%
+                          </span>
+                        </div>
+                        <div className="progress" style={{ height: "8px" }}>
+                          <div
+                            className="progress-bar bg-primary"
+                            role="progressbar"
+                            style={{ width: `${progressPercentage}%` }}
+                            aria-valuenow={progressPercentage}
+                            aria-valuemin="0"
+                            aria-valuemax="100"
+                          ></div>
+                        </div>
+                        <div className="text-center mt-2 text-muted small">
+                          {completedSubtasks} / {subtasks.length} công việc con
+                          đã hoàn thành
+                        </div>
+                      </div>
+                    )}
+                  </>
                 ) : (
-                  <Box textAlign="center" py={3}>
-                    <Typography color="text.secondary" variant="body2">
+                  <div className="text-center py-4">
+                    <CheckSquare size={48} className="text-muted mb-3" />
+                    <p className="text-muted mb-0">
                       Chưa có công việc con nào. Hãy thêm công việc con để quản
                       lý chi tiết hơn.
-                    </Typography>
-                  </Box>
+                    </p>
+                  </div>
                 )}
+              </Card.Body>
+            </Card>
+          </Col>
 
-                {/* Progress Stats */}
-                {subtasks.length > 0 && (
-                  <Box sx={{ p: 2, bgcolor: "info.light", borderRadius: 1 }}>
-                    <Typography
-                      variant="body2"
-                      color="info.dark"
-                      fontWeight="medium"
-                    >
-                      Tiến độ: {subtasks.filter((st) => st.completed).length} /{" "}
-                      {subtasks.length} công việc con đã hoàn thành (
-                      {Math.round(
-                        (subtasks.filter((st) => st.completed).length /
-                          subtasks.length) *
-                          100
-                      )}
-                      %)
-                    </Typography>
-                  </Box>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        </Grid>
+          {/* Right Column - Sidebar */}
+          <Col lg={4}>
+            {/* Additional Information Card */}
+            <Card className="todo-form-card mb-4">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center">
+                  <div className="todo-card-icon bg-warning">
+                    <Folder size={20} />
+                  </div>
+                  <h5 className="mb-0 ms-3">Thông tin bổ sung</h5>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Danh mục</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Nhập danh mục..."
+                    value={formData.category}
+                    onChange={(e) =>
+                      setFormData({ ...formData, category: e.target.value })
+                    }
+                    className="form-control-lg"
+                  />
+                </Form.Group>
 
-        {/* Right Column - Additional Information */}
-        <Grid item xs={12} md={4}>
-          <Card sx={{ mb: 3 }}>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: "info.main" }}>
-                  <Category />
-                </Avatar>
-              }
-              title="Thông tin bổ sung"
-              titleTypographyProps={{ variant: "h6", fontWeight: "bold" }}
-            />
-            <CardContent>
-              <Stack spacing={2}>
-                <TextField
-                  fullWidth
-                  label="Danh mục"
-                  value={formData.category}
-                  onChange={(e) =>
-                    setFormData({ ...formData, category: e.target.value })
-                  }
-                  variant="outlined"
-                  size="small"
-                  placeholder="Nhập danh mục..."
-                />
-
-                <FormControl fullWidth size="small">
-                  <InputLabel>Trạng thái</InputLabel>
-                  <Select
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Trạng thái</Form.Label>
+                  <Form.Select
                     value={formData.status}
-                    label="Trạng thái"
                     onChange={(e) =>
                       setFormData({ ...formData, status: e.target.value })
                     }
+                    className="form-control-lg"
                   >
-                    <MenuItem value="scheduled">📅 Đã lên lịch</MenuItem>
-                    <MenuItem value="in-progress">🔄 Đang thực hiện</MenuItem>
-                    <MenuItem value="done">✅ Hoàn thành</MenuItem>
-                    <MenuItem value="cancelled">❌ Đã hủy</MenuItem>
-                  </Select>
-                </FormControl>
+                    <option value="scheduled">
+                      <CalendarDays className="me-2" size={16} />
+                      Đã lên lịch
+                    </option>
+                    <option value="in-progress">
+                      <Clock className="me-2" size={16} />
+                      Đang thực hiện
+                    </option>
+                    <option value="done">
+                      <CheckCircle className="me-2" size={16} />
+                      Hoàn thành
+                    </option>
+                    <option value="cancelled">
+                      <XCircle className="me-2" size={16} />
+                      Đã hủy
+                    </option>
+                  </Form.Select>
+                </Form.Group>
 
-                <FormControlLabel
-                  control={
-                    <Checkbox
-                      checked={formData.isImportant}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          isImportant: e.target.checked,
-                        })
-                      }
-                      color="warning"
-                    />
-                  }
+                <Form.Check
+                  type="checkbox"
+                  id="isImportant"
+                  className="mb-3"
                   label={
-                    <Box display="flex" alignItems="center" gap={1}>
-                      <Flag
-                        color={formData.isImportant ? "warning" : "disabled"}
+                    <span className="fw-medium">
+                      <Star
+                        size={16}
+                        className={`me-2 ${
+                          formData.isImportant ? "text-warning" : "text-muted"
+                        }`}
+                        fill={formData.isImportant ? "currentColor" : "none"}
                       />
-                      <Typography
-                        color={
-                          formData.isImportant ? "warning.main" : "text.primary"
-                        }
-                      >
-                        Đánh dấu quan trọng
-                      </Typography>
-                    </Box>
+                      Đánh dấu quan trọng
+                    </span>
+                  }
+                  checked={formData.isImportant}
+                  onChange={(e) =>
+                    setFormData({ ...formData, isImportant: e.target.checked })
                   }
                 />
-              </Stack>
-            </CardContent>
-          </Card>
 
-          {/* Tags Section */}
-          <Card>
-            <CardHeader
-              avatar={
-                <Avatar sx={{ bgcolor: "warning.main" }}>
-                  <LocalOffer />
-                </Avatar>
-              }
-              title="Tags & Nhãn"
-              titleTypographyProps={{ variant: "h6", fontWeight: "bold" }}
-            />
-            <CardContent>
-              <Stack spacing={2}>
-                <Box sx={{ display: "flex", gap: 1 }}>
-                  <TextField
-                    fullWidth
-                    size="small"
-                    placeholder="Thêm tag mới..."
-                    value={newTag}
-                    onChange={(e) => setNewTag(e.target.value)}
-                    onKeyPress={(e) =>
-                      e.key === "Enter" && (e.preventDefault(), handleAddTag())
+                <Form.Group className="mb-3">
+                  <Form.Label className="fw-semibold">Ghi chú</Form.Label>
+                  <Form.Control
+                    as="textarea"
+                    rows={3}
+                    placeholder="Thêm ghi chú..."
+                    value={formData.notes}
+                    onChange={(e) =>
+                      setFormData({ ...formData, notes: e.target.value })
                     }
-                    variant="outlined"
+                    className="form-control-lg"
                   />
-                  <Button
-                    onClick={handleAddTag}
-                    variant="outlined"
-                    disabled={!newTag.trim()}
-                  >
-                    <Add />
-                  </Button>
-                </Box>
+                </Form.Group>
+              </Card.Body>
+            </Card>
+
+            {/* Tags Card */}
+            <Card className="todo-form-card">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center">
+                  <div className="todo-card-icon bg-danger">
+                    <Tag size={20} />
+                  </div>
+                  <h5 className="mb-0 ms-3">Tags & Nhãn</h5>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                <div className="mb-3">
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="Thêm tag mới..."
+                      value={newTag}
+                      onChange={(e) => setNewTag(e.target.value)}
+                      onKeyPress={(e) =>
+                        e.key === "Enter" &&
+                        (e.preventDefault(), handleAddTag())
+                      }
+                      className="form-control-lg"
+                    />
+                    <Button
+                      variant="outline-primary"
+                      onClick={handleAddTag}
+                      disabled={!newTag.trim()}
+                    >
+                      <Plus size={20} />
+                    </Button>
+                  </InputGroup>
+                </div>
 
                 {formData.tags.length > 0 ? (
-                  <Box sx={{ display: "flex", gap: 0.5, flexWrap: "wrap" }}>
+                  <div className="todo-tags-container">
                     {formData.tags.map((tag, index) => (
-                      <Chip
+                      <Badge
                         key={index}
-                        label={tag}
-                        onDelete={() => handleRemoveTag(tag)}
-                        color="primary"
-                        variant="outlined"
-                        size="small"
-                        deleteIcon={<Delete />}
-                      />
+                        bg="primary"
+                        className="todo-tag me-2 mb-2"
+                      >
+                        {tag}
+                        <Button
+                          variant="link"
+                          className="todo-tag-remove p-0 ms-2"
+                          onClick={() => handleRemoveTag(tag)}
+                        >
+                          <X size={14} />
+                        </Button>
+                      </Badge>
                     ))}
-                  </Box>
+                  </div>
                 ) : (
-                  <Typography
-                    variant="body2"
-                    color="text.secondary"
-                    textAlign="center"
-                  >
-                    Chưa có tag nào. Thêm tag để dễ dàng tìm kiếm.
-                  </Typography>
+                  <div className="text-center py-3">
+                    <Tag size={32} className="text-muted mb-2" />
+                    <p className="text-muted mb-0 small">
+                      Chưa có tag nào. Thêm tag để dễ dàng tìm kiếm.
+                    </p>
+                  </div>
                 )}
-              </Stack>
-            </CardContent>
+              </Card.Body>
+            </Card>
+          </Col>
+        </Row>
+
+        {/* Submit Buttons */}
+        <div className="todo-form-footer">
+          <Card className="border-0 shadow-lg">
+            <Card.Body className="py-3">
+              <div className="d-flex justify-content-between align-items-center">
+                <Button
+                  variant="outline-secondary"
+                  onClick={() => navigate("/todo/list")}
+                  disabled={loading}
+                  size="lg"
+                >
+                  Hủy bỏ
+                </Button>
+                <Button
+                  type="submit"
+                  variant="primary"
+                  disabled={loading || !formData.title.trim()}
+                  size="lg"
+                  className="px-5"
+                >
+                  {loading ? (
+                    <>
+                      <Spinner
+                        as="span"
+                        animation="border"
+                        size="sm"
+                        className="me-2"
+                      />
+                      Đang xử lý...
+                    </>
+                  ) : isEditing ? (
+                    <>
+                      <Save size={20} className="me-2" />
+                      Cập nhật
+                    </>
+                  ) : (
+                    <>
+                      <Plus size={20} className="me-2" />
+                      Tạo công việc
+                    </>
+                  )}
+                </Button>
+              </div>
+            </Card.Body>
           </Card>
-        </Grid>
-      </Grid>
+        </div>
+      </Form>
 
-      {/* Submit Buttons */}
-      <Box
-        sx={{
-          position: "sticky",
-          bottom: 0,
-          bgcolor: "background.paper",
-          p: 2,
-          mt: 3,
-          borderRadius: 2,
-          boxShadow: 3,
-        }}
+      {/* Delete Confirmation Modal */}
+      <Modal
+        show={showDeleteConfirm}
+        onHide={() => setShowDeleteConfirm(false)}
+        centered
+        size="sm"
       >
-        <Stack direction="row" spacing={2} justifyContent="flex-end">
+        <Modal.Header closeButton>
+          <Modal.Title>Xác nhận xóa</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <p>
+            Bạn có chắc chắn muốn xóa công việc con{" "}
+            <strong>"{subtaskToDelete?.title}"</strong>?
+          </p>
+        </Modal.Body>
+        <Modal.Footer>
           <Button
-            variant="outlined"
-            onClick={() => navigate("/todo/list")}
-            disabled={loading}
-            size="large"
+            variant="outline-secondary"
+            onClick={() => setShowDeleteConfirm(false)}
           >
-            Hủy bỏ
+            Hủy
           </Button>
-          <Button
-            type="submit"
-            variant="contained"
-            disabled={loading || !formData.title.trim()}
-            onClick={handleSubmit}
-            size="large"
-            sx={{ minWidth: 120 }}
-          >
-            {loading
-              ? "Đang xử lý..."
-              : isEditing
-              ? "📝 Cập nhật"
-              : "✨ Tạo công việc"}
+          <Button variant="danger" onClick={handleDeleteSubtask}>
+            <Trash2 size={16} className="me-2" />
+            Xóa
           </Button>
-        </Stack>
-      </Box>
-
-      {/* Snackbar */}
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar({ ...snackbar, open: false })}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert
-          onClose={() => setSnackbar({ ...snackbar, open: false })}
-          severity={snackbar.severity}
-          variant="filled"
-        >
-          {snackbar.message}
-        </Alert>
-      </Snackbar>
-    </Box>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 };
 

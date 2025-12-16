@@ -4,7 +4,8 @@ import { usePost } from "../../contexts/PostContext";
 import Post from "../Post/Post";
 import { RefreshCw } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { FileText } from "lucide-react";
 
 const ProfilePosts = ({ userId }) => {
   const { posts, fetchPosts, loading, error, deletePost } = usePost();
@@ -159,7 +160,10 @@ const ProfilePosts = ({ userId }) => {
       {!loading && userPosts.length === 0 && !error && (
         <div className="card">
           <div className="card-body text-center text-muted py-5">
-            <div className="empty-icon mb-3">📝</div>
+            <div className="empty-icon mb-3">
+              <FileText size={48} className="mb-3 text-muted" />
+            </div>
+
             <h5>Chưa có bài viết nào</h5>
             <p className="mb-0">Người dùng chưa đăng bài viết nào</p>
           </div>
