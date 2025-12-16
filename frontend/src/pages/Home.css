@@ -80,6 +80,8 @@
   transition: text-shadow 0.5s ease, color 0.5s ease;
 }
 
+
+
 .home-container.authenticated .hero-title {
   text-shadow: none;
   color: #1a1a1a;
@@ -93,7 +95,11 @@
   line-height: 1.6;
   transition: color 0.5s ease, opacity 0.5s ease;
 }
-
+/* Ensure Vietnamese diacritics render properly for hero text */
+.hero-title,
+.hero-subtitle {
+  font-family: Poppins, Montserrat, "Noto Sans", "Segoe UI", Tahoma, sans-serif;
+}
 .home-container.authenticated .hero-subtitle {
   color: #666;
   opacity: 1;
