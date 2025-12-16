@@ -31,6 +31,8 @@ const EventPopover = ({
   onDelete,
   loading = false,
 }) => {
+  console.log("EventPopover event.extendedProps:", event.extendedProps);
+
   const handleClose = (e) => {
     e.stopPropagation();
     onClose();
@@ -205,6 +207,21 @@ const EventPopover = ({
                 </div>
               )}
             </div>
+            {/* <div className="section-content">
+              {formatDateTime(event.extendedProps.start)}
+              {event.extendedProps.end &&
+                event.end !== event.extendedProps.start && (
+                  <>
+                    <br />
+                    Kết thúc: {formatDateTime(event.extendedProps.end)}
+                  </>
+                )}
+              {event.extendedProps.allDay && (
+                <div className="mt-1">
+                  <em>(Cả ngày)</em>
+                </div>
+              )}
+            </div> */}
           </div>
 
           {/* Hạn hoàn thành */}

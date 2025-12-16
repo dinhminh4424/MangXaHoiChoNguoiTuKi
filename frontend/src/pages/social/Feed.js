@@ -308,7 +308,7 @@ const Feed = () => {
         <div
           className="feed-header-overlay"
           style={{
-            backgroundColor: imageBanner ? "rgba(0, 0, 0, 0.5)" : "transparent",
+            backgroundColor: imageBanner ? "rgba(0, 0, 0, 0.2)" : "transparent",
           }}
         ></div>
         <div className="container feed-header-content">

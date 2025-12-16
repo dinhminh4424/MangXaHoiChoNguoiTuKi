@@ -2126,6 +2126,15 @@ const TodoCalendar = () => {
     setTimeout(() => setShowSnackbar(false), 3000);
   };
 
+  const formatDateTimeLocal = (date) => {
+    const d = new Date(date);
+    const pad = (n) => String(n).padStart(2, "0");
+
+    return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(
+      d.getDate()
+    )}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  };
+
   const handleDateSelect = (selectInfo) => {
     setFormData({
       title: "",
@@ -2153,9 +2162,16 @@ const TodoCalendar = () => {
 
     try {
       const response = await todoService.getTodoDetail(event.id);
+      // const response = await todoService.getTodoDetail(event.publicId);
+      console.log("Fetched todo detail:", response);
       const todo = response.todo;
 
       const updatedEvent = {
+        id: event.id,
+        title: todo.title || event.title,
+        start: event.start,
+        end: event.end,
+        allDay: event.allDay,
         ...event,
         extendedProps: {
           ...event.extendedProps,
@@ -2171,6 +2187,8 @@ const TodoCalendar = () => {
           reminder: todo.reminder || event.extendedProps.reminder,
           attendees: todo.attendees || event.extendedProps.attendees,
           status: todo.status || event.extendedProps.status,
+          start: todo.start || event.start,
+          end: todo.end || event.end,
         },
       };
 
@@ -2179,14 +2197,18 @@ const TodoCalendar = () => {
         event: updatedEvent,
       });
 
+      console.log("Updated event:", updatedEvent);
+
       setSelectedEvent(updatedEvent);
       setFormData({
         title: todo.title,
         description: todo.description || "",
-        start: todo.start
-          ? new Date(todo.start).toISOString().slice(0, 16)
-          : "",
-        end: todo.end ? new Date(todo.end).toISOString().slice(0, 16) : "",
+        // start: todo.start
+        //   ? new Date(todo.start).toISOString().slice(0, 16)
+        //   : "",
+        // end: todo.end ? new Date(todo.end).toISOString().slice(0, 16) : "",
+        start: todo.start ? formatDateTimeLocal(todo.start) : "",
+        end: todo.end ? formatDateTimeLocal(todo.end) : "",
         type: todo.type || "Task",
         priority: todo.priority || "medium",
         isAllDay: todo.isAllDay || false,
@@ -2270,6 +2292,7 @@ const TodoCalendar = () => {
 
     try {
       setLoading(true);
+      console.log("selectedEvent: ", selectedEvent);
       await todoService.updateTodo(selectedEvent.id, formData);
       showMessage("Cập nhật công việc thành công");
       setShowDialog(false);
@@ -2508,6 +2531,15 @@ const TodoCalendar = () => {
     const cardClass = `todo-card ${todo.status === "done" ? "completed" : ""} ${
       todo.isImportant ? "important" : ""
     } ${isOverdue ? "overdue" : ""}`;
+
+    console.log(
+      "Rendering todo:",
+      todo,
+      "isOverdue:",
+      isOverdue,
+      "cardClass:",
+      cardClass
+    );
 
     return (
       <div key={todo._id} className={cardClass}>
@@ -3114,7 +3146,7 @@ const TodoCalendar = () => {
                   <Button
                     variant="primary"
                     onClick={() => setShowDialog(true)}
-                    className="btn-primary-custom d-flex align-items-center"
+                    className="btn-primary-custom d-flex align-items-center border-1 border-white"
                   >
                     <Plus size={16} className="me-2" />
                     Thêm Công Việc
@@ -3234,7 +3266,7 @@ const TodoCalendar = () => {
               <div className="tab-content">
                 {/* Filter Controls */}
                 <div className="d-flex gap-2 mb-3 flex-wrap">
-                  <Form.Select
+                  {/* <Form.Select
                     size="sm"
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
@@ -3245,7 +3277,7 @@ const TodoCalendar = () => {
                     <option value="high">Ưu tiên cao</option>
                     <option value="medium">Ưu tiên trung</option>
                     <option value="low">Ưu tiên thấp</option>
-                  </Form.Select>
+                  </Form.Select> */}
 
                   <Form.Select
                     size="sm"

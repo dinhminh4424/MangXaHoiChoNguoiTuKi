@@ -710,7 +710,7 @@
 }
 
 /* Dark mode support */
-@media (prefers-color-scheme: dark) {
+/* @media (prefers-color-scheme: dark) {
   .todo-calendar-container {
     background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
   }
@@ -746,4 +746,4 @@
   .modal-custom .modal-body {
     background: #1e293b;
   }
-}
+} */
