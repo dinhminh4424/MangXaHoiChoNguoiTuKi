@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth, user } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
 import FriendRequestsDropdown from "./friend/FriendRequestsDropdown";
@@ -27,9 +27,9 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
     { path: "/", icon: "fa-solid fa-house", label: "Trang chủ" },
     { path: "/feed", icon: "las la-newspaper", label: "Bài viết mới" },
     { path: "/profile", icon: "las la-user", label: "Trang cá nhân" },
-    { path: "/chat", icon: "las la-comments", label: "Chat" },
+    { path: "/chat", icon: "las la-comments", label: "Tin nhắn" },
     { path: "/group", icon: "las la-users", label: "Nhóm" },
-    { path: "/todo", icon: "las la-check-circle", label: "Todo" },
+    { path: "/todo", icon: "las la-check-circle", label: "Công việc" },
     {
       path: "/journal",
       icon: "las la-book",
@@ -61,7 +61,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
     {
       path: "/profile/dashboard",
       icon: "ri-dashboard-line",
-      label: "Dashboard",
+      label: "Thống kê",
     },
     {
       path: "/homeContact",
@@ -73,88 +73,89 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
   return (
     <>
       {/* Sidebar Navigation bên trái */}
-      <div
-        className={`iq-sidebar sidebar-default ${
-          isCollapsed ? "sidebar-mini" : ""
-        }`}
-      >
-        <div id="sidebar-scrollbar">
-          <nav className="iq-sidebar-menu">
-            <ul id="iq-sidebar-toggle" className="iq-menu">
-              {mainNavItems.map((item) => {
-                const hasChildren =
-                  Array.isArray(item.children) && item.children.length > 0;
-                const isActive = hasChildren
-                  ? isActiveParent(item.children.map((child) => child.path))
-                  : isActiveRoute(item.path);
-                const isExpanded = hasChildren && isActive;
+      {user.active && (
+        <div
+          className={`iq-sidebar sidebar-default ${
+            isCollapsed ? "sidebar-mini" : ""
+          }`}
+        >
+          <div id="sidebar-scrollbar">
+            <nav className="iq-sidebar-menu">
+              <ul id="iq-sidebar-toggle" className="iq-menu">
+                {mainNavItems.map((item) => {
+                  const hasChildren =
+                    Array.isArray(item.children) && item.children.length > 0;
+                  const isActive = hasChildren
+                    ? isActiveParent(item.children.map((child) => child.path))
+                    : isActiveRoute(item.path);
+                  const isExpanded = hasChildren && isActive;
 
-                return (
-                  <li key={item.path} className={isActive ? "active" : ""}>
-                    {hasChildren ? (
-                      <>
-                        <a
-                          href={`#${item.path.replace("/", "")}`}
-                          data-bs-toggle="collapse"
-                          className={`collapsed ${
-                            isExpanded ? "" : "collapsed"
-                          }`}
-                          aria-expanded={isExpanded}
-                        >
-                          <i className={item.icon}></i>
-                          <span>{item.label}</span>
-                          <i className="ri-arrow-right-s-line iq-arrow-right"></i>
-                        </a>
-                        <ul
-                          id={item.path.replace("/", "")}
-                          className={`iq-submenu ${
-                            isExpanded ? "show" : "collapse"
-                          }`}
-                          data-bs-parent="#iq-sidebar-toggle"
-                        >
-                          {item.children.map((child) => (
-                            <li
-                              key={child.path}
-                              className={
-                                isActiveRoute(child.path) ? "active" : ""
-                              }
-                            >
-                              <Link
-                                to={child.path}
+                  return (
+                    <li key={item.path} className={isActive ? "active" : ""}>
+                      {hasChildren ? (
+                        <>
+                          <a
+                            href={`#${item.path.replace("/", "")}`}
+                            data-bs-toggle="collapse"
+                            className={`collapsed ${
+                              isExpanded ? "" : "collapsed"
+                            }`}
+                            aria-expanded={isExpanded}
+                          >
+                            <i className={item.icon}></i>
+                            <span>{item.label}</span>
+                            <i className="ri-arrow-right-s-line iq-arrow-right"></i>
+                          </a>
+                          <ul
+                            id={item.path.replace("/", "")}
+                            className={`iq-submenu ${
+                              isExpanded ? "show" : "collapse"
+                            }`}
+                            data-bs-parent="#iq-sidebar-toggle"
+                          >
+                            {item.children.map((child) => (
+                              <li
+                                key={child.path}
                                 className={
                                   isActiveRoute(child.path) ? "active" : ""
                                 }
                               >
-                                <i className={child.icon}></i>
+                                <Link
+                                  to={child.path}
+                                  className={
+                                    isActiveRoute(child.path) ? "active" : ""
+                                  }
+                                >
+                                  <i className={child.icon}></i>
 
-                                <span>{child.label}</span>
-                              </Link>
-                            </li>
-                          ))}
-                        </ul>
-                      </>
-                    ) : (
-                      <TooltipWrapper title={item.label} placement="right">
-                        <Link
-                          to={item.path}
-                          className={`nav-link ${
-                            isActiveRoute(item.path) ? "active" : ""
-                          }`}
-                        >
-                          <i className={item.icon}></i>
-                          <span>{item.label}</span>
-                        </Link>
-                      </TooltipWrapper>
-                    )}
-                  </li>
-                );
-              })}
-            </ul>
-          </nav>
-          <div className="p-5"></div>
+                                  <span>{child.label}</span>
+                                </Link>
+                              </li>
+                            ))}
+                          </ul>
+                        </>
+                      ) : (
+                        <TooltipWrapper title={item.label} placement="right">
+                          <Link
+                            to={item.path}
+                            className={`nav-link ${
+                              isActiveRoute(item.path) ? "active" : ""
+                            }`}
+                          >
+                            <i className={item.icon}></i>
+                            <span>{item.label}</span>
+                          </Link>
+                        </TooltipWrapper>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </nav>
+            <div className="p-5"></div>
+          </div>
         </div>
-      </div>
-
+      )}
       {/* Top Navigation Bar - bên trên  */}
       <div className="iq-top-navbar">
         <div className="iq-navbar-custom">
@@ -169,96 +170,119 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                 <span>Connect</span>
               </Link>
               <div className="iq-menu-bt align-self-center">
-                <div className="wrapper-menu" onClick={onToggleSidebar}>
-                  <div className="main-circle">
-                    <i className="ri-menu-line"></i>
+                {user.active && (
+                  <div className="wrapper-menu" onClick={onToggleSidebar}>
+                    <div className="main-circle">
+                      <i className="ri-menu-line"></i>
+                    </div>
                   </div>
-                </div>
+                )}
               </div>
             </div>
 
             {/* Search Bar */}
-            <div className="iq-search-bar device-search">
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  const searchInput = e.target.querySelector(".search-input");
-                  if (searchInput.value.trim()) {
-                    navigate(
-                      `/search?q=${encodeURIComponent(
-                        searchInput.value.trim()
-                      )}`
-                    );
-                  }
-                }}
-                className="searchbox"
-              >
-                <button type="submit" className="search-link">
-                  <i className="ri-search-line"></i>
-                </button>
-                <input
-                  type="text"
-                  className="text search-input"
-                  placeholder="Tìm kiếm người dùng... (Thêm @ để tìm username)"
-                  onKeyPress={(e) => {
-                    if (e.key === "Enter") {
-                      if (e.target.value.trim()) {
-                        navigate(
-                          `/search?q=${encodeURIComponent(
-                            e.target.value.trim()
-                          )}`
-                        );
-                      }
+            {user.active && (
+              <div className="iq-search-bar device-search">
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    const searchInput = e.target.querySelector(".search-input");
+                    if (searchInput.value.trim()) {
+                      navigate(
+                        `/search?q=${encodeURIComponent(
+                          searchInput.value.trim()
+                        )}`
+                      );
                     }
                   }}
-                />
-              </form>
-            </div>
+                  className="searchbox"
+                >
+                  <button type="submit" className="search-link">
+                    <i className="ri-search-line"></i>
+                  </button>
+                  <input
+                    type="text"
+                    className="text search-input"
+                    placeholder="Tìm kiếm người dùng... (Thêm @ để tìm username)"
+                    onKeyPress={(e) => {
+                      if (e.key === "Enter") {
+                        if (e.target.value.trim()) {
+                          navigate(
+                            `/search?q=${encodeURIComponent(
+                              e.target.value.trim()
+                            )}`
+                          );
+                        }
+                      }
+                    }}
+                  />
+                </form>
+              </div>
+            )}
 
-            <button
-              className="navbar-toggler"
-              type="button"
-              data-bs-toggle="collapse"
-              data-bs-target="#navbarSupportedContent"
-              aria-controls="navbarSupportedContent"
-              aria-label="Toggle navigation"
-            >
-              <i className="ri-menu-3-line"></i>
-            </button>
+            {user.active && (
+              <button
+                className="navbar-toggler"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#navbarSupportedContent"
+                aria-controls="navbarSupportedContent"
+                aria-label="Toggle navigation"
+              >
+                <i className="ri-menu-3-line"></i>
+              </button>
+            )}
 
             <div
               className="collapse navbar-collapse"
               id="navbarSupportedContent"
             >
               <ul className="navbar-nav ms-auto navbar-list">
-                {/* Home */}
-                <li>
-                  <Link to="/aiChat" className="d-flex align-items-center">
-                    <i className="ri-home-line"></i>
-                  </Link>
-                </li>
+                {user.active && (
+                  <>
+                    {/* Home */}
+                    <li>
+                      <Link to="/aiChat" className="d-flex align-items-center">
+                        <i className="ri-home-line"></i>
+                      </Link>
+                    </li>
+                    {/* nhận diện gợi ý  */}
+                    <li>
+                      <Link
+                        to="/QRScanner"
+                        className="d-flex align-items-center"
+                      >
+                        <i className="fas fa-qrcode "></i>
+                      </Link>
+                    </li>
 
-                {/* nhận diện gợi ý  */}
-                <li>
-                  <Link to="/nhandien" className="d-flex align-items-center">
-                    <i className="lab la-buffer"></i>
-                  </Link>
-                </li>
-                {/* Friend Requests Dropdown */}
-                {/* <FriendRequestsDropdown /> */}
+                    {/* nhận diện gợi ý  */}
+                    <li>
+                      <Link
+                        to="/nhandien"
+                        className="d-flex align-items-center"
+                      >
+                        <i className="lab la-buffer"></i>
+                      </Link>
+                    </li>
+                    {/* Friend Requests Dropdown */}
 
-                {(user.settings && user.settings.pushNotifications !== false) ||
-                !user.settings ? (
-                  <FriendRequestsDropdown />
-                ) : (
-                  <p>Tắt tính năng bạn bè</p>
-                )}
+                    {(user.settings &&
+                      user.settings.pushNotifications !== false) ||
+                    !user.settings ? (
+                      <FriendRequestsDropdown />
+                    ) : (
+                      <p>Tắt tính năng bạn bè</p>
+                    )}
 
-                {(user.settings && user.settings.pushNotifications !== false) ||
-                !user.settings ? (
-                  <UserNotifications />
-                ) : (
-                  <p>Tắt tính năng thông báo</p>
+                    {(user.settings &&
+                      user.settings.pushNotifications !== false) ||
+                    !user.settings ? (
+                      <UserNotifications />
+                    ) : (
+                      <p>Tắt tính năng thông báo</p>
+                    )}
+                  </>
                 )}
 
                 {/* User Profile Dropdown */}
@@ -272,7 +296,10 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                     aria-expanded="false"
                   >
                     <img
-                      src={user?.profile?.avatar || "/assets/images/user/1.jpg"}
+                      src={
+                        user?.profile?.avatar ||
+                        "/assets/images/default-avatar.png"
+                      }
                       className="img-fluid rounded-circle me-3"
                       alt="user"
                     />
@@ -308,6 +335,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                             <div className="rounded card-icon bg-soft-primary">
                               <i className="ri-file-user-line"></i>
                             </div>
+
                             <div className="ms-3">
                               <h6 className="mb-0">Trang cá nhân</h6>
                               <p className="mb-0 font-size-12">
@@ -408,28 +436,31 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
           </nav>
         </div>
       </div>
-
       {/* Right Sidebar - Simplified bên phair*/}
-      <div className="right-sidebar-mini right-sidebar">
-        <div className="right-sidebar-panel p-0">
-          <div className="card shadow-none">
-            <div className="card-body p-0">
-              <div className="media-height p-3" data-scrollbar="init">
-                <h6 className="mb-3">Online Friends</h6>
-                <div className="text-center">
-                  <p className="text-muted">Hiện không có ai đang hoạt động</p>
+      {user.active && (
+        <div className="right-sidebar-mini right-sidebar">
+          <div className="right-sidebar-panel p-0">
+            <div className="card shadow-none">
+              <div className="card-body p-0">
+                <div className="media-height p-3" data-scrollbar="init">
+                  <h6 className="mb-3">Online Friends</h6>
+                  <div className="text-center">
+                    <p className="text-muted">
+                      Hiện không có ai đang hoạt động
+                    </p>
+                  </div>
                 </div>
-              </div>
-              <div className="right-sidebar-toggle bg-primary text-white mt-3">
-                <i className="ri-arrow-left-line side-left-icon"></i>
-                <i className="ri-arrow-right-line side-right-icon">
-                  <span className="ms-3 d-inline-block">Close Menu</span>
-                </i>
+                <div className="right-sidebar-toggle bg-primary text-white mt-3">
+                  <i className="ri-arrow-left-line side-left-icon"></i>
+                  <i className="ri-arrow-right-line side-right-icon">
+                    <span className="ms-3 d-inline-block">Close Menu</span>
+                  </i>
+                </div>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
     </>
   );
 }

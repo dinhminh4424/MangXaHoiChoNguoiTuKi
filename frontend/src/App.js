@@ -4,6 +4,7 @@ import {
   Routes,
   Route,
   Navigate,
+  useLocation,
 } from "react-router-dom";
 
 // Context imports
@@ -46,6 +47,7 @@ import Resources from "./pages/support/Resources";
 import Emotion from "./pages/emotions/emotion";
 import MoodHistory from "./pages/emotions/MoodHistory";
 import Group from "./pages/social/Group";
+import GroupStatistics from "./components/Group/GroupStatistics";
 import GroupDetailPage from "./pages/social/GroupDetailPage";
 import CreateGroupPage from "./pages/social/CreateGroupPage";
 
@@ -84,6 +86,7 @@ import ProtectedAdminRoute from "./components/admin/ProtectedAdminRoute";
 import AdminChatManagement from "./components/admin/chat/AdminChatManagement";
 
 import AppealManagement from "./pages/admin/appeals/AppealManagement";
+import AdminEmergencyManagement from "./pages/admin/emergency/AdminEmergencyManagement";
 
 import BackupLogs from "./pages/admin/backup/BackupLogs";
 import BackupManagement from "./pages/admin/backup/BackupManagement";
@@ -94,10 +97,13 @@ import AppealForm from "./components/appeals/AppealForm";
 import CheckStatusAppeal from "./components/appeals/CheckStatus";
 import AdminAppeals from "./components/admin/appeals/AdminAppeals";
 
+import AdminQuoteManagement from "./pages/admin/quotes/AdminQuoteManagement";
+
 import UserLayout from "./components/layouts/UserLayout";
 import AdminLayout from "./components/layouts/AdminLayout";
 
 import ErrorPage from "./components/error/pages-error";
+import QRScanner from "./components/qr/QRScanner";
 
 import Test from "./pages/test";
 
@@ -108,27 +114,56 @@ import AiChatScreen from "./components/ai/AiChatScreen";
 /**
  * COMPONENT: ProtectedRoute
  */
-function ProtectedRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+// function ProtectedRoute({ children }) {
+//   const { isAuthenticated, isLoading, user } = useAuth();
 
+//   if (isLoading) {
+//     return <div className="loading-spinner">Loading...</div>;
+//   }
+
+//   return isAuthenticated ? children : <Navigate to="/login" />;
+// }
+
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
+  // trong trường hợp vẫn loading
   if (isLoading) {
     return <div className="loading-spinner">Loading...</div>;
   }
 
-  return isAuthenticated ? children : <Navigate to="/login" />;
+  // nếu chưa đăng nhập -> về login
+  if (!isAuthenticated) {
+    return <Navigate to="/login" />;
+  }
+
+  // nếu user tồn tại và active === false -> chỉ cho phép truy cập các route kháng nghị
+  // tránh redirect vòng lặp: nếu đang ở /AppealForm hoặc /appealCheckStatus thì cho qua
+
+  console.log("ProtectedRoute - User Active Status:", user?.active);
+
+  // nếu mọi thứ ok -> cho vào
+
+  return children;
 }
 
 /**
  * COMPONENT: PublicRoute
  */
 function PublicRoute({ children }) {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
 
   if (isLoading) {
     return <div className="loading-spinner">Loading...</div>;
   }
 
-  return !isAuthenticated ? children : <Navigate to="/home" />;
+  return !isAuthenticated ? (
+    children
+  ) : user.active ? (
+    <Navigate to="/home" />
+  ) : (
+    <Navigate to="/violations" />
+  );
 }
 
 /**
@@ -169,6 +204,11 @@ const routeConfigs = [
   // Protected User Routes - Group
   { path: "/group", component: Group, layout: UserLayout },
   { path: "/group/:groupId", component: GroupDetailPage, layout: UserLayout },
+  {
+    path: "/group/:groupId/statistics",
+    component: GroupStatistics,
+    layout: UserLayout,
+  },
   { path: "/create-group", component: CreateGroupPage, layout: UserLayout },
   {
     path: "/group/createPost/:groupId",
@@ -197,6 +237,7 @@ const routeConfigs = [
   // Protected User Routes - Emotion
   { path: "/nhandien", component: Emotion, layout: UserLayout },
   { path: "/mood-history", component: MoodHistory, layout: UserLayout }, // MoodHistory
+  { path: "/QRScanner", component: QRScanner, layout: UserLayout }, // MoodHistory
 
   // Protected User Setting
   { path: "/settings", component: SettingsDashboard, layout: UserLayout },
@@ -222,6 +263,12 @@ const routeConfigs = [
     isAdmin: true,
   },
   {
+    path: "/admin/quotes",
+    component: AdminQuoteManagement,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
     path: "/admin/users",
     component: AdminUserManagement,
     layout: AdminLayout,
@@ -229,6 +276,12 @@ const routeConfigs = [
   },
   {
     path: "/admin/users/reports",
+    component: ReportUser,
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/users/reports/:id",
     component: ReportUser,
     layout: AdminLayout,
     isAdmin: true,
@@ -323,6 +376,12 @@ const routeConfigs = [
     component: AppealManagement, // Kháng Nghị
     layout: AdminLayout,
     isAdmin: true,
+  }, //
+  {
+    path: "/admin/emergencies",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
   }, // ImageManager
   {
     path: "/admin/imageManager",
@@ -361,7 +420,9 @@ const routeConfigs = [
  * PURPOSE: Định nghĩa tất cả routes sử dụng map
  */
 function AppRoutes() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const userId = user?._id || user?.id || null;
+
   return (
     <Routes>
       {/* --- NEW: Route xử lý callback từ Social Login --- */}
@@ -398,6 +459,7 @@ function AppRoutes() {
             <ProtectedRoute>
               <Layout>
                 <Component />
+                {userId && user.active && <SOSButton userId={userId} />}
               </Layout>
             </ProtectedRoute>
           );
@@ -442,7 +504,7 @@ function AppContent() {
     <div className="App">
       <AppRoutes />
       {/* ✅ Nút SOS hiển thị trên mọi trang */}
-      {userId && <SOSButton userId={userId} />}
+      {/* {userId && user.active && <SOSButton userId={userId} />} */}
     </div>
   );
 }

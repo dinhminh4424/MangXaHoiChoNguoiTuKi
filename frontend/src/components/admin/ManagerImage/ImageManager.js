@@ -481,7 +481,7 @@ const ImageManagement = () => {
   );
 
   return (
-    <div className="image-management container-flush">
+    <div className="image-management container">
       {/* Alert */}
       {alert.show && (
         <Alert
@@ -495,7 +495,7 @@ const ImageManagement = () => {
       )}
 
       {/* Header */}
-      <div className="management-header p-2">
+      <div className=" page-header management-header p-2">
         <Row className="align-items-center p-4">
           <Col>
             <div className="header-content">
@@ -525,7 +525,7 @@ const ImageManagement = () => {
       </div>
 
       {/* Stats Cards */}
-      {stats && (
+      {/* {stats && (
         <Row className="stats-row">
           <Col xl={3} lg={6} className="mb-4">
             <Card className="stat-card total-card">
@@ -569,7 +569,7 @@ const ImageManagement = () => {
             );
           })}
         </Row>
-      )}
+      )} */}
 
       {/* Controls */}
       <Card className="controls-card">
@@ -662,12 +662,12 @@ const ImageManagement = () => {
                 >
                   <span className="category-icon me-2">{category.icon}</span>
                   {category.label}
-                  {stats && (
+                  {/* {stats && (
                     <Badge bg="light" text="dark" className="ms-2">
                       {stats.categoryStats.find((s) => s._id === category.value)
                         ?.count || 0}
                     </Badge>
-                  )}
+                  )} */}
                 </Nav.Link>
               </Nav.Item>
             ))}

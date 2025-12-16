@@ -246,7 +246,15 @@ const HomeContact = () => {
               <Col lg={3} md={6} key={index} className="mb-4">
                 <Card className="feature-card h-100">
                   <Card.Body className="text-center">
-                    <div className="feature-icon mb-3">{feature.icon}</div>
+                    <div
+                      className="feature-icon mb-3"
+                      style={{
+                        background:
+                          "linear-gradient(135deg, #6f86ebff 0%, #12c6ef 100%)",
+                      }}
+                    >
+                      {feature.icon}
+                    </div>
                     <h5 className="feature-title">{feature.title}</h5>
                     <p className="feature-description">{feature.description}</p>
                   </Card.Body>

@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "../../contexts/AuthContext";
 
 /**
@@ -8,6 +8,7 @@ import { useAuth } from "../../contexts/AuthContext";
  */
 const ProtectedAdminRoute = ({ children }) => {
   const { user, isAuthenticated } = useAuth();
+  const location = useLocation();
 
   // Nếu chưa đăng nhập, chuyển về trang login
   if (!isAuthenticated) {
@@ -19,9 +20,17 @@ const ProtectedAdminRoute = ({ children }) => {
     return <Navigate to="/home" />;
   }
 
+  // nếu account inactive -> redirect tới kháng nghị (và chặn admin pages)
+  const isAppealRoute =
+    location.pathname === "/violations" ||
+    location.pathname === "/appealCheckStatus";
+
+  if (user && user.active === false && !isAppealRoute) {
+    return <Navigate to="/violations" replace />;
+  }
+
   // Nếu là admin, hiển thị nội dung
   return children;
 };
 
 export default ProtectedAdminRoute;
-

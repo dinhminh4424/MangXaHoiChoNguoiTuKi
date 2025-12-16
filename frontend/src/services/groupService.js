@@ -167,6 +167,17 @@ const groupService = {
     const res = await api.post(`/api/groups/${groupId}/report`, formData);
     return res.data;
   },
+
+  getGroupReports: async (groupId, params = {}) => {
+    try {
+      const res = await api.get(`/api/groups/${groupId}/violation`, { params });
+
+      return res.data;
+    } catch (err) {
+      console.error("Error fetching group reports:", err);
+      throw err;
+    }
+  },
 };
 
 export default groupService;

@@ -410,7 +410,6 @@
   background: white;
   border-radius: 12px;
   width: 100%;
-  max-width: 700px;
   max-height: 90vh;
   overflow-y: auto;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);

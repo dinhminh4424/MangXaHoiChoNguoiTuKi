@@ -4,12 +4,14 @@ const User = require("../models/User");
 const Friend = require("../models/Friend"); // Đảm bảo đã import Friend
 const GroupMember = require("../models/GroupMember"); // Đảm bảo đã import Friend
 
-const FileManager = require("../utils/FileManager");
+const FileManager = require("../utils/fileManager");
 const Violation = require("../models/Violation");
 const mailService = require("../services/mailService");
 const NotificationService = require("../services/notificationService");
 const AuthService = require("../services/authService");
 const { logUserActivity } = require("../logging/userActivityLogger");
+
+const mongoose = require("mongoose");
 
 // thêm bài viết
 exports.createPost = async (req, res) => {
@@ -118,8 +120,142 @@ exports.createPost = async (req, res) => {
 };
 
 // lấy danh sách bài viết với phân trang và lọc (*** ĐÃ SỬA LỖI QUERY FRIEND ***)
+// exports.getPosts = async (req, res) => {
+//   try {
+//     let {
+//       page = 1,
+//       limit = 10,
+//       userCreateID,
+//       emotions,
+//       tags,
+//       privacy,
+//       sortBy,
+//       search = "",
+//     } = req.query;
+
+//     page = parseInt(page);
+//     limit = parseInt(limit);
+//     const skip = (page - 1) * limit;
+
+//     const currentUserId = req.user.userId;
+
+//     // --- BẮT ĐẦU SỬA ---
+//     // Lấy danh sách bạn bè (Logic 2 chiều - Sửa lại cho đúng model Friend.js)
+//     const friendDocs = await Friend.find({
+//       // status: 'accepted', // <--- LỖI: Model Friend không có status
+//       $or: [
+//         { userA: currentUserId }, // <-- Sửa thành userA
+//         { userB: currentUserId }, // <-- Sửa thành userB
+//       ],
+//     }).lean();
+
+//     const friendIds = friendDocs.map((doc) => {
+//       // Sửa logic trích xuất ID
+//       return doc.userA.equals(currentUserId) ? doc.userB : doc.userA;
+//     });
+//     // --- KẾT THÚC SỬA ---
+
+//     friendIds.push(currentUserId); // Thêm cả ID của mình vào
+
+//     // Query CƠ BẢN để đảm bảo quyền truy cập (Logic này đã đúng)
+//     const query = {
+//       $or: [
+//         { isDeletedByUser: false },
+//         { isDeletedByUser: { $exists: false } },
+//       ],
+//       isBlocked: false,
+
+//       $and: [
+//         {
+//           $or: [
+//             { privacy: "public" },
+//             { userCreateID: currentUserId },
+//             { privacy: "friends", userCreateID: { $in: friendIds } }, // Mệnh đề $in này giờ sẽ đúng
+//           ],
+//         },
+//       ],
+//     };
+
+//     // Áp dụng các filter khác
+//     if (userCreateID) {
+//       query.userCreateID = userCreateID;
+//     }
+//     if (emotions) {
+//       query.emotions = { $in: emotions.split(",") };
+//     }
+//     if (tags) {
+//       query.tags = { $in: tags.split(",") };
+//     }
+
+//     if (privacy && privacy !== "all") {
+//       if (privacy === "private" || privacy === "friends") {
+//         if (userCreateID && userCreateID === currentUserId) {
+//           query.privacy = privacy;
+//         }
+//       } else {
+//         query.privacy = privacy; // 'public'
+//       }
+//     }
+
+//     const posts = await Post.find(query)
+//       .sort({ createdAt: -1 })
+//       .skip(skip)
+//       .limit(limit)
+//       .populate("userCreateID", "username _id profile.avatar fullName");
+
+//     const total = await Post.countDocuments(query);
+//     const totalPages = Math.ceil(total / limit);
+
+//     const responsePayload = {
+//       success: true,
+//       page,
+//       totalPages,
+//       totalPosts: total,
+//       posts,
+//     };
+
+//     res.status(200);
+
+//     // log
+//     logUserActivity({
+//       action: "feed.fetch",
+//       req,
+//       res,
+//       userId: req.user?.userId,
+//       role: req.user?.role,
+//       target: { type: "feed", owner: req.user?.userId },
+//       description: "Người dùng lấy danh sách bài viết",
+//       payload: {
+//         page,
+//         limit,
+//         filters: {
+//           userCreateID: userCreateID || null,
+//           emotions: emotions || null,
+//           tags: tags || null,
+//           privacy: privacy || "all",
+//           search,
+//         },
+//         resultCount: posts.length,
+//         total,
+//       },
+//       meta: {
+//         totalPages,
+//       },
+//     });
+
+//     return res.json(responsePayload);
+//   } catch (err) {
+//     return res.status(500).json({
+//       success: false,
+//       message: err.message,
+//     });
+//   }
+// };
+
 exports.getPosts = async (req, res) => {
   try {
+    const mongoose = require("mongoose");
+
     let {
       page = 1,
       limit = 10,
@@ -127,7 +263,6 @@ exports.getPosts = async (req, res) => {
       emotions,
       tags,
       privacy,
-      sortBy,
       search = "",
     } = req.query;
 
@@ -136,116 +271,258 @@ exports.getPosts = async (req, res) => {
     const skip = (page - 1) * limit;
 
     const currentUserId = req.user.userId;
+    const currentUserObjectId = new mongoose.Types.ObjectId(currentUserId);
 
-    // --- BẮT ĐẦU SỬA ---
-    // Lấy danh sách bạn bè (Logic 2 chiều - Sửa lại cho đúng model Friend.js)
+    // 1. Lấy danh sách bạn bè
     const friendDocs = await Friend.find({
-      // status: 'accepted', // <--- LỖI: Model Friend không có status
-      $or: [
-        { userA: currentUserId }, // <-- Sửa thành userA
-        { userB: currentUserId }, // <-- Sửa thành userB
-      ],
+      $or: [{ userA: currentUserObjectId }, { userB: currentUserObjectId }],
     }).lean();
 
-    const friendIds = friendDocs.map((doc) => {
-      // Sửa logic trích xuất ID
-      return doc.userA.equals(currentUserId) ? doc.userB : doc.userA;
+    const friendIds = friendDocs.map((doc) =>
+      doc.userA.equals(currentUserObjectId) ? doc.userB : doc.userA
+    );
+
+    const friendObjectIds = [
+      currentUserObjectId,
+      ...friendIds.map((id) => new mongoose.Types.ObjectId(id)),
+    ];
+
+    // 2. Lấy danh sách group mà user là member
+    const userGroupMemberships = await GroupMember.find({
+      userId: currentUserObjectId,
+      status: { $in: ["active", "pending"] },
+    }).lean();
+
+    const userGroupIds = userGroupMemberships.map((member) => member.groupId);
+
+    // 3. Tạo pipeline
+    const pipeline = [];
+
+    // Stage 1: Match cơ bản
+    pipeline.push({
+      $match: {
+        isBlocked: false,
+        isDeletedByUser: { $ne: true },
+      },
     });
-    // --- KẾT THÚC SỬA ---
 
-    friendIds.push(currentUserId); // Thêm cả ID của mình vào
+    // Stage 2: Lookup user
+    pipeline.push({
+      $lookup: {
+        from: "users",
+        localField: "userCreateID",
+        foreignField: "_id",
+        as: "user",
+      },
+    });
 
-    // Query CƠ BẢN để đảm bảo quyền truy cập (Logic này đã đúng)
-    const query = {
-      $or: [
-        { isDeletedByUser: false },
-        { isDeletedByUser: { $exists: false } },
-      ],
-      isBlocked: false,
+    pipeline.push({
+      $unwind: {
+        path: "$user",
+        preserveNullAndEmptyArrays: false,
+      },
+    });
 
-      $and: [
-        {
-          $or: [
-            { privacy: "public" },
-            { userCreateID: currentUserId },
-            { privacy: "friends", userCreateID: { $in: friendIds } }, // Mệnh đề $in này giờ sẽ đúng
-          ],
-        },
-      ],
-    };
+    // Stage 3: Lookup group
+    pipeline.push({
+      $lookup: {
+        from: "groups",
+        localField: "groupId",
+        foreignField: "_id",
+        as: "group",
+      },
+    });
 
-    // Áp dụng các filter khác
+    pipeline.push({
+      $unwind: {
+        path: "$group",
+        preserveNullAndEmptyArrays: true,
+      },
+    });
+
+    // Stage 4: Điều kiện hiển thị
+    pipeline.push({
+      $match: {
+        $or: [
+          // Post không có group
+          {
+            groupId: null,
+            $or: [
+              { userCreateID: currentUserObjectId },
+              { privacy: "public" },
+              {
+                privacy: "friends",
+                userCreateID: { $in: friendObjectIds },
+              },
+            ],
+          },
+          // Post có group mà user là member
+          {
+            groupId: { $in: userGroupIds },
+          },
+          // Post có group và group public
+          {
+            $and: [
+              { groupId: { $ne: null } },
+              { "group.visibility": "public" },
+            ],
+          },
+          // Post của chính user (trong group)
+          {
+            userCreateID: currentUserObjectId,
+          },
+        ],
+      },
+    });
+
+    // Stage 5: Filter thêm từ query params
+    const additionalFilters = [];
+
     if (userCreateID) {
-      query.userCreateID = userCreateID;
+      additionalFilters.push({
+        userCreateID: new mongoose.Types.ObjectId(userCreateID),
+      });
     }
+
     if (emotions) {
-      query.emotions = { $in: emotions.split(",") };
+      const emotionList = emotions.split(",").map((e) => e.trim());
+      additionalFilters.push({
+        emotions: { $in: emotionList },
+      });
     }
+
     if (tags) {
-      query.tags = { $in: tags.split(",") };
+      const tagList = tags.split(",").map((t) => t.trim());
+      additionalFilters.push({
+        tags: { $in: tagList },
+      });
     }
 
     if (privacy && privacy !== "all") {
-      if (privacy === "private" || privacy === "friends") {
-        if (userCreateID && userCreateID === currentUserId) {
-          query.privacy = privacy;
-        }
-      } else {
-        query.privacy = privacy; // 'public'
-      }
+      additionalFilters.push({
+        privacy: privacy,
+      });
     }
 
-    const posts = await Post.find(query)
-      .sort({ createdAt: -1 })
-      .skip(skip)
-      .limit(limit)
-      .populate("userCreateID", "username _id profile.avatar fullName");
-
-    const total = await Post.countDocuments(query);
-    const totalPages = Math.ceil(total / limit);
-
-    const responsePayload = {
-      success: true,
-      page,
-      totalPages,
-      totalPosts: total,
-      posts,
-    };
-
-    res.status(200);
-
-    // log
-    logUserActivity({
-      action: "feed.fetch",
-      req,
-      res,
-      userId: req.user?.userId,
-      role: req.user?.role,
-      target: { type: "feed", owner: req.user?.userId },
-      description: "Người dùng lấy danh sách bài viết",
-      payload: {
-        page,
-        limit,
-        filters: {
-          userCreateID: userCreateID || null,
-          emotions: emotions || null,
-          tags: tags || null,
-          privacy: privacy || "all",
-          search,
+    if (additionalFilters.length > 0) {
+      pipeline.push({
+        $match: {
+          $and: additionalFilters,
         },
-        resultCount: posts.length,
-        total,
-      },
-      meta: {
-        totalPages,
+      });
+    }
+
+    // Stage 6: Tìm kiếm (nếu có)
+    if (search && search.trim() !== "") {
+      const searchTerm = search.trim();
+      const searchRegex = new RegExp(searchTerm, "i");
+
+      pipeline.push({
+        $match: {
+          $or: [
+            { content: searchRegex },
+            { tags: searchRegex },
+            { emotions: searchRegex },
+            { "user.username": searchRegex },
+            { "user.fullName": searchRegex },
+            { "user.email": searchRegex },
+          ],
+        },
+      });
+    }
+
+    // Stage 7: Sort
+    pipeline.push({
+      $sort: { createdAt: -1 },
+    });
+
+    // Stage 8: Pagination (cho query chính)
+    const paginationPipeline = [...pipeline];
+    paginationPipeline.push({ $skip: skip });
+    paginationPipeline.push({ $limit: limit });
+
+    // Stage 9: Project format
+    paginationPipeline.push({
+      $project: {
+        _id: 1,
+        content: 1,
+        files: 1,
+        emotions: 1,
+        tags: 1,
+        privacy: 1,
+        createdAt: 1,
+        updatedAt: 1,
+        likeCount: 1,
+        commentCount: 1,
+        isEdited: 1,
+        isAnonymous: 1,
+        groupId: 1,
+        userCreateID: {
+          _id: "$user._id",
+          username: "$user.username",
+          fullName: "$user.fullName",
+          email: "$user.email",
+          profile: "$user.profile",
+          coverPhoto: "$user.profile.coverPhoto",
+        },
+        group: {
+          $cond: {
+            if: { $ne: ["$groupId", null] },
+            then: {
+              _id: "$group._id",
+              name: "$group.name",
+              avatar: "$group.avatar",
+              coverPhoto: "$group.coverPhoto",
+              visibility: "$group.visibility",
+            },
+            else: null,
+          },
+        },
+        userLike: {
+          $filter: {
+            input: "$likes",
+            as: "like",
+            cond: { $eq: ["$$like.user", currentUserObjectId] },
+          },
+        },
       },
     });
 
-    return res.json(responsePayload);
+    // 4. Thực thi query
+    const [posts, countResult] = await Promise.all([
+      Post.aggregate(paginationPipeline),
+      Post.aggregate([...pipeline, { $count: "total" }]),
+    ]);
+
+    const totalPosts = countResult[0]?.total || 0;
+
+    // 5. Xử lý thêm userLike
+    const processedPosts = posts.map((post) => ({
+      ...post,
+      userLike:
+        post.userLike && post.userLike.length > 0 ? post.userLike[0] : null,
+      userEmotion:
+        post.userLike && post.userLike.length > 0
+          ? post.userLike[0].emotion
+          : null,
+    }));
+
+    // 6. Response
+    return res.status(200).json({
+      success: true,
+      page,
+      limit,
+      totalPages: Math.ceil(totalPosts / limit),
+      totalPosts,
+      posts: processedPosts,
+      searchTerm: search || null,
+    });
   } catch (err) {
+    console.error("Lỗi getPosts:", err);
     return res.status(500).json({
       success: false,
-      message: err.message,
+      message: err.message || "Lỗi server khi lấy danh sách bài viết",
+      error: process.env.NODE_ENV === "development" ? err.stack : undefined,
     });
   }
 };
@@ -874,6 +1151,12 @@ exports.reportPost = async (req, res) => {
         url: `/posts/${newViolation.targetId}`,
       });
 
+      await mailService.sendPostAutoBlockedEmail(
+        post.userCreateID,
+        post,
+        newViolation
+      );
+
       await AddViolationUserByID(
         post.userCreateID,
         newViolation,
@@ -895,7 +1178,7 @@ exports.reportPost = async (req, res) => {
       recipient: null, // Gửi cho tất cả admin
       sender: userId,
       type: "REPORT_CREATED",
-      title: "Báo cáo mới cần xử lý",
+      title: "Báo cáo bài viết mới cần xử lý",
       message: `Bài viết đã được báo cáo với lý do: ${reason}`,
       data: {
         violationId: newViolation._id,
@@ -905,7 +1188,7 @@ exports.reportPost = async (req, res) => {
         reason: reason,
       },
       priority: "high",
-      url: `/admin/reports/${newViolation._id}`,
+      url: `/admin/content/reports/${newViolation._id}`,
     });
 
     await NotificationService.createAndEmitNotification({

@@ -1,10 +1,8 @@
 const express = require("express");
 const router = express.Router();
-const EmergencyContact = require("../models/EmergencyContact");
 const EmergencyRequest = require("../models/EmergencyRequest");
 const User = require("../models/User");
 const NotificationService = require("../services/notificationService");
-const nodemailer = require("nodemailer");
 const mailService = require("../services/mailService");
 const fetch = (...args) =>
   import("node-fetch").then(({ default: fetch }) => fetch(...args));
@@ -28,56 +26,198 @@ async function getAddressFromCoordinates(lat, lon) {
 }
 
 // Gửi SOS
+// router.post("/sos", async (req, res) => {
+//   console.log("📩 Nhận tín hiệu SOS:", req.body);
+//   try {
+//     const {
+//       // userId,
+//       phoneNumber,
+//       latitude,
+//       longitude,
+//       message,
+//       type,
+//       isSilent,
+//     } = req.body;
+
+//     const userId = req.user?.userId;
+
+//     if (!userId || !latitude || !longitude)
+//       return res
+//         .status(400)
+//         .json({ success: false, message: "Thiếu dữ liệu bắt buộc!" });
+
+//     // ✅ Lấy địa chỉ cụ thể từ OpenStreetMap
+//     const address = await getAddressFromCoordinates(latitude, longitude);
+//     console.log("📍 Địa chỉ xác định:", address);
+
+//     // 1️⃣ Lấy thông tin người dùng (nếu userId là ObjectId)
+//     let user = null;
+//     try {
+//       user = await User.findById(userId).select("username fullName");
+//     } catch (error) {
+//       console.log("Không tìm thấy user với userId:", userId);
+//     }
+
+//     // 2️⃣ Lưu yêu cầu khẩn cấp
+//     const newRequest = new EmergencyRequest({
+//       userId,
+//       phoneNumber,
+//       latitude,
+//       longitude,
+//       address,
+//       message,
+//       type,
+//       isSilent,
+//       status: "pending",
+//     });
+
+//     await newRequest.save();
+
+//     // 3️⃣ Gửi thông báo cho tất cả admin
+//     try {
+//       const userName = user ? user.fullName || user.username : userId;
+//       const notificationMessage = `Người dùng ${userName} vừa gửi tín hiệu SOS khẩn cấp! ${
+//         message ? `Tin nhắn: ${message}` : ""
+//       }`;
+
+//       await NotificationService.emitNotificationToAdmins({
+//         type: "SOS_EMERGENCY",
+//         title: "🚨 Tín hiệu SOS khẩn cấp",
+//         message: notificationMessage,
+//         priority: "urgent",
+//         data: {
+//           emergencyRequestId: newRequest._id.toString(),
+//           userId: userId,
+//           userName: userName,
+//           phoneNumber: phoneNumber,
+//           latitude: latitude,
+//           longitude: longitude,
+//           address: address,
+//           message: message,
+//           type: type,
+//           mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}`,
+//         },
+//         url: `/admin/emergency/${newRequest._id}`, // URL để admin xem chi tiết
+//         sender: user ? user._id : null,
+//       });
+
+//       console.log("✅ Đã gửi thông báo SOS cho admin");
+//     } catch (notificationError) {
+//       console.error("❌ Lỗi khi gửi thông báo cho admin:", notificationError);
+//       // Không throw error để không ảnh hưởng đến việc gửi SOS
+//     }
+
+//     // 5️⃣ Gửi email/SMS đến từng Admin
+
+//     const admins = await User.find({
+//       role: { $in: ["admin", "supporter"] },
+//       email: { $exists: true, $ne: "" },
+//     });
+//     if (admins.length > 0) {
+//       const adminEmails = admins.map((admin) => admin.email);
+
+//       // Gửi mail
+//       await mailService.sendEmail({
+//         to: adminEmails,
+//         subject: "🚨 Yêu Cầu Khẩn Cấp Mới - Autism Support",
+//         templateName: "EMERGENCY_NEW_REQUEST",
+//         templateData: {
+//           requestId: newRequest._id,
+//           userId: newRequest.userId,
+//           phoneNumber: newRequest.phoneNumber,
+//           type: newRequest.type,
+//           latitude: newRequest.latitude,
+//           longitude: newRequest.longitude,
+//           address: newRequest.address,
+//           message: newRequest.message,
+//           isSilent: newRequest.isSilent,
+//           status: newRequest.status,
+//           createdAt: newRequest.createdAt.toLocaleString("vi-VN"),
+//           adminLink: `${process.env.FRONTEND_URL}/emergency/${newRequest._id}`,
+//           mapLink: `https://maps.google.com/?q=${newRequest.latitude},${newRequest.longitude}`,
+//           adminName: "Quản trị viên - Admin",
+//         },
+//       });
+//     }
+
+//     res.status(200).json({
+//       success: true,
+//       message: "SOS sent successfully",
+//       address, // 👈 gửi địa chỉ cụ thể về frontend
+//     });
+//   } catch (error) {
+//     console.error("Error sending SOS:", error);
+//     res.status(500).json({ success: false, error: error.message });
+//   }
+// });
+
+// Gửi SOS (cho người dùng thông thường)
 router.post("/sos", async (req, res) => {
   console.log("📩 Nhận tín hiệu SOS:", req.body);
   try {
     const {
-      // userId,
       phoneNumber,
       latitude,
       longitude,
       message,
-      type,
-      isSilent,
+      type = "panic",
+      isSilent = false,
+      deviceInfo = {},
     } = req.body;
 
-    const userId = req.user?.userId;
+    const userId = req.user?._id || req.user?.userId;
 
-    if (!userId || !latitude || !longitude)
+    if (!latitude || !longitude)
       return res
         .status(400)
-        .json({ success: false, message: "Thiếu dữ liệu bắt buộc!" });
+        .json({ success: false, message: "Thiếu thông tin vị trí!" });
 
     // ✅ Lấy địa chỉ cụ thể từ OpenStreetMap
     const address = await getAddressFromCoordinates(latitude, longitude);
     console.log("📍 Địa chỉ xác định:", address);
 
-    // 1️⃣ Lấy thông tin người dùng (nếu userId là ObjectId)
+    // 1️⃣ Lấy thông tin người dùng
     let user = null;
-    try {
-      user = await User.findById(userId).select("username fullName");
-    } catch (error) {
-      console.log("Không tìm thấy user với userId:", userId);
+    if (userId) {
+      try {
+        user = await User.findById(userId).select(
+          "username fullName email profile.avatar isOnline"
+        );
+      } catch (error) {
+        console.log("Không tìm thấy user với userId:", userId);
+      }
     }
 
-    // 2️⃣ Lưu yêu cầu khẩn cấp
+    // 2️⃣ Lưu yêu cầu khẩn cấp với cấu trúc mới
     const newRequest = new EmergencyRequest({
-      userId,
+      userId: userId || null,
       phoneNumber,
       latitude,
       longitude,
+      locationAccuracy: deviceInfo.locationAccuracy || null,
       address,
       message,
       type,
       isSilent,
       status: "pending",
+      priority: "critical", // Mặc định là khẩn cấp
+      deviceInfo: {
+        battery: deviceInfo.battery,
+        network: deviceInfo.network,
+        os: deviceInfo.os,
+        appVersion: deviceInfo.appVersion,
+      },
+      createdAt: new Date(),
+      updatedAt: new Date(),
     });
 
     await newRequest.save();
 
-    // 3️⃣ Gửi thông báo cho tất cả admin
+    // 3️⃣ Gửi thông báo cho tất cả admin/supporter
     try {
-      const userName = user ? user.fullName || user.username : userId;
+      const userName = user
+        ? user.fullName || user.username
+        : phoneNumber || "Người dùng ẩn danh";
       const notificationMessage = `Người dùng ${userName} vừa gửi tín hiệu SOS khẩn cấp! ${
         message ? `Tin nhắn: ${message}` : ""
       }`;
@@ -98,85 +238,123 @@ router.post("/sos", async (req, res) => {
           message: message,
           type: type,
           mapUrl: `https://www.google.com/maps?q=${latitude},${longitude}`,
+          priority: "critical",
+          adminUrl: `${
+            process.env.FRONTEND_URL || "http://localhost:3000"
+          }/admin/emergencies/${newRequest._id}`,
         },
-        url: `/admin/emergency/${newRequest._id}`, // URL để admin xem chi tiết
+        url: `/admin/emergencies/${newRequest._id}`,
         sender: user ? user._id : null,
       });
 
-      console.log("✅ Đã gửi thông báo SOS cho admin");
+      console.log("✅ Đã gửi thông báo SOS cho admin/supporter");
     } catch (notificationError) {
       console.error("❌ Lỗi khi gửi thông báo cho admin:", notificationError);
-      // Không throw error để không ảnh hưởng đến việc gửi SOS
     }
 
-    // 4️⃣ Lấy danh bạ khẩn cấp của người dùng
-    const contacts = await EmergencyContact.find({ userId });
-
-    // 5️⃣ Gửi email/SMS đến từng liên hệ
-    // for (const contact of contacts) {
-    //   const mailOptions = {
-    //     from: process.env.EMAIL_USER,
-    //     to: contact.phoneNumber, // có thể là email
-    //     subject: "🚨 Cảnh báo khẩn cấp SOS",
-    //     text: `
-    //     Xin chào ${contact.name},
-
-    //     Người dùng ${
-    //       user ? user.fullName || user.username : userId
-    //     } vừa gửi tín hiệu SOS!
-
-    //     📍 Địa chỉ: ${address}
-    //     🌐 Xem bản đồ: https://www.google.com/maps?q=${latitude},${longitude}
-    //     📩 Tin nhắn: ${message || "Không có tin nhắn"}
-
-    //     ⚠️ Vui lòng phản hồi ngay lập tức.
-    //     `,
-    //   };
-    //   await transporter.sendMail(mailOptions);
-    // }
-
-    // 5️⃣ Gửi email/SMS đến từng Admin
-
-    const admins = await User.find({
-      role: { $in: ["admin", "supporter"] },
-      email: { $exists: true, $ne: "" },
-    });
-    if (admins.length > 0) {
-      const adminEmails = admins.map((admin) => admin.email);
-
-      // Gửi mail
-      await mailService.sendEmail({
-        to: adminEmails,
-        subject: "🚨 Yêu Cầu Khẩn Cấp Mới - Autism Support",
-        templateName: "EMERGENCY_NEW_REQUEST",
-        templateData: {
-          requestId: newRequest._id,
-          userId: newRequest.userId,
-          phoneNumber: newRequest.phoneNumber,
-          type: newRequest.type,
-          latitude: newRequest.latitude,
-          longitude: newRequest.longitude,
-          address: newRequest.address,
-          message: newRequest.message,
-          isSilent: newRequest.isSilent,
-          status: newRequest.status,
-          createdAt: newRequest.createdAt.toLocaleString("vi-VN"),
-          adminLink: `${process.env.FRONTEND_URL}/emergency/${newRequest._id}`,
-          mapLink: `https://maps.google.com/?q=${newRequest.latitude},${newRequest.longitude}`,
-          adminName: "Quản trị viên - Admin",
-        },
+    // 4️⃣ Gửi email đến admin/supporter
+    try {
+      const admins = await User.find({
+        role: { $in: ["admin", "supporter", "doctor"] },
+        email: { $exists: true, $ne: "" },
+        active: true,
       });
+
+      if (admins.length > 0) {
+        const adminEmails = admins.map((admin) => admin.email);
+
+        // Helper function để format date
+        function formatDateTime(date) {
+          if (!date) return "";
+          const d = new Date(date);
+          const day = String(d.getDate()).padStart(2, "0");
+          const month = String(d.getMonth() + 1).padStart(2, "0");
+          const year = d.getFullYear();
+          const hours = String(d.getHours()).padStart(2, "0");
+          const minutes = String(d.getMinutes()).padStart(2, "0");
+          const seconds = String(d.getSeconds()).padStart(2, "0");
+          return `${day}/${month}/${year} ${hours}:${minutes}:${seconds}`;
+        }
+
+        // Helper function để get emergency type label
+        function getEmergencyTypeLabel(type) {
+          const types = {
+            panic: "Khẩn cấp",
+            medical: "Y tế",
+            fire: "Hỏa hoạn",
+            police: "Cảnh sát",
+            other: "Khác",
+          };
+          return types[type] || type;
+        }
+
+        await mailService.sendEmail({
+          to: adminEmails,
+          subject: "🚨 Yêu Cầu Khẩn Cấp Mới - Autism Support",
+          templateName: "EMERGENCY_NEW_REQUEST",
+          templateData: {
+            requestId: newRequest._id,
+            userName: user ? user.fullName || user.username : "Người dùng",
+            userEmail: user ? user.email : "Không có email",
+            phoneNumber: newRequest.phoneNumber,
+            type: newRequest.type,
+            latitude: newRequest.latitude,
+            longitude: newRequest.longitude,
+            address: newRequest.address,
+            message: newRequest.message,
+            isSilent: newRequest.isSilent,
+            status: newRequest.status,
+            priority: newRequest.priority,
+            createdAt: formatDateTime(newRequest.createdAt), // Thay moment bằng formatDateTime
+            adminLink: `${
+              process.env.FRONTEND_URL || "http://localhost:3000"
+            }/admin/emergencies/${newRequest._id}`,
+            mapLink: `https://maps.google.com/?q=${newRequest.latitude},${newRequest.longitude}`,
+            adminName: "Quản trị viên",
+            emergencyType: getEmergencyTypeLabel(newRequest.type),
+          },
+        });
+
+        console.log(`✅ Đã gửi email đến ${admins.length} admin/supporter`);
+      }
+    } catch (emailError) {
+      console.error("❌ Lỗi khi gửi email:", emailError);
     }
 
     res.status(200).json({
       success: true,
-      message: "SOS sent successfully",
-      address, // 👈 gửi địa chỉ cụ thể về frontend
+      message: "Đã gửi tín hiệu SOS thành công",
+      data: {
+        requestId: newRequest._id,
+        address,
+        status: "pending",
+        priority: "critical",
+        createdAt: formatDateTimeForResponse(newRequest.createdAt), // Format cho response
+      },
     });
   } catch (error) {
     console.error("Error sending SOS:", error);
-    res.status(500).json({ success: false, error: error.message });
+    res.status(500).json({
+      success: false,
+      message: "Lỗi hệ thống khi gửi SOS",
+      error: error.message,
+    });
   }
 });
+
+// Helper functions riêng cho route này (có thể đặt ở trên cùng file)
+function formatDateTimeForResponse(date) {
+  if (!date) return null;
+  const d = new Date(date);
+  return d.toLocaleDateString("vi-VN", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
+}
 
 module.exports = router;

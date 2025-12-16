@@ -216,6 +216,14 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                 {post.isAnonymous ? "🕶️ Ẩn danh" : post.userCreateID.fullName}
               </h5>
             </div>
+            {post.group?._id && (
+              <Link
+                to={`/groups/${post.group._id}`}
+                className="group-badge btn btn-sm btn-outline-primary"
+              >
+                {post.group.name}
+              </Link>
+            )}
             <div className="post-meta small text-muted">
               <span className="post-time">
                 {dayjs(post.createdAt).fromNow()}
@@ -224,6 +232,7 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                 <span className="edited-badge"> • Đã chỉnh sửa</span>
               )}
             </div>
+
             {post.isBlocked && (
               <div className="user-details">
                 <div className="user-name text-start">

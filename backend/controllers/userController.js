@@ -15,6 +15,7 @@ const Todo = require("../models/Todo");
 const mailService = require("../services/mailService");
 const ImageBackground = require("../models/ImageBackground");
 const { logUserActivity } = require("../logging/userActivityLogger");
+const QRService = require("../services/qrService");
 
 class UserController {
   // [GET] /api/users/me - Lấy thông tin user hiện tại
@@ -907,13 +908,13 @@ class UserController {
         message: `Người Dùng đã được báo cáo với lý do: ${reason}`,
         data: {
           violationId: newViolation._id,
-          postId: targetId,
+          userId: targetId,
           reporterId: userCurrentId,
           reporterName: reporter.fullName || reporter.username,
           reason: reason,
         },
         priority: "high",
-        url: `/admin/reports/users/${newViolation._id}`,
+        url: `/admin/users/reports/${newViolation._id}`,
       });
 
       // 2. Gửi thông báo cho TÀI KHOẢN (nếu cần)
@@ -1071,6 +1072,114 @@ class UserController {
       return res.status(500).json({
         success: false,
         message: "Lỗi server khi lấy thống kê dashboard",
+        error: error.message,
+      });
+    }
+  }
+
+  // ===================================================================== QR CODE
+  // [GET] /api/users/:userId/qr - Lấy QR code của user
+  async getUserQR(req, res) {
+    try {
+      const user = await User.findById(req.params.userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User không tồn tại",
+        });
+      }
+
+      const profileUrl = `${process.env.FRONTEND_URL}/profile/${user._id}`;
+
+      // KIỂM TRA THEO SCHEMA MỚI
+      if (!user.qrCode || !user.qrCode.dataURL) {
+        console.log("🆕 Tạo QR code mới cho user:", user.username);
+        user.qrCode = await QRService.generatePermanentQR(profileUrl);
+        await user.save();
+      }
+
+      // RESPONSE PHÙ HỢP
+      res.json({
+        success: true,
+        data: {
+          qrDataURL: user.qrCode.dataURL,
+          profileUrl: user.qrCode.data,
+          user: {
+            id: user._id,
+            username: user.username,
+            fullName: user.fullName,
+          },
+        },
+      });
+    } catch (error) {
+      console.error("Error getting user QR:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi lấy QR code",
+        error: error.message,
+      });
+    }
+  }
+
+  /**
+   * Cập nhật QR code - CHỈ ADMIN HOẶC BẢN THÂN USER
+   * TẠO LẠI QR CODE MỚI
+   */
+  async updateUserQR(req, res) {
+    try {
+      const user = await User.findById(req.params.userId);
+
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User không tồn tại",
+        });
+      }
+
+      // CHỈ admin hoặc chính user đó
+      const isOwner = req.user.userId === user._id.toString();
+      const isAdmin = req.user.role === "admin";
+
+      if (!isOwner && !isAdmin) {
+        return res.status(403).json({
+          success: false,
+          message: "Chỉ admin hoặc chủ tài khoản mới có thể cập nhật QR code",
+        });
+      }
+
+      const { options = {} } = req.body;
+      const profileUrl = `${process.env.FRONTEND_URL}/profile/${user._id}`;
+
+      // TẠO QR CODE MỚI VĨNH VIỄN
+      const newQRData = await QRService.generatePermanentQR(profileUrl, {
+        color: {
+          dark: "#1a56db",
+          light: "#ffffff",
+        },
+        ...options,
+      });
+
+      // CẬP NHẬT VÀO DATABASE
+      user.qrCode = newQRData;
+      await user.save();
+
+      console.log("🔄 Đã cập nhật QR code cho user:", user.username);
+
+      res.json({
+        success: true,
+        message: "QR code đã được cập nhật thành công",
+        data: {
+          qrDataURL: newQRData.dataURL,
+          updatedBy: isAdmin ? "admin" : "owner",
+          // ❌ BỎ: info: QRService.getQRInfo(newQRData)
+        },
+      });
+    } catch (error) {
+      console.error("Error updating user QR:", error);
+      res.status(500).json({
+        success: false,
+        message: "Lỗi khi cập nhật QR code",
         error: error.message,
       });
     }

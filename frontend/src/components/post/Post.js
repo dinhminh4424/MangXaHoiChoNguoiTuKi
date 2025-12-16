@@ -65,18 +65,11 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
   const handleLike = async () => {
     if (isLiking || !post) return;
 
-    console.log("🔄 handleLike called, current state:", {
-      isLiked,
-      userEmotion,
-    });
-
     setIsLiking(true);
     try {
       if (isLiked) {
-        console.log("🔄 Unliking post...");
         await unlikePost(post._id);
       } else {
-        console.log("🔄 Liking post...");
         await likePost(post._id, "like");
       }
     } catch (error) {
@@ -88,8 +81,6 @@ const Post = ({ post, onUpdate, onDelete, onEdit, onReport }) => {
 
   const handleEmotionSelect = async (emotion) => {
     if (!post) return;
-
-    console.log("🔄 handleEmotionSelect:", emotion);
 
     setIsLiking(true);
     try {

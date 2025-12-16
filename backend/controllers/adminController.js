@@ -32,11 +32,11 @@ const getDashboardStats = async (req, res) => {
     const now = new Date();
     now.setHours(23, 59, 59, 999);
 
-    let rangeEnd = endParam ? new Date(endParam) : now;
+    let rangeEnd = endParam ? new Date(endParam) : now; // Nếu không có endDate, lấy ngày hiện tại
     if (Number.isNaN(rangeEnd.getTime())) {
       rangeEnd = now;
     }
-    rangeEnd = new Date(rangeEnd.getTime());
+    rangeEnd = new Date(rangeEnd.getTime()); //
     rangeEnd.setHours(23, 59, 59, 999);
 
     const createStartFromDays = (days) => {
@@ -48,7 +48,9 @@ const getDashboardStats = async (req, res) => {
 
     let rangeStart;
 
-    switch (range) {
+    switch (
+      range // tính khoảng thời gian bắt đầu từ thời gian kết thúc
+    ) {
       case "7d":
         rangeStart = createStartFromDays(7);
         break;
@@ -96,10 +98,17 @@ const getDashboardStats = async (req, res) => {
       rangeStart = createStartFromDays(30);
     }
 
-    const diffMs = Math.max(1, rangeEnd.getTime() - rangeStart.getTime());
-    const prevEnd = new Date(rangeStart.getTime() - 1);
+    // ==> rangeStart: ngày bắt đầu thời gian cần thống kê
+    // ==> rangeEnd: ngày kết thúc của khoảng thời gian cần thống kê
+    // ==> prevStart: ngày bắt đầu của khoảng thời gian trước đó
+    // ==> prevEnd: ngày kết thúc của khoảng thời gian trước đó
+
+    // vd thống kê 1 tuần từ 1/6 đến 7/6 thì khoảng thời gian trước đó sẽ là từ 25/5 đến 31/5
+
+    const diffMs = Math.max(1, rangeEnd.getTime() - rangeStart.getTime()); // khoảng thời gian Trung Gian
+    const prevEnd = new Date(rangeStart.getTime() - 1); // thời gian
     prevEnd.setHours(23, 59, 59, 999);
-    const prevStart = new Date(prevEnd.getTime() - diffMs);
+    const prevStart = new Date(prevEnd.getTime() - diffMs); // khoảng thời gian trước đó
     prevStart.setHours(0, 0, 0, 0);
 
     const diffDays = Math.max(1, Math.ceil(diffMs / (1000 * 60 * 60 * 24)));
@@ -2609,6 +2618,8 @@ const getPostViolation = async (req, res) => {
         },
       });
     }
+
+    console.log("id:", id);
 
     if (id) {
       searchConditions.push({

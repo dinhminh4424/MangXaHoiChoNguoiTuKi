@@ -45,13 +45,22 @@ const Login = () => {
 
         // Hàm điều hướng sau khi xử lý xong
         const navigateHome = () => {
-          notificationService.success({
-            title: "Đăng nhập thành công!",
-            text: "Chào mừng bạn trở lại!",
-            timer: 2000,
-            showConfirmButton: false,
-          });
-          navigate("/");
+          if (!user.active) {
+            notificationService.error({
+              title: "Tài khoản chưa được kích hoạt",
+              text: "Vui lòng kiểm tra email để kích hoạt tài khoản của bạn.",
+              confirmButtonText: "Đã hiểu",
+            });
+            navigate("/violations");
+          } else {
+            notificationService.success({
+              title: "Đăng nhập thành công!",
+              text: "Chào mừng bạn trở lại!",
+              timer: 2000,
+              showConfirmButton: false,
+            });
+            navigate("/");
+          }
         };
 
         // Xử lý logic mất chuỗi
@@ -101,11 +110,45 @@ const Login = () => {
         }
       } else {
         // Hiển thị lỗi bằng SweetAlert2
-        notificationService.error({
-          title: "Đăng nhập thất bại",
-          text: result.message?.toString(),
-          confirmButtonText: "Thử lại",
-        });
+        if (result.check === "1") {
+          notificationService.error({
+            title: "Đăng nhập thất bại",
+            text: "Email hoặc mật khẩu không đúng.",
+            confirmButtonText: "Đóng",
+          });
+        } else if (result.check === "2") {
+          notificationService.error({
+            title: "Đăng nhập thất bại",
+            text: "Email hoặc mật khẩu không đúng.",
+            confirmButtonText: "Đóng",
+          });
+        } else if (result.check === "3") {
+          notificationService.error({
+            title: "Tài khoản đã bị khóa",
+            text: "Tài khoản của bạn hiện đang bị khóa.",
+            confirmButtonText: "Đóng",
+          });
+        } else
+          notificationService.error({
+            title: "Tài khoản đã bị khóa",
+            html: `
+              <div style="text-align:left;">
+                <p>Tài khoản của bạn hiện đang <b>bị khóa</b>.</p>
+                <p>Nếu bạn nghĩ đây là nhầm lẫn, hãy gửi kháng nghị.</p>
+              </div>
+            `,
+            showCancelButton: true,
+            cancelButtonText: "Đóng",
+            confirmButtonText: "Kháng nghị",
+
+            preConfirm: () => {
+              // window.open(`https://your-appeal-link.com`, "_blank");// process.env.REACT_APP_API_URL
+              window.open(`AppealForm`, "_blank"); // process.env.REACT_APP_API_URL
+
+              return true;
+            },
+          });
+
         setError(result.message?.toString());
       }
     } catch (error) {
@@ -205,9 +248,9 @@ const Login = () => {
                   <button
                     type="button"
                     className="btn-close"
-                    data-bs-dismiss="alert"
                     aria-label="Close"
-                  ></button>
+                    onClick={() => setError("")} // ✅ React control
+                  />
                 </div>
               )}
 
@@ -268,20 +311,20 @@ const Login = () => {
                 </div>
                 <div className="d-inline-block w-100">
                   <div className="form-check d-inline-block mt-2 pt-1">
-                    <input
-                      type="checkbox"
-                      className="form-check-input"
-                      id="customCheck11"
-                    />
                     <label className="form-check-label" htmlFor="customCheck11">
-                      Ghi nhớ tôi!
+                      <a
+                        href="/appealForm"
+                        className="float-end text-decoration-none"
+                      >
+                        Gửi thông tin báo cáo!
+                      </a>
                     </label>
                   </div>
                   <button
-                    // type="submit"
+                    type="submit"
                     className="btn btn-primary float-end py-2"
                     disabled={loading}
-                    onClick={handleSubmit}
+                    // onClick={handleSubmit}
                   >
                     {loading ? (
                       <>
@@ -343,17 +386,17 @@ const Login = () => {
                   </span>
                   <ul className="iq-social-media">
                     <li>
-                      <a href="#">
+                      <a href="https://www.facebook.com/inhminh.196020">
                         <i className="ri-facebook-box-line"></i>
                       </a>
                     </li>
                     <li>
-                      <a href="#">
+                      <a href="https://x.com/Minh_cmd_exe">
                         <i className="ri-twitter-line"></i>
                       </a>
                     </li>
                     <li>
-                      <a href="#">
+                      <a href="https://www.instagram.com/congminh.cmd.exe/">
                         <i className="ri-instagram-line"></i>
                       </a>
                     </li>

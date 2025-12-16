@@ -4,12 +4,15 @@ import { usePost } from "../../contexts/PostContext";
 import Post from "../Post/Post";
 import { RefreshCw } from "lucide-react";
 import { useAuth } from "../../contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { FileText } from "lucide-react";
 
 const ProfilePosts = ({ userId }) => {
   const { posts, fetchPosts, loading, error, deletePost } = usePost();
   const [refreshing, setRefreshing] = useState(false);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const navigate = useNavigate();
 
   const { user: currentUser } = useAuth();
 
@@ -88,9 +91,31 @@ const ProfilePosts = ({ userId }) => {
   return (
     <div className="profile-posts">
       {!loading && userPosts.length > 0 && (
-        <div className="image-profile-header p-5">
+        <div className="d-flex justify-content-between align-items-center mb-4 image-profile-header p-5">
           <div className="header-content">
             <h3>Bài viết</h3>
+          </div>
+          <div>
+            {isOwnProfile && (
+              <a
+                href="/posts/createPost"
+                className="btn btn-outline-primary btn-sm text-white"
+                style={{ position: "absolute", right: "150px" }}
+              >
+                <i className="bi bi-plus-lg"></i>
+                <span className="ms-2">Thêm Mới</span>
+              </a>
+            )}
+
+            <button
+              className="btn btn-outline-primary btn-sm text-white"
+              style={{ position: "absolute", right: "20px" }}
+              onClick={handleRefresh}
+              disabled={refreshing}
+            >
+              <RefreshCw size={16} className={refreshing ? "spinning" : ""} />
+              <span className="ms-2">Làm mới</span>
+            </button>
           </div>
         </div>
       )}
@@ -135,7 +160,10 @@ const ProfilePosts = ({ userId }) => {
       {!loading && userPosts.length === 0 && !error && (
         <div className="card">
           <div className="card-body text-center text-muted py-5">
-            <div className="empty-icon mb-3">📝</div>
+            <div className="empty-icon mb-3">
+              <FileText size={48} className="mb-3 text-muted" />
+            </div>
+
             <h5>Chưa có bài viết nào</h5>
             <p className="mb-0">Người dùng chưa đăng bài viết nào</p>
           </div>

@@ -1761,7 +1761,7 @@ class CommentController {
           reason,
         },
         priority: "low",
-        url: `/admin/reports/comments/${violation._id}`,
+        url: `/admin/content/reportsComment/${violation._id}`,
       });
 
       // GHI LOG BÁO CÁO

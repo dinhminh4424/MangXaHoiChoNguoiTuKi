@@ -162,6 +162,39 @@ const userSchema = new mongoose.Schema(
         default: "everyone",
       },
     },
+
+    qrCode: {
+      data: {
+        type: String, // URL profile (vd: "https://example.com/profile/123")
+        default: null,
+      },
+      dataURL: {
+        // THÊM FIELD NÀY - QR code dạng base64
+        type: String,
+        default: null,
+      },
+      options: {
+        type: Object, // Các tùy chọn tạo QR
+        default: {
+          width: 300,
+          margin: 1,
+          color: {
+            dark: "#000000",
+            light: "#FFFFFF",
+          },
+        },
+      },
+      generatedAt: {
+        // ĐỔI TÊN lastGenerated -> generatedAt
+        type: Date,
+        default: Date.now,
+      },
+      expiresAt: {
+        // THÊM FIELD expiry
+        type: Date,
+        default: null,
+      },
+    },
   },
   {
     timestamps: true, // Tự động tạo createdAt và updatedAt

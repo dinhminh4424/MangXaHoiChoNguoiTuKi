@@ -1,0 +1,309 @@
+/* EventPopover.css */
+
+/* Overlay cho popover */
+.event-popover-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+/* Popover chính */
+.event-popover-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  width: 400px;
+  max-width: 90vw;
+  max-height: 80vh;
+  overflow: hidden;
+  animation: slideUp 0.3s ease;
+  z-index: 1051;
+}
+
+/* Header */
+.event-popover-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 20px 24px;
+  position: relative;
+}
+
+.event-popover-close-btn {
+  position: absolute;
+  top: 20px;
+  right: 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.event-popover-close-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  transform: rotate(90deg);
+}
+
+.event-popover-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin: 0;
+  padding-right: 40px;
+  word-break: break-word;
+}
+
+/* Body */
+.event-popover-body {
+  padding: 24px;
+  max-height: calc(80vh - 150px);
+  overflow-y: auto;
+}
+
+/* Sections */
+.event-section {
+  margin-bottom: 20px;
+}
+
+.event-section:last-child {
+  margin-bottom: 0;
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #667eea;
+  margin-bottom: 8px;
+}
+
+.section-content {
+  font-size: 0.95rem;
+  color: #333;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.section-content.empty {
+  color: #999;
+  font-style: italic;
+}
+
+/* Tags */
+.event-tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 4px;
+}
+
+.event-tag-item {
+  background: #f0f4ff;
+  color: #667eea;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+/* Status badges */
+.event-status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-right: 8px;
+  margin-bottom: 8px;
+}
+
+.event-status-badge.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.event-status-badge.priority-medium {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.event-status-badge.priority-low {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.event-status-badge.status-done {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.event-status-badge.status-in-progress {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.event-status-badge.status-cancelled {
+  background: #f3f4f6;
+  color: #6b7280;
+}
+
+.event-status-badge.status-scheduled {
+  background: #f0f4ff;
+  color: #667eea;
+}
+
+/* Footer với các nút */
+.event-popover-footer {
+  padding: 16px 24px;
+  background: #f8fafc;
+  border-top: 1px solid #e2e8f0;
+  display: flex;
+  gap: 12px;
+  justify-content: flex-end;
+}
+
+.popover-btn {
+  padding: 8px 20px;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  border: 2px solid transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.popover-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-success {
+  background: #10b981;
+  color: white;
+  border-color: #10b981;
+}
+
+.btn-success:hover:not(:disabled) {
+  background: #059669;
+  border-color: #059669;
+}
+
+.btn-edit {
+  background: white;
+  color: #667eea;
+  border-color: #667eea;
+}
+
+.btn-edit:hover:not(:disabled) {
+  background: #667eea;
+  color: white;
+}
+
+.btn-delete {
+  background: white;
+  color: #ef4444;
+  border-color: #ef4444;
+}
+
+.btn-delete:hover:not(:disabled) {
+  background: #ef4444;
+  color: white;
+}
+
+.btn-secondary {
+  background: #f1f5f9;
+  color: #475569;
+  border-color: #f1f5f9;
+}
+
+.btn-secondary:hover:not(:disabled) {
+  background: #e2e8f0;
+  border-color: #e2e8f0;
+}
+
+/* Scrollbar cho popover body */
+.event-popover-body::-webkit-scrollbar {
+  width: 6px;
+}
+
+.event-popover-body::-webkit-scrollbar-track {
+  background: #f1f5f9;
+  border-radius: 3px;
+}
+
+.event-popover-body::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+}
+
+.event-popover-body::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Animations */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .event-popover-card {
+    width: 95vw;
+  }
+
+  .event-popover-header {
+    padding: 16px 20px;
+  }
+
+  .event-popover-body {
+    padding: 20px;
+    max-height: calc(80vh - 140px);
+  }
+
+  .event-popover-footer {
+    padding: 12px 20px;
+    flex-wrap: wrap;
+  }
+
+  .popover-btn {
+    flex: 1;
+    min-width: 100px;
+    justify-content: center;
+  }
+}

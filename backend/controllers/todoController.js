@@ -369,6 +369,8 @@ exports.updateTodo = async (req, res) => {
     const { id } = req.params;
     const updateData = { ...req.body };
 
+    console.log("id:", id);
+
     const todo = await Todo.findById(id);
     if (!todo) {
       return res.status(404).json({

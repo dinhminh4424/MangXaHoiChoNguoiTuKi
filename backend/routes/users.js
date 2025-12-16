@@ -573,7 +573,12 @@ router.get("/me", userController.getCurrentUser);
 router.get("/supporters/list", userController.getSupporters);
 router.get("/admin/stats", userController.getAdminStats);
 router.get("/username/:userName", userController.getUserByUsername);
+
+router.get("/:userId/qr", userController.getUserQR);
+
 router.get("/:userId", userController.getUserById);
+
+router.put("/:userId/qr", userController.updateUserQR);
 
 // Route "/" phải đứng CUỐI CÙNG
 router.get("/", userController.getUsers);

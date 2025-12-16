@@ -696,11 +696,13 @@ const BackupManagement = () => {
         </Alert>
       )}
 
-      <Row>
-        <Col>
-          <h2 className="mb-4">Quản lý Backup & Restore</h2>
-        </Col>
-      </Row>
+      <div className=" page-header mb-4">
+        <Row>
+          <Col>
+            <h2 className="mb-4">Quản lý Backup & Restore</h2>
+          </Col>
+        </Row>
+      </div>
 
       {/* Backup Actions */}
       <Row className="mb-4">

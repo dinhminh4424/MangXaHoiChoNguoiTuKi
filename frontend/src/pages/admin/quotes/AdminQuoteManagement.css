@@ -1,0 +1,36 @@
+.admin-quote-management {
+  padding: 20px;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.quote-author {
+  color: #7f8c8d;
+  font-size: 14px;
+  font-style: normal;
+}
+
+/* Status badges */
+.status-badge.active {
+  background-color: #28a745;
+  color: white;
+}
+
+.status-badge.inactive {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Loading state */
+.loading-container {
+  min-height: 400px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-container p {
+  margin-top: 15px;
+  color: #7f8c8d;
+}

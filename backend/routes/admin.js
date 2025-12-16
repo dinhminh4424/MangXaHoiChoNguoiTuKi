@@ -14,6 +14,9 @@ const User = require("../models/User");
 const UserRouter = require("./admin/user");
 const PostRouter = require("./admin/post");
 const GroupRouter = require("./admin/group");
+const QuotesRouter = require("./admin/quote");
+
+const Emergency = require("./admin/emergency");
 
 // Middleware kiểm tra đăng nhập trước, sau đó kiểm tra quyền admin
 router.use(auth);
@@ -76,6 +79,7 @@ router.delete("/journals/:journalId", adminController.deleteJournal);
 // router.delete("/groups/:groupId", adminController.deleteGroup);
 
 router.use("/groups", GroupRouter);
+router.use("/quotes", QuotesRouter);
 
 // Quản lý bình luận
 router.get("/comments", adminController.getAllComments);
@@ -124,6 +128,8 @@ router.use("/appealsForUser", appealsRoutes); // appeals
 
 // security
 router.use("/security", securityRoutes);
+
+router.use("/emergencies", Emergency);
 
 // logs user
 router.get("/logs", adminController.getSystemLogs);

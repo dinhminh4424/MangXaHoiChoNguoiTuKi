@@ -5,6 +5,7 @@ import { usePost } from "../../contexts/PostContext";
 import { useAuth } from "../../contexts/AuthContext";
 
 import groupService from "../../services/groupService";
+import NotificationService from "../../services/notificationService";
 import {
   ArrowLeft,
   Image,
@@ -218,7 +219,12 @@ const CreatePost = () => {
 
       await createPost(submitData);
 
-      alert("Đăng bài viết thành công!");
+      // alert("Đăng bài viết thành công!");
+
+      NotificationService.success({
+        title: "Đăng bài viết thành công!",
+        text: "Bài viết của bạn đã được đăng.",
+      });
 
       if (groupId) {
         navigate(`/group/${groupId}`);
@@ -309,7 +315,9 @@ const CreatePost = () => {
             <div className="user-info-card">
               <div className="d-flex align-items-center">
                 <img
-                  src={user?.avatar || "/assets/images/default-avatar.png"}
+                  src={
+                    user?.profile?.avatar || "/assets/images/default-avatar.png"
+                  }
                   alt="Avatar"
                   className="user-avatar"
                 />
@@ -370,6 +378,7 @@ const CreatePost = () => {
                   <div
                     className="group-info-card text-white mb-3"
                     style={{
+                      backdropFilter: "blur(4px)",
                       backgroundImage: `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.5)), url(${
                         group?.coverPhoto ||
                         group?.avatar ||

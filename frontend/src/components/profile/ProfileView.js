@@ -60,11 +60,89 @@ const ProfileView = ({ userId }) => {
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
 
-  const [hasCheckedInToday, setHasCheckedInToday] = React.useState(false); // ✅ State mới
-  const [checkInLoading, setCheckInLoading] = React.useState(false); // ✅ State cho loading điểm danh
+  // Diểm Danh
+
+  const [hasCheckedInToday, setHasCheckedInToday] = React.useState(false);
+  const [checkInLoading, setCheckInLoading] = React.useState(false);
+
+  //  QR CODE
+  const [qrCode, setQrCode] = React.useState(null);
+  const [qrLoading, setQrLoading] = React.useState(false);
+  const [showQRModal, setShowQRModal] = React.useState(false);
+  const [qrError, setQrError] = React.useState(null);
 
   const socketRef = React.useRef(null);
   const followActionInProgress = React.useRef(false);
+
+  // Hàm lấy QR code
+  const loadQRCode = async () => {
+    try {
+      setQrLoading(true);
+      setQrError(null);
+
+      const response = await api.get(`/api/users/${userId}/qr`);
+
+      if (response.data.success) {
+        const qrDataURL = response.data.data?.qrDataURL || response.data.data;
+        if (qrDataURL) {
+          setQrCode(qrDataURL);
+        } else {
+          throw new Error("Không tìm thấy QR code data");
+        }
+      } else {
+        throw new Error(response.data.message || "Không thể tải QR code");
+      }
+    } catch (error) {
+      console.error("Lỗi tải QR code:", error);
+      setQrError(
+        error.response?.data?.message ||
+          error.message ||
+          "Không thể tải QR code"
+      );
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  // Hàm mở modal và load QR code
+  const handleShowQRCode = async () => {
+    setShowQRModal(true);
+    await loadQRCode(); // Load QR khi mở modal
+  };
+
+  // Hàm cập nhật QR code
+  const updateQRCode = async () => {
+    try {
+      setQrLoading(true);
+      const response = await api.put(`/api/users/${userId}/qr`);
+
+      if (response.data.success) {
+        const qrDataURL = response.data.data?.qrDataURL || response.data.data;
+        if (qrDataURL) {
+          setQrCode(qrDataURL);
+          NotificationService.success({
+            title: "Thành công!",
+            text: "QR code đã được cập nhật",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Lỗi cập nhật QR code:", error);
+      NotificationService.error({
+        title: "Lỗi",
+        text: error.response?.data?.message || "Không thể cập nhật QR code",
+      });
+    } finally {
+      setQrLoading(false);
+    }
+  };
+
+  // Tải QR code khi component mount
+  React.useEffect(() => {
+    if (userId) {
+      loadQRCode();
+    }
+  }, [userId]);
 
   const handleFileChangeReport = (e) => {
     const selectedFiles = Array.from(e.target.files);
@@ -1156,7 +1234,7 @@ const ProfileView = ({ userId }) => {
                             }}
                           >
                             <i className="fas fa-comment me-2"></i>
-                            Nhắn tin 123 456
+                            Nhắn tin
                           </button>
                         )
                       ) : (
@@ -1168,7 +1246,7 @@ const ProfileView = ({ userId }) => {
                           }}
                         >
                           <i className="fas fa-comment me-2"></i>
-                          Nhắn tin 123
+                          Nhắn tin
                         </button>
                       ))}
 
@@ -1205,6 +1283,15 @@ const ProfileView = ({ userId }) => {
                     >
                       <i className="fa-solid fa-flag"></i>
                       Báo Cáo
+                    </button>
+
+                    {/* Thêm nút QR Code vào đây */}
+                    <button
+                      className="btn btn-outline-info px-4 py-2 d-flex align-items-center"
+                      onClick={handleShowQRCode}
+                    >
+                      <i className="fas fa-qrcode me-2"></i>
+                      Xem QR Code
                     </button>
                   </div>
                 </div>
@@ -1266,9 +1353,7 @@ const ProfileView = ({ userId }) => {
                 <div className="col-md-4">
                   <div className="card border-0 bg-gradient-primary text-white text-center">
                     <div className="card-body py-3">
-                      <h5 className="mb-1">
-                        {viewedUser?.countPost || "Chưa cập nhật"}
-                      </h5>
+                      <h5 className="mb-1">{viewedUser?.countPost || "0"}</h5>
                       <small>Bài viết</small>
                     </div>
                   </div>
@@ -1299,9 +1384,148 @@ const ProfileView = ({ userId }) => {
                 </div>
               </div>
             )}
+
+            {/* QR CODE SECTION - IMPROVED */}
+            {isOwnProfile && (
+              <div className="card border-0 bg-light mt-4">
+                <div className="card-body">
+                  <h6 className="card-title fw-semibold mb-3">
+                    <i className="fas fa-qrcode me-2 text-primary"></i>
+                    QR Code Profile
+                  </h6>
+
+                  <div className="text-center">
+                    <button
+                      className="btn btn-outline-primary btn-lg"
+                      onClick={handleShowQRCode}
+                    >
+                      <i className="fas fa-qrcode me-2"></i>
+                      Xem QR Code Profile
+                    </button>
+                    <p className="text-muted small mt-2">
+                      Quét QR code để xem nhanh profile
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Modal hiển thị QR Code lớn */}
+      {/* Modal hiển thị QR Code lớn - IMPROVED */}
+      <Modal
+        show={showQRModal}
+        onHide={() => setShowQRModal(false)}
+        centered
+        size="sm"
+      >
+        <Modal.Header closeButton className="bg-primary text-white">
+          <Modal.Title>
+            <i className="fas fa-qrcode me-2"></i>
+            QR Code Profile
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="text-center p-4">
+          {qrLoading ? (
+            <div className="py-4">
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="text-muted">Đang tải QR code...</p>
+            </div>
+          ) : qrError ? (
+            <div className="py-3">
+              <div className="alert alert-warning mb-3">
+                <i className="fas fa-exclamation-triangle me-2"></i>
+                {qrError}
+              </div>
+              <Button variant="primary" onClick={loadQRCode}>
+                <i className="fas fa-redo me-2"></i>
+                Thử lại
+              </Button>
+            </div>
+          ) : qrCode ? (
+            <>
+              <img
+                src={qrCode}
+                alt="QR Code Profile"
+                className="img-fluid rounded shadow-sm mb-3"
+                style={{
+                  maxWidth: "100%",
+                  border: "8px solid white",
+                  boxShadow: "0 4px 8px rgba(0,0,0,0.1)",
+                }}
+              />
+              <p className="text-muted mb-3">
+                Quét QR code để xem profile của{" "}
+                <strong>{viewedUser?.fullName || viewedUser?.username}</strong>
+              </p>
+              <div className="d-flex justify-content-center gap-2 flex-wrap">
+                <Button
+                  variant="outline-primary"
+                  size="sm"
+                  onClick={() => {
+                    const link = document.createElement("a");
+                    link.href = qrCode;
+                    link.download = `qr-profile-${
+                      viewedUser?.username || "user"
+                    }.png`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                  }}
+                >
+                  <i className="fas fa-download me-2"></i>
+                  Tải xuống
+                </Button>
+                <Button
+                  variant="primary"
+                  size="sm"
+                  onClick={() => {
+                    const profileUrl = `${process.env.REACT_APP_FRONTEND_URL}/profile/${userId}`;
+                    navigator.clipboard.writeText(profileUrl);
+                    NotificationService.success({
+                      title: "Đã sao chép!",
+                      text: "Đã sao chép link profile vào clipboard",
+                      timer: 2000,
+                    });
+                  }}
+                >
+                  <i className="fas fa-link me-2"></i>
+                  Sao chép link
+                </Button>
+                {(isOwnProfile || currentUser?.role === "admin") && (
+                  <Button
+                    variant="outline-secondary"
+                    size="sm"
+                    onClick={updateQRCode}
+                    disabled={qrLoading}
+                  >
+                    {qrLoading ? (
+                      <span className="spinner-border spinner-border-sm"></span>
+                    ) : (
+                      <>
+                        <i className="fas fa-refresh me-2"></i>
+                        Làm mới
+                      </>
+                    )}
+                  </Button>
+                )}
+              </div>
+            </>
+          ) : (
+            <div className="py-3">
+              <p className="text-muted">Không thể tải QR code</p>
+              <Button variant="primary" onClick={loadQRCode}>
+                <i className="fas fa-redo me-2"></i>
+                Thử lại
+              </Button>
+            </div>
+          )}
+        </Modal.Body>
+      </Modal>
 
       {/* Friends List Modal */}
       <FriendsListModal

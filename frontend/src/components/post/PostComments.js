@@ -1147,6 +1147,8 @@ import { useAuth } from "../../contexts/AuthContext";
 import commentService from "../../services/commentService";
 import { useEmotionPicker } from "../../hooks/useEmotionPicker";
 import EmotionPicker from "./EmojiPicker";
+import { Link, useNavigate } from "react-router-dom";
+
 import {
   EMOTION_ICONS,
   EMOTION_COLORS,
@@ -1176,6 +1178,8 @@ const PostComments = ({ postId, onCommentAdded }) => {
   const [filePreview, setFilePreview] = useState(null);
   const fileInputRef = useRef(null);
   const commentEndRef = useRef(null);
+
+  const navigate = useNavigate();
 
   // ---------- QUẢN LÝ PREVIEW CỦA CÁC REPLY ----------
   const [replyFileStates, setReplyFileStates] = useState({}); // { commentId: { file, preview } }
@@ -1274,7 +1278,7 @@ const PostComments = ({ postId, onCommentAdded }) => {
         <div className="comment-input-container">
           <div className="user-avatar">
             <img
-              src={user?.avatar || "/assets/images/default-avatar.png"}
+              src={user?.profile?.avatar || "/assets/images/default-avatar.png"}
               alt="Your avatar"
               className="w-100 h-100"
             />
@@ -1455,6 +1459,8 @@ const CommentItem = ({
   const [reportReason, setReportReason] = useState("");
   const [reportNote, setReportNote] = useState("");
   const menuRef = useRef(null);
+
+  const navigate = useNavigate();
 
   // Thêm các state cập nhật bl
   const [editingComment, setEditingComment] = useState(null);
@@ -1807,13 +1813,15 @@ const CommentItem = ({
             comment.userID?.profile?.avatar ||
             "/assets/images/default-avatar.png"
           }
+          onClick={() => navigate("/profile/" + comment.userID?._id)}
           alt="Avatar"
+          style={{ cursor: "pointer" }}
         />
       </div>
 
-      <div className="comment-content">
-        <div className="comment-body">
-          <div className="comment-header">
+      <div className="comment-content ">
+        <div className="comment-body ms-3">
+          <div className="comment-header ms-1">
             <div className="comment-user">
               <span className="user-name">
                 {comment.userID?.fullName || "Người dùng"}
@@ -1867,7 +1875,7 @@ const CommentItem = ({
             </div>
           </div>
 
-          <div className="comment-text">
+          <div className="comment-text ms-1">
             {editingComment === comment._id ? (
               <div className="edit-comment-container">
                 <textarea
@@ -2231,7 +2239,9 @@ const CommentItem = ({
 
             <div className="user-avatar small">
               <img
-                src={user?.avatar || "/assets/images/default-avatar.png"}
+                src={
+                  user?.profile?.avatar || "/assets/images/default-avatar.png"
+                }
                 alt="Your avatar"
                 className="w-100 h-100"
               />

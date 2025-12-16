@@ -16,82 +16,164 @@ import {
   YAxis,
   Tooltip,
   Legend,
+  RadarChart,
+  Radar,
+  PolarGrid,
+  PolarAngleAxis,
+  PolarRadiusAxis,
 } from "recharts";
 import { useAuth } from "../../contexts/AuthContext";
 import { getDashboardStats } from "../../services/adminService";
 import { updateToken } from "../../services/api";
 import "./AdminDashboard.css";
 
+// React Icons
+import {
+  FiUsers,
+  FiUserCheck,
+  FiFileText,
+  FiMessageSquare,
+  FiMessageCircle,
+  FiBookOpen,
+  FiUsers as FiGroup,
+  FiAlertTriangle,
+  FiHeart,
+  FiTrendingUp,
+  FiActivity,
+  FiBarChart2,
+  FiPieChart,
+  FiStar,
+  FiRefreshCw,
+  FiCalendar,
+  FiFilter,
+  FiEye,
+  FiArrowUpRight,
+  FiArrowDownRight,
+  FiChevronRight,
+  FiGlobe,
+  FiClock,
+  FiBell,
+  FiShield,
+  FiDatabase,
+} from "react-icons/fi";
+
 const RANGE_OPTIONS = [
-  { value: "7d", label: "7 ngày" },
-  { value: "30d", label: "30 ngày" },
-  { value: "90d", label: "90 ngày" },
-  { value: "180d", label: "6 tháng" },
-  { value: "365d", label: "12 tháng" },
-  { value: "mtd", label: "Tháng này" },
-  { value: "ytd", label: "Từ đầu năm" },
-  { value: "custom", label: "Tùy chỉnh" },
+  { value: "7d", label: "7 ngày", icon: <FiCalendar /> },
+  { value: "30d", label: "30 ngày", icon: <FiCalendar /> },
+  { value: "90d", label: "90 ngày", icon: <FiCalendar /> },
+  { value: "180d", label: "6 tháng", icon: <FiCalendar /> },
+  { value: "365d", label: "12 tháng", icon: <FiCalendar /> },
+  { value: "mtd", label: "Tháng này", icon: <FiCalendar /> },
+  { value: "ytd", label: "Từ đầu năm", icon: <FiCalendar /> },
+  { value: "custom", label: "Tùy chỉnh", icon: <FiFilter /> },
 ];
 
 const GROUP_OPTIONS = [
-  { value: "day", label: "Theo ngày" },
-  { value: "month", label: "Theo tháng" },
-  { value: "year", label: "Theo năm" },
+  { value: "day", label: "Theo ngày", icon: <FiActivity /> },
+  { value: "month", label: "Theo tháng", icon: <FiBarChart2 /> },
+  { value: "year", label: "Theo năm", icon: <FiPieChart /> },
 ];
 
-const AREA_COLORS = {
-  users: "#4f46e5",
-  posts: "#667eea",
-  comments: "#f093fb",
-  messages: "#43e97b",
-  journals: "#00f2fe",
-  likes: "#fa709a",
-  interactions: "#ffd166",
-  violations: "#ff6b6b",
-  moodLogs: "#38bdf8",
+const CHART_COLORS = {
+  primary: "#667eea",
+  secondary: "#764ba2",
+  success: "#10b981",
+  warning: "#f59e0b",
+  danger: "#ef4444",
+  info: "#3b82f6",
+  purple: "#8b5cf6",
+  pink: "#ec4899",
+  indigo: "#6366f1",
+  teal: "#14b8a6",
+  orange: "#f97316",
+  cyan: "#06b6d4",
 };
 
-const PIE_COLORS = [
-  "#667eea",
-  "#f093fb",
-  "#43e97b",
-  "#00f2fe",
-  "#fa709a",
-  "#ffd166",
-  "#ff9f1c",
-  "#38bdf8",
-];
+const CHART_GRADIENTS = {
+  users: { start: "#667eea", end: "#764ba2" },
+  posts: { start: "#10b981", end: "#3b82f6" },
+  comments: { start: "#f59e0b", end: "#ec4899" },
+  messages: { start: "#8b5cf6", end: "#6366f1" },
+  interactions: { start: "#06b6d4", end: "#3b82f6" },
+  violations: { start: "#ef4444", end: "#f97316" },
+  mood: { start: "#8b5cf6", end: "#ec4899" },
+};
 
 const SUMMARY_ICONS = {
-  users: "ri-user-3-line",
-  activeUsers: "ri-shield-user-line",
-  posts: "ri-article-line",
-  comments: "ri-chat-3-line",
-  messages: "ri-message-3-line",
-  journals: "ri-book-open-line",
-  groups: "ri-group-line",
-  violations: "ri-error-warning-line",
-  moodLogs: "ri-mental-health-line",
-  likes: "ri-heart-2-line",
+  totalUsers: <FiUsers size={24} />,
+  activeUsers: <FiUserCheck size={24} />,
+  posts: <FiFileText size={24} />,
+  comments: <FiMessageSquare size={24} />,
+  messages: <FiMessageCircle size={24} />,
+  journals: <FiBookOpen size={24} />,
+  groups: <FiGroup size={24} />,
+  violations: <FiAlertTriangle size={24} />,
+  moodLogs: <FiActivity size={24} />,
+  likes: <FiHeart size={24} />,
 };
 
-const VIOLATION_STATUS_LABELS = {
-  pending: "Đang chờ",
-  reviewed: "Đã xử lý",
-  approved: "Chấp thuận",
-  rejected: "Từ chối",
-  auto: "Tự động",
-  unknown: "Khác",
-};
-
-const TARGET_TYPE_LABELS = {
-  Post: "Bài viết",
-  Comment: "Bình luận",
-  User: "Người dùng",
-  Message: "Tin nhắn",
-  Group: "Nhóm",
-  Other: "Khác",
-};
+const METRIC_CARDS = [
+  {
+    key: "totalUsers",
+    label: "Tổng người dùng",
+    color: CHART_COLORS.primary,
+    icon: SUMMARY_ICONS.totalUsers,
+  },
+  {
+    key: "activeUsers",
+    label: "Đang hoạt động",
+    color: CHART_COLORS.success,
+    icon: SUMMARY_ICONS.activeUsers,
+  },
+  {
+    key: "posts",
+    label: "Bài viết",
+    color: CHART_COLORS.info,
+    icon: SUMMARY_ICONS.posts,
+  },
+  {
+    key: "comments",
+    label: "Bình luận",
+    color: CHART_COLORS.warning,
+    icon: SUMMARY_ICONS.comments,
+  },
+  {
+    key: "messages",
+    label: "Tin nhắn",
+    color: CHART_COLORS.purple,
+    icon: SUMMARY_ICONS.messages,
+  },
+  {
+    key: "journals",
+    label: "Nhật ký",
+    color: CHART_COLORS.teal,
+    icon: SUMMARY_ICONS.journals,
+  },
+  {
+    key: "groups",
+    label: "Nhóm",
+    color: CHART_COLORS.indigo,
+    icon: SUMMARY_ICONS.groups,
+  },
+  {
+    key: "violations",
+    label: "Vi phạm",
+    color: CHART_COLORS.danger,
+    icon: SUMMARY_ICONS.violations,
+  },
+  {
+    key: "moodLogs",
+    label: "Cảm xúc",
+    color: CHART_COLORS.pink,
+    icon: SUMMARY_ICONS.moodLogs,
+  },
+  {
+    key: "likes",
+    label: "Lượt thích",
+    color: CHART_COLORS.orange,
+    icon: SUMMARY_ICONS.likes,
+  },
+];
 
 const defaultFilters = {
   range: "30d",
@@ -104,6 +186,9 @@ const formatNumber = (value) => {
   if (value === undefined || value === null) return "0";
   const number = Number(value);
   if (Number.isNaN(number)) return "0";
+
+  if (number >= 1000000) return `${(number / 1000000).toFixed(1)}M`;
+  if (number >= 1000) return `${(number / 1000).toFixed(1)}K`;
   return number.toLocaleString("vi-VN");
 };
 
@@ -111,9 +196,10 @@ const formatDateLabel = (value, groupBy) => {
   if (!value) return "";
   const date = dayjs(value);
   if (!date.isValid()) return value;
+
   switch (groupBy) {
     case "month":
-      return date.format("MM/YYYY");
+      return date.format("MMM YYYY");
     case "year":
       return date.format("YYYY");
     default:
@@ -142,153 +228,194 @@ const DashboardFilters = ({
     : "-";
 
   return (
-    <div className="dashboard-filters">
-      <div className="filters-header">
-        <h2>Bộ lọc dữ liệu</h2>
-        <div className="filters-meta">
-          <div className="meta-info">
-            <span className="meta-label">Khoảng dữ liệu:</span>
-            <span className="meta-value">
-              {rangeStartLabel} - {rangeEndLabel}
-            </span>
+    <div className="ad-filter-container">
+      <div className="ad-filter-header">
+        <div className="ad-filter-title">
+          <FiFilter className="ad-filter-icon" />
+          <h2>Bộ lọc Dữ liệu Thống kê</h2>
+        </div>
+        <div className="ad-filter-meta">
+          <div className="ad-meta-item">
+            <FiCalendar className="ad-meta-icon" />
+            <div>
+              <span className="ad-meta-label">Khoảng dữ liệu</span>
+              <span className="ad-meta-value">
+                {rangeStartLabel} - {rangeEndLabel}
+              </span>
+            </div>
           </div>
-          <div className="meta-info">
-            <span className="meta-label">Cập nhật lần cuối:</span>
-            <span className="meta-value">
-              {lastUpdated
-                ? dayjs(lastUpdated).format("HH:mm:ss DD/MM/YYYY")
-                : "Chưa có"}
-            </span>
+          <div className="ad-meta-item">
+            <FiClock className="ad-meta-icon" />
+            <div>
+              <span className="ad-meta-label">Cập nhật lần cuối</span>
+              <span className="ad-meta-value">
+                {lastUpdated
+                  ? dayjs(lastUpdated).format("HH:mm DD/MM")
+                  : "Chưa có"}
+              </span>
+            </div>
           </div>
         </div>
       </div>
 
-      <div className="filters-content">
-        <div className="filters-group">
-          <div className="filter-control">
-            <label className="filter-label">Khoảng thời gian</label>
-            <select
-              className="filter-select"
-              value={filters.range}
-              onChange={(event) => onFilterChange("range", event.target.value)}
-            >
-              {RANGE_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
+      <div className="ad-filter-content">
+        <div className="ad-filter-controls">
+          <div className="ad-filter-group">
+            <div className="ad-control">
+              <label className="ad-control-label">
+                <FiCalendar className="me-2" />
+                Khoảng thời gian
+              </label>
+              <div className="ad-select-wrapper">
+                <select
+                  className="ad-select"
+                  value={filters.range}
+                  onChange={(e) => onFilterChange("range", e.target.value)}
+                >
+                  {RANGE_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <FiChevronRight className="ad-select-arrow" />
+              </div>
+            </div>
+
+            {filters.range === "custom" && (
+              <>
+                <div className="ad-control">
+                  <label className="ad-control-label">
+                    <FiCalendar className="me-2" />
+                    Từ ngày
+                  </label>
+                  <input
+                    type="date"
+                    className="ad-input"
+                    value={filters.startDate}
+                    onChange={(e) =>
+                      onFilterChange("startDate", e.target.value)
+                    }
+                  />
+                </div>
+                <div className="ad-control">
+                  <label className="ad-control-label">
+                    <FiCalendar className="me-2" />
+                    Đến ngày
+                  </label>
+                  <input
+                    type="date"
+                    className="ad-input"
+                    value={filters.endDate}
+                    onChange={(e) => onFilterChange("endDate", e.target.value)}
+                  />
+                </div>
+              </>
+            )}
+
+            <div className="ad-control">
+              <label className="ad-control-label">
+                <FiBarChart2 className="me-2" />
+                Nhóm theo
+              </label>
+              <div className="ad-select-wrapper">
+                <select
+                  className="ad-select"
+                  value={filters.groupBy}
+                  onChange={(e) => onFilterChange("groupBy", e.target.value)}
+                >
+                  {GROUP_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                <FiChevronRight className="ad-select-arrow" />
+              </div>
+            </div>
           </div>
 
-          {filters.range === "custom" && (
-            <>
-              <div className="filter-control">
-                <label className="filter-label">Từ ngày</label>
-                <input
-                  type="date"
-                  className="filter-input"
-                  value={filters.startDate}
-                  onChange={(event) =>
-                    onFilterChange("startDate", event.target.value)
-                  }
-                />
-              </div>
-              <div className="filter-control">
-                <label className="filter-label">Đến ngày</label>
-                <input
-                  type="date"
-                  className="filter-input"
-                  value={filters.endDate}
-                  onChange={(event) =>
-                    onFilterChange("endDate", event.target.value)
-                  }
-                />
-              </div>
-            </>
-          )}
-
-          <div className="filter-control">
-            <label className="filter-label">Nhóm theo</label>
-            <select
-              className="filter-select"
-              value={filters.groupBy}
-              onChange={(event) =>
-                onFilterChange("groupBy", event.target.value)
-              }
-            >
-              {GROUP_OPTIONS.map((option) => (
-                <option key={option.value} value={option.value}>
-                  {option.label}
-                </option>
-              ))}
-            </select>
-          </div>
+          <button
+            className="ad-refresh-btn"
+            onClick={onRefresh}
+            disabled={isRefreshing}
+          >
+            {isRefreshing ? (
+              <>
+                <div className="ad-spinner"></div>
+                <span>Đang làm mới...</span>
+              </>
+            ) : (
+              <>
+                <FiRefreshCw className="me-2" />
+                <span>Làm mới Dữ liệu</span>
+              </>
+            )}
+          </button>
         </div>
-
-        <button
-          className="refresh-btn"
-          onClick={onRefresh}
-          disabled={isRefreshing}
-        >
-          {isRefreshing ? (
-            <>
-              <span
-                className="spinner-border spinner-border-sm me-2"
-                role="status"
-                aria-hidden="true"
-              ></span>
-              Đang làm mới
-            </>
-          ) : (
-            <>
-              <i className="ri-refresh-line me-2"></i>
-              Làm mới
-            </>
-          )}
-        </button>
       </div>
     </div>
   );
 };
 
-const MetricCard = ({
-  title,
-  value,
-  description,
-  icon,
-  trend,
-  className = "",
-}) => (
-  <div className={`metric-card ${className}`}>
-    <div className="metric-header">
-      <div className="metric-icon">
-        <i className={icon}></i>
+const MetricCard = ({ title, value, description, icon, color, trend }) => {
+  const trendValue = trend?.value || 0;
+  const trendDirection = trend?.direction || "neutral";
+
+  return (
+    <div className="ad-metric-card" style={{ borderTopColor: color }}>
+      <div className="ad-metric-header">
+        <div
+          className="ad-metric-icon"
+          style={{ backgroundColor: `${color}15` }}
+        >
+          {React.cloneElement(icon, { color: color })}
+        </div>
+        <div className="ad-metric-trend">
+          {trendDirection !== "neutral" && (
+            <span className={`ad-trend-badge ${trendDirection}`}>
+              {trendDirection === "up" ? (
+                <FiArrowUpRight className="me-1" />
+              ) : (
+                <FiArrowDownRight className="me-1" />
+              )}
+              {Math.abs(trendValue).toFixed(1)}%
+            </span>
+          )}
+        </div>
       </div>
-      <div className="metric-trend">
-        {trend && (
-          <span className={`trend-indicator ${trend.direction}`}>
-            {trend.direction === "up" ? "↗" : "↘"} {trend.value}
-          </span>
-        )}
+      <div className="ad-metric-content">
+        <h3 className="ad-metric-value">{value}</h3>
+        <p className="ad-metric-title">{title}</p>
+        {description && <p className="ad-metric-description">{description}</p>}
+      </div>
+      <div className="ad-metric-footer">
+        <div className="ad-progress-bar">
+          <div
+            className="ad-progress-fill"
+            style={{
+              width: `${Math.min(100, trendValue + 50)}%`,
+              backgroundColor: color,
+            }}
+          ></div>
+        </div>
       </div>
     </div>
-    <div className="metric-content">
-      <h3 className="metric-value">{value}</h3>
-      <p className="metric-title">{title}</p>
-      {description && <p className="metric-description">{description}</p>}
-    </div>
-  </div>
-);
+  );
+};
 
 const ChartContainer = ({ title, subtitle, children, className = "" }) => (
-  <div className={`chart-container ${className}`}>
-    <div className="chart-header">
+  <div className={`ad-chart-container ${className}`}>
+    <div className="ad-chart-header">
       <div>
-        <h3 className="chart-title">{title}</h3>
-        {subtitle && <p className="chart-subtitle">{subtitle}</p>}
+        <h3 className="ad-chart-title">{title}</h3>
+        {subtitle && <p className="ad-chart-subtitle">{subtitle}</p>}
       </div>
+      <button className="ad-chart-zoom">
+        <FiEye size={18} />
+      </button>
     </div>
-    <div className="chart-content">{children}</div>
+    <div className="ad-chart-content">{children}</div>
   </div>
 );
 
@@ -302,8 +429,8 @@ const AdminDashboard = () => {
   const [lastUpdated, setLastUpdated] = useState(null);
 
   const handleFilterChange = useCallback((field, value) => {
-    setFilters((previous) => {
-      const updated = { ...previous, [field]: value };
+    setFilters((prev) => {
+      const updated = { ...prev, [field]: value };
       if (field === "range" && value !== "custom") {
         updated.startDate = "";
         updated.endDate = "";
@@ -360,7 +487,7 @@ const AdminDashboard = () => {
         console.error("Dashboard stats error:", err);
         const message =
           err?.response?.data?.message || err.message || err.toString();
-        setError(`Không thể tải thống kê dashboard: ${message}`);
+        setError(`Không thể tải thống kê: ${message}`);
       } finally {
         if (!silent) {
           setLoading(false);
@@ -384,127 +511,51 @@ const AdminDashboard = () => {
 
     const totals = stats.overview || {};
     const period = stats.periodOverview || {};
+    const growth = stats.growth || {};
 
-    return [
-      {
-        key: "users",
-        label: "Tổng người dùng",
-        total: totals.totalUsers,
-        period: period.users,
-        icon: SUMMARY_ICONS.users,
-        trend: {
-          direction: period.users > 0 ? "up" : "neutral",
-          value: `+${formatNumber(period.users || 0)}`,
-        },
-      },
-      {
-        key: "activeUsers",
-        label: "Người dùng hoạt động",
-        total: totals.activeUsers,
-        period: period.users,
-        icon: SUMMARY_ICONS.activeUsers,
-      },
-      {
-        key: "posts",
-        label: "Bài viết",
-        total: totals.totalPosts,
-        period: period.posts,
-        icon: SUMMARY_ICONS.posts,
-        trend: {
-          direction: period.posts > 0 ? "up" : "neutral",
-          value: `+${formatNumber(period.posts || 0)}`,
-        },
-      },
-      {
-        key: "comments",
-        label: "Bình luận",
-        total: totals.totalComments,
-        period: period.comments,
-        icon: SUMMARY_ICONS.comments,
-        trend: {
-          direction: period.comments > 0 ? "up" : "neutral",
-          value: `+${formatNumber(period.comments || 0)}`,
-        },
-      },
-      {
-        key: "messages",
-        label: "Tin nhắn",
-        total: totals.totalMessages,
-        period: period.messages,
-        icon: SUMMARY_ICONS.messages,
-      },
-      {
-        key: "journals",
-        label: "Nhật ký",
-        total: totals.totalJournals,
-        period: period.journals,
-        icon: SUMMARY_ICONS.journals,
-      },
-      {
-        key: "groups",
-        label: "Nhóm",
-        total: totals.totalGroups,
-        period: period.groups,
-        icon: SUMMARY_ICONS.groups,
-      },
-      {
-        key: "likes",
-        label: "Lượt thích",
-        total: totals.totalLikes,
-        period: period.likes,
-        icon: SUMMARY_ICONS.likes,
-        trend: {
-          direction: period.likes > 0 ? "up" : "neutral",
-          value: `+${formatNumber(period.likes || 0)}`,
-        },
-      },
-      {
-        key: "violations",
-        label: "Vi phạm",
-        total: totals.totalViolations,
-        period: period.violations,
-        icon: SUMMARY_ICONS.violations,
-      },
-    ];
+    return METRIC_CARDS.map((card) => {
+      const totalValue = totals[card.key] || 0;
+      const periodValue = period[card.key] || 0;
+      const growthData = growth[card.key] || {};
+
+      let trend = { direction: "neutral", value: 0 };
+      if (growthData.growthRate) {
+        trend = {
+          direction: growthData.growthRate >= 0 ? "up" : "down",
+          value: Math.abs(growthData.growthRate),
+        };
+      } else if (periodValue > 0) {
+        trend = { direction: "up", value: 10 };
+      }
+
+      return {
+        ...card,
+        total: totalValue,
+        period: periodValue,
+        formattedValue: formatNumber(totalValue),
+        description: `+${formatNumber(periodValue)} trong kỳ`,
+        trend,
+      };
+    });
   }, [stats]);
 
   const growthCards = useMemo(() => {
     const growth = stats?.growth;
     if (!growth) return [];
 
-    const formatGrowthValue = (value) => {
-      if (!value) return { delta: 0, growthRate: 0 };
-      return {
-        delta: value.delta,
-        growthRate: value.growthRate,
-      };
-    };
-
     return [
-      { key: "users", label: "Người dùng", ...formatGrowthValue(growth.users) },
-      { key: "posts", label: "Bài viết", ...formatGrowthValue(growth.posts) },
-      {
-        key: "comments",
-        label: "Bình luận",
-        ...formatGrowthValue(growth.comments),
-      },
-      {
-        key: "messages",
-        label: "Tin nhắn",
-        ...formatGrowthValue(growth.messages),
-      },
-      { key: "likes", label: "Lượt thích", ...formatGrowthValue(growth.likes) },
-      {
-        key: "violations",
-        label: "Vi phạm",
-        ...formatGrowthValue(growth.violations),
-      },
+      { key: "users", label: "Người dùng", ...(growth.users || {}) },
+      { key: "posts", label: "Bài viết", ...(growth.posts || {}) },
+      { key: "comments", label: "Bình luận", ...(growth.comments || {}) },
+      { key: "messages", label: "Tin nhắn", ...(growth.messages || {}) },
+      { key: "likes", label: "Lượt thích", ...(growth.likes || {}) },
+      { key: "violations", label: "Vi phạm", ...(growth.violations || {}) },
       {
         key: "interactions",
         label: "Tương tác",
-        ...formatGrowthValue(growth.interactions),
+        ...(growth.interactions || {}),
       },
-    ];
+    ].filter((item) => item.delta !== undefined);
   }, [stats]);
 
   const timelineData = stats?.trendSeries || [];
@@ -514,37 +565,51 @@ const AdminDashboard = () => {
     return Object.entries(statusObj)
       .filter(([, count]) => count > 0)
       .map(([status, count]) => ({
-        status,
-        label: VIOLATION_STATUS_LABELS[status] || status,
-        count,
+        name: status,
+        label: status.charAt(0).toUpperCase() + status.slice(1),
+        value: count,
+        color:
+          status === "pending"
+            ? CHART_COLORS.warning
+            : status === "approved"
+            ? CHART_COLORS.success
+            : CHART_COLORS.danger,
       }));
   }, [stats]);
 
   const violationTargetData = useMemo(() => {
-    return (stats?.violationSummary?.byTarget || []).map((item) => ({
-      name: TARGET_TYPE_LABELS[item.targetType] || item.targetType,
+    return (stats?.violationSummary?.byTarget || []).map((item, index) => ({
+      name: item.targetType || "Khác",
       value: item.count,
+      color:
+        Object.values(CHART_COLORS)[index % Object.values(CHART_COLORS).length],
     }));
   }, [stats]);
 
-  const moodPieData = useMemo(() => {
-    return (stats?.moodStats || []).map((item) => ({
+  const moodData = useMemo(() => {
+    return (stats?.moodStats || []).map((item, index) => ({
       name: item.emotion || "Khác",
       value: item.count,
+      color:
+        Object.values(CHART_COLORS)[index % Object.values(CHART_COLORS).length],
     }));
   }, [stats]);
 
-  const interactionPieData = useMemo(() => {
-    return (stats?.activityBreakdown?.interaction || []).map((item) => ({
+  const interactionData = useMemo(() => {
+    return (stats?.activityBreakdown?.interaction || []).map((item, index) => ({
       name: item.label,
       value: item.count,
+      color:
+        Object.values(CHART_COLORS)[index % Object.values(CHART_COLORS).length],
     }));
   }, [stats]);
 
-  const contentPieData = useMemo(() => {
-    return (stats?.activityBreakdown?.content || []).map((item) => ({
+  const contentData = useMemo(() => {
+    return (stats?.activityBreakdown?.content || []).map((item, index) => ({
       name: item.label,
       value: item.count,
+      color:
+        Object.values(CHART_COLORS)[index % Object.values(CHART_COLORS).length],
     }));
   }, [stats]);
 
@@ -559,18 +624,79 @@ const AdminDashboard = () => {
     fetchDashboardStats({ silent: true, params: queryParams });
   }, [fetchDashboardStats, queryParams]);
 
-  return (
-    <div className="admin-dashboard">
-      <div className="dashboard-header">
-        <div className="header-content">
-          <h1 className="dashboard-title">Quản trị hệ thống</h1>
-          <p className="dashboard-subtitle">
-            Chào mừng, <strong>{user?.username || "Admin"}</strong>! Theo dõi
-            sức khỏe hệ thống và các chỉ số quan trọng.
+  const CustomTooltip = ({ active, payload, label }) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="ad-custom-tooltip">
+          <p className="ad-tooltip-label">
+            {formatDateLabel(label, requestedRange?.groupBy)}
           </p>
+          {payload.map((entry, index) => (
+            <p
+              key={index}
+              className="ad-tooltip-item"
+              style={{ color: entry.color }}
+            >
+              <span
+                className="ad-tooltip-dot"
+                style={{ backgroundColor: entry.color }}
+              ></span>
+              {entry.name}: <strong>{formatNumber(entry.value)}</strong>
+            </p>
+          ))}
+        </div>
+      );
+    }
+    return null;
+  };
+
+  const CustomPieTooltip = ({ active, payload }) => {
+    if (active && payload && payload.length) {
+      const data = payload[0];
+      return (
+        <div className="ad-custom-tooltip">
+          <p className="ad-tooltip-label">{data.name}</p>
+          <p className="ad-tooltip-value">{formatNumber(data.value)}</p>
+          <p className="ad-tooltip-percent">
+            {((data.value / data.payload.total) * 100).toFixed(1)}%
+          </p>
+        </div>
+      );
+    }
+    return null;
+  };
+
+  return (
+    <div className="ad-dashboard">
+      {/* Dashboard Header */}
+      <div className="ad-header">
+        <div className="ad-header-content">
+          <div className="ad-header-title">
+            <h1 className="ad-main-title">
+              <FiGlobe className="ad-title-icon" />
+              Dashboard Quản trị
+            </h1>
+            <p className="ad-subtitle">
+              Xin chào, <strong>{user?.username || "Administrator"}</strong>!
+              Theo dõi và phân tích toàn diện hệ thống của bạn.
+            </p>
+          </div>
+          <div className="ad-header-stats">
+            <div className="ad-stat-badge">
+              <FiActivity className="me-2" />
+              <span>Dữ liệu thời gian thực</span>
+            </div>
+            <div className="ad-stat-badge success">
+              <FiTrendingUp className="me-2" />
+              <span>
+                Tổng {formatNumber(stats?.overview?.totalUsers || 0)} người dùng
+              </span>
+            </div>
+          </div>
         </div>
       </div>
 
+      {/* Filters Section */}
       <DashboardFilters
         filters={filters}
         onFilterChange={handleFilterChange}
@@ -580,89 +706,114 @@ const AdminDashboard = () => {
         requestedRange={requestedRange}
       />
 
+      {/* Error Alert */}
       {error && (
-        <div className="alert-container">
-          <div className="alert alert-warning" role="alert">
-            <div className="alert-content">
-              <i className="ri-alert-line alert-icon"></i>
-              <span>{error}</span>
-            </div>
-            <button
-              className="btn btn-link alert-action"
-              onClick={() =>
-                queryParams &&
-                fetchDashboardStats({ silent: false, params: queryParams })
-              }
-            >
-              Thử lại
-            </button>
+        <div className="ad-alert error">
+          <div className="ad-alert-content">
+            <FiAlertTriangle className="ad-alert-icon" />
+            <span>{error}</span>
           </div>
+          <button
+            className="ad-alert-action"
+            onClick={() =>
+              queryParams &&
+              fetchDashboardStats({ silent: false, params: queryParams })
+            }
+          >
+            Thử lại
+          </button>
         </div>
       )}
 
       {loading && !hasStats ? (
-        <div className="loading-container">
-          <div className="loading-spinner">
-            <div className="spinner-border text-primary" role="status">
-              <span className="visually-hidden">Loading...</span>
-            </div>
-          </div>
-          <p className="loading-text">Đang tải thống kê...</p>
+        <div className="ad-loading">
+          <div className="ad-spinner-large"></div>
+          <p className="ad-loading-text">Đang tải thống kê...</p>
         </div>
       ) : hasStats ? (
         <>
-          <div className="metrics-grid">
+          {/* Metrics Overview */}
+          {/* <div className="ad-metrics-grid">
             {overviewCards.map((card) => (
               <MetricCard
                 key={card.key}
                 title={card.label}
-                value={formatNumber(card.total)}
+                value={card.formattedValue}
+                description={card.description}
                 icon={card.icon}
+                color={card.color}
                 trend={card.trend}
-                className={card.key}
               />
             ))}
-          </div>
+          </div> */}
 
+          {/* Growth Section */}
           {growthCards.length > 0 && (
-            <div className="growth-section">
-              <h3 className="section-title">Tăng trưởng</h3>
-              <div className="growth-grid">
+            <div className="ad-growth-section">
+              <div className="ad-section-header">
+                <h3 className="ad-section-title">
+                  <FiTrendingUp className="me-2" />
+                  Tăng trưởng & Hiệu suất
+                </h3>
+                <div className="ad-period-badge">
+                  {requestedRange?.periodDays
+                    ? `${requestedRange.periodDays} ngày`
+                    : "30 ngày"}
+                </div>
+              </div>
+              <div className="ad-growth-grid">
                 {growthCards.map((item) => (
-                  <div key={item.key} className="growth-card">
-                    <span className="growth-label">{item.label}</span>
-                    <div className="growth-value">
-                      {formatNumber(item.delta)}
+                  <div key={item.key} className="ad-growth-card">
+                    <div className="ad-growth-label">{item.label}</div>
+                    <div className="ad-growth-value">
+                      {formatNumber(item.delta || 0)}
                     </div>
-                    <span
-                      className={`growth-trend ${
+                    <div
+                      className={`ad-growth-trend ${
                         item.growthRate >= 0 ? "up" : "down"
                       }`}
                     >
-                      {item.growthRate >= 0 ? "↗" : "↘"}{" "}
-                      {Math.abs(item.growthRate).toFixed(2)}%
-                    </span>
+                      {item.growthRate >= 0 ? (
+                        <FiArrowUpRight className="me-1" />
+                      ) : (
+                        <FiArrowDownRight className="me-1" />
+                      )}
+                      {Math.abs(item.growthRate || 0).toFixed(1)}%
+                    </div>
+                    <div className="ad-growth-bar">
+                      <div
+                        className="ad-growth-fill"
+                        style={{
+                          width: `${Math.min(
+                            100,
+                            Math.abs(item.growthRate || 0) + 30
+                          )}%`,
+                          backgroundColor:
+                            item.growthRate >= 0
+                              ? CHART_COLORS.success
+                              : CHART_COLORS.danger,
+                        }}
+                      ></div>
+                    </div>
                   </div>
                 ))}
               </div>
             </div>
           )}
 
-          <div className="charts-grid">
+          {/* Charts Grid */}
+          <div className="ad-charts-grid">
+            {/* Main Area Chart - Content Trends */}
             <ChartContainer
-              title="Xu hướng nội dung"
-              subtitle={`${
-                requestedRange?.periodDays
-                  ? `${requestedRange.periodDays} ngày`
-                  : ""
-              }`}
+              title="Xu hướng Nội dung"
+              subtitle="Phân tích theo thời gian"
               className="wide"
             >
               {timelineData.length > 0 ? (
-                <ResponsiveContainer width="100%" height={300}>
+                <ResponsiveContainer width="100%" height={350}>
                   <AreaChart
                     data={timelineData}
-                    margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
                   >
                     <defs>
                       <linearGradient
@@ -674,12 +825,12 @@ const AdminDashboard = () => {
                       >
                         <stop
                           offset="5%"
-                          stopColor={AREA_COLORS.posts}
-                          stopOpacity={0.4}
+                          stopColor={CHART_GRADIENTS.posts.start}
+                          stopOpacity={0.8}
                         />
                         <stop
                           offset="95%"
-                          stopColor={AREA_COLORS.posts}
+                          stopColor={CHART_GRADIENTS.posts.end}
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -692,17 +843,17 @@ const AdminDashboard = () => {
                       >
                         <stop
                           offset="5%"
-                          stopColor={AREA_COLORS.comments}
-                          stopOpacity={0.4}
+                          stopColor={CHART_GRADIENTS.comments.start}
+                          stopOpacity={0.8}
                         />
                         <stop
                           offset="95%"
-                          stopColor={AREA_COLORS.comments}
+                          stopColor={CHART_GRADIENTS.comments.end}
                           stopOpacity={0}
                         />
                       </linearGradient>
                       <linearGradient
-                        id="colorMessages"
+                        id="colorInteractions"
                         x1="0"
                         y1="0"
                         x2="0"
@@ -710,30 +861,12 @@ const AdminDashboard = () => {
                       >
                         <stop
                           offset="5%"
-                          stopColor={AREA_COLORS.messages}
-                          stopOpacity={0.4}
+                          stopColor={CHART_GRADIENTS.interactions.start}
+                          stopOpacity={0.8}
                         />
                         <stop
                           offset="95%"
-                          stopColor={AREA_COLORS.messages}
-                          stopOpacity={0}
-                        />
-                      </linearGradient>
-                      <linearGradient
-                        id="colorJournals"
-                        x1="0"
-                        y1="0"
-                        x2="0"
-                        y2="1"
-                      >
-                        <stop
-                          offset="5%"
-                          stopColor={AREA_COLORS.journals}
-                          stopOpacity={0.4}
-                        />
-                        <stop
-                          offset="95%"
-                          stopColor={AREA_COLORS.journals}
+                          stopColor={CHART_GRADIENTS.interactions.end}
                           stopOpacity={0}
                         />
                       </linearGradient>
@@ -741,28 +874,22 @@ const AdminDashboard = () => {
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       tickFormatter={(value) =>
-                        formatDateLabel(
-                          value,
-                          requestedRange?.groupBy || filters.groupBy
-                        )
+                        formatDateLabel(value, requestedRange?.groupBy)
                       }
                     />
-                    <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(value) => formatNumber(value)}
                     />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Area
                       type="monotone"
                       dataKey="posts"
                       name="Bài viết"
-                      stroke={AREA_COLORS.posts}
+                      stroke={CHART_GRADIENTS.posts.start}
                       fill="url(#colorPosts)"
                       strokeWidth={2}
                     />
@@ -770,359 +897,349 @@ const AdminDashboard = () => {
                       type="monotone"
                       dataKey="comments"
                       name="Bình luận"
-                      stroke={AREA_COLORS.comments}
+                      stroke={CHART_GRADIENTS.comments.start}
                       fill="url(#colorComments)"
                       strokeWidth={2}
                     />
                     <Area
                       type="monotone"
-                      dataKey="messages"
-                      name="Tin nhắn"
-                      stroke={AREA_COLORS.messages}
-                      fill="url(#colorMessages)"
-                      strokeWidth={2}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="journals"
-                      name="Nhật ký"
-                      stroke={AREA_COLORS.journals}
-                      fill="url(#colorJournals)"
+                      dataKey="interactions"
+                      name="Tương tác"
+                      stroke={CHART_GRADIENTS.interactions.start}
+                      fill="url(#colorInteractions)"
                       strokeWidth={2}
                     />
                   </AreaChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-bar-chart-line empty-icon"></i>
+                <div className="ad-empty-chart">
+                  <FiBarChart2 size={48} />
                   <p>Chưa có dữ liệu cho biểu đồ</p>
                 </div>
               )}
             </ChartContainer>
 
-            <ChartContainer title="Người dùng & Tương tác">
+            {/* Line Chart - Users & Messages */}
+            <ChartContainer title="Người dùng & Tin nhắn">
               {timelineData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart
                     data={timelineData}
-                    margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
                     <XAxis
                       dataKey="date"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                       tickFormatter={(value) =>
-                        formatDateLabel(
-                          value,
-                          requestedRange?.groupBy || filters.groupBy
-                        )
+                        formatDateLabel(value, requestedRange?.groupBy)
                       }
                     />
-                    <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(value) => formatNumber(value)}
                     />
+                    <Tooltip content={<CustomTooltip />} />
                     <Legend />
                     <Line
                       type="monotone"
                       dataKey="users"
                       name="Người dùng mới"
-                      stroke={AREA_COLORS.users}
-                      strokeWidth={2}
-                      dot={false}
+                      stroke={CHART_GRADIENTS.users.start}
+                      strokeWidth={3}
+                      dot={{ r: 4 }}
+                      activeDot={{ r: 6 }}
                     />
                     <Line
                       type="monotone"
-                      dataKey="interactions"
-                      name="Tương tác"
-                      stroke={AREA_COLORS.interactions}
-                      strokeWidth={2}
-                      dot={false}
+                      dataKey="messages"
+                      name="Tin nhắn"
+                      stroke={CHART_GRADIENTS.messages.start}
+                      strokeWidth={3}
+                      strokeDasharray="5 5"
+                      dot={{ r: 4 }}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-line-chart-line empty-icon"></i>
+                <div className="ad-empty-chart">
+                  <FiTrendingUp size={48} />
                   <p>Chưa có dữ liệu cho biểu đồ</p>
                 </div>
               )}
             </ChartContainer>
 
-            <ChartContainer title="Vi phạm theo trạng thái">
+            {/* Violation Status Bar Chart */}
+            <ChartContainer title="Trạng thái Vi phạm">
               {violationStatusData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <BarChart
                     data={violationStatusData}
-                    margin={{ top: 10, right: 24, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 0, bottom: 10 }}
                   >
                     <CartesianGrid strokeDasharray="3 3" stroke="#f0f0f0" />
-                    <XAxis dataKey="label" />
-                    <YAxis tickFormatter={(value) => formatNumber(value)} />
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                    <XAxis
+                      dataKey="label"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
                     />
-                    <Bar
-                      dataKey="count"
-                      fill={AREA_COLORS.violations}
-                      radius={[4, 4, 0, 0]}
+                    <YAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(value) => formatNumber(value)}
                     />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Bar dataKey="value" name="Số lượng" radius={[6, 6, 0, 0]}>
+                      {violationStatusData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-bar-chart-line empty-icon"></i>
+                <div className="ad-empty-chart">
+                  <FiAlertTriangle size={48} />
                   <p>Không có báo cáo vi phạm</p>
                 </div>
               )}
             </ChartContainer>
 
-            <ChartContainer title="Phân bổ vi phạm theo đối tượng">
+            {/* Violation Target Pie Chart */}
+            <ChartContainer title="Phân bổ Vi phạm">
               {violationTargetData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
                       data={violationTargetData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={60}
+                      outerRadius={90}
+                      paddingAngle={5}
                       dataKey="value"
                       nameKey="name"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
+                      label={(entry) => entry.name}
                     >
                       {violationTargetData.map((entry, index) => (
-                        <Cell
-                          key={`violation-target-${entry.name}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
+                    <Tooltip content={<CustomPieTooltip />} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-pie-chart-line empty-icon"></i>
+                <div className="ad-empty-chart">
+                  <FiPieChart size={48} />
                   <p>Không có dữ liệu vi phạm</p>
                 </div>
               )}
             </ChartContainer>
 
-            <ChartContainer title="Phân bổ cảm xúc">
-              {moodPieData.length > 0 ? (
+            {/* Mood Radar Chart */}
+            <ChartContainer title="Phân tích Cảm xúc">
+              {moodData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <PieChart>
-                    <Pie
-                      data={moodPieData}
+                  <RadarChart
+                    cx="50%"
+                    cy="50%"
+                    outerRadius="80%"
+                    data={moodData}
+                  >
+                    <PolarGrid stroke="#e2e8f0" />
+                    <PolarAngleAxis
+                      dataKey="name"
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                    />
+                    <PolarRadiusAxis
+                      tick={{ fill: "#64748b", fontSize: 12 }}
+                      tickFormatter={(value) => formatNumber(value)}
+                    />
+                    <Radar
+                      name="Cảm xúc"
                       dataKey="value"
-                      nameKey="name"
-                      outerRadius={110}
-                      paddingAngle={3}
-                    >
-                      {moodPieData.map((entry, index) => (
-                        <Cell
-                          key={`mood-${entry.name}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
-                      ))}
-                    </Pie>
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
+                      stroke={CHART_GRADIENTS.mood.start}
+                      fill={CHART_GRADIENTS.mood.start}
+                      fillOpacity={0.6}
+                      strokeWidth={2}
                     />
                     <Legend />
-                  </PieChart>
+                    <Tooltip content={<CustomTooltip />} />
+                  </RadarChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-pie-chart-line empty-icon"></i>
+                <div className="ad-empty-chart">
+                  <FiActivity size={48} />
                   <p>Chưa có dữ liệu cảm xúc</p>
                 </div>
               )}
             </ChartContainer>
 
-            <ChartContainer title="Phân bổ nội dung">
-              {contentPieData.length > 0 ? (
+            {/* Interaction Distribution Pie */}
+            <ChartContainer title="Phân bổ Tương tác">
+              {interactionData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <PieChart>
                     <Pie
-                      data={contentPieData}
+                      data={interactionData}
+                      cx="50%"
+                      cy="50%"
+                      innerRadius={40}
+                      outerRadius={80}
+                      paddingAngle={2}
                       dataKey="value"
                       nameKey="name"
-                      innerRadius={60}
-                      outerRadius={100}
-                      paddingAngle={4}
+                      label={(entry) =>
+                        `${entry.name}: ${formatNumber(entry.value)}`
+                      }
                     >
-                      {contentPieData.map((entry, index) => (
-                        <Cell
-                          key={`content-${entry.name}`}
-                          fill={PIE_COLORS[index % PIE_COLORS.length]}
-                        />
+                      {interactionData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={entry.color} />
                       ))}
                     </Pie>
-                    <Tooltip
-                      formatter={(value) => formatNumber(value)}
-                      contentStyle={{
-                        borderRadius: "8px",
-                        border: "none",
-                        boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                      }}
-                    />
+                    <Tooltip content={<CustomPieTooltip />} />
                     <Legend />
                   </PieChart>
                 </ResponsiveContainer>
               ) : (
-                <div className="empty-state">
-                  <i className="ri-pie-chart-line empty-icon"></i>
-                  <p>Không có dữ liệu nội dung</p>
+                <div className="ad-empty-chart">
+                  <FiMessageSquare size={48} />
+                  <p>Không có dữ liệu tương tác</p>
                 </div>
               )}
             </ChartContainer>
           </div>
 
-          <div className="activity-sections">
-            <div className="activity-section">
-              <h3 className="section-title">Người dùng mới</h3>
-              <div className="activity-list">
-                {recentUsers.length ? (
-                  recentUsers.map((recentUser) => (
-                    <div key={recentUser._id} className="activity-item">
-                      <div className="activity-avatar">
-                        <i className="ri-user-line"></i>
+          {/* Activity Sections */}
+          <div className="ad-activity-grid">
+            {/* Recent Users */}
+            <div className="ad-activity-section">
+              <div className="ad-activity-header">
+                <h3 className="ad-activity-title">
+                  <FiUsers className="me-2" />
+                  Người dùng Mới
+                </h3>
+                <span className="ad-activity-count">
+                  {recentUsers.length} người
+                </span>
+              </div>
+              <div className="ad-activity-list">
+                {recentUsers.length > 0 ? (
+                  recentUsers.map((user) => (
+                    <div key={user._id} className="ad-activity-item">
+                      <div className="ad-activity-avatar">
+                        <div className="ad-avatar-initial">
+                          {user.username?.charAt(0).toUpperCase()}
+                        </div>
                       </div>
-                      <div className="activity-content">
-                        <h4 className="activity-name">{recentUser.username}</h4>
-                        <p className="activity-meta">{recentUser.email}</p>
-                        <span className="activity-date">
-                          {recentUser.createdAt
-                            ? dayjs(recentUser.createdAt).format("DD/MM/YYYY")
-                            : ""}
-                        </span>
+                      <div className="ad-activity-content">
+                        <div className="ad-activity-name">{user.username}</div>
+                        <div className="ad-activity-email">{user.email}</div>
+                        <div className="ad-activity-date">
+                          {dayjs(user.createdAt).format("DD/MM/YYYY")}
+                        </div>
                       </div>
-                      <span className={`role-badge role-${recentUser.role}`}>
-                        {recentUser.role}
-                      </span>
+                      <div className={`ad-role-badge ${user.role}`}>
+                        {user.role}
+                      </div>
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">
-                    <i className="ri-user-line empty-icon"></i>
+                  <div className="ad-empty-activity">
+                    <FiUsers size={32} />
                     <p>Không có người dùng mới</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="activity-section">
-              <h3 className="section-title">Bài viết gần đây</h3>
-              <div className="activity-list">
-                {recentPosts.length ? (
+            {/* Recent Posts */}
+            <div className="ad-activity-section">
+              <div className="ad-activity-header">
+                <h3 className="ad-activity-title">
+                  <FiFileText className="me-2" />
+                  Bài viết Gần đây
+                </h3>
+                <span className="ad-activity-count">
+                  {recentPosts.length} bài
+                </span>
+              </div>
+              <div className="ad-activity-list">
+                {recentPosts.length > 0 ? (
                   recentPosts.map((post) => (
-                    <div key={post._id} className="activity-item">
-                      <div className="activity-avatar">
-                        <i className="ri-file-text-line"></i>
+                    <div key={post._id} className="ad-activity-item">
+                      <div className="ad-activity-avatar">
+                        <FiFileText size={20} />
                       </div>
-                      <div className="activity-content">
-                        <h4 className="activity-name">
+                      <div className="ad-activity-content">
+                        <div className="ad-activity-name">
                           {post.userCreateID?.username || "Ẩn danh"}
-                        </h4>
-                        <p className="activity-text">
-                          {trimText(post.content, 80)}
-                        </p>
-                        <span className="activity-date">
-                          {post.createdAt
-                            ? dayjs(post.createdAt).format("DD/MM/YYYY")
-                            : ""}
-                        </span>
-                      </div>
-                      <div className="activity-stats">
-                        <span className="stat">
-                          <i className="ri-heart-line"></i>{" "}
-                          {formatNumber(
-                            post.likeCount || post.likes?.length || 0
-                          )}
-                        </span>
-                        <span className="stat">
-                          <i className="ri-chat-3-line"></i>{" "}
-                          {formatNumber(
-                            post.commentCount || post.comments?.length || 0
-                          )}
-                        </span>
+                        </div>
+                        <div className="ad-activity-text">
+                          {trimText(post.content, 60)}
+                        </div>
+                        <div className="ad-activity-stats">
+                          <span className="ad-stat-item">
+                            <FiHeart size={14} />{" "}
+                            {formatNumber(post.likeCount || 0)}
+                          </span>
+                          <span className="ad-stat-item">
+                            <FiMessageSquare size={14} />{" "}
+                            {formatNumber(post.commentCount || 0)}
+                          </span>
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">
-                    <i className="ri-article-line empty-icon"></i>
+                  <div className="ad-empty-activity">
+                    <FiFileText size={32} />
                     <p>Không có bài viết mới</p>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="activity-section">
-              <h3 className="section-title">Bài viết nổi bật</h3>
-              <div className="activity-list">
-                {topPosts.length ? (
-                  topPosts.map((post) => (
-                    <div key={post._id} className="activity-item featured">
-                      <div className="activity-avatar">
-                        <i className="ri-star-line"></i>
-                      </div>
-                      <div className="activity-content">
-                        <h4 className="activity-name">
+            {/* Top Posts */}
+            <div className="ad-activity-section">
+              <div className="ad-activity-header">
+                <h3 className="ad-activity-title">
+                  <FiStar className="me-2" />
+                  Bài viết Nổi bật
+                </h3>
+                <span className="ad-activity-count">{topPosts.length} bài</span>
+              </div>
+              <div className="ad-activity-list">
+                {topPosts.length > 0 ? (
+                  topPosts.map((post, index) => (
+                    <div key={post._id} className="ad-activity-item featured">
+                      <div className="ad-rank-badge">{index + 1}</div>
+                      <div className="ad-activity-content">
+                        <div className="ad-activity-name">
                           {post.userCreateID?.username || "Ẩn danh"}
-                        </h4>
-                        <p className="activity-text">
-                          {trimText(post.content, 100)}
-                        </p>
-                        <span className="activity-date">
-                          {post.createdAt
-                            ? dayjs(post.createdAt).format("DD/MM/YYYY")
-                            : ""}
-                        </span>
-                      </div>
-                      <div className="activity-stats">
-                        <span className="stat">
-                          <i className="ri-heart-line"></i>{" "}
-                          {formatNumber(post.likeCount || 0)}
-                        </span>
-                        <span className="stat">
-                          <i className="ri-chat-3-line"></i>{" "}
-                          {formatNumber(post.commentCount || 0)}
-                        </span>
-                        {post.warningCount > 0 && (
-                          <span className="stat warning">
-                            <i className="ri-alert-line"></i>{" "}
-                            {post.warningCount}
+                        </div>
+                        <div className="ad-activity-text">
+                          {trimText(post.content, 80)}
+                        </div>
+                        <div className="ad-activity-stats">
+                          <span className="ad-stat-item highlight">
+                            <FiHeart size={14} />{" "}
+                            {formatNumber(post.likeCount || 0)}
                           </span>
-                        )}
+                          <span className="ad-stat-item">
+                            <FiMessageSquare size={14} />{" "}
+                            {formatNumber(post.commentCount || 0)}
+                          </span>
+                          {post.warningCount > 0 && (
+                            <span className="ad-stat-item warning">
+                              <FiAlertTriangle size={14} /> {post.warningCount}
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                   ))
                 ) : (
-                  <div className="empty-state">
-                    <i className="ri-star-line empty-icon"></i>
+                  <div className="ad-empty-activity">
+                    <FiStar size={32} />
                     <p>Chưa có bài viết nổi bật</p>
                   </div>
                 )}
@@ -1131,10 +1248,20 @@ const AdminDashboard = () => {
           </div>
         </>
       ) : (
-        <div className="empty-state large">
-          <i className="ri-database-2-line empty-icon"></i>
+        <div className="ad-empty-state">
+          <FiDatabase size={64} />
           <h3>Chưa có dữ liệu</h3>
           <p>Không có dữ liệu trong khoảng thời gian này</p>
+          <button
+            className="ad-refresh-btn"
+            onClick={() =>
+              queryParams &&
+              fetchDashboardStats({ silent: false, params: queryParams })
+            }
+          >
+            <FiRefreshCw className="me-2" />
+            Tải lại dữ liệu
+          </button>
         </div>
       )}
     </div>

@@ -7,14 +7,7 @@ import notificationService from "../../services/notificationService";
 
 import { getImagesByCategoryActive } from "../../services/imageService";
 
-import {
-  Plus,
-  Filter,
-  Search,
-  RefreshCw,
-  TrendingUp,
-  Earth,
-} from "lucide-react";
+import { Plus, Filter, Search, RefreshCw, Earth } from "lucide-react";
 import Post from "../../components/Post/Post";
 import "./Feed.css";
 
@@ -84,6 +77,7 @@ const Feed = () => {
   }, [searchTerm]);
 
   // Infinite scroll observer
+  //////////////////////////////////////////////////////////////////////////
   useEffect(() => {
     if (loading || !hasMore) return;
 
@@ -107,6 +101,8 @@ const Feed = () => {
     };
   }, [loading, hasMore, posts.length]);
 
+  //////////////////////////////////////////////////////////////////////////
+
   // Load posts với debounce
   const loadPosts = useCallback(
     async (pageNum = 1, append = false) => {
@@ -116,7 +112,7 @@ const Feed = () => {
       try {
         const params = {
           page: pageNum,
-          limit: 10,
+          limit: 5,
           ...filters,
         };
 
@@ -126,6 +122,8 @@ const Feed = () => {
 
         // Truyền thêm tham số append để biết có nối dữ liệu không
         const response = await fetchPosts(params, append);
+
+        console.log("Fetched posts:", response.posts);
 
         // Kiểm tra xem còn dữ liệu không
         if (response.posts && response.posts.length > 0) {
@@ -287,41 +285,6 @@ const Feed = () => {
   return (
     <div className="feed-container">
       {/* Header */}
-      {/* <div
-        className="feed-header"
-        style={imageBanner ? { backgroundImage: `url(${imageBanner})` } : {}}
-      >
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col">
-              <h1 className="feed-title">Bảng tin</h1>
-              <p className="feed-subtitle">Cập nhật mới nhất từ cộng đồng</p>
-            </div>
-            <div className="col-auto">
-              <div className="d-flex gap-2">
-                <button
-                  className="btn btn-outline-primary btn-refresh"
-                  onClick={handleRefresh}
-                  disabled={refreshing}
-                >
-                  <RefreshCw
-                    size={18}
-                    className={refreshing ? "spinning" : ""}
-                  />
-                </button>
-                <button
-                  className="btn btn-primary btn-create-post"
-                  onClick={() => navigate("/posts/createPost")}
-                >
-                  <Earth size={18} className="me-2" />
-                  Tạo bài viết
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div> */}
-      {/* Header */}
       <div className="feed-header">
         <div
           className="feed-header-bg"
@@ -345,7 +308,7 @@ const Feed = () => {
         <div
           className="feed-header-overlay"
           style={{
-            backgroundColor: imageBanner ? "rgba(0, 0, 0, 0.5)" : "transparent",
+            backgroundColor: imageBanner ? "rgba(0, 0, 0, 0.2)" : "transparent",
           }}
         ></div>
         <div className="container feed-header-content">
@@ -383,10 +346,10 @@ const Feed = () => {
         <div className="row">
           {/* Sidebar - Filters */}
           <div className="col-lg-3 col-md-4">
-            <div className="feed-sidebar">
+            <div className="feed-sidebar ">
               {/* Search */}
               <div className="filter-card">
-                <div className="filter-header">
+                <div className="filter-header bg-primary">
                   <Search size={18} />
                   <span>Tìm kiếm</span>
                 </div>
@@ -403,7 +366,7 @@ const Feed = () => {
 
               {/* Filters */}
               <div className="filter-card">
-                <div className="filter-header">
+                <div className="filter-header bg-primary">
                   <Filter size={18} />
                   <span>Bộ lọc</span>
                   {hasActiveFilters && (
@@ -478,28 +441,6 @@ const Feed = () => {
                   </div>
                 </div>
               </div>
-
-              {/* Stats */}
-              {/* <div className="filter-card">
-                <div className="filter-header">
-                  <TrendingUp size={18} />
-                  <span>Thống kê</span>
-                </div>
-                <div className="filter-content">
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.totalPosts}</div>
-                    <div className="stats-label">Bài viết</div>
-                  </div>
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.publicPosts}</div>
-                    <div className="stats-label">Công khai</div>
-                  </div>
-                  <div className="stats-item">
-                    <div className="stats-value">{stats.anonymousPosts}</div>
-                    <div className="stats-label">Ẩn danh</div>
-                  </div>
-                </div>
-              </div> */}
             </div>
           </div>
 

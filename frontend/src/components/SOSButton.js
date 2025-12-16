@@ -91,7 +91,7 @@ function SOSButton({ userId }) {
         onMouseLeave={(e) => (e.target.style.transform = "scale(1)")}
         title="Gửi tín hiệu khẩn cấp"
       >
-        🚨
+        <i className="fas fa-exclamation-triangle"></i>
       </button>
 
       {/* 🧭 Popup SOS */}

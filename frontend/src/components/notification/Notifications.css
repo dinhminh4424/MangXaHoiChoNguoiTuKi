@@ -713,7 +713,6 @@
 }
 /* === KẾT THÚC BỔ SUNG CSS === */
 
-
 /* Notification Detail Modal (CŨ - đã được thay thế bằng wrapper) */
 /* .notification-detail-modal {
   padding: 0;
@@ -1003,4 +1002,129 @@
   .notif-title-compact {
     font-size: 0.875rem;
   }
+}
+
+/* toast */
+/* ===== Toast Container ===== */
+.toast-container {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 9999;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none;
+}
+
+/* ===== Toast Card ===== */
+.toast-card {
+  pointer-events: auto;
+  display: flex;
+  align-items: flex-start;
+  width: 320px;
+  padding: 12px 14px;
+  border-radius: 12px;
+  background: #ffffff;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.12);
+  animation: toast-slide-in 0.25s ease-out;
+  position: relative;
+  overflow: hidden;
+}
+
+/* ===== Animation ===== */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* ===== Icon ===== */
+.toast-icon {
+  flex-shrink: 0;
+  font-size: 20px;
+  margin-right: 12px;
+  margin-top: 2px;
+}
+
+/* ===== Content ===== */
+.toast-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.toast-title {
+  font-weight: 600;
+  font-size: 14px;
+  color: #212529;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-message {
+  font-size: 13px;
+  color: #495057;
+  line-height: 1.4;
+  margin-top: 2px;
+  max-height: 38px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.toast-time {
+  font-size: 11px;
+  color: #868e96;
+  margin-top: 4px;
+}
+
+/* ===== Close Button ===== */
+.toast-close {
+  background: none;
+  border: none;
+  padding: 0;
+  margin-left: 8px;
+  font-size: 18px;
+  color: #adb5bd;
+  cursor: pointer;
+}
+
+.toast-close:hover {
+  color: #495057;
+}
+
+/* ===== Color Accent ===== */
+.toast-card::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  border-radius: 12px 0 0 12px;
+}
+
+.toast-info::before {
+  background: #0dcaf0;
+}
+
+.toast-success::before {
+  background: #198754;
+}
+
+.toast-warning::before {
+  background: #ffc107;
+}
+
+.toast-danger::before {
+  background: #dc3545;
+}
+
+.toast-secondary::before {
+  background: #6c757d;
 }

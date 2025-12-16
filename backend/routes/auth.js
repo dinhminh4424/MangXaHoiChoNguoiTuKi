@@ -155,7 +155,7 @@ router.post("/register", async (req, res) => {
     });
 
     if (existingUser) {
-      return res.status(400).json({
+      return res.json({
         success: false,
         message: "Email hoặc username đã tồn tại",
       });
@@ -202,8 +202,11 @@ router.post("/register", async (req, res) => {
           email: user.email,
           fullName: user.fullName,
           role: user.role,
+          profile: user.profile,
           checkInStreak: user.checkInStreak,
           journalStreak: user.journalStreak,
+          userId: user._id, // địt mẹ sửa phải nhìn nào có sải, sửa lỗi hệ thống
+          active: user.active,
         },
         milestone: null, // Không còn milestone khi đăng ký
         token,
@@ -355,9 +358,10 @@ router.post("/login", async (req, res) => {
     // Tìm user bằng email
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(401).json({
+      return res.json({
         success: false,
         message: "Email hoặc mật khẩu không đúng",
+        check: "1",
       });
     }
 
@@ -367,16 +371,17 @@ router.post("/login", async (req, res) => {
       return res.json({
         success: false,
         message: "Email hoặc mật khẩu không đúng",
+        check: "2",
       });
     }
 
     // Kiểm tra hoạt động
-    if (user.active == false) {
-      return res.json({
-        success: false,
-        message: "Tài Khoản Đã Bị Khoá",
-      });
-    }
+    // if (user.active == false) {
+    //   return res.json({
+    //     success: false,
+    //     message: "Tài Khoản Đã Bị Khoá",
+    //   });
+    // }
 
     // === LOGIC KHÔI PHỤC CHUỖI KHI LOGIN ===
     // Kiểm tra và reset số lần khôi phục hàng tuần
@@ -403,6 +408,7 @@ router.post("/login", async (req, res) => {
     const responsePayload = {
       success: true,
       message: "Đăng nhập thành công",
+      check: user.active == false ? "3" : "0",
       data: {
         user: {
           id: user._id,
@@ -417,6 +423,8 @@ router.post("/login", async (req, res) => {
           hasLostStreak: user.has_lost_streak,
           canRestore: (user.weekly_recovery_uses || 0) < 2,
           streakToRestore: user.checkInStreak, // Gửi chuỗi cũ để hiển thị
+          userId: user._id, // địt mẹ sửa phải nhìn nào có sải, sửa lỗi hệ thống
+          active: user.active,
         },
         milestone: null, // Không còn milestone khi đăng nhập
         token,
@@ -800,6 +808,8 @@ router.post("/face-login", async (req, res) => {
           profile: user.profile,
           checkInStreak: user.checkInStreak,
           journalStreak: user.journalStreak,
+          userId: user._id, // địt mẹ sửa phải nhìn nào có sải, sửa lỗi hệ thống
+          active: user.active,
         },
         token,
       },

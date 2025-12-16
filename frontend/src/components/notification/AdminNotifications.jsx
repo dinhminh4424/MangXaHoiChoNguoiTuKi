@@ -9,6 +9,9 @@ const AdminNotifications = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [sosNotification, setSosNotification] = useState(null);
   const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
+
+  const [toasts, setToasts] = useState([]);
+
   const socketRef = useRef(null);
 
   const getPriorityClass = (priority) => {
@@ -24,38 +27,57 @@ const AdminNotifications = () => {
     }
   };
 
-  const showToast = useCallback((notification) => {
-    // Kiểm tra xem toast container đã tồn tại chưa
-    let toastContainer = document.getElementById("toast-container");
-    if (!toastContainer) {
-      toastContainer = document.createElement("div");
-      toastContainer.id = "toast-container";
-      toastContainer.className =
-        "toast-container position-fixed top-0 end-0 p-3";
-      document.body.appendChild(toastContainer);
-    }
+  // const showToast = useCallback((notification) => {
+  //   // Kiểm tra xem toast container đã tồn tại chưa
+  //   let toastContainer = document.getElementById("toast-container");
+  //   if (!toastContainer) {
+  //     toastContainer = document.createElement("div");
+  //     toastContainer.id = "toast-container";
+  //     toastContainer.className =
+  //       "toast-container position-fixed top-0 end-0 p-3";
+  //     document.body.appendChild(toastContainer);
+  //   }
 
-    const toast = document.createElement("div");
-    toast.className = `notification-toast ${getPriorityClass(
-      notification.priority
-    )}`;
-    toast.innerHTML = `
-      <div class="toast-header">
-        <strong>${notification.title}</strong>
-        <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
-      </div>
-      <div class="toast-body">
-        ${notification.message}
-        <small class="text-muted">${new Date(
-          notification.createdAt
-        ).toLocaleTimeString()}</small>
-      </div>
-    `;
-    toastContainer.appendChild(toast);
+  //   const toast = document.createElement("div");
+  //   toast.className = `notification-toast ${getPriorityClass(
+  //     notification.priority
+  //   )}`;
+  //   toast.innerHTML = `
+  //     <div class="toast-header">
+  //       <strong>${notification.title}</strong>
+  //       <button type="button" class="btn-close" onclick="this.parentElement.parentElement.remove()"></button>
+  //     </div>
+  //     <div class="toast-body">
+  //       ${notification.message}
+  //       <small class="text-muted">${new Date(
+  //         notification.createdAt
+  //       ).toLocaleTimeString()}</small>
+  //     </div>
+  //   `;
+  //   toastContainer.appendChild(toast);
+
+  //   setTimeout(() => {
+  //     if (toast.parentElement) toast.remove();
+  //   }, 5000);
+  // }, []);
+
+  const showToast = useCallback((notification, duration = 5000) => {
+    const id = Date.now();
+
+    setToasts((prev) => [
+      ...prev,
+      {
+        id,
+        title: notification.title,
+        message: notification.message,
+        type: notification.type,
+        createdAt: notification.createdAt,
+      },
+    ]);
 
     setTimeout(() => {
-      if (toast.parentElement) toast.remove();
-    }, 5000);
+      setToasts((prev) => prev.filter((t) => t.id !== id));
+    }, duration);
   }, []);
 
   useEffect(() => {
@@ -216,10 +238,101 @@ const AdminNotifications = () => {
     return date.toLocaleDateString("vi-VN");
   };
 
+  const isPostNotification = (type) => {
+    const postTypes = [
+      "POST_LIKED",
+      "POST_COMMENTED",
+      "COMMENT_LIKED",
+      "COMMENT_REPLIED",
+    ];
+    return postTypes.includes(type);
+  };
+
+  const isSystemNotification = (type) => {
+    const systemTypes = [
+      "REPORT_CREATED",
+      "REPORT_RESOLVED",
+      "REPORT_REJECTED",
+      "POST_BLOCKED",
+      "USER_BANNED",
+      "USER_WARNED",
+      "GROUP_BLOCKED",
+      "GROUP_WARNED",
+      "SYSTEM_ANNOUNCEMENT",
+      "ADMIN_ALERT",
+      "MAINTENANCE_NOTICE",
+      "FEATURE_UPDATE",
+      "SECURITY_ALERT",
+      "LOGIN_ATTEMPT",
+      "PASSWORD_CHANGED",
+      "EMAIL_VERIFIED",
+      "SUPPORT_TICKET_CREATED",
+      "SUPPORT_TICKET_UPDATED",
+      "SUPPORT_TICKET_RESOLVED",
+      "APPEAL_RESOLVED",
+      "APPEAL_CREATE",
+      "FORCE_LOGOUT",
+    ];
+    return systemTypes.includes(type);
+  };
+
+  const getNotificationColor = (type) => {
+    if (isPostNotification(type)) return "info";
+    if (isSystemNotification(type)) {
+      switch (type) {
+        case "USER_BANNED":
+        case "POST_BLOCKED":
+          return "danger";
+        case "REPORT_CREATED":
+        case "REPORT_RESOLVED":
+          return "warning";
+        case "FEATURE_UPDATE":
+          return "success";
+        default:
+          return "secondary";
+      }
+    }
+    return "secondary";
+  };
+
+  const getNotificationIcon = (type) => {
+    switch (type) {
+      case "POST_LIKED":
+        return "ri-heart-fill text-danger";
+      case "POST_COMMENTED":
+      case "COMMENT_REPLIED":
+        return "ri-chat-1-fill text-info";
+      case "COMMENT_LIKED":
+        return "ri-thumb-up-fill text-primary";
+      case "NEW_MESSAGE":
+        return "ri-message-2-fill text-primary";
+      case "USER_BANNED":
+        return "ri-forbid-fill text-danger";
+      case "POST_BLOCKED":
+        return "ri-eye-off-fill text-warning";
+      case "REPORT_CREATED":
+      case "REPORT_RESOLVED":
+      case "REPORT_REJECTED":
+        return "ri-alarm-warning-fill text-warning";
+      case "SYSTEM_ANNOUNCEMENT":
+        return "ri-megaphone-fill text-info";
+      case "FEATURE_UPDATE":
+        return "ri-update-fill text-success";
+      case "FRIEND_REQUEST":
+        return "ri-user-add-fill text-primary";
+      case "FRIEND_REQUEST_ACCEPTED":
+        return "ri-user-check-fill text-success";
+      case "FRIEND_REQUEST_REJECTED":
+        return "ri-user-unfollow-fill text-danger";
+      case "FRIEND_REQUEST_CANCELLED":
+        return "ri-user-unfollow-fill text-secondary";
+      default:
+        return "ri-notification-fill text-secondary";
+    }
+  };
+
   return (
     <>
-      {/* Toast Container sẽ được tạo động */}
-
       {/* Notifications Dropdown */}
       <li className="nav-item dropdown">
         <button
@@ -390,6 +503,37 @@ const AdminNotifications = () => {
           </div>
         </div>
       </li>
+
+      {/* ===== TOAST UI ===== */}
+      <div className="toast-container">
+        {toasts.map((toast) => (
+          <div
+            key={toast.id}
+            className={`toast-card toast-${getNotificationColor(toast.type)}`}
+          >
+            <div className="toast-icon">
+              <i className={getNotificationIcon(toast.type)} />
+            </div>
+
+            <div className="toast-content">
+              <div className="toast-title">{toast.title}</div>
+              <div className="toast-message">{toast.message}</div>
+              <div className="toast-time">
+                {new Date(toast.createdAt).toLocaleTimeString()}
+              </div>
+            </div>
+
+            <button
+              className="toast-close"
+              onClick={() =>
+                setToasts((prev) => prev.filter((t) => t.id !== toast.id))
+              }
+            >
+              <i className="ri-close-line" />
+            </button>
+          </div>
+        ))}
+      </div>
 
       {/* SOS Emergency Popup */}
       {isSosPopupOpen && sosNotification && (

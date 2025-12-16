@@ -68,8 +68,9 @@ const BackupLogs = () => {
   };
 
   return (
-    <Container className="py-4">
-      <Row>
+    <Container className=" py-4">
+      {/* Header */}
+      <Row className="mb-4 page-header">
         <Col>
           <h2 className="mb-4">Lịch sử Backup & Restore</h2>
         </Col>

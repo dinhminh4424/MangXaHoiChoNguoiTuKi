@@ -500,7 +500,7 @@
 }
 
 .group-info-content {
-  backdrop-filter: blur(4px);
+  /* backdrop-filter: blur(4px); */
   background: rgba(0, 0, 0, 0.4);
   border-radius: 8px;
 }
