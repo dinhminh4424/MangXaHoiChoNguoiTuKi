@@ -1791,6 +1791,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
+
 import viLocale from "@fullcalendar/core/locales/vi";
 import {
   Container,
@@ -2118,6 +2119,21 @@ const TodoCalendar = () => {
     fetchEvents(start, end);
     fetchAllData();
   }, [currentDate]);
+
+  // Thêm useEffect này sau các useEffect khác trong component
+  useEffect(() => {
+    if (calendarRef.current) {
+      const calendarApi = calendarRef.current.getApi();
+      const viewName =
+        viewType === "month"
+          ? "dayGridMonth"
+          : viewType === "week"
+          ? "timeGridWeek"
+          : "timeGridDay";
+
+      calendarApi.changeView(viewName);
+    }
+  }, [viewType]);
 
   const showMessage = (message, severity = "success") => {
     setSnackbarMessage(message);
@@ -3078,7 +3094,7 @@ const TodoCalendar = () => {
                 </div>
 
                 <div className="d-flex gap-2">
-                  <div
+                  {/* <div
                     className="input-group input-group-sm"
                     style={{ width: "200px" }}
                   >
@@ -3092,9 +3108,9 @@ const TodoCalendar = () => {
                       onChange={(e) => setSearchQuery(e.target.value)}
                       className="form-control-custom"
                     />
-                  </div>
-
-                  <div className="btn-group">
+                  </div> */}
+                  {/* Nút bấm cũ */}
+                  {/* <div className="btn-group">
                     <Button
                       variant="outline-light"
                       onClick={() => setViewType("month")}
@@ -3119,17 +3135,48 @@ const TodoCalendar = () => {
                     >
                       Ngày
                     </Button>
+                  </div> */}
+                  <div className="btn-group">
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Xem theo tháng</Tooltip>}
+                    >
+                      <Button
+                        variant="outline-light"
+                        onClick={() => setViewType("month")}
+                        active={viewType === "month"}
+                        size="sm"
+                      >
+                        Tháng
+                      </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Xem theo tuần</Tooltip>}
+                    >
+                      <Button
+                        variant="outline-light"
+                        onClick={() => setViewType("week")}
+                        active={viewType === "week"}
+                        size="sm"
+                      >
+                        Tuần
+                      </Button>
+                    </OverlayTrigger>
+                    <OverlayTrigger
+                      placement="top"
+                      overlay={<Tooltip>Xem theo ngày</Tooltip>}
+                    >
+                      <Button
+                        variant="outline-light"
+                        onClick={() => setViewType("day")}
+                        active={viewType === "day"}
+                        size="sm"
+                      >
+                        Ngày
+                      </Button>
+                    </OverlayTrigger>
                   </div>
-
-                  <Button
-                    variant="outline-light"
-                    onClick={toggleDarkMode}
-                    size="sm"
-                    className="d-flex align-items-center"
-                  >
-                    {darkMode ? <Sun size={16} /> : <Moon size={16} />}
-                  </Button>
-
                   <Button
                     variant="outline-light"
                     onClick={toggleFullscreen}
@@ -3142,11 +3189,10 @@ const TodoCalendar = () => {
                       <Maximize2 size={16} />
                     )}
                   </Button>
-
                   <Button
-                    variant="primary"
+                    variant="outline-light"
                     onClick={() => setShowDialog(true)}
-                    className="btn-primary-custom d-flex align-items-center border-1 border-white"
+                    className=" d-flex align-items-center border-1 border-white"
                   >
                     <Plus size={16} className="me-2" />
                     Thêm Công Việc
@@ -3266,7 +3312,7 @@ const TodoCalendar = () => {
               <div className="tab-content">
                 {/* Filter Controls */}
                 <div className="d-flex gap-2 mb-3 flex-wrap">
-                  {/* <Form.Select
+                  <Form.Select
                     size="sm"
                     value={filterPriority}
                     onChange={(e) => setFilterPriority(e.target.value)}
@@ -3277,7 +3323,7 @@ const TodoCalendar = () => {
                     <option value="high">Ưu tiên cao</option>
                     <option value="medium">Ưu tiên trung</option>
                     <option value="low">Ưu tiên thấp</option>
-                  </Form.Select> */}
+                  </Form.Select>
 
                   <Form.Select
                     size="sm"

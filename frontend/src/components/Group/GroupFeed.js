@@ -4,7 +4,9 @@ import { useAuth } from "../../contexts/AuthContext";
 import { Alert, Spinner } from "react-bootstrap";
 import groupService from "../../services/groupService";
 import Post from "../Post/Post";
+import { usePost } from "../../contexts/PostContext";
 import "./GroupFeed.css";
+import notificationService from "../../services/notificationService";
 
 const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
   const { user } = useAuth();
@@ -14,6 +16,7 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
   const [error, setError] = useState(null);
   const [page, setPage] = useState(1);
   const [hasMore, setHasMore] = useState(true);
+  const { deletePost, reportPost } = usePost();
 
   // Ref để theo dõi phần tử cuối
   const observer = useRef();
@@ -73,14 +76,83 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
     [groupId]
   );
 
-  const handleDeletePost = (postId) => {
-    setPosts((prev) => prev.filter((post) => post._id !== postId));
-  };
+  // const handleDeletePost = (postId) => {
+  //   setPosts((prev) => prev.filter((post) => post._id !== postId));
+  // };
 
   const handleUpdatePost = (updatedPost) => {
     setPosts((prev) =>
       prev.map((post) => (post._id === updatedPost.__id ? updatedPost : post))
     );
+  };
+
+  const handleDeletePost = async (postId) => {
+    let confirm = await notificationService.confirm({
+      title: "Bạn có chắc muốn xoá bài viết này?",
+      confirmText: "Chắc chắn xoá",
+      cancelText: "Huỷ xoá",
+    });
+
+    if (!confirm) return;
+
+    try {
+      const res = await deletePost(postId);
+      if (res.success) {
+        notificationService.success({
+          title: "Xoá bài viết thành công",
+          text: "Bạn đã xoá bài viết thành công",
+          timer: 3000,
+          showConfirmButton: false,
+        });
+        setPosts((prev) => prev.filter((post) => post._id !== postId));
+      } else {
+        notificationService.error({
+          title: "Xoá bài viết thất bại",
+          text: res.message,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (err) {
+      console.error("Error deleting post:", err);
+      notificationService.error({
+        title: "Xoá bài viết thất bại",
+        text: err.message || "Có lỗi xảy ra",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    }
+  };
+
+  // Handle post report
+  const handleReportPost = async (reportData) => {
+    try {
+      const finalReportData = {
+        targetType: reportData.targetType,
+        targetId: reportData.targetId,
+        reason: reportData.reason,
+        notes: reportData.notes,
+        files: reportData.files,
+      };
+
+      const res = await reportPost(finalReportData);
+      if (res.success) {
+        notificationService.success({
+          title: "Thành Công",
+          text: res?.message,
+          timer: 3000,
+          showConfirmButton: false,
+        });
+      }
+    } catch (error) {
+      console.error("Error reporting post:", error);
+      notificationService.error({
+        title: "Thất Bại",
+        text: error.message || "Có lỗi xảy ra",
+        timer: 3000,
+        showConfirmButton: false,
+      });
+    }
   };
 
   // Tải lại khi refreshTrigger thay đổi
@@ -128,6 +200,7 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
                   post={post}
                   onDelete={handleDeletePost}
                   onUpdate={handleUpdatePost}
+                  onReport={handleReportPost}
                 />
               </div>
             ))}

@@ -478,6 +478,8 @@ const AdminDashboard = () => {
         const response = await getDashboardStats(params);
 
         if (response?.success) {
+          console.log("Dashboard stats response:", response.data);
+
           setStats(response.data);
           setLastUpdated(new Date());
         } else {
@@ -554,6 +556,21 @@ const AdminDashboard = () => {
         key: "interactions",
         label: "Tương tác",
         ...(growth.interactions || {}),
+      },
+      {
+        key: "moodLogs",
+        label: "Cảm xúc",
+        ...(growth.moodLogs || {}),
+      },
+      {
+        key: "journals",
+        label: "Nhật ký",
+        ...(growth.journals || {}),
+      },
+      {
+        key: "groups",
+        label: "Nhóm",
+        ...(growth.groups || {}),
       },
     ].filter((item) => item.delta !== undefined);
   }, [stats]);
@@ -920,7 +937,11 @@ const AdminDashboard = () => {
             </ChartContainer>
 
             {/* Line Chart - Users & Messages */}
-            <ChartContainer title="Người dùng & Tin nhắn">
+            <ChartContainer
+              title="Người dùng & Tin nhắn"
+              subtitle="Phân tích theo thời gian"
+              className="wide"
+            >
               {timelineData.length > 0 ? (
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart

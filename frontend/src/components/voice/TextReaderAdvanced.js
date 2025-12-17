@@ -101,6 +101,7 @@ const TextReaderTwoButtons = ({
   showSetupDefault = false,
   height = 40, // Chiều cao mặc định
   minWidth = 120, // Chiều rộng tối thiểu
+  children = "", // "light" hoặc "dark"
 }) => {
   // Local state
   const [isReading, setIsReading] = useState(false);
@@ -304,7 +305,7 @@ const TextReaderTwoButtons = ({
         {/* Nút setup */}
         <button
           type="button"
-          className="btn btn-outline-secondary"
+          className="btn btn-secondary border-1 "
           // style={squareBtnStyle}
           style={buttonStyle}
           title="Mở cài đặt đọc"
@@ -314,6 +315,8 @@ const TextReaderTwoButtons = ({
             <SettingsIcon />
           </i>
         </button>
+
+        {children}
 
         {/* Hiển thị trạng thái */}
         {minWidth > 160 && (

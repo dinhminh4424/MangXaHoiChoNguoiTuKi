@@ -445,18 +445,34 @@ exports.getPosts = async (req, res) => {
     paginationPipeline.push({
       $project: {
         _id: 1,
-        content: 1,
-        files: 1,
+
         emotions: 1,
         tags: 1,
-        privacy: 1,
+
         createdAt: 1,
         updatedAt: 1,
-        likeCount: 1,
+
         commentCount: 1,
+        likes: 1,
+        likeCount: 1,
         isEdited: 1,
-        isAnonymous: 1,
+        reportCount: 1,
+        warningCount: 1,
         groupId: 1,
+        editedAt: 1,
+        content: 1,
+        files: 1,
+        privacy: 1,
+        isAnonymous: 1,
+        violationCount: 1,
+        isBlocked: 1,
+        isBlockedComment: 1,
+
+        isDeletedByUser: 1,
+        userCreateID: 1,
+
+        comments: 1,
+
         userCreateID: {
           _id: "$user._id",
           username: "$user.username",

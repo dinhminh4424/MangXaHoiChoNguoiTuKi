@@ -2,13 +2,13 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useAuth } from "../../contexts/AuthContext";
 import { useChat } from "../../contexts/ChatContext";
 import { Modal } from "react-bootstrap";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
 import SpeechToText from "../../components/voice/SpeechToText";
 import { File, Image, Video, Music, PinIcon } from "lucide-react";
 
 const Chat = () => {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const { chatUserId } = useParams();
   const navigate = useNavigate();
   const {
@@ -156,7 +156,6 @@ const Chat = () => {
   useEffect(() => {
     if (hasStartedConversation.current || !chatUserId) return;
 
-    console.log("🎯 Bắt đầu chat với user:", chatUserId);
     hasStartedConversation.current = true;
 
     const startChat = async () => {
@@ -169,10 +168,8 @@ const Chat = () => {
         );
 
         if (existingConv) {
-          console.log("✅ Dùng conversation có sẵn:", existingConv._id);
           await selectChat(existingConv);
         } else {
-          console.log("🆕 Tạo conversation mới");
           await startConversation(chatUserId, false);
         }
       } catch (error) {
@@ -510,7 +507,8 @@ const Chat = () => {
 
   const setVoiceNewMessage = (newData) => {
     setNewMessage((prev) => {
-      return prev + " " + newData;
+      // return prev + " " + newData;
+      return newData;
     });
   };
 
@@ -1432,42 +1430,53 @@ const Chat = () => {
                                                 : "0",
                                           }}
                                         >
-                                          <button
-                                            className="btn btn-sm btn-outline-primary me-1"
-                                            onClick={() =>
-                                              handleReplyMessage(message)
-                                            }
-                                          >
-                                            <i className="ri-reply-line"></i>
-                                          </button>
-
-                                          {/* Ai cũng có thể xoá (chỉ mình không thấy) */}
-                                          <button
-                                            className="btn btn-sm btn-outline-warning me-1"
-                                            onClick={() =>
-                                              setShowDeleteConfirm(message._id)
-                                            }
-                                          >
-                                            <i className="ri-delete-bin-line"></i>
-                                          </button>
                                           <TextReaderAdvanced
                                             text={message.content || "Khác"}
-                                            height={25}
-                                          />
+                                            height={31.6}
+                                            children={
+                                              <>
+                                                {/* trả lời */}
+                                                <button
+                                                  className="btn btn-sm btn-outline-primary me-1"
+                                                  onClick={() =>
+                                                    handleReplyMessage(message)
+                                                  }
+                                                  title="Trả lời tin nhắn"
+                                                >
+                                                  <i className="ri-reply-line"></i>
+                                                </button>
 
-                                          {/* Chỉ người gửi mới được thu hồi */}
-                                          {message.sender?._id === user.id && (
-                                            <button
-                                              className="btn btn-sm btn-outline-danger"
-                                              onClick={() =>
-                                                setShowRecallConfirm(
-                                                  message._id
-                                                )
-                                              }
-                                            >
-                                              <i className="ri-time-line"></i>
-                                            </button>
-                                          )}
+                                                {/* Ai cũng có thể xoá (chỉ mình không thấy) */}
+                                                <button
+                                                  className="btn btn-sm btn-outline-warning me-1"
+                                                  onClick={() =>
+                                                    setShowDeleteConfirm(
+                                                      message._id
+                                                    )
+                                                  }
+                                                  title="Xoá tin nhắn"
+                                                >
+                                                  <i className="ri-delete-bin-line"></i>
+                                                </button>
+
+                                                {/* Chỉ người gửi mới được thu hồi */}
+                                                {message.sender?._id ===
+                                                  user.id && (
+                                                  <button
+                                                    className="btn btn-sm btn-outline-danger"
+                                                    onClick={() =>
+                                                      setShowRecallConfirm(
+                                                        message._id
+                                                      )
+                                                    }
+                                                    title="Thu hồi tin nhắn"
+                                                  >
+                                                    <i className="ri-time-line"></i>
+                                                  </button>
+                                                )}
+                                              </>
+                                            }
+                                          />
                                         </div>
                                       )}
 

@@ -184,7 +184,9 @@ const Register = () => {
                       disabled={loading}
                     />
                   </div>
-                  <div className="mb-3 form-group">
+
+                  {/* ============================== VAI TRÒ =============================== */}
+                  {/* <div className="mb-3 form-group">
                     <label htmlFor="role" className="form-label" for="role">
                       Vai trò
                     </label>
@@ -201,7 +203,9 @@ const Register = () => {
                       <option value="doctor">Chuyên Gia</option>
                       <option value="admin">Admin</option>
                     </select>
-                  </div>
+                  </div> */}
+
+                  {/* ============================== VAI TRÒ =============================== */}
                   <div className="d-inline-block w-100">
                     <div className="form-check d-inline-block mt-2 pt-1">
                       <input

@@ -317,10 +317,10 @@ export default function AiChatScreen() {
           </div>
 
           <div className="ai-header-actions">
-            <div className="ai-status">
+            {/* <div className="ai-status">
               <div className="ai-status-indicator"></div>
               <span className="ai-status-text">Online</span>
-            </div>
+            </div> */}
 
             {/* Công cụ voice */}
             <div className="chat-tools me-3">
@@ -330,11 +330,11 @@ export default function AiChatScreen() {
                 className="me-2"
               />
               <button
-                className="btn btn-outline-light btn-sm"
+                className="btn btn-outline-primary btn-sm"
                 onClick={readAIMessage}
                 title="Đọc tin nhắn AI cuối cùng"
               >
-                🔊
+                <i className="fa-solid fa-volume-high "></i>
               </button>
             </div>
 
@@ -351,7 +351,7 @@ export default function AiChatScreen() {
               >
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
               </svg>
-              Xóa chat
+              Clear chat
             </button>
           </div>
         </div>
@@ -396,23 +396,24 @@ export default function AiChatScreen() {
                               .replace(/\*(.*?)\*/g, "$1")}
                             height={30}
                             showSetupDefault={false}
+                            children={
+                              <button
+                                className="ai-message-action-btn"
+                                onClick={() => copyMessage(m.content)}
+                                title="Sao chép tin nhắn"
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                                </svg>
+                              </button>
+                            }
                           />
                         )}
-
-                        <button
-                          className="ai-message-action-btn"
-                          onClick={() => copyMessage(m.content)}
-                          title="Sao chép tin nhắn"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                          </svg>
-                        </button>
                       </>
                     )}
                   </div>
