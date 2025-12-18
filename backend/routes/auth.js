@@ -580,7 +580,10 @@ router.post("/streaks/dismiss", authMiddleware, async (req, res) => {
 // LẤY THÔNG TIN USER HIỆN TẠI (ME)
 router.get("/me", authMiddleware, async (req, res) => {
   try {
-    const user = await User.findById(req.user._id).select("-password");
+    // const user = await User.findById(req.user._id).select("-password");
+
+    const user = await User.findById(req.user.userId).select("-password");
+
     if (!user) {
       return res
         .status(404)
@@ -621,6 +624,7 @@ router.get("/me", authMiddleware, async (req, res) => {
           countPost: post.length,
           countFriends,
           countFollowers,
+          active: user.active,
         },
       },
     });

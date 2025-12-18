@@ -57,6 +57,8 @@ const ProfileView = ({ userId }) => {
   const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const [showFollowersModal, setShowFollowersModal] = React.useState(false);
 
+  const [coverPhoto, setCoverPhoto] = React.useState("");
+
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
 
@@ -213,6 +215,9 @@ const ProfileView = ({ userId }) => {
         setShowModalUpdateCoverPhoto(false);
         setFile(null);
         setPreviewImage(null);
+        if (result.user?.profile?.coverPhoto) {
+          setCoverPhoto(result.user?.profile.coverPhoto);
+        }
 
         // ✅ THÊM: Thông báo thành công
         NotificationService.success({
@@ -301,6 +306,10 @@ const ProfileView = ({ userId }) => {
   React.useEffect(() => {
     if (userId) {
       viewUserProfile(userId);
+      console.log("viewedUser 19585695695685252:", viewedUser);
+      if (viewedUser?.profile?.coverPhoto) {
+        setCoverPhoto(viewedUser?.profile?.coverPhoto);
+      }
     }
   }, [userId, viewUserProfile]);
 
@@ -663,10 +672,32 @@ const ProfileView = ({ userId }) => {
   // };
 
   console.log("viewedUser:", viewedUser);
+
+  // const getBackgroundStyle = (user) => {
+  //   return user?.profile?.coverPhoto
+  //     ? {
+  //         backgroundImage: `url("${user.profile.coverPhoto}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : imageCover
+  //     ? {
+  //         backgroundImage: `url("${imageCover}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : {
+  //         backgroundImage:
+  //           "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
+  //       };
+  // };
+
   const getBackgroundStyle = (user) => {
-    return user?.profile?.coverPhoto
+    return coverPhoto
       ? {
-          backgroundImage: `url("${user.profile.coverPhoto}")`,
+          backgroundImage: `url("${coverPhoto}")`,
           backgroundSize: "100% 100%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",

@@ -87,17 +87,11 @@ const GroupFeed = ({ groupId, canPost, refreshTrigger = 0 }) => {
   };
 
   const handleDeletePost = async (postId) => {
-    let confirm = await notificationService.confirm({
-      title: "Bạn có chắc muốn xoá bài viết này?",
-      confirmText: "Chắc chắn xoá",
-      cancelText: "Huỷ xoá",
-    });
-
-    if (!confirm) return;
-
     try {
       const res = await deletePost(postId);
       if (res.success) {
+        console.log("Xóa bài viết thành công");
+
         notificationService.success({
           title: "Xoá bài viết thành công",
           text: "Bạn đã xoá bài viết thành công",

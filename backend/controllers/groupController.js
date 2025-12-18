@@ -378,6 +378,9 @@ class GroupController {
         }
       }
 
+      query.isDeletedByUser = false;
+      query.isBlocked = false;
+
       const posts = await Post.find(query)
         .sort({ createdAt: -1 })
         .skip(skip)

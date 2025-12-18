@@ -6,6 +6,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import TextReaderAdvanced from "../../components/voice/TextReaderAdvanced";
 import SpeechToText from "../../components/voice/SpeechToText";
 import { File, Image, Video, Music, PinIcon } from "lucide-react";
+import notificationService from "../../services/notificationService"; // Import service
 
 const Chat = () => {
   const { user } = useAuth();
@@ -817,6 +818,8 @@ const Chat = () => {
                         <ul className="iq-chat-ui nav flex-column nav-pills">
                           {directConversations.length > 0 ? (
                             directConversations.map((item) => {
+                              console.log("item", item);
+
                               return (
                                 <li key={item._id}>
                                   <button

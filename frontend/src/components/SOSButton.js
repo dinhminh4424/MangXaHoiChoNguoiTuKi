@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import api from "../services/api";
+import NotificationService from "../services/notificationService"; // Import service
 
 function SOSButton({ userId }) {
   const [showPopup, setShowPopup] = useState(false);
@@ -9,7 +10,11 @@ function SOSButton({ userId }) {
 
   const sendSOS = () => {
     if (!phoneNumber) {
-      alert("⚠️ Vui lòng nhập số điện thoại khẩn trước khi gửi SOS!");
+      NotificationService.error({
+        title: "Vui lòng nhập số điện thoại!",
+        text: "⚠️ Vui lòng nhập số điện thoại khẩn trước khi gửi SOS!",
+        confirmButtonText: "Đã hiểu",
+      });
       return;
     }
 
@@ -48,9 +53,18 @@ function SOSButton({ userId }) {
 
           if (result.success) {
             setAddress(result.address || "Không xác định vị trí cụ thể");
-            alert("🚨 Đã gửi tín hiệu SOS thành công!");
+            NotificationService.success({
+              title: "Gửi tín hiệu SOS thành công!",
+              text: "🚨 Đã gửi tín hiệu SOS thành công!",
+              timer: 2000,
+              showConfirmButton: false,
+            });
           } else {
-            alert("❌ Gửi SOS thất bại: " + (result.message || ""));
+            NotificationService.error({
+              title: "Gửi SOS thất bại",
+              text: "❌ Gửi SOS thất bại: " + (result.message || ""),
+              confirmButtonText: "Đã hiểu",
+            });
           }
         } catch (error) {
           console.error(error);

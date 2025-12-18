@@ -104,6 +104,39 @@ export const AuthProvider = ({ children }) => {
     checkAuth();
   }, []); // ✅ GIỮ NGUYÊN empty dependencies
 
+  const loadingUser123 = async () => {
+    try {
+      const response = await api.get("/api/auth/me");
+
+      if (response.data && response.data.data && response.data.data.user) {
+        setUser(response.data.data.user);
+      } else {
+        console.warn("⚠️ Unexpected response structure:", response.data);
+        throw new Error("Invalid response structure");
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      // Xử lý các loại lỗi khác nhau
+      let errorMessage = "Load usse thaats baij";
+
+      if (error.response) {
+        // Lỗi từ server
+        errorMessage = error.response.data?.message || errorMessage;
+      } else if (error.request) {
+        // Không nhận được response
+        errorMessage = "Không thể kết nối đến server";
+      } else {
+        // Lỗi khác
+        errorMessage = error.message || errorMessage;
+      }
+
+      return {
+        success: false,
+        message: errorMessage,
+      };
+    }
+  };
+
   // Hàm đăng nhập trong AuthContext
   const login = async (email, password) => {
     // ✅ SỬA LỖI: Trả về toàn bộ response.data để Login.js có thể truy cập
@@ -354,6 +387,7 @@ export const AuthProvider = ({ children }) => {
     updateUserStreaks, // ✅ Export hàm mới
     checkIn, // ✅ Export hàm điểm danh
     showMilestonePopup, // ✅ Export hàm này để các context/component khác có thể dùng
+    loadingUser123,
   };
 
   return (

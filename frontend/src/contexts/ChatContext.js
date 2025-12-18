@@ -11,6 +11,8 @@ import api from "../services/api";
 import io from "socket.io-client";
 import { useAuth } from "./AuthContext";
 
+import notificationService from "../services/notificationService"; // Import service
+
 const ChatContext = createContext();
 
 export const useChat = () => {
@@ -611,6 +613,9 @@ export const ChatProvider = ({ children }) => {
       const res = await api.put(`/api/chat/${chatId}/pin`);
       if (res?.data?.success) {
         const updatedChat = res.data.chat;
+
+        console.log("THÀNH CÔNG: ", updatedChat);
+
         setConversations((prev) => {
           const list = Array.isArray(prev) ? prev : [];
           // loại mọi conversation cùng id (nếu có)
@@ -619,6 +624,12 @@ export const ChatProvider = ({ children }) => {
           );
           // thêm updatedChat lên đầu (hoặc cuối tuỳ bạn)
           return [updatedChat, ...filtered];
+        });
+        notificationService.success({
+          title: "Đăng nhập thành công!",
+          text: "Chào mừng bạn trở lại!",
+          timer: 2000,
+          showConfirmButton: false,
         });
       }
       return res.data;

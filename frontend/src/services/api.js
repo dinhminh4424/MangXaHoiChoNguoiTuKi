@@ -9,7 +9,7 @@ const api = axios.create({
   withCredentials: true,
 });
 
-console.log("API_BASE_URL: ", API_BASE_URL);
+console.log("API_BASE_URL hahaha: ", API_BASE_URL);
 
 // Function để cập nhật token
 const updateToken = () => {
