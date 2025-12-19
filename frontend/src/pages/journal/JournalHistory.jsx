@@ -1,8 +1,12 @@
 // pages/journal/JournalHistory.jsx
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useJournal } from "../../contexts/JournalContext";
 import { useAuth } from "../../contexts/AuthContext";
 import { Calendar, Clock, Lock, Unlock, FileText, Plus } from "lucide-react";
+
+import { getImagesByCategoryActive } from "../../services/imageService";
+
+import { RefreshCw, Earth } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 
@@ -11,14 +15,30 @@ const JournalHistory = () => {
   const {
     journalHistory,
     fetchJournalHistory,
-    loading,
     currentPage,
     totalPages,
+    historyLoading,
+    loading,
   } = useJournal();
   const navigate = useNavigate();
 
+  const [imageBanner, setImageBanner] = useState("");
+
   useEffect(() => {
     loadHistory();
+    loadImagesBanner();
+  }, []);
+
+  const loadImagesBanner = useCallback(async () => {
+    try {
+      const res = await getImagesByCategoryActive("Journal");
+      console.log(res);
+      if (res.success) {
+        setImageBanner(res.image?.file.path);
+      }
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
   const loadHistory = async (page = 1) => {
@@ -27,6 +47,10 @@ const JournalHistory = () => {
     } catch (error) {
       console.error("Error loading journal history:", error);
     }
+  };
+
+  const handleRefresh = () => {
+    loadHistory(1);
   };
 
   const truncateContent = (html, maxLength = 150) => {
@@ -113,7 +137,7 @@ const JournalHistory = () => {
 
   return (
     <div className="container mt-4">
-      <div className="d-flex justify-content-between align-items-center mb-4">
+      {/* <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h2 className="mb-1">Lịch sử Nhật ký</h2>
           <p className="text-muted mb-0">
@@ -127,6 +151,64 @@ const JournalHistory = () => {
           <Plus size={18} />
           Nhật ký mới
         </button>
+      </div> */}
+
+      {/* Header */}
+      <div className="feed-header">
+        <div
+          className="feed-header-bg"
+          // 1. nên dùng cái này
+          style={{
+            backgroundImage: `url(${imageBanner})`,
+            filter: imageBanner ? "blur(0.5px)" : "none",
+            backgroundPosition: "center",
+            backgroundRepeat: "no-repeat",
+          }}
+
+          // 2. cái nàu xấu hơn cái 1 nhưng nó dãn ra ko mất hình
+          // style={{
+          //   backgroundImage: `url(${imageBanner})`,
+          //   // opacity: imageBanner ? 0.5 : 1,
+          //   backgroundSize: "100% 100%",
+          //   backgroundPosition: "center",
+          //   backgroundRepeat: "no-repeat",
+          // }}
+        ></div>
+        <div
+          className="feed-header-overlay"
+          style={{
+            backgroundColor: imageBanner ? "rgba(0, 0, 0, 0.2)" : "transparent",
+          }}
+        ></div>
+        <div className="container feed-header-content">
+          <div className="row align-items-center">
+            <div className="col">
+              <h1 className="feed-title">Nhật Kí</h1>
+              <p className="feed-subtitle">Cập nhật mới nhất từ người dùng</p>
+            </div>
+            <div className="col-auto">
+              <div className="d-flex gap-2">
+                <button
+                  className="btn btn-outline-primary btn-refresh"
+                  onClick={handleRefresh}
+                  disabled={historyLoading}
+                >
+                  <RefreshCw
+                    size={18}
+                    className={historyLoading ? "spinning" : ""}
+                  />
+                </button>
+                <button
+                  className="btn btn-primary btn-create-post"
+                  onClick={() => navigate("/journal/create")}
+                >
+                  <Earth size={18} className="me-2" />
+                  Viết nhật kí hôm nay
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       <div className="row">

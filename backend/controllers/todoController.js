@@ -1388,3 +1388,170 @@ exports.getImportantTodos = async (req, res) => {
     return res.status(500).json({ success: false, message: error.message });
   }
 };
+
+// Hàm 1: Lấy todos cần gửi reminder
+exports.getTodosForReminder = async (req, res) => {
+  try {
+    const now = new Date();
+    const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60000);
+
+    const todos = await Todo.find({
+      createdBy: req.user.id,
+      start: {
+        $gte: now,
+        $lte: fiveMinutesFromNow,
+      },
+      reminderSent: false,
+    })
+      .select("title start end location reminderSent reminderMinutes")
+      .sort("start")
+      .lean();
+
+    res.json({
+      success: true,
+      count: todos.length,
+      todos: todos.map((todo) => ({
+        id: todo._id,
+        title: todo.title,
+        start: todo.start,
+        end: todo.end,
+        location: todo.location,
+        reminderSent: todo.reminderSent,
+        reminderMinutes: todo.reminderMinutes,
+        minutesLeft: Math.floor((new Date(todo.start) - now) / (1000 * 60)),
+      })),
+    });
+  } catch (error) {
+    console.error("Lỗi getTodosForReminder:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
+// Hàm 2: Cập nhật cài đặt reminder
+exports.updateTodoReminder = async (req, res) => {
+  try {
+    const { todoId } = req.params;
+    const { reminderMinutes, enableReminder } = req.body;
+
+    // Tìm todo
+    const todo = await Todo.findOne({
+      _id: todoId,
+      createdBy: req.user.id,
+    });
+
+    if (!todo) {
+      return res.status(404).json({
+        success: false,
+        message: "Không tìm thấy todo",
+      });
+    }
+
+    // Cập nhật
+    if (reminderMinutes !== undefined) {
+      todo.reminderMinutes = reminderMinutes;
+    }
+
+    if (enableReminder !== undefined) {
+      // Nếu bật reminder -> reset trạng thái đã gửi
+      if (enableReminder) {
+        todo.reminderSent = false;
+        todo.reminderError = null;
+      }
+    }
+
+    await todo.save();
+
+    res.json({
+      success: true,
+      message: "Đã cập nhật cài đặt reminder",
+      todo: {
+        id: todo._id,
+        reminderMinutes: todo.reminderMinutes,
+        reminderSent: todo.reminderSent,
+        reminderError: todo.reminderError,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi updateTodoReminder:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};
+
+// Hàm 3: Gửi test reminder (chỉ admin)
+exports.testReminder = async (req, res) => {
+  try {
+    const { todoId } = req.params;
+
+    // Chỉ admin mới được test
+    if (req.user.role !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Chỉ admin mới được test reminder",
+      });
+    }
+
+    const ReminderService = require("../services/ReminderService");
+    const result = await ReminderService.sendTestReminder(todoId);
+
+    res.json(result);
+  } catch (error) {
+    console.error("Lỗi testReminder:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Lỗi server",
+    });
+  }
+};
+
+// Hàm 4: Lấy thống kê reminder
+exports.getReminderStats = async (req, res) => {
+  try {
+    const stats = await Todo.aggregate([
+      {
+        $match: {
+          createdBy: req.user._id,
+          hasCalendarEvent: true,
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalEvents: { $sum: 1 },
+          remindersSent: {
+            $sum: { $cond: [{ $eq: ["$reminderSent", true] }, 1, 0] },
+          },
+          remindersFailed: {
+            $sum: { $cond: [{ $ne: ["$reminderError", null] }, 1, 0] },
+          },
+          upcomingEvents: {
+            $sum: {
+              $cond: [{ $gt: ["$start", new Date()] }, 1, 0],
+            },
+          },
+        },
+      },
+    ]);
+
+    res.json({
+      success: true,
+      stats: stats[0] || {
+        totalEvents: 0,
+        remindersSent: 0,
+        remindersFailed: 0,
+        upcomingEvents: 0,
+      },
+    });
+  } catch (error) {
+    console.error("Lỗi getReminderStats:", error);
+    res.status(500).json({
+      success: false,
+      message: "Lỗi server",
+    });
+  }
+};

@@ -30,7 +30,7 @@ const ProfileView = ({ userId }) => {
     updateImageCover,
     reportUser,
   } = useProfile();
-  const { user: currentUser, setUser, checkIn } = useAuth(); // ✅ Lấy hàm checkIn và setUser từ context
+  const { user: currentUser, setUser, checkIn, loadingUser123 } = useAuth(); // ✅ Lấy hàm checkIn và setUser từ context
 
   const [showModalUpdateCoverPhoto, setShowModalUpdateCoverPhoto] =
     React.useState(false);
@@ -218,6 +218,7 @@ const ProfileView = ({ userId }) => {
         if (result.user?.profile?.coverPhoto) {
           setCoverPhoto(result.user?.profile.coverPhoto);
         }
+        loadingUser123(); // ✅ Lấy hàm checkIn và setUser từ context
 
         // ✅ THÊM: Thông báo thành công
         NotificationService.success({
@@ -673,31 +674,10 @@ const ProfileView = ({ userId }) => {
 
   console.log("viewedUser:", viewedUser);
 
-  // const getBackgroundStyle = (user) => {
-  //   return user?.profile?.coverPhoto
-  //     ? {
-  //         backgroundImage: `url("${user.profile.coverPhoto}")`,
-  //         backgroundSize: "100% 100%",
-  //         backgroundPosition: "center",
-  //         backgroundRepeat: "no-repeat",
-  //       }
-  //     : imageCover
-  //     ? {
-  //         backgroundImage: `url("${imageCover}")`,
-  //         backgroundSize: "100% 100%",
-  //         backgroundPosition: "center",
-  //         backgroundRepeat: "no-repeat",
-  //       }
-  //     : {
-  //         backgroundImage:
-  //           "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
-  //       };
-  // };
-
   const getBackgroundStyle = (user) => {
-    return coverPhoto
+    return user?.profile?.coverPhoto
       ? {
-          backgroundImage: `url("${coverPhoto}")`,
+          backgroundImage: `url("${user.profile.coverPhoto}")`,
           backgroundSize: "100% 100%",
           backgroundPosition: "center",
           backgroundRepeat: "no-repeat",
@@ -714,6 +694,27 @@ const ProfileView = ({ userId }) => {
             "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
         };
   };
+
+  // const getBackgroundStyle = (user) => {
+  //   return coverPhoto
+  //     ? {
+  //         backgroundImage: `url("${coverPhoto}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : imageCover
+  //     ? {
+  //         backgroundImage: `url("${imageCover}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : {
+  //         backgroundImage:
+  //           "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
+  //       };
+  // };
 
   return (
     <div className="card border-0 shadow-lg overflow-hidden">

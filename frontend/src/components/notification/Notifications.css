@@ -1022,7 +1022,11 @@
   pointer-events: auto;
   display: flex;
   align-items: flex-start;
-  width: 320px;
+  /* width: 420px; */
+  width: 50vw; /* 👈 50% chiều ngang màn hình */
+  max-width: 600px; /* (tuỳ chọn) không quá to */
+  min-width: 320px; /* (tuỳ chọn) mobile vẫn đẹp */
+
   padding: 12px 14px;
   border-radius: 12px;
   background: #ffffff;

@@ -183,4 +183,39 @@ export const todoService = {
       throw error.response?.data || error;
     }
   },
+
+  // Hàm test gửi reminder ngay lập tức
+  testReminder: async (todoId) => {
+    try {
+      const response = await api.post(`/api/todos/${todoId}/test-reminder`);
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Lỗi gửi test reminder");
+    }
+  },
+
+  // Hàm cập nhật cài đặt reminder
+  updateReminderSettings: async (todoId, settings) => {
+    try {
+      const response = await api.put(
+        `/api/todos/${todoId}/reminder-settings`,
+        settings
+      );
+      return response.data;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Lỗi cập nhật reminder");
+    }
+  },
+
+  // Hàm lấy thông tin reminder
+  getReminderInfo: async (todoId) => {
+    try {
+      const response = await api.get(`/api/todos/${todoId}/reminder-info`);
+      return response.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message || "Lỗi lấy thông tin reminder"
+      );
+    }
+  },
 };

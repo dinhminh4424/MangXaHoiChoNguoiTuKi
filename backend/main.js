@@ -18,6 +18,9 @@ const config = require("./config");
 const connectDB = require("./config/database");
 const { configureSocket } = require("./config/socket");
 const corsOptions = require("./config/cors");
+
+const ReminderService = require("./services/ReminderService"); // THÊM DÒNG NÀY
+
 require("./config/passport"); // passport strategies
 
 // 4) Optional: import User model nếu bạn cần cập nhật trạng thái online (bạn đã dùng trong Google login)
@@ -47,6 +50,28 @@ const app = express();
 const server = http.createServer(app);
 
 const checkLostStreaks = require("./cron/streak-checker");
+
+// === KHỞI ĐỘNG REMINDER SERVICE ===
+console.log("🔧 Đang cấu hình Reminder Service...");
+
+// Kiểm tra biến môi trường
+if (process.env.ENABLE_REMINDERS !== "false") {
+  ReminderService.start();
+  console.log("✅ Reminder Service đã khởi động");
+} else {
+  console.log("⏸️ Reminder Service đang tắt (ENABLE_REMINDERS=false)");
+}
+
+// ... CÁC ROUTES HIỆN CÓ ...
+
+// Health check cho reminder service
+app.get("/api/health/reminders", (req, res) => {
+  res.json({
+    service: "todo-reminder",
+    status: ReminderService.getStatus(),
+    enabled: process.env.ENABLE_REMINDERS !== "false",
+  });
+});
 
 // --------------------------------------- [MIDDLEWARE CHUNG] ------------------------------------
 // CORS, body parser, passport

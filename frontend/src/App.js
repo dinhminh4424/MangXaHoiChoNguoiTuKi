@@ -13,6 +13,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
+import { ReminderProvider } from "./contexts/ReminderContext"; // THÊM DÒNG NÀY
 import AuthCallback from "./components/AuthCallback";
 import SOSButton from "./components/SOSButton";
 
@@ -518,7 +519,9 @@ function AppProviders({ children }) {
       <ProfileProvider>
         <ChatProvider>
           <JournalProvider>
-            <PostProvider>{children}</PostProvider>
+            <PostProvider>
+              <ReminderProvider>{children}</ReminderProvider>
+            </PostProvider>
           </JournalProvider>
         </ChatProvider>
       </ProfileProvider>

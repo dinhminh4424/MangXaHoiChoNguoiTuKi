@@ -708,3 +708,17 @@
     text-align: center;
   }
 }
+
+.fc-event-wrapper {
+  width: 100%;
+}
+
+.fc-event-title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.3;
+}

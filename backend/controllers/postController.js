@@ -1167,12 +1167,6 @@ exports.reportPost = async (req, res) => {
         url: `/posts/${newViolation.targetId}`,
       });
 
-      await mailService.sendPostAutoBlockedEmail(
-        post.userCreateID,
-        post,
-        newViolation
-      );
-
       await AddViolationUserByID(
         post.userCreateID,
         newViolation,
@@ -1239,6 +1233,8 @@ exports.reportPost = async (req, res) => {
         autoBlocked,
       },
     });
+
+    // sendViolationEmails(newViolation, reporter, post);
 
     return res.status(200).json({
       success: true,
@@ -1544,37 +1540,5 @@ async function sendViolationEmails(violation, reporter, post) {
     console.log("✅ Đã gửi email thông báo vi phạm");
   } catch (error) {
     console.error("❌ Lỗi gửi email thông báo vi phạm:", error);
-  }
-}
-
-/**
- * Gửi email thông báo khi bài viết bị ẩn
- */
-async function sendPostBlockedEmail(post, admin, reason) {
-  try {
-    const postOwner = await User.findById(post.userCreateID);
-    if (!postOwner) return;
-
-    await mailService.sendEmail({
-      to: postOwner.email,
-      subject: "🚫 Bài viết của bạn đã bị ẩn - Autism Support",
-      templateName: "POST_BLOCKED",
-      templateData: {
-        userName: postOwner.fullName || postOwner.username,
-        violationReason: reason,
-        severityLevel: "Nghiêm trọng",
-        actionTime: new Date().toLocaleString("vi-VN"),
-        adminName: admin.fullName || admin.username,
-        details: "Bài viết vi phạm nguyên tắc cộng đồng và đã bị ẩn",
-        postContent: post.content,
-        guidelinesLink: `${process.env.FRONTEND_URL}/guidelines`,
-        appealLink: `${process.env.FRONTEND_URL}/appeal`,
-        supportEmail: process.env.EMAIL_USER,
-      },
-    });
-
-    console.log("✅ Đã gửi email thông báo bài viết bị ẩn");
-  } catch (error) {
-    console.error("❌ Lỗi gửi email thông báo bài viết bị ẩn:", error);
   }
 }

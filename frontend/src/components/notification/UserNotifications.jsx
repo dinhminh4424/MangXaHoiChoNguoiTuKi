@@ -57,6 +57,7 @@ const UserNotifications = () => {
       "APPEAL_RESOLVED",
       "APPEAL_CREATE",
       "FORCE_LOGOUT",
+      "TODO_REMINDER",
     ];
     return systemTypes.includes(type);
   };
@@ -102,6 +103,9 @@ const UserNotifications = () => {
         return "ri-user-unfollow-fill text-danger";
       case "FRIEND_REQUEST_CANCELLED":
         return "ri-user-unfollow-fill text-secondary";
+      case "TODO_REMINDER":
+        return "ri-alarm-line text-warning"; // hoặc "ri-time-line text-info"
+
       default:
         return "ri-notification-fill text-secondary";
     }
@@ -119,6 +123,8 @@ const UserNotifications = () => {
           return "warning";
         case "FEATURE_UPDATE":
           return "success";
+        case "TODO_REMINDER":
+          return "warning"; // Màu vàng cho nhắc nhở
         default:
           return "secondary";
       }
@@ -501,6 +507,10 @@ const UserNotifications = () => {
       },
     ]);
 
+    if (notification.type === "TODO_REMINDER") {
+      return;
+    }
+
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
@@ -804,6 +814,8 @@ const UserNotifications = () => {
                   className={`notification-detail-extra mb-4 p-3 rounded ${
                     selectedNotification.type === "SOS_ALERT"
                       ? "bg-danger bg-opacity-10 border border-danger border-opacity-25"
+                      : selectedNotification.type === "TODO_REMINDER"
+                      ? "bg-warning bg-opacity-10 border border-warning border-opacity-25" // Màu vàng cho todo reminder
                       : "bg-light border"
                   }`}
                 >
@@ -813,10 +825,24 @@ const UserNotifications = () => {
                       Thông tin khẩn cấp
                     </h6>
                   )}
+                  {/* === THÊM HIỂN THỊ CHO TODO_REMINDER === */}
+                  {selectedNotification.type === "TODO_REMINDER" && (
+                    <h6 className="text-warning mb-3">
+                      <i className="ri-alarm-line me-2"></i>
+                      Thông tin nhắc nhở công việc
+                    </h6>
+                  )}
                   {selectedNotification.data.userName && (
                     <p className="mb-2">
                       <strong>Người dùng:</strong>{" "}
                       {selectedNotification.data.userName}
+                    </p>
+                  )}
+                  {/* Hiển thị thông tin todo */}
+                  {selectedNotification.data.todoTitle && (
+                    <p className="mb-2">
+                      <strong>Công việc:</strong>{" "}
+                      {selectedNotification.data.todoTitle}
                     </p>
                   )}
                   {selectedNotification.data.message && (
