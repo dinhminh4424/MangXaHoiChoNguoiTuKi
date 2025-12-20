@@ -1516,7 +1516,7 @@ const ProfileView = ({ userId }) => {
                   variant="primary"
                   size="sm"
                   onClick={() => {
-                    const profileUrl = `${process.env.REACT_APP_FRONTEND_URL}/profile/${userId}`;
+                    const profileUrl = `${process.env.REACT_APP_URL}/profile/${userId}`;
                     navigator.clipboard.writeText(profileUrl);
                     NotificationService.success({
                       title: "Đã sao chép!",

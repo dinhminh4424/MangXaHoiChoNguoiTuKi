@@ -12,6 +12,15 @@ import {
   getAllAppeals,
   updateAppealStatus,
 } from "../../../services/adminService";
+import {
+  Filter,
+  Search,
+  Hash,
+  User,
+  X,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
 import { useParams } from "react-router-dom";
 
 const AppealManagement = () => {
@@ -49,6 +58,8 @@ const AppealManagement = () => {
   const limit = 10;
   const isFetchingRef = useRef(false);
   const filtersRef = useRef(filters);
+
+  const [showAdvancedFilter, setShowAdvancedFilter] = useState(true);
 
   // Cập nhật ref khi filters thay đổi
   useEffect(() => {
@@ -639,135 +650,152 @@ const AppealManagement = () => {
 
       {/* Bộ lọc nâng cao */}
       <div className="card mb-4">
-        <div className="card-header bg-light">
+        <div
+          className="card-header bg-light d-flex justify-content-between align-items-center cursor-pointer"
+          onClick={() => setShowAdvancedFilter((v) => !v)}
+        >
           <h5 className="card-title mb-0">
-            <i className="bi bi-funnel me-2"></i>Bộ lọc nâng cao
+            <i className="bi bi-funnel me-2"></i>
+            Bộ lọc nâng cao
           </h5>
+
+          <i
+            className={`bi ${
+              showAdvancedFilter ? "bi-chevron-up" : "bi-chevron-down"
+            }`}
+          ></i>
         </div>
-        <div className="card-body">
-          <Row className="g-3">
-            <Col md={3}>
-              <label className="form-label">Trạng thái kháng nghị</label>
-              <select
-                className="form-select"
-                value={filters.appealStatus}
-                onChange={(e) =>
-                  handleFilterChange("appealStatus", e.target.value)
-                }
-              >
-                <option value="all">Tất cả trạng thái</option>
-                <option value="pending">Đang chờ</option>
-                <option value="approved">Đã chấp thuận</option>
-                <option value="rejected">Đã từ chối</option>
-                <option value="cancelled">Đã hủy</option>
-              </select>
-            </Col>
-
-            <Col md={2}>
-              <label className="form-label">Loại đối tượng</label>
-              <select
-                className="form-select"
-                value={filters.targetType}
-                onChange={(e) =>
-                  handleFilterChange("targetType", e.target.value)
-                }
-              >
-                <option value="all">Tất cả loại</option>
-                <option value="Post">Bài viết</option>
-                <option value="Comment">Bình luận</option>
-                <option value="User">Người dùng</option>
-                <option value="Group">Nhóm</option>
-              </select>
-            </Col>
-
-            <Col md={2}>
-              <label className="form-label">Mã kháng nghị</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nhập mã kháng nghị..."
-                value={filters.appealId}
-                onChange={(e) => handleFilterChange("appealId", e.target.value)}
-              />
-            </Col>
-
-            <Col md={2}>
-              <label className="form-label">Mã vi phạm</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Nhập mã vi phạm..."
-                value={filters.violationId}
-                onChange={(e) =>
-                  handleFilterChange("violationId", e.target.value)
-                }
-              />
-            </Col>
-
-            <Col md={3}>
-              <label className="form-label">Tìm kiếm</label>
-              <input
-                type="text"
-                className="form-control"
-                placeholder="Lý do, nội dung kháng nghị..."
-                value={filters.search}
-                onChange={(e) => handleFilterChange("search", e.target.value)}
-              />
-            </Col>
-
-            <Col md={3}>
-              <label className="form-label">Từ ngày kháng nghị</label>
-              <input
-                type="date"
-                className="form-control"
-                value={filters.dateFrom}
-                onChange={(e) => handleFilterChange("dateFrom", e.target.value)}
-              />
-            </Col>
-
-            <Col md={3}>
-              <label className="form-label">Đến ngày kháng nghị</label>
-              <input
-                type="date"
-                className="form-control"
-                value={filters.dateTo}
-                onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-              />
-            </Col>
-
-            <Col md={6} className="d-flex align-items-end">
-              <div className="d-flex gap-2 w-100">
-                <Button
-                  variant="primary"
-                  className="flex-fill"
-                  onClick={handleApplyFilters}
-                  disabled={loading}
+        <div className={`collapse ${showAdvancedFilter ? "show" : ""}`}>
+          {" "}
+          <div className="card-body">
+            <Row className="g-3">
+              <Col md={3}>
+                <label className="form-label">Trạng thái kháng nghị</label>
+                <select
+                  className="form-select"
+                  value={filters.appealStatus}
+                  onChange={(e) =>
+                    handleFilterChange("appealStatus", e.target.value)
+                  }
                 >
-                  {loading ? (
-                    <>
-                      <span
-                        className="spinner-border spinner-border-sm me-2"
-                        role="status"
-                      ></span>
-                      Đang tải...
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-search me-1"></i>
-                      Áp dụng bộ lọc
-                    </>
-                  )}
-                </Button>
-                <Button
-                  variant="outline-secondary"
-                  onClick={handleResetFilters}
-                  disabled={loading}
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="pending">Đang chờ</option>
+                  <option value="approved">Đã chấp thuận</option>
+                  <option value="rejected">Đã từ chối</option>
+                  <option value="cancelled">Đã hủy</option>
+                </select>
+              </Col>
+
+              <Col md={2}>
+                <label className="form-label">Loại đối tượng</label>
+                <select
+                  className="form-select"
+                  value={filters.targetType}
+                  onChange={(e) =>
+                    handleFilterChange("targetType", e.target.value)
+                  }
                 >
-                  <i className="bi bi-arrow-clockwise"></i>
-                </Button>
-              </div>
-            </Col>
-          </Row>
+                  <option value="all">Tất cả loại</option>
+                  <option value="Post">Bài viết</option>
+                  <option value="Comment">Bình luận</option>
+                  <option value="User">Người dùng</option>
+                  <option value="Group">Nhóm</option>
+                </select>
+              </Col>
+
+              <Col md={2}>
+                <label className="form-label">Mã kháng nghị</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Nhập mã kháng nghị..."
+                  value={filters.appealId}
+                  onChange={(e) =>
+                    handleFilterChange("appealId", e.target.value)
+                  }
+                />
+              </Col>
+
+              <Col md={2}>
+                <label className="form-label">Mã vi phạm</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Nhập mã vi phạm..."
+                  value={filters.violationId}
+                  onChange={(e) =>
+                    handleFilterChange("violationId", e.target.value)
+                  }
+                />
+              </Col>
+
+              <Col md={3}>
+                <label className="form-label">Tìm kiếm</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  placeholder="Lý do, nội dung kháng nghị..."
+                  value={filters.search}
+                  onChange={(e) => handleFilterChange("search", e.target.value)}
+                />
+              </Col>
+
+              <Col md={3}>
+                <label className="form-label">Từ ngày kháng nghị</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={filters.dateFrom}
+                  onChange={(e) =>
+                    handleFilterChange("dateFrom", e.target.value)
+                  }
+                />
+              </Col>
+
+              <Col md={3}>
+                <label className="form-label">Đến ngày kháng nghị</label>
+                <input
+                  type="date"
+                  className="form-control"
+                  value={filters.dateTo}
+                  onChange={(e) => handleFilterChange("dateTo", e.target.value)}
+                />
+              </Col>
+
+              <Col md={6} className="d-flex align-items-end">
+                <div className="d-flex gap-2 w-100">
+                  <Button
+                    variant="primary"
+                    className="flex-fill"
+                    onClick={handleApplyFilters}
+                    disabled={loading}
+                  >
+                    {loading ? (
+                      <>
+                        <span
+                          className="spinner-border spinner-border-sm me-2"
+                          role="status"
+                        ></span>
+                        Đang tải...
+                      </>
+                    ) : (
+                      <>
+                        <i className="bi bi-search me-1"></i>
+                        Áp dụng bộ lọc
+                      </>
+                    )}
+                  </Button>
+                  <Button
+                    variant="outline-secondary"
+                    onClick={handleResetFilters}
+                    disabled={loading}
+                  >
+                    <i className="bi bi-arrow-clockwise"></i>
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+          </div>
         </div>
       </div>
 

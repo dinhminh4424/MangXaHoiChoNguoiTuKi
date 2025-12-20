@@ -216,6 +216,20 @@ const routeConfigs = [
     component: CreatePost,
     layout: UserLayout,
   },
+  // Protected User Routes - Groups đỡ sửa
+  { path: "/groups", component: Group, layout: UserLayout },
+  { path: "/groups/:groupId", component: GroupDetailPage, layout: UserLayout },
+  {
+    path: "/groups/:groupId/statistics",
+    component: GroupStatistics,
+    layout: UserLayout,
+  },
+  { path: "/create-group", component: CreateGroupPage, layout: UserLayout },
+  {
+    path: "/groups/createPost/:groupId",
+    component: CreatePost,
+    layout: UserLayout,
+  },
 
   // Protected User Routes - Journal
   { path: "/journal", component: Journal, layout: UserLayout },
@@ -384,6 +398,12 @@ const routeConfigs = [
     layout: AdminLayout,
     isAdmin: true,
   }, // ImageManager
+  {
+    path: "/admin/emergencies/:id",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  },
   {
     path: "/admin/imageManager",
     component: ImageManager,

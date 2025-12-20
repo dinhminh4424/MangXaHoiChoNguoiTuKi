@@ -66,6 +66,7 @@ export const useEnhancedAnalytics = (initialPeriod = "today") => {
         showLabels: true,
         showPercentages: true,
         showLegend: true,
+        stacked: true,
         title: "Phân loại vi phạm",
       },
       userEngagementChart: {

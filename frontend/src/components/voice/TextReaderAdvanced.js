@@ -139,47 +139,98 @@ const TextReaderTwoButtons = ({
   };
 
   // Lấy danh sách giọng đọc
+  // useEffect(() => {
+  //   const populateVoices = () => {
+  //     const allVoices = window.speechSynthesis.getVoices() || [];
+
+  //     console.log("allVoices", allVoices);
+
+  //     setVoices(allVoices);
+
+  //     // Sắp xếp và lọc giọng đọc: ưu tiên tiếng Việt, rồi tiếng Anh
+  //     const sortedVoices = [...allVoices].sort((a, b) => {
+  //       const aLang = a.lang || "";
+  //       const bLang = b.lang || "";
+
+  //       // Ưu tiên tiếng Việt lên đầu
+  //       if (aLang.startsWith("vi") && !bLang.startsWith("vi")) return -1;
+  //       if (!aLang.startsWith("vi") && bLang.startsWith("vi")) return 1;
+
+  //       // Sau đó ưu tiên tiếng Anh
+  //       if (aLang.startsWith("en") && !bLang.startsWith("en")) return -1;
+  //       if (!aLang.startsWith("en") && bLang.startsWith("en")) return 1;
+
+  //       // Còn lại sắp xếp theo tên
+  //       return a.name.localeCompare(b.name);
+  //     });
+
+  //     setFilteredVoices(sortedVoices);
+
+  //     // Tự động chọn giọng phù hợp với ngôn ngữ hiện tại
+  //     if (sortedVoices.length > 0 && !selectedVoice) {
+  //       const defaultVoice =
+  //         sortedVoices.find((voice) =>
+  //           voice.lang.startsWith(propLang.split("-")[0])
+  //         ) || sortedVoices[0];
+  //       setSelectedVoice(defaultVoice.name);
+  //     }
+  //   };
+
+  //   populateVoices();
+  //   window.speechSynthesis.onvoiceschanged = populateVoices;
+
+  //   return () => {
+  //     window.speechSynthesis.onvoiceschanged = null;
+  //   };
+  // }, [propLang, selectedVoice]);
+
   useEffect(() => {
+    const synth = window.speechSynthesis;
+
     const populateVoices = () => {
-      const allVoices = window.speechSynthesis.getVoices() || [];
+      const allVoices = synth.getVoices();
+      if (!allVoices.length) return;
+
+      console.log("allVoices", allVoices);
+
       setVoices(allVoices);
 
-      // Sắp xếp và lọc giọng đọc: ưu tiên tiếng Việt, rồi tiếng Anh
       const sortedVoices = [...allVoices].sort((a, b) => {
-        const aLang = a.lang || "";
-        const bLang = b.lang || "";
+        const la = a.lang || "";
+        const lb = b.lang || "";
 
-        // Ưu tiên tiếng Việt lên đầu
-        if (aLang.startsWith("vi") && !bLang.startsWith("vi")) return -1;
-        if (!aLang.startsWith("vi") && bLang.startsWith("vi")) return 1;
+        if (la !== lb) return la.localeCompare(lb);
 
-        // Sau đó ưu tiên tiếng Anh
-        if (aLang.startsWith("en") && !bLang.startsWith("en")) return -1;
-        if (!aLang.startsWith("en") && bLang.startsWith("en")) return 1;
+        // ưu tiên local voice
+        if (a.localService && !b.localService) return -1;
+        if (!a.localService && b.localService) return 1;
 
-        // Còn lại sắp xếp theo tên
         return a.name.localeCompare(b.name);
       });
 
       setFilteredVoices(sortedVoices);
 
-      // Tự động chọn giọng phù hợp với ngôn ngữ hiện tại
-      if (sortedVoices.length > 0 && !selectedVoice) {
-        const defaultVoice =
-          sortedVoices.find((voice) =>
-            voice.lang.startsWith(propLang.split("-")[0])
-          ) || sortedVoices[0];
-        setSelectedVoice(defaultVoice.name);
-      }
+      // chỉ set default 1 lần
+      setSelectedVoice((prev) => {
+        if (prev) return prev;
+
+        const baseLang = propLang.split("-")[0];
+        const def =
+          sortedVoices.find((v) => v.lang === propLang) ||
+          sortedVoices.find((v) => v.lang.startsWith(baseLang)) ||
+          sortedVoices[0];
+
+        return def?.name || "";
+      });
     };
 
     populateVoices();
-    window.speechSynthesis.onvoiceschanged = populateVoices;
+    synth.onvoiceschanged = populateVoices;
 
     return () => {
-      window.speechSynthesis.onvoiceschanged = null;
+      synth.onvoiceschanged = null;
     };
-  }, [propLang, selectedVoice]);
+  }, []); // ⚠️ KHÔNG CÓ DEPENDENCY
 
   // Nếu props thay đổi từ parent, cập nhật local state tương ứng
   useEffect(() => setText(propText || ""), [propText]);

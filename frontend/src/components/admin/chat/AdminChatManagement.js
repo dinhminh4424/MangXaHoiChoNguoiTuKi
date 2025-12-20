@@ -14,6 +14,7 @@ import {
   Alert,
   InputGroup,
   ProgressBar,
+  Collapse,
 } from "react-bootstrap";
 import {
   Search,
@@ -85,6 +86,8 @@ const AdminChatManagement = () => {
     hasFile: "",
     recalled: "",
   });
+
+  const [showFilter, setShowFilter] = useState(true);
 
   // Fetch conversations
   const fetchConversations = useCallback(async () => {
@@ -410,7 +413,7 @@ const AdminChatManagement = () => {
 
       {/* Enhanced Stats Cards */}
       <Row className="mb-4">
-        <Col md={2}>
+        <Col md={3}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -430,7 +433,7 @@ const AdminChatManagement = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        {/* <Col md={2}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -450,8 +453,8 @@ const AdminChatManagement = () => {
               </div>
             </Card.Body>
           </Card>
-        </Col>
-        <Col md={2}>
+        </Col> */}
+        <Col md={3}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -472,7 +475,7 @@ const AdminChatManagement = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        <Col md={3}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -495,7 +498,7 @@ const AdminChatManagement = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        <Col md={3}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -521,7 +524,7 @@ const AdminChatManagement = () => {
             </Card.Body>
           </Card>
         </Col>
-        <Col md={2}>
+        {/* <Col md={2}>
           <Card className="stats-card fade-in">
             <Card.Body>
               <div className="d-flex justify-content-between align-items-start">
@@ -541,176 +544,197 @@ const AdminChatManagement = () => {
               </div>
             </Card.Body>
           </Card>
-        </Col>
+        </Col> */}
       </Row>
 
       {/* Enhanced Filters */}
       <Card className="filter-card">
-        <Card.Header className="bg-white">
+        <Card.Header
+          className="bg-white d-flex justify-content-between align-items-center cursor-pointer"
+          onClick={() => setShowFilter((v) => !v)}
+        >
           <h5 className="mb-0">
             <Filter size={20} className="me-2 text-primary" />
             Bộ lọc tìm kiếm
           </h5>
+
+          {showFilter ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </Card.Header>
-        <Card.Body>
-          <Row className="g-3">
-            <Col md={3}>
-              <Form.Label>
-                <Search size={14} className="me-1" />
-                Tìm kiếm chung
-              </Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  placeholder="Tên hộp thoại, nội dung..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                />
-              </InputGroup>
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <Hash size={14} className="me-1" />
-                ID hộp thoại
-              </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Nhập ID..."
-                value={filters.searchId}
-                onChange={(e) => handleFilterChange("searchId", e.target.value)}
-              />
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <User size={14} className="me-1" />
-                Người dùng A
-              </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Username hoặc email..."
-                value={filters.searchUserA}
-                onChange={(e) =>
-                  handleFilterChange("searchUserA", e.target.value)
-                }
-              />
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <User size={14} className="me-1" />
-                Người dùng B
-              </Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Username hoặc email..."
-                value={filters.searchUserB}
-                onChange={(e) =>
-                  handleFilterChange("searchUserB", e.target.value)
-                }
-              />
-            </Col>
-            <Col md={3}>
-              <Form.Label>Loại hộp thoại</Form.Label>
-              <Row>
-                <Col>
-                  <Form.Select
-                    value={filters.type}
-                    onChange={(e) => handleFilterChange("type", e.target.value)}
-                  >
-                    <option value="">Tất cả loại</option>
-                    <option value="direct">Cá nhân</option>
-                    <option value="group">Nhóm</option>
-                  </Form.Select>
+        <Collapse in={showFilter}>
+          <div>
+            <Card.Body>
+              <Row className="g-3">
+                <Col md={3}>
+                  <Form.Label>
+                    <Search size={14} className="me-1" />
+                    Tìm kiếm chung
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="Tên hộp thoại, nội dung..."
+                      value={filters.search}
+                      onChange={(e) =>
+                        handleFilterChange("search", e.target.value)
+                      }
+                    />
+                  </InputGroup>
                 </Col>
-                <Col>
-                  <Form.Select
-                    value={filters.hasFiles}
+                <Col md={2}>
+                  <Form.Label>
+                    <Hash size={14} className="me-1" />
+                    ID hộp thoại
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Nhập ID..."
+                    value={filters.searchId}
                     onChange={(e) =>
-                      handleFilterChange("hasFiles", e.target.value)
+                      handleFilterChange("searchId", e.target.value)
                     }
-                  >
-                    <option value="">Tất cả file</option>
-                    <option value="true">Có file</option>
-                    <option value="false">Không có file</option>
-                  </Form.Select>
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label>
+                    <User size={14} className="me-1" />
+                    Người dùng A
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Username hoặc email..."
+                    value={filters.searchUserA}
+                    onChange={(e) =>
+                      handleFilterChange("searchUserA", e.target.value)
+                    }
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label>
+                    <User size={14} className="me-1" />
+                    Người dùng B
+                  </Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Username hoặc email..."
+                    value={filters.searchUserB}
+                    onChange={(e) =>
+                      handleFilterChange("searchUserB", e.target.value)
+                    }
+                  />
+                </Col>
+                <Col md={3}>
+                  <Form.Label>Loại hộp thoại</Form.Label>
+                  <Row>
+                    <Col>
+                      <Form.Select
+                        value={filters.type}
+                        onChange={(e) =>
+                          handleFilterChange("type", e.target.value)
+                        }
+                      >
+                        <option value="">Tất cả loại</option>
+                        <option value="direct">Cá nhân</option>
+                        <option value="group">Nhóm</option>
+                      </Form.Select>
+                    </Col>
+                    <Col>
+                      <Form.Select
+                        value={filters.hasFiles}
+                        onChange={(e) =>
+                          handleFilterChange("hasFiles", e.target.value)
+                        }
+                      >
+                        <option value="">Tất cả file</option>
+                        <option value="true">Có file</option>
+                        <option value="false">Không có file</option>
+                      </Form.Select>
+                    </Col>
+                  </Row>
                 </Col>
               </Row>
-            </Col>
-          </Row>
 
-          <Row className="g-3 mt-2">
-            <Col md={2}>
-              <Form.Label>Từ ngày</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="date"
-                  value={filters.dateFrom}
-                  onChange={(e) =>
-                    handleFilterChange("dateFrom", e.target.value)
-                  }
-                />
-              </InputGroup>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Đến ngày</Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="date"
-                  value={filters.dateTo}
-                  onChange={(e) => handleFilterChange("dateTo", e.target.value)}
-                />
-              </InputGroup>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Sắp xếp</Form.Label>
-              <Form.Select
-                value={`${filters.sortBy}-${filters.sortOrder}`}
-                onChange={(e) => {
-                  const [sortBy, sortOrder] = e.target.value.split("-");
-                  handleFilterChange("sortBy", sortBy);
-                  handleFilterChange("sortOrder", sortOrder);
-                }}
-              >
-                <option value="updatedAt-desc">Mới nhất</option>
-                <option value="updatedAt-asc">Cũ nhất</option>
-                <option value="createdAt-desc">Tạo mới nhất</option>
-                <option value="createdAt-asc">Tạo cũ nhất</option>
-                <option value="messageCount-desc">Tin nhắn nhiều nhất</option>
-                <option value="messageCount-asc">Tin nhắn ít nhất</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Trạng thái</Form.Label>
-              <Form.Select
-                value={filters.isActive}
-                onChange={(e) => handleFilterChange("isActive", e.target.value)}
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Không hoạt động</option>
-              </Form.Select>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button
-                variant="outline-primary"
-                className="w-100"
-                onClick={handleResetFilters}
-              >
-                <X size={16} className="me-1" />
-                Xóa lọc
-              </Button>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button
-                variant="primary"
-                className="w-100"
-                onClick={fetchConversations}
-              >
-                <Search size={16} className="me-1" />
-                Tìm kiếm
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
+              <Row className="g-3 mt-2">
+                <Col md={2}>
+                  <Form.Label>Từ ngày</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="date"
+                      value={filters.dateFrom}
+                      onChange={(e) =>
+                        handleFilterChange("dateFrom", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Đến ngày</Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="date"
+                      value={filters.dateTo}
+                      onChange={(e) =>
+                        handleFilterChange("dateTo", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Sắp xếp</Form.Label>
+                  <Form.Select
+                    value={`${filters.sortBy}-${filters.sortOrder}`}
+                    onChange={(e) => {
+                      const [sortBy, sortOrder] = e.target.value.split("-");
+                      handleFilterChange("sortBy", sortBy);
+                      handleFilterChange("sortOrder", sortOrder);
+                    }}
+                  >
+                    <option value="updatedAt-desc">Mới nhất</option>
+                    <option value="updatedAt-asc">Cũ nhất</option>
+                    <option value="createdAt-desc">Tạo mới nhất</option>
+                    <option value="createdAt-asc">Tạo cũ nhất</option>
+                    <option value="messageCount-desc">
+                      Tin nhắn nhiều nhất
+                    </option>
+                    <option value="messageCount-asc">Tin nhắn ít nhất</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Trạng thái</Form.Label>
+                  <Form.Select
+                    value={filters.isActive}
+                    onChange={(e) =>
+                      handleFilterChange("isActive", e.target.value)
+                    }
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Không hoạt động</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2} className="d-flex align-items-end">
+                  <Button
+                    variant="outline-primary"
+                    className="w-100"
+                    onClick={handleResetFilters}
+                  >
+                    <X size={16} className="me-1" />
+                    Xóa lọc
+                  </Button>
+                </Col>
+                <Col md={2} className="d-flex align-items-end">
+                  <Button
+                    variant="primary"
+                    className="w-100"
+                    onClick={fetchConversations}
+                  >
+                    <Search size={16} className="me-1" />
+                    Tìm kiếm
+                  </Button>
+                </Col>
+              </Row>
+            </Card.Body>
+          </div>
+        </Collapse>
       </Card>
 
       {/* Conversations Table */}
@@ -1010,7 +1034,7 @@ const AdminChatManagement = () => {
         centered
         className="modal-enhanced"
       >
-        <Modal.Header className="modal-header-enhanced">
+        <Modal.Header className="modal-header-enhanced" closeButton>
           <Modal.Title>
             <MessageCircle size={24} className="me-2" />
             Chi tiết Hộp thoại

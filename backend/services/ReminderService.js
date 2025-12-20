@@ -53,11 +53,11 @@ class ReminderService {
       // Tính thời điểm 5 phút sau
       const fiveMinutesFromNow = new Date(now.getTime() + 5 * 60000);
 
-      console.log(
-        `🔍 Tìm todos bắt đầu từ ${this.formatTime(now)} đến ${this.formatTime(
-          fiveMinutesFromNow
-        )}`
-      );
+      // console.log(
+      //   `🔍 Tìm todos bắt đầu từ ${this.formatTime(now)} đến ${this.formatTime(
+      //     fiveMinutesFromNow
+      //   )}`
+      // );
 
       // Tìm todos cần gửi reminder
       const todos = await Todo.find({
