@@ -341,6 +341,7 @@ const AdminNotifications = () => {
           id="notification-drop"
           data-bs-toggle="dropdown"
           aria-expanded="false"
+          style={{ color: "#50b5ff" }}
         >
           <i className="ri-notification-4-line"></i>
           {unreadCount > 0 && (

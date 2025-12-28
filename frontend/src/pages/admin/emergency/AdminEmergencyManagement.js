@@ -2553,7 +2553,7 @@ const AdminEmergencyManagement = () => {
                 <small className="text-muted">Xử lý dữ liệu</small>
               </Button>
             </Col>
-            <Col md={6}>
+            {/* <Col md={6}>
               <Button
                 variant="outline-info"
                 className="w-100 py-3"
@@ -2574,7 +2574,7 @@ const AdminEmergencyManagement = () => {
                 <div>Excel</div>
                 <small className="text-muted">Định dạng Excel đầy đủ</small>
               </Button>
-            </Col>
+            </Col> */}
           </Row>
         </Modal.Body>
         <Modal.Footer className="bg-light">

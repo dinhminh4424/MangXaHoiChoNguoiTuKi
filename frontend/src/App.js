@@ -405,6 +405,18 @@ const routeConfigs = [
     isAdmin: true,
   },
   {
+    path: "/admin/emergency",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // ImageManager
+  {
+    path: "/admin/emergency/:id",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
     path: "/admin/imageManager",
     component: ImageManager,
     layout: AdminLayout,

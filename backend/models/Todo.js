@@ -109,7 +109,7 @@ const todoSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["scheduled", "in-progress", "done", "cancelled"],
+      enum: ["scheduled", "in-progress", "done", "cancelled", "overdue"],
       default: "scheduled",
     },
 

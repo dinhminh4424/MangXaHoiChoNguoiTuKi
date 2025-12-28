@@ -437,7 +437,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         </div>
       </div>
       {/* Right Sidebar - Simplified bên phair*/}
-      {user.active && (
+      {/* {user.active && (
         <div className="right-sidebar-mini right-sidebar">
           <div className="right-sidebar-panel p-0">
             <div className="card shadow-none">
@@ -460,7 +460,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 }
