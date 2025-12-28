@@ -626,6 +626,8 @@ router.put("/:chatId/pin", auth, async (req, res) => {
       .populate("createdBy", "username fullName")
       .lean();
 
+    updatedChat.isPinned = isPinned;
+
     return res.json({
       success: true,
       message: isPinned

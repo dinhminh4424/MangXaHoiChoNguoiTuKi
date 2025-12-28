@@ -149,7 +149,10 @@ export default function AiChatScreen() {
 
     try {
       // Sử dụng webhook từ component AIChat
-      const webhookUrl = "https://zzm0i0nhzz.app.n8n.cloud/webhook/ai-anh";
+
+      const webhookUrl = "https://j0v0iinh.app.n8n.cloud/webhook/ai-anh";
+
+      // const webhookUrl = "https://zzm0i0nhzz.app.n8n.cloud/webhook/ai-anh";
 
       // const webhookUrl = "http://localhost:5678/webhook/ai-anh";
 
@@ -302,13 +305,26 @@ export default function AiChatScreen() {
   };
 
   return (
-    <div className="ai-chat-container container m-4">
+    <div className="ai-chat-container  m-4">
       {/* Header */}
       <div className="ai-chat-header">
         <div className="ai-chat-header-content">
           <div className="ai-header-main">
             <div className="ai-avatar">
-              <div className="ai-avatar-icon">AI</div>
+              <div className="ai-avatar-icon">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="29"
+                  height="29"
+                  viewBox="0 0 32 32"
+                  fill="#fafafa"
+                >
+                  <g fill="#fafafa">
+                    <path d="M13.472 26h5.056C19.34 26 20 25.326 20 24.5s-.66-1.5-1.472-1.5h-5.056C12.66 23 12 23.674 12 24.5s.66 1.5 1.472 1.5ZM10.5 10a4.5 4.5 0 1 0 0 9h11a4.5 4.5 0 1 0 0-9h-11Zm.75 2c.69 0 1.25.56 1.25 1.25v2.5a1.25 1.25 0 1 1-2.5 0v-2.5c0-.69.56-1.25 1.25-1.25Zm8.25 1.25a1.25 1.25 0 1 1 2.5 0v2.5a1.25 1.25 0 1 1-2.5 0v-2.5Z" />
+                    <path d="M4 4.915a1.5 1.5 0 1 0-1 0v7.355a2 2 0 0 0-1 1.728v7.004c0 .736.403 1.382 1 1.729v1.319A6.945 6.945 0 0 0 9.95 31h12.1A6.943 6.943 0 0 0 29 24.06v-1.39c.597-.347 1-.994 1-1.73v-7.01c0-.736-.403-1.383-1-1.73V5.018a1.55 1.55 0 1 0-1 0v3.396A7.017 7.017 0 0 0 21.98 5h-1.065A1.5 1.5 0 0 0 19.5 3h-7a1.5 1.5 0 0 0-1.415 2H10.03C7.47 5 5.23 6.369 4 8.414v-3.5Zm1 7.115A5.03 5.03 0 0 1 10.03 7h11.95A5.028 5.028 0 0 1 27 12.03v12.03A4.943 4.943 0 0 1 22.05 29H9.95A4.945 4.945 0 0 1 5 24.05V12.03Z" />
+                  </g>
+                </svg>
+              </div>
             </div>
             <div className="ai-chat-info">
               <h1 className="ai-chat-title">AI Người Bạn Đồng Hành</h1>
@@ -317,10 +333,10 @@ export default function AiChatScreen() {
           </div>
 
           <div className="ai-header-actions">
-            <div className="ai-status">
+            {/* <div className="ai-status">
               <div className="ai-status-indicator"></div>
               <span className="ai-status-text">Online</span>
-            </div>
+            </div> */}
 
             {/* Công cụ voice */}
             <div className="chat-tools me-3">
@@ -330,11 +346,11 @@ export default function AiChatScreen() {
                 className="me-2"
               />
               <button
-                className="btn btn-outline-light btn-sm"
+                className="btn btn-outline-primary btn-sm"
                 onClick={readAIMessage}
                 title="Đọc tin nhắn AI cuối cùng"
               >
-                🔊
+                <i className="fa-solid fa-volume-high "></i>
               </button>
             </div>
 
@@ -351,7 +367,7 @@ export default function AiChatScreen() {
               >
                 <path d="M6 19c0 1.1.9 2 2 2h8c1.1 0 2-.9 2-2V7H6v12zM19 4h-3.5l-1-1h-5l-1 1H5v2h14V4z" />
               </svg>
-              Xóa chat
+              Clear chat
             </button>
           </div>
         </div>
@@ -369,7 +385,20 @@ export default function AiChatScreen() {
             <div className="ai-message-wrapper">
               {m.role === "assistant" && (
                 <div className="ai-message-avatar ai-assistant-avatar">
-                  <div className="ai-avatar-badge">AI</div>
+                  <div className="ai-avatar-badge">
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="25"
+                      height="25"
+                      viewBox="0 0 32 32"
+                      fill="#3788d8"
+                    >
+                      <g fill="#3788d8">
+                        <path d="M13.472 26h5.056C19.34 26 20 25.326 20 24.5s-.66-1.5-1.472-1.5h-5.056C12.66 23 12 23.674 12 24.5s.66 1.5 1.472 1.5ZM10.5 10a4.5 4.5 0 1 0 0 9h11a4.5 4.5 0 1 0 0-9h-11Zm.75 2c.69 0 1.25.56 1.25 1.25v2.5a1.25 1.25 0 1 1-2.5 0v-2.5c0-.69.56-1.25 1.25-1.25Zm8.25 1.25a1.25 1.25 0 1 1 2.5 0v2.5a1.25 1.25 0 1 1-2.5 0v-2.5Z" />
+                        <path d="M4 4.915a1.5 1.5 0 1 0-1 0v7.355a2 2 0 0 0-1 1.728v7.004c0 .736.403 1.382 1 1.729v1.319A6.945 6.945 0 0 0 9.95 31h12.1A6.943 6.943 0 0 0 29 24.06v-1.39c.597-.347 1-.994 1-1.73v-7.01c0-.736-.403-1.383-1-1.73V5.018a1.55 1.55 0 1 0-1 0v3.396A7.017 7.017 0 0 0 21.98 5h-1.065A1.5 1.5 0 0 0 19.5 3h-7a1.5 1.5 0 0 0-1.415 2H10.03C7.47 5 5.23 6.369 4 8.414v-3.5Zm1 7.115A5.03 5.03 0 0 1 10.03 7h11.95A5.028 5.028 0 0 1 27 12.03v12.03A4.943 4.943 0 0 1 22.05 29H9.95A4.945 4.945 0 0 1 5 24.05V12.03Z" />
+                      </g>
+                    </svg>
+                  </div>
                 </div>
               )}
 
@@ -396,36 +425,39 @@ export default function AiChatScreen() {
                               .replace(/\*(.*?)\*/g, "$1")}
                             height={30}
                             showSetupDefault={false}
+                            children={
+                              <button
+                                className="ai-message-action-btn"
+                                onClick={() => copyMessage(m.content)}
+                                title="Sao chép tin nhắn"
+                              >
+                                <svg
+                                  width="14"
+                                  height="14"
+                                  viewBox="0 0 24 24"
+                                  fill="currentColor"
+                                >
+                                  <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
+                                </svg>
+                              </button>
+                            }
                           />
                         )}
-
-                        <button
-                          className="ai-message-action-btn"
-                          onClick={() => copyMessage(m.content)}
-                          title="Sao chép tin nhắn"
-                        >
-                          <svg
-                            width="14"
-                            height="14"
-                            viewBox="0 0 24 24"
-                            fill="currentColor"
-                          >
-                            <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" />
-                          </svg>
-                        </button>
                       </>
                     )}
                   </div>
                 </div>
                 <div className="ai-message-meta">
-                  <span className="ai-message-time">
+                  <span className="ai-message-time text-light">
                     {formatTime(m.timestamp || m.createdAt)}
                   </span>
                   {m.role === "user" && (
                     <span className="ai-message-sender">Bạn</span>
                   )}
                   {m.role === "assistant" && (
-                    <span className="ai-message-sender">AI Assistant</span>
+                    <span className="ai-message-sender text-light">
+                      AI Assistant
+                    </span>
                   )}
                 </div>
               </div>
@@ -433,7 +465,18 @@ export default function AiChatScreen() {
               {m.role === "user" && (
                 <div className="ai-message-avatar ai-user-avatar">
                   <div className="ai-avatar-badge user">
-                    {currentUser?.name?.charAt(0) || "U"}
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      width="25"
+                      height="25"
+                      viewBox="0 0 18 18"
+                      fill="#000000"
+                    >
+                      <g fill="#000000" fill-rule="evenodd">
+                        <path d="M13.689 11.132c1.155 1.222 1.953 2.879 2.183 4.748a1.007 1.007 0 0 1-1 1.12H3.007a1.005 1.005 0 0 1-1-1.12c.23-1.87 1.028-3.526 2.183-4.748c.247.228.505.442.782.633c-1.038 1.069-1.765 2.55-1.972 4.237L14.872 16c-.204-1.686-.93-3.166-1.966-4.235a7.01 7.01 0 0 0 .783-.633M8.939 1c1.9 0 3 2 4.38 2.633a2.483 2.483 0 0 1-1.88.867c-.298 0-.579-.06-.844-.157A3.726 3.726 0 0 1 7.69 5.75c-1.395 0-3.75.25-3.245-1.903C5.94 3 6.952 1 8.94 1" />
+                        <path d="M8.94 2c2.205 0 4 1.794 4 4s-1.795 4-4 4c-2.207 0-4-1.794-4-4s1.793-4 4-4m0 9A5 5 0 1 0 8.937.999A5 5 0 0 0 8.94 11" />
+                      </g>
+                    </svg>
                   </div>
                 </div>
               )}

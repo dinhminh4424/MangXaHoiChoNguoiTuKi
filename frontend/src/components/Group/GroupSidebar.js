@@ -57,7 +57,7 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
   return (
     <div className="group-sidebar">
       {/* Menu Navigation */}
-      <Card className="mb-3">
+      <Card className="mb-3 bg-primary">
         <Card.Body className="p-0">
           <ListGroup variant="flush">
             {visibleItems.map((item) => (
@@ -78,7 +78,7 @@ const GroupSidebar = ({ group, activeTab, onTabChange, isMember, isAdmin }) => {
 
       {/* Group Info */}
       <Card className="mb-3">
-        <Card.Header>
+        <Card.Header className="bg-primary">
           <h6 className="mb-0">Giới thiệu</h6>
         </Card.Header>
         <Card.Body>

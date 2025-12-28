@@ -22,6 +22,16 @@ const PostMedia = ({ files }) => {
     setShowModal(true);
   };
 
+  const downloadFile = async (url, fileName) => {
+    const res = await fetch(url, { credentials: "include" });
+    const blob = await res.blob();
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(blob);
+    a.download = fileName;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  };
+
   const handleCloseModal = () => {
     setShowModal(false);
     setSelectedMediaIndex(0);
@@ -150,14 +160,21 @@ const PostMedia = ({ files }) => {
                       </small>
                     </div>
                   </div>
-                  <a
+                  <button
+                    type="button"
                     href={file.fileUrl}
                     download
                     className="btn btn-outline-primary btn-sm"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={() => downloadFile(file.fileUrl, file.fileName)}
                   >
                     <Download size={16} />
-                  </a>
+                  </button>
+                  {/* <Button
+                    size="sm"
+                    onClick={() => downloadFile(file.fileUrl, file.fileName)}
+                  >
+                    <Download size={16} />
+                  </Button> */}
                 </div>
               </div>
             </div>

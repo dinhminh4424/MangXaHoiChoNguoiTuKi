@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from "react";
 import { Card, Form, Button, Alert, Row, Col } from "react-bootstrap";
 import { accountService } from "../../services/accountService";
+import { useAuth } from "../../contexts/AuthContext";
 
 const PrivacyTab = ({ user }) => {
   const [settings, setSettings] = useState({
@@ -15,6 +16,8 @@ const PrivacyTab = ({ user }) => {
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState({ type: "", text: "" });
+
+  const { loadingUser123 } = useAuth();
 
   useEffect(() => {
     fetchSettings();
@@ -47,6 +50,7 @@ const PrivacyTab = ({ user }) => {
     try {
       await accountService.updateSettings(settings);
       setMessage({ type: "success", text: "Cập nhật cài đặt thành công!" });
+      await loadingUser123();
     } catch (error) {
       setMessage({
         type: "danger",

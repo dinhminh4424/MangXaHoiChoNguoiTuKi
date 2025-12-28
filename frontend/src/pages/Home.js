@@ -10,37 +10,43 @@ function Home() {
     {
       icon: "fas fa-shield-alt",
       title: "An toàn & Bảo mật",
-      description: "Môi trường được kiểm duyệt và bảo vệ, đảm bảo an toàn cho mọi thành viên trong cộng đồng.",
+      description:
+        "Môi trường được kiểm duyệt và bảo vệ, đảm bảo an toàn cho mọi thành viên trong cộng đồng.",
     },
     {
       icon: "fas fa-users",
       title: "Cộng đồng Thân thiện",
-      description: "Kết nối với những người có cùng trải nghiệm, chia sẻ và hỗ trợ lẫn nhau trong hành trình.",
+      description:
+        "Kết nối với những người có cùng trải nghiệm, chia sẻ và hỗ trợ lẫn nhau trong hành trình.",
     },
     {
       icon: "fas fa-heart",
       title: "Hỗ trợ Tâm lý",
-      description: "Truy cập các tài nguyên và công cụ hỗ trợ tâm lý, nhật ký cảm xúc và theo dõi sức khỏe tinh thần.",
+      description:
+        "Truy cập các tài nguyên và công cụ hỗ trợ tâm lý, nhật ký cảm xúc và theo dõi sức khỏe tinh thần.",
     },
     {
       icon: "fas fa-comments",
       title: "Giao tiếp Dễ dàng",
-      description: "Trò chuyện, chia sẻ bài viết và tương tác với bạn bè một cách thuận tiện và thân thiện.",
+      description:
+        "Trò chuyện, chia sẻ bài viết và tương tác với bạn bè một cách thuận tiện và thân thiện.",
     },
     {
       icon: "fas fa-users-cog",
       title: "Nhóm & Hoạt động",
-      description: "Tham gia các nhóm theo sở thích, tổ chức và tham gia các hoạt động cộng đồng ý nghĩa.",
+      description:
+        "Tham gia các nhóm theo sở thích, tổ chức và tham gia các hoạt động cộng đồng ý nghĩa.",
     },
     {
       icon: "fas fa-chart-line",
       title: "Theo dõi Tiến độ",
-      description: "Theo dõi và phân tích cảm xúc, tiến độ phát triển cá nhân qua các công cụ thống kê trực quan.",
+      description:
+        "Theo dõi và phân tích cảm xúc, tiến độ phát triển cá nhân qua các công cụ thống kê trực quan.",
     },
   ];
 
   return (
-    <div className={`home-container ${isAuthenticated ? 'authenticated' : ''}`}>
+    <div className={`home-container ${isAuthenticated ? "authenticated" : ""}`}>
       {!isAuthenticated && (
         <div id="container-inside">
           <div id="circle-small"></div>
@@ -53,16 +59,24 @@ function Home() {
       <div className="quote-wrapper">
         <Quote />
       </div>
-      
+
       <div className="hero-section">
         <div className="container">
           <div className="hero-content">
             <h1 className="hero-title">
-              Chào mừng đến với<br />
-              <span style={{ color: isAuthenticated ? "rgb(28, 140, 238)" : "#87ceeb" }}>Connect</span>
+              Wellcome
+              <br />
+              <span
+                style={{
+                  color: isAuthenticated ? "rgb(28, 140, 238)" : "#87ceeb",
+                }}
+              >
+                Connect
+              </span>
             </h1>
             <p className="hero-subtitle">
-              Mạng xã hội an toàn và thân thiện dành cho cộng đồng người tự kỷ.<br />
+              Mạng xã hội an toàn và thân thiện dành cho cộng đồng người tự kỷ.
+              <br />
               Nơi bạn có thể kết nối, chia sẻ và phát triển cùng nhau.
             </p>
             {!isAuthenticated && (
@@ -87,8 +101,8 @@ function Home() {
             <h2 className="features-title">Tính năng nổi bật</h2>
             <div className="features-grid">
               {features.map((feature, index) => (
-                <div 
-                  key={index} 
+                <div
+                  key={index}
                   className="feature-card"
                   style={{ animationDelay: `${index * 0.1}s` }}
                 >

@@ -71,7 +71,6 @@ const ChartContainer = ({
       <Card.Header className="bg-transparent border-0 py-3">
         <div className="row">
           <div className="col-12">
-            {" "}
             <div className="d-flex justify-content-between align-items-center">
               <div className="d-flex align-items-center">
                 <h5 className="mb-0 fw-semibold me-2">{title}</h5>
@@ -102,7 +101,7 @@ const ChartContainer = ({
                 )}
 
                 {/* Chart Type Selector */}
-                {customizable && chartId && (
+                {/* {customizable && chartId && (
                   <Dropdown className="me-2">
                     <Dropdown.Toggle
                       variant="outline-secondary"
@@ -132,7 +131,7 @@ const ChartContainer = ({
                       </Dropdown.Item>
                     </Dropdown.Menu>
                   </Dropdown>
-                )}
+                )} */}
               </div>
 
               <div className="d-flex align-items-center">
@@ -185,7 +184,7 @@ const ChartContainer = ({
           </div>
           <div className="col-12">
             {/* Quick Settings Bar */}
-            {!isCollapsed && customizable && chartConfig && chartId && (
+            {/* {!isCollapsed && customizable && chartConfig && chartId && (
               <div className="mt-2 pt-2 border-top">
                 <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
                   <small className="text-muted me-2">Tùy chỉnh:</small>
@@ -239,7 +238,7 @@ const ChartContainer = ({
                   )}
                 </div>
               </div>
-            )}
+            )} */}
           </div>
         </div>
       </Card.Header>

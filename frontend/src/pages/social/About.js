@@ -27,64 +27,81 @@ import "./About.css";
 const About = () => {
   const teamMembers = [
     {
-      name: "Dr. Sarah Johnson",
+      name: "Đinh Công Minh",
       role: "Chuyên gia tâm lý",
       specialization: "Chuyên gia can thiệp sớm",
       experience: "15 năm",
-      image: "/team/sarah.jpg",
+      image: "/assets/images/user/member/1.jpg",
       badges: ["PhD Tâm lý", "Chứng chỉ ABA"],
     },
     {
-      name: "Michael Chen",
+      name: "Minh Đinh công",
       role: "Kỹ sư công nghệ",
       specialization: "Phát triển nền tảng",
       experience: "8 năm",
-      image: "/team/michael.jpg",
+      image: "/assets/images/user/member/m2.jpg",
       badges: ["Thạc sĩ AI", "Chuyên gia UX"],
     },
     {
-      name: "Emily Davis",
+      name: "Công Minh Đinh",
       role: "Chuyên gia giáo dục",
       specialization: "Thiết kế chương trình",
       experience: "12 năm",
-      image: "/team/emily.jpg",
+      image: "/assets/images/user/member/2.jpg",
       badges: ["M.Ed Giáo dục", "Chứng chỉ TEACCH"],
     },
     {
-      name: "David Wilson",
+      name: "Minh Công Đinh",
       role: "Quản lý cộng đồng",
       specialization: "Hỗ trợ phụ huynh",
       experience: "10 năm",
-      image: "/team/david.jpg",
+      image: "/assets/images/user/member/m1.jpg",
       badges: ["MSW Công tác xã hội", "Chứng nhận CPS"],
     },
   ];
 
   const milestones = [
     {
-      year: "2020",
+      year: "9-2025",
       event: "Thành lập Autism Network",
       description: "Bắt đầu hành trình hỗ trợ cộng đồng tự kỷ",
     },
     {
-      year: "2021",
-      event: "Ra mắt nền tảng",
+      year: "9-2025",
+      event: "AI - Nhận diện cảm xúc",
       description: "Chính thức ra mắt phiên bản đầu tiên",
     },
     {
-      year: "2022",
-      event: "10,000 thành viên",
-      description: "Đạt mốc 10,000 thành viên đăng ký",
+      year: "10-2025",
+      event: "AI Chat - Hỗ trợ tư vấn",
+      description: "Ai giúp chia sẽ và hỗ trợ",
     },
     {
-      year: "2023",
-      event: "Mở rộng quốc tế",
-      description: "Mở rộng sang 5 quốc gia Đông Nam Á",
+      year: "10-2025",
+      event: "Chia sẽ khoảng khắc",
+      description: "Dùng TRang feed để chia sẻ ảnh, video, âm thanh",
     },
     {
-      year: "2024",
-      event: "AI hỗ trợ",
-      description: "Triển khai AI phân tích và hỗ trợ",
+      year: "10-2025",
+      event: "Hộp thoại nhắn tin",
+      description:
+        "Dùng có thể nhắn tin với nhau, chức năng nhắn tin ngẫu nhiên để chia sẽ câu truyện",
+    },
+    {
+      year: "10-2025",
+      event: "Hội Nhóm",
+      description: "Giúp người dùng chia sẽ tập chung vào 1 chủ đề nào đó",
+    },
+    {
+      year: "10-2025",
+      event: "Nhật kí",
+      description:
+        "Giúp người dùng ghi lại chi tiết ngày hôm nay - cải thiện mặt cảm xúc của mình",
+    },
+    {
+      year: "11-2025",
+      event: "Lịch Todo",
+      description: "Giúp người dùng lên lịch todo - thông báo công việc",
     },
   ];
 
@@ -161,7 +178,7 @@ const About = () => {
                 cộng đồng nơi mọi cá nhân trên phổ tự kỷ đều tìm thấy tiếng nói,
                 sự thấu hiểu và cơ hội phát triển.
               </p>
-              <div className="hero-stats">
+              {/* <div className="hero-stats">
                 <Row>
                   {stats.map((stat, index) => (
                     <Col xs={6} sm={3} key={index}>
@@ -175,7 +192,7 @@ const About = () => {
                     </Col>
                   ))}
                 </Row>
-              </div>
+              </div> */}
             </Col>
             <Col lg={6}>
               <div className="hero-visual">
@@ -321,7 +338,7 @@ const About = () => {
       </section>
 
       {/* Team Section */}
-      <section className="team-section py-5">
+      {/* <section className="team-section py-5">
         <Container>
           <Row className="text-center mb-5">
             <Col>
@@ -338,6 +355,7 @@ const About = () => {
                   <div className="team-image">
                     <div className="image-placeholder">
                       <People size={48} className="text-muted" />
+                     
                     </div>
                     <div className="team-experience">
                       <Clock size={14} className="me-1" />
@@ -367,7 +385,7 @@ const About = () => {
             ))}
           </Row>
         </Container>
-      </section>
+      </section> */}
 
       {/* Timeline Section */}
       <section className="timeline-section py-5 bg-light">

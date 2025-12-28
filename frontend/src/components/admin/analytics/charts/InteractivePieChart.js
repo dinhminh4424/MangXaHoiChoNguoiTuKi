@@ -348,7 +348,7 @@ const InteractivePieChart = ({
   return (
     <div className="interactive-pie-chart">
       {/* Control Panel */}
-      <Card className="mb-3 border-0">
+      {/* <Card className="mb-3 border-0">
         <Card.Body className="py-2">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <div className="d-flex align-items-center gap-2">
@@ -441,7 +441,7 @@ const InteractivePieChart = ({
             </div>
           </div>
         </Card.Body>
-      </Card>
+      </Card> */}
 
       {/* Pie Chart */}
       <ResponsiveContainer width="100%" height={400}>

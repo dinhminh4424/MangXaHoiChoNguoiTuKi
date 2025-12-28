@@ -4,7 +4,7 @@
 .todo-calendar-container {
   /* #50b5ff */
   /* background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); */
-  background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+
   min-height: 100vh;
   padding: 20px;
   font-family: "Segoe UI", "Inter", -apple-system, sans-serif;
@@ -180,7 +180,7 @@
   flex: 1;
   overflow: auto;
   padding: 24px;
-  background: #f8fafc;
+  /* background: #f8fafc; */
 }
 
 /* Todo Cards */
@@ -709,41 +709,16 @@
   }
 }
 
-/* Dark mode support */
-/* @media (prefers-color-scheme: dark) {
-  .todo-calendar-container {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-  }
+.fc-event-wrapper {
+  width: 100%;
+}
 
-  .calendar-wrapper,
-  .sidebar-container,
-  .stats-card,
-  .todo-card {
-    background: #1e293b;
-    color: #e2e8f0;
-  }
-
-  .fc-theme-standard td,
-  .fc-theme-standard th {
-    border-color: #334155;
-  }
-
-  .fc .fc-daygrid-day-number {
-    color: #cbd5e1;
-  }
-
-  .fc .fc-col-header-cell {
-    background: #0f172a;
-    color: #94a3b8;
-  }
-
-  .form-control-custom {
-    background: #1e293b;
-    border-color: #334155;
-    color: #e2e8f0;
-  }
-
-  .modal-custom .modal-body {
-    background: #1e293b;
-  }
-} */
+.fc-event-title {
+  display: block;
+  max-width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+  font-size: 12px;
+  line-height: 1.3;
+}

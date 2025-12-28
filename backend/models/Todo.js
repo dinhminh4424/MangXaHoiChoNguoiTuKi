@@ -109,7 +109,7 @@ const todoSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["scheduled", "in-progress", "done", "cancelled"],
+      enum: ["scheduled", "in-progress", "done", "cancelled", "overdue"],
       default: "scheduled",
     },
 
@@ -149,6 +149,52 @@ const todoSchema = new mongoose.Schema(
     subtasks: {
       type: [subtaskSchema],
       default: [],
+    },
+
+    // Field 1: Đánh dấu đã gửi thông báo chưa
+
+    reminderEnabled: {
+      type: Boolean,
+      default: true,
+    },
+
+    reminderSent: {
+      type: Boolean,
+      default: false,
+      index: true, // Tạo index để tìm kiếm nhanh
+    },
+
+    // Field 2: Thời gian gửi thông báo
+    reminderSentAt: {
+      type: Date,
+      default: null,
+    },
+
+    // Field 3: Số phút trước khi gửi reminder
+    reminderMinutes: {
+      type: Number,
+      default: 5, // Mặc định 5 phút
+      min: 0,
+      max: 1440, // Tối đa 24 giờ
+    },
+
+    // Field 4: Lần cuối kiểm tra reminder
+    lastReminderCheck: {
+      type: Date,
+      default: null,
+    },
+
+    // Field 5: Loại reminder
+    reminderType: {
+      type: String,
+      enum: ["email", "push", "both"],
+      default: "push",
+    },
+
+    // Field 6: Đánh dấu nếu reminder bị lỗi
+    reminderError: {
+      type: String,
+      default: null,
     },
   },
   {

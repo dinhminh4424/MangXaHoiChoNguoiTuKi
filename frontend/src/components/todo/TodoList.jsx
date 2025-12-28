@@ -51,6 +51,7 @@ import {
   CalendarClock,
 } from "lucide-react";
 import { todoService } from "../../services/todoService";
+import ReminderBadge from "./ReminderBadge";
 import "./TodoList.css";
 
 const TodoList = () => {
@@ -560,6 +561,11 @@ const TodoList = () => {
                           </p>
                         )}
                       </div>
+
+                      <td>
+                        {/* Thay badge cũ bằng */}
+                        <ReminderBadge todo={todo} size="sm" />
+                      </td>
 
                       {/* Actions Dropdown */}
                       {/* Actions Dropdown */}

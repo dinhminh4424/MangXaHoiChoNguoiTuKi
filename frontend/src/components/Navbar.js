@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link, useNavigate, useLocation } from "react-router-dom";
-import { useAuth, user } from "../contexts/AuthContext";
+import { useAuth } from "../contexts/AuthContext";
 import TooltipWrapper from "./TooltipWrapper";
 import UserNotifications from "./notification/UserNotifications";
 import FriendRequestsDropdown from "./friend/FriendRequestsDropdown";
@@ -272,7 +272,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                     !user.settings ? (
                       <FriendRequestsDropdown />
                     ) : (
-                      <p>Tắt tính năng bạn bè</p>
+                      <p></p>
                     )}
 
                     {(user.settings &&
@@ -280,7 +280,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
                     !user.settings ? (
                       <UserNotifications />
                     ) : (
-                      <p>Tắt tính năng thông báo</p>
+                      <p></p>
                     )}
                   </>
                 )}
@@ -437,7 +437,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
         </div>
       </div>
       {/* Right Sidebar - Simplified bên phair*/}
-      {user.active && (
+      {/* {user.active && (
         <div className="right-sidebar-mini right-sidebar">
           <div className="right-sidebar-panel p-0">
             <div className="card shadow-none">
@@ -460,7 +460,7 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
             </div>
           </div>
         </div>
-      )}
+      )} */}
     </>
   );
 }

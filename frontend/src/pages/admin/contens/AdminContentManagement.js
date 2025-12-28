@@ -9,6 +9,8 @@ import {
 
 import NotificationService from "../../../services/notificationService";
 
+import { Collapse } from "react-bootstrap";
+
 const DEFAULT_LIMIT = 12;
 
 const AdminContentManagement = () => {
@@ -37,6 +39,8 @@ const AdminContentManagement = () => {
   const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError] = useState(null);
   const [loadUpdate, setLoadUpdate] = useState(false);
+
+  const [showFilters, setShowFilters] = useState(true);
 
   const sentinelRef = useRef(null);
   const observerRef = useRef(null);
@@ -255,152 +259,173 @@ const AdminContentManagement = () => {
 
   // Render search và filters
   const renderFilters = () => (
-    <div className="filters-section">
-      <div className="row g-2 mb-3">
-        {/* Tìm kiếm cơ bản */}
-        <div className="col-md-3">
-          <input
-            className="form-control form-control-sm"
-            placeholder="Email người dùng"
-            value={filters.email}
-            onChange={(e) => handleFilterChange("email", e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <input
-            className="form-control form-control-sm"
-            placeholder="Username"
-            value={filters.username}
-            onChange={(e) => handleFilterChange("username", e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <input
-            className="form-control form-control-sm"
-            placeholder="ID bài viết"
-            value={filters.postId}
-            onChange={(e) => handleFilterChange("postId", e.target.value)}
-          />
-        </div>
-
-        {/* Lọc theo thời gian */}
-        <div className="col-md-3">
-          <input
-            type="date"
-            className="form-control form-control-sm"
-            placeholder="Từ ngày"
-            value={filters.fromDate}
-            onChange={(e) => handleFilterChange("fromDate", e.target.value)}
-          />
-        </div>
-        <div className="col-md-3">
-          <input
-            type="date"
-            className="form-control form-control-sm"
-            placeholder="Đến ngày"
-            value={filters.toDate}
-            onChange={(e) => handleFilterChange("toDate", e.target.value)}
-          />
-        </div>
-
-        {/* Lọc theo trạng thái */}
-        <div className="col-md-2">
-          <select
-            className="form-select form-select-sm"
-            value={filters.status}
-            onChange={(e) => handleFilterChange("status", e.target.value)}
-          >
-            <option value="">Tất cả trạng thái</option>
-            <option value="active">Đang hoạt động</option>
-            <option value="blocked">Đã chặn</option>
-          </select>
-        </div>
-
-        {/* Lọc theo số vi phạm */}
-        <div className="col-md-2">
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            placeholder="Số lỗi từ"
-            value={filters.minViolations}
-            onChange={(e) =>
-              handleFilterChange("minViolations", e.target.value)
-            }
-            min="0"
-          />
-        </div>
-        <div className="col-md-2">
-          <input
-            type="number"
-            className="form-control form-control-sm"
-            placeholder="Số lỗi đến"
-            value={filters.maxViolations}
-            onChange={(e) =>
-              handleFilterChange("maxViolations", e.target.value)
-            }
-            min="0"
-          />
-        </div>
-
-        {/* Lọc theo quyền riêng tư */}
-        <div className="col-md-2">
-          <select
-            className="form-select form-select-sm"
-            value={filters.privacy}
-            onChange={(e) => handleFilterChange("privacy", e.target.value)}
-          >
-            <option value="">Tất cả quyền riêng tư</option>
-            <option value="public">Công khai</option>
-            <option value="private">Riêng tư</option>
-            <option value="friends">Bạn bè</option>
-          </select>
-        </div>
-
-        {/* Lọc theo file đính kèm */}
-        <div className="col-md-2">
-          <select
-            className="form-select form-select-sm"
-            value={filters.hasFiles}
-            onChange={(e) => handleFilterChange("hasFiles", e.target.value)}
-          >
-            <option value="">Tất cả file</option>
-            <option value="true">Có file đính kèm</option>
-            <option value="false">Không có file</option>
-          </select>
-        </div>
-
-        {/* Nút reset */}
-        <div className="col-md-2">
-          <button
-            className="btn btn-sm btn-outline-secondary w-100"
-            onClick={handleResetFilters}
-          >
-            <i className="ri-refresh-line me-1"></i> Reset
-          </button>
+    <div className="filters-section" style={{ display: "block" }}>
+      <div
+        className="card-header bg-white d-flex justify-content-between align-items-center cursor-pointer"
+        onClick={() => setShowFilters((v) => !v)}
+        style={{ cursor: "pointer" }}
+      >
+        <h6 className="mb-0">
+          <i className="ri-filter-3-line me-2 text-primary"></i>
+          Bộ lọc tìm kiếm
+        </h6>
+        <div className="d-flex align-items-center gap-2">
+          <i
+            className={`ri-arrow-${showFilters ? "up" : "down"}-s-line`}
+            style={{ fontSize: "18px" }}
+          ></i>
         </div>
       </div>
+      <Collapse in={showFilters}>
+        <div>
+          <div className="row g-2 mb-3">
+            {/* Tìm kiếm cơ bản */}
+            <div className="col-md-3">
+              <input
+                className="form-control form-control-sm"
+                placeholder="Email người dùng"
+                value={filters.email}
+                onChange={(e) => handleFilterChange("email", e.target.value)}
+              />
+            </div>
+            <div className="col-md-3">
+              <input
+                className="form-control form-control-sm"
+                placeholder="Username"
+                value={filters.username}
+                onChange={(e) => handleFilterChange("username", e.target.value)}
+              />
+            </div>
+            <div className="col-md-3">
+              <input
+                className="form-control form-control-sm"
+                placeholder="ID bài viết"
+                value={filters.postId}
+                onChange={(e) => handleFilterChange("postId", e.target.value)}
+              />
+            </div>
 
-      {/* Thống kê nhanh */}
-      <div className="row g-2 mb-3">
-        <div className="col-12">
-          <div className="d-flex justify-content-between align-items-center">
-            <small className="text-muted">
-              Tìm thấy {pagination.total} bài viết
-            </small>
-            <div className="d-flex gap-2">
-              <span className="badge bg-primary">
-                Đang hoạt động: {posts.filter((p) => !p.isBlocked).length}
-              </span>
-              <span className="badge bg-danger">
-                Đã chặn: {posts.filter((p) => p.isBlocked).length}
-              </span>
-              <span className="badge bg-warning">
-                Có vi phạm: {posts.filter((p) => p.violationCount > 0).length}
-              </span>
+            {/* Lọc theo thời gian */}
+            <div className="col-md-3">
+              <input
+                type="date"
+                className="form-control form-control-sm"
+                placeholder="Từ ngày"
+                value={filters.fromDate}
+                onChange={(e) => handleFilterChange("fromDate", e.target.value)}
+              />
+            </div>
+            <div className="col-md-3">
+              <input
+                type="date"
+                className="form-control form-control-sm"
+                placeholder="Đến ngày"
+                value={filters.toDate}
+                onChange={(e) => handleFilterChange("toDate", e.target.value)}
+              />
+            </div>
+
+            {/* Lọc theo trạng thái */}
+            <div className="col-md-2">
+              <select
+                className="form-select form-select-sm"
+                value={filters.status}
+                onChange={(e) => handleFilterChange("status", e.target.value)}
+              >
+                <option value="">Tất cả trạng thái</option>
+                <option value="active">Đang hoạt động</option>
+                <option value="blocked">Đã chặn</option>
+              </select>
+            </div>
+
+            {/* Lọc theo số vi phạm */}
+            <div className="col-md-2">
+              <input
+                type="number"
+                className="form-control form-control-sm"
+                placeholder="Số lỗi từ"
+                value={filters.minViolations}
+                onChange={(e) =>
+                  handleFilterChange("minViolations", e.target.value)
+                }
+                min="0"
+              />
+            </div>
+            <div className="col-md-2">
+              <input
+                type="number"
+                className="form-control form-control-sm"
+                placeholder="Số lỗi đến"
+                value={filters.maxViolations}
+                onChange={(e) =>
+                  handleFilterChange("maxViolations", e.target.value)
+                }
+                min="0"
+              />
+            </div>
+
+            {/* Lọc theo quyền riêng tư */}
+            <div className="col-md-2">
+              <select
+                className="form-select form-select-sm"
+                value={filters.privacy}
+                onChange={(e) => handleFilterChange("privacy", e.target.value)}
+              >
+                <option value="">Tất cả quyền riêng tư</option>
+                <option value="public">Công khai</option>
+                <option value="private">Riêng tư</option>
+                <option value="friends">Bạn bè</option>
+              </select>
+            </div>
+
+            {/* Lọc theo file đính kèm */}
+            <div className="col-md-2">
+              <select
+                className="form-select form-select-sm"
+                value={filters.hasFiles}
+                onChange={(e) => handleFilterChange("hasFiles", e.target.value)}
+              >
+                <option value="">Tất cả file</option>
+                <option value="true">Có file đính kèm</option>
+                <option value="false">Không có file</option>
+              </select>
+            </div>
+
+            {/* Nút reset */}
+            <div className="col-md-2">
+              <button
+                className="btn btn-sm btn-outline-secondary w-100"
+                onClick={handleResetFilters}
+              >
+                <i className="ri-refresh-line me-1"></i> Reset
+              </button>
+            </div>
+          </div>
+
+          {/* Thống kê nhanh */}
+          <div className="row g-2 mb-3">
+            <div className="col-12">
+              <div className="d-flex justify-content-between align-items-center">
+                <small className="text-muted">
+                  Tìm thấy {pagination.total} bài viết
+                </small>
+                <div className="d-flex gap-2">
+                  <span className="badge bg-primary">
+                    Đang hoạt động: {posts.filter((p) => !p.isBlocked).length}
+                  </span>
+                  <span className="badge bg-danger">
+                    Đã chặn: {posts.filter((p) => p.isBlocked).length}
+                  </span>
+                  <span className="badge bg-warning">
+                    Có vi phạm:{" "}
+                    {posts.filter((p) => p.violationCount > 0).length}
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      </Collapse>
     </div>
   );
 
@@ -646,8 +671,8 @@ const AdminContentManagement = () => {
   );
 
   return (
-    <div className="admin-content-management">
-      <div className="page-header">
+    <div className="admin-content-management container">
+      <div className="page-header mt-3">
         <h1>Quản lý bài viết</h1>
         <p>Quản lý và kiểm duyệt tất cả bài viết trong hệ thống</p>
       </div>

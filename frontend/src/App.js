@@ -13,6 +13,7 @@ import { ChatProvider } from "./contexts/ChatContext";
 import { ProfileProvider } from "./contexts/ProfileContext";
 import { JournalProvider } from "./contexts/JournalContext";
 import { PostProvider } from "./contexts/PostContext";
+import { ReminderProvider } from "./contexts/ReminderContext"; // THÊM DÒNG NÀY
 import AuthCallback from "./components/AuthCallback";
 import SOSButton from "./components/SOSButton";
 
@@ -215,6 +216,20 @@ const routeConfigs = [
     component: CreatePost,
     layout: UserLayout,
   },
+  // Protected User Routes - Groups đỡ sửa
+  { path: "/groups", component: Group, layout: UserLayout },
+  { path: "/groups/:groupId", component: GroupDetailPage, layout: UserLayout },
+  {
+    path: "/groups/:groupId/statistics",
+    component: GroupStatistics,
+    layout: UserLayout,
+  },
+  { path: "/create-group", component: CreateGroupPage, layout: UserLayout },
+  {
+    path: "/groups/createPost/:groupId",
+    component: CreatePost,
+    layout: UserLayout,
+  },
 
   // Protected User Routes - Journal
   { path: "/journal", component: Journal, layout: UserLayout },
@@ -384,6 +399,24 @@ const routeConfigs = [
     isAdmin: true,
   }, // ImageManager
   {
+    path: "/admin/emergencies/:id",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
+    path: "/admin/emergency",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  }, // ImageManager
+  {
+    path: "/admin/emergency/:id",
+    component: AdminEmergencyManagement, // SOS Management
+    layout: AdminLayout,
+    isAdmin: true,
+  },
+  {
     path: "/admin/imageManager",
     component: ImageManager,
     layout: AdminLayout,
@@ -518,7 +551,9 @@ function AppProviders({ children }) {
       <ProfileProvider>
         <ChatProvider>
           <JournalProvider>
-            <PostProvider>{children}</PostProvider>
+            <PostProvider>
+              <ReminderProvider>{children}</ReminderProvider>
+            </PostProvider>
           </JournalProvider>
         </ChatProvider>
       </ProfileProvider>

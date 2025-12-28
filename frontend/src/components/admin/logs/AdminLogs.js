@@ -1,5 +1,5 @@
 // export default AdminLogs;
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import {
   Card,
   Form,
@@ -12,9 +12,9 @@ import {
   Accordion,
   Spinner,
   Modal,
-  Tab,
-  Tabs,
+  Collapse,
 } from "react-bootstrap";
+import { Filter, ChevronUp, ChevronDown } from "lucide-react";
 import { getUserById, getSystemLogs } from "../../../services/adminService";
 
 // Helper functions
@@ -309,7 +309,7 @@ const UserInfoModal = ({ show, onHide, user }) => {
           <Col md={3} className="text-center">
             {user.profile?.avatar ? (
               <img
-                src={user.profile.avatar}
+                src={user.profile?.avatar}
                 alt="Avatar"
                 className="rounded-circle mb-3"
                 style={{ width: "100px", height: "100px", objectFit: "cover" }}
@@ -378,6 +378,8 @@ const AdminLogs = () => {
   const [showUserModal, setShowUserModal] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null);
   const [stats, setStats] = useState({}); // Thêm state cho thống kê
+
+  const [showFilter, setShowFilter] = useState(true);
 
   const [filters, setFilters] = useState({
     page: 1,
@@ -505,17 +507,6 @@ const AdminLogs = () => {
     return stats.typeCounts?.[type] || 0;
   };
 
-  if (loading) {
-    return (
-      <Card className="shadow-sm border-0">
-        <Card.Body className="text-center py-5">
-          <Spinner animation="border" variant="primary" />
-          <p className="mt-3 text-muted">Đang tải client logs...</p>
-        </Card.Body>
-      </Card>
-    );
-  }
-
   return (
     <div className="admin-logs">
       <Card className="shadow-sm border-0 mt-2">
@@ -538,149 +529,172 @@ const AdminLogs = () => {
           </div>
         </Card.Header>
 
+        {/* lỌC */}
+
         <Card.Body className="p-4">
           {/* Bộ lọc */}
           <Card className="mb-4 border-0 shadow-sm">
-            <Card.Header className="bg-light border-0">
-              <h6 className="mb-0 fw-semibold">
-                <i className="fas fa-filter text-primary me-2"></i>
-                Bộ lọc tìm kiếm Client Logs
-              </h6>
+            <Card.Header
+              className="bg-white d-flex justify-content-between align-items-center cursor-pointer"
+              onClick={() => setShowFilter((v) => !v)}
+            >
+              <h5 className="mb-0">
+                <Filter size={20} className="me-2 text-primary" />
+                Bộ lọc tìm kiếm
+              </h5>
+
+              {showFilter ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
             </Card.Header>
-            <Card.Body>
-              <Row className="g-3">
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">Level</Form.Label>
-                  <Form.Select
-                    value={filters.level}
-                    onChange={(e) =>
-                      handleFilterChange("level", e.target.value)
-                    }
-                    size="sm"
-                  >
-                    <option value="">Tất cả level</option>
-                    <option value="error">Error</option>
-                    <option value="warn">Warning</option>
-                    <option value="info">Info</option>
-                    <option value="debug">Debug</option>
-                  </Form.Select>
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">Loại</Form.Label>
-                  <Form.Select
-                    value={filters.type}
-                    onChange={(e) => handleFilterChange("type", e.target.value)}
-                    size="sm"
-                  >
-                    {logTypes.map((type) => (
-                      <option key={type.value} value={type.value}>
-                        {type.icon && <i className={`${type.icon} me-2`}></i>}
-                        {type.label}
-                      </option>
-                    ))}
-                  </Form.Select>
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">Event</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Event..."
-                    value={filters.event}
-                    onChange={(e) =>
-                      handleFilterChange("event", e.target.value)
-                    }
-                    size="sm"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">User ID</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="User ID..."
-                    value={filters.userId}
-                    onChange={(e) =>
-                      handleFilterChange("userId", e.target.value)
-                    }
-                    size="sm"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">Từ ngày</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={filters.startDate}
-                    onChange={(e) =>
-                      handleFilterChange("startDate", e.target.value)
-                    }
-                    size="sm"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">Đến ngày</Form.Label>
-                  <Form.Control
-                    type="date"
-                    value={filters.endDate}
-                    onChange={(e) =>
-                      handleFilterChange("endDate", e.target.value)
-                    }
-                    size="sm"
-                  />
-                </Col>
-              </Row>
-              <Row className="g-3 mt-2">
-                <Col md={6}>
-                  <Form.Label className="small fw-medium">Tìm kiếm</Form.Label>
-                  <Form.Control
-                    type="text"
-                    placeholder="Tìm theo event, description, IP, type..."
-                    value={filters.search}
-                    onChange={(e) =>
-                      handleFilterChange("search", e.target.value)
-                    }
-                    size="sm"
-                  />
-                </Col>
-                <Col md={2}>
-                  <Form.Label className="small fw-medium">
-                    Số bản ghi
-                  </Form.Label>
-                  <Form.Select
-                    value={filters.limit}
-                    onChange={(e) =>
-                      handleFilterChange("limit", parseInt(e.target.value))
-                    }
-                    size="sm"
-                  >
-                    <option value={10}>10</option>
-                    <option value={20}>20</option>
-                    <option value={50}>50</option>
-                    <option value={100}>100</option>
-                  </Form.Select>
-                </Col>
-                <Col md={2} className="d-flex align-items-end">
-                  <Button
-                    variant="outline-danger"
-                    size="sm"
-                    onClick={clearFilters}
-                    className="w-100"
-                  >
-                    <i className="fas fa-times me-2"></i>
-                    Xóa lọc
-                  </Button>
-                </Col>
-                <Col md={2} className="d-flex align-items-end">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    onClick={fetchLogs}
-                    className="w-100"
-                  >
-                    <i className="fas fa-search me-2"></i>
-                    Tìm kiếm
-                  </Button>
-                </Col>
-              </Row>
-            </Card.Body>
+            <Collapse in={showFilter}>
+              <div>
+                <Card.Body>
+                  <Row className="g-3">
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">Level</Form.Label>
+                      <Form.Select
+                        value={filters.level}
+                        onChange={(e) =>
+                          handleFilterChange("level", e.target.value)
+                        }
+                        size="sm"
+                      >
+                        <option value="">Tất cả level</option>
+                        <option value="error">Error</option>
+                        <option value="warn">Warning</option>
+                        <option value="info">Info</option>
+                        <option value="debug">Debug</option>
+                      </Form.Select>
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">Loại</Form.Label>
+                      <Form.Select
+                        value={filters.type}
+                        onChange={(e) =>
+                          handleFilterChange("type", e.target.value)
+                        }
+                        size="sm"
+                      >
+                        {logTypes.map((type) => (
+                          <option key={type.value} value={type.value}>
+                            {type.icon && (
+                              <i className={`${type.icon} me-2`}></i>
+                            )}
+                            {type.label}
+                          </option>
+                        ))}
+                      </Form.Select>
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">Event</Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Event..."
+                        value={filters.event}
+                        onChange={(e) =>
+                          handleFilterChange("event", e.target.value)
+                        }
+                        size="sm"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">
+                        User ID
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="User ID..."
+                        value={filters.userId}
+                        onChange={(e) =>
+                          handleFilterChange("userId", e.target.value)
+                        }
+                        size="sm"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">
+                        Từ ngày
+                      </Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={filters.startDate}
+                        onChange={(e) =>
+                          handleFilterChange("startDate", e.target.value)
+                        }
+                        size="sm"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">
+                        Đến ngày
+                      </Form.Label>
+                      <Form.Control
+                        type="date"
+                        value={filters.endDate}
+                        onChange={(e) =>
+                          handleFilterChange("endDate", e.target.value)
+                        }
+                        size="sm"
+                      />
+                    </Col>
+                  </Row>
+                  <Row className="g-3 mt-2">
+                    <Col md={6}>
+                      <Form.Label className="small fw-medium">
+                        Tìm kiếm
+                      </Form.Label>
+                      <Form.Control
+                        type="text"
+                        placeholder="Tìm theo event, description, IP, type..."
+                        value={filters.search}
+                        onChange={(e) =>
+                          handleFilterChange("search", e.target.value)
+                        }
+                        size="sm"
+                      />
+                    </Col>
+                    <Col md={2}>
+                      <Form.Label className="small fw-medium">
+                        Số bản ghi
+                      </Form.Label>
+                      <Form.Select
+                        value={filters.limit}
+                        onChange={(e) =>
+                          handleFilterChange("limit", parseInt(e.target.value))
+                        }
+                        size="sm"
+                      >
+                        <option value={10}>10</option>
+                        <option value={20}>20</option>
+                        <option value={50}>50</option>
+                        <option value={100}>100</option>
+                      </Form.Select>
+                    </Col>
+                    <Col md={2} className="d-flex align-items-end">
+                      <Button
+                        variant="outline-danger"
+                        size="sm"
+                        onClick={clearFilters}
+                        className="w-100"
+                      >
+                        <i className="fas fa-times me-2"></i>
+                        Xóa lọc
+                      </Button>
+                    </Col>
+                    <Col md={2} className="d-flex align-items-end">
+                      <Button
+                        variant="primary"
+                        size="sm"
+                        onClick={fetchLogs}
+                        className="w-100"
+                      >
+                        <i className="fas fa-search me-2"></i>
+                        Tìm kiếm
+                      </Button>
+                    </Col>
+                  </Row>
+                </Card.Body>
+              </div>
+            </Collapse>
           </Card>
 
           {/* Thống kê nhanh */}
@@ -704,12 +718,7 @@ const AdminLogs = () => {
                           <i className={`${type.icon} fa-2x`}></i>
                         </div>
                         <h6 className="mb-1">{type.label}</h6>
-                        <Badge
-                          bg={getLogTypeColor(type.value)}
-                          className="fs-6"
-                        >
-                          {getTypeCount(type.value)}
-                        </Badge>
+
                         {filters.type === type.value && (
                           <div className="mt-2">
                             <Badge bg="primary" className="small">
@@ -786,7 +795,14 @@ const AdminLogs = () => {
           )}
         </Card.Body>
       </Card>
-
+      {loading && (
+        <Card className="shadow-sm border-0">
+          <Card.Body className="text-center py-5">
+            <Spinner animation="border" variant="primary" />
+            <p className="mt-3 text-muted">Đang tải client logs...</p>
+          </Card.Body>
+        </Card>
+      )}
       {/* Modal xem thông tin user */}
       <UserInfoModal
         show={showUserModal}

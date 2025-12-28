@@ -480,7 +480,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                 </li>
 
                 {/* Quick Stats */}
-                <li className="nav-item dropdown">
+                {/* <li className="nav-item dropdown">
                   <a
                     href="#"
                     className="dropdown-toggle"
@@ -524,12 +524,21 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                       </div>
                     </div>
                   </div>
+                </li> */}
+                <li>
+                  <Link
+                    to="/admin/analytics/overview"
+                    className="d-flex align-items-center"
+                    title="Tổng Quan"
+                  >
+                    <i className="ri-bar-chart-line"></i>
+                  </Link>
                 </li>
 
                 <AdminNotifications />
 
                 {/* System Status */}
-                <li className="nav-item dropdown">
+                {/* <li className="nav-item dropdown">
                   <a
                     href="#"
                     className="dropdown-toggle"
@@ -575,6 +584,16 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                       </div>
                     </div>
                   </div>
+                </li> */}
+
+                <li>
+                  <Link
+                    to="/admin/backup"
+                    className="d-flex align-items-center"
+                    title="Backup & Restore"
+                  >
+                    <i className="ri-server-line"></i>
+                  </Link>
                 </li>
 
                 {/* User Profile Dropdown */}
@@ -618,7 +637,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                       </div>
                       <div className="card-body p-0">
                         <Link
-                          to="/admin/profile"
+                          to="/profile"
                           className="iq-sub-card iq-bg-primary-hover"
                         >
                           <div className="d-flex align-items-center">
@@ -634,7 +653,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
                           </div>
                         </Link>
                         <Link
-                          to="/admin/settings"
+                          to="/admin/security"
                           className="iq-sub-card iq-bg-warning-hover"
                         >
                           <div className="d-flex align-items-center">
@@ -684,7 +703,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
       </div>
 
       {/* Right Sidebar - Simplified for Admin */}
-      <div className="right-sidebar-mini right-sidebar">
+      {/* <div className="right-sidebar-mini right-sidebar">
         <div className="right-sidebar-panel p-0">
           <div className="card shadow-none">
             <div className="card-body p-0">
@@ -720,7 +739,7 @@ function NavbarAdmin({ isCollapsed, onToggleSidebar }) {
             </div>
           </div>
         </div>
-      </div>
+      </div> */}
     </>
   );
 }

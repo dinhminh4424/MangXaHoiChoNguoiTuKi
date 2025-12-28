@@ -184,8 +184,8 @@ const Feed = () => {
 
   // Handle post deletion
   const handleDeletePost = async (postId) => {
-    const confirm = window.confirm("Bạn có chắc chắn muốn xoá bài viết này?");
-    if (!confirm) return;
+    // const confirm = window.confirm("Bạn có chắc chắn muốn xoá bài viết này?");
+    // if (!confirm) return;
 
     try {
       const res = await deletePost(postId);

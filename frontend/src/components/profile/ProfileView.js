@@ -30,7 +30,7 @@ const ProfileView = ({ userId }) => {
     updateImageCover,
     reportUser,
   } = useProfile();
-  const { user: currentUser, setUser, checkIn } = useAuth(); // ✅ Lấy hàm checkIn và setUser từ context
+  const { user: currentUser, setUser, checkIn, loadingUser123 } = useAuth(); // ✅ Lấy hàm checkIn và setUser từ context
 
   const [showModalUpdateCoverPhoto, setShowModalUpdateCoverPhoto] =
     React.useState(false);
@@ -56,6 +56,8 @@ const ProfileView = ({ userId }) => {
   const [followLoading, setFollowLoading] = React.useState(false);
   const [showFriendsModal, setShowFriendsModal] = React.useState(false);
   const [showFollowersModal, setShowFollowersModal] = React.useState(false);
+
+  const [coverPhoto, setCoverPhoto] = React.useState("");
 
   const [imageCover, setImageCover] = React.useState("");
   const [imageAvatar, setImageAvatar] = React.useState("");
@@ -213,6 +215,10 @@ const ProfileView = ({ userId }) => {
         setShowModalUpdateCoverPhoto(false);
         setFile(null);
         setPreviewImage(null);
+        if (result.user?.profile?.coverPhoto) {
+          setCoverPhoto(result.user?.profile.coverPhoto);
+        }
+        loadingUser123(); // ✅ Lấy hàm checkIn và setUser từ context
 
         // ✅ THÊM: Thông báo thành công
         NotificationService.success({
@@ -301,6 +307,10 @@ const ProfileView = ({ userId }) => {
   React.useEffect(() => {
     if (userId) {
       viewUserProfile(userId);
+      console.log("viewedUser 19585695695685252:", viewedUser);
+      if (viewedUser?.profile?.coverPhoto) {
+        setCoverPhoto(viewedUser?.profile?.coverPhoto);
+      }
     }
   }, [userId, viewUserProfile]);
 
@@ -663,6 +673,7 @@ const ProfileView = ({ userId }) => {
   // };
 
   console.log("viewedUser:", viewedUser);
+
   const getBackgroundStyle = (user) => {
     return user?.profile?.coverPhoto
       ? {
@@ -683,6 +694,27 @@ const ProfileView = ({ userId }) => {
             "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
         };
   };
+
+  // const getBackgroundStyle = (user) => {
+  //   return coverPhoto
+  //     ? {
+  //         backgroundImage: `url("${coverPhoto}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : imageCover
+  //     ? {
+  //         backgroundImage: `url("${imageCover}")`,
+  //         backgroundSize: "100% 100%",
+  //         backgroundPosition: "center",
+  //         backgroundRepeat: "no-repeat",
+  //       }
+  //     : {
+  //         backgroundImage:
+  //           "linear-gradient(135deg, #667eea 0%, #674ba2ff 100%)",
+  //       };
+  // };
 
   return (
     <div className="card border-0 shadow-lg overflow-hidden">
@@ -1484,7 +1516,7 @@ const ProfileView = ({ userId }) => {
                   variant="primary"
                   size="sm"
                   onClick={() => {
-                    const profileUrl = `${process.env.REACT_APP_FRONTEND_URL}/profile/${userId}`;
+                    const profileUrl = `${process.env.REACT_APP_URL}/profile/${userId}`;
                     navigator.clipboard.writeText(profileUrl);
                     NotificationService.success({
                       title: "Đã sao chép!",

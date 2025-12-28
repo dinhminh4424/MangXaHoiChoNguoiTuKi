@@ -183,14 +183,14 @@ const EnhancedFilterPanel = ({
             )}
           </div>
           <div className="d-flex gap-1">
-            <Button
+            {/* <Button
               variant="outline-primary"
               size="sm"
               onClick={savePreset}
               disabled={Object.keys(localFilters).length === 0}
             >
               <Save size={14} />
-            </Button>
+            </Button> */}
             <Button
               variant="outline-danger"
               size="sm"

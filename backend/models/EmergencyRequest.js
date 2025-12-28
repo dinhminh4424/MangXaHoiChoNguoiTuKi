@@ -63,7 +63,20 @@ const EmergencyRequestSchema = new mongoose.Schema(
     // Thông tin thiết bị
     deviceInfo: {
       battery: { type: Number },
-      network: { type: String, enum: ["wifi", "cellular", "unknown"] },
+      network: {
+        type: String,
+        enum: [
+          "wifi",
+          "cellular",
+          "2g",
+          "3g",
+          "4g",
+          "5g",
+          "slow-2g",
+          "unknown",
+        ],
+        default: "unknown",
+      },
       os: { type: String },
       appVersion: { type: String },
     },

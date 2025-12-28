@@ -86,6 +86,9 @@ const notificationSchema = new mongoose.Schema(
 
         // Khẩn cấp
         "SOS_EMERGENCY", // Tín hiệu SOS khẩn cấp
+
+        // Todo
+        "TODO_REMINDER", // Nhắc nhở sự kiện todo
       ],
     },
 

@@ -185,3 +185,50 @@
     margin-bottom: 1rem;
   }
 }
+/* Thêm vào TodoForm.css */
+
+/* Reminder Settings Styling */
+.reminder-time-buttons .btn {
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.reminder-time-buttons .btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 123, 255, 0.2);
+}
+
+.reminder-preview {
+  border-left: 4px solid #0dcaf0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.reminder-preview .alert-primary {
+  background-color: rgba(13, 202, 240, 0.1);
+  border: 1px solid rgba(13, 202, 240, 0.2);
+}
+
+/* Form Range Custom Styling */
+.form-range::-webkit-slider-thumb {
+  background: #0dcaf0;
+  border: 2px solid #fff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-range::-webkit-slider-track {
+  background: #dee2e6;
+}
+
+/* Checkbox/Radio Styling */
+.form-check-input:checked {
+  background-color: #0dcaf0;
+  border-color: #0dcaf0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .reminder-time-buttons .btn {
+    flex: 1;
+    min-width: 80px;
+  }
+}

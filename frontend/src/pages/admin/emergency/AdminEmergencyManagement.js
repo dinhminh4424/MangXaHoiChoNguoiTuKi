@@ -16,6 +16,7 @@ import {
   ProgressBar,
   Dropdown,
   ListGroup,
+  Collapse,
 } from "react-bootstrap";
 import {
   Search,
@@ -25,13 +26,11 @@ import {
   Phone,
   User,
   Clock,
-  Calendar,
   Eye,
   Trash2,
   CheckCircle,
   XCircle,
   Navigation,
-  Mail,
   FileText,
   Download,
   BarChart3,
@@ -39,17 +38,22 @@ import {
   Shield,
   Activity,
   RefreshCw,
-  ChevronRight,
   ExternalLink,
-  Bell,
   BellOff,
   Wifi,
   WifiOff,
   Battery,
-  BatteryCharging,
+  X,
+  Calendar,
+  ArrowUpDown,
+  Hash,
+  RotateCcw,
 } from "lucide-react";
+import { ChevronUp, ChevronDown } from "lucide-react";
 import api from "../../../services/api";
 import "./AdminEmergencyManagement.css";
+
+import { useParams } from "react-router-dom";
 
 const AdminEmergencyManagement = () => {
   const [emergencies, setEmergencies] = useState([]);
@@ -58,6 +62,9 @@ const AdminEmergencyManagement = () => {
   const [pagination, setPagination] = useState({});
   const [stats, setStats] = useState({});
   const [advancedStats, setAdvancedStats] = useState({});
+
+  // Param từ URL
+  const { id } = useParams();
 
   // Filters
   const [filters, setFilters] = useState({
@@ -74,6 +81,7 @@ const AdminEmergencyManagement = () => {
     respondedBy: "",
     hasLocation: "",
     isSilent: "",
+    emergencyId: "" || id,
   });
 
   // Modals
@@ -89,6 +97,7 @@ const AdminEmergencyManagement = () => {
   const [selectedLocation, setSelectedLocation] = useState(null);
   const [responders, setResponders] = useState([]);
   const [responseLoading, setResponseLoading] = useState(false);
+  const [showFilter, setShowFilter] = useState(true);
 
   // Response form
   const [responseForm, setResponseForm] = useState({
@@ -178,6 +187,7 @@ const AdminEmergencyManagement = () => {
       respondedBy: "",
       hasLocation: "",
       isSilent: "",
+      emergencyId: "",
     });
   };
 
@@ -653,185 +663,649 @@ const AdminEmergencyManagement = () => {
       </Row>
 
       {/* Enhanced Filters */}
-      <Card className="emergency-filter-card">
-        <Card.Header className="bg-white">
+      {/* <Card className="emergency-filter-card">
+        <Card.Header
+          className="bg-white d-flex justify-content-between align-items-center cursor-pointer"
+          onClick={() => setShowFilter((v) => !v)}
+        >
           <h5 className="mb-0">
             <Filter size={20} className="me-2 text-danger" />
             Bộ lọc tìm kiếm
           </h5>
+
+          {showFilter ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
         </Card.Header>
-        <Card.Body>
-          <Row className="g-3">
-            <Col md={3}>
-              <Form.Label>
-                <Search size={14} className="me-1" />
-                Tìm kiếm
-              </Form.Label>
-              <InputGroup>
-                <Form.Control
-                  type="text"
-                  placeholder="SĐT, tin nhắn, địa chỉ..."
-                  value={filters.search}
-                  onChange={(e) => handleFilterChange("search", e.target.value)}
-                />
-              </InputGroup>
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <AlertTriangle size={14} className="me-1" />
-                Loại yêu cầu
-              </Form.Label>
-              <Form.Select
-                value={filters.type}
-                onChange={(e) => handleFilterChange("type", e.target.value)}
-              >
-                <option value="">Tất cả loại</option>
-                <option value="panic">Khẩn cấp</option>
-                <option value="medical">Y tế</option>
-                <option value="fire">Hỏa hoạn</option>
-                <option value="police">Cảnh sát</option>
-                <option value="other">Khác</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <Shield size={14} className="me-1" />
-                Trạng thái
-              </Form.Label>
-              <Form.Select
-                value={filters.status}
-                onChange={(e) => handleFilterChange("status", e.target.value)}
-              >
-                <option value="">Tất cả trạng thái</option>
-                <option value="pending">Đang chờ</option>
-                <option value="responded">Đã tiếp nhận</option>
-                <option value="in_progress">Đang xử lý</option>
-                <option value="resolved">Đã giải quyết</option>
-                <option value="cancelled">Đã hủy</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>
-                <Activity size={14} className="me-1" />
-                Độ ưu tiên
-              </Form.Label>
-              <Form.Select
-                value={filters.priority}
-                onChange={(e) => handleFilterChange("priority", e.target.value)}
-              >
-                <option value="">Tất cả độ ưu tiên</option>
-                <option value="critical">Khẩn cấp</option>
-                <option value="high">Cao</option>
-                <option value="medium">Trung bình</option>
-                <option value="low">Thấp</option>
-              </Form.Select>
-            </Col>
-            <Col md={3}>
-              <Form.Label>Thời gian</Form.Label>
-              <Row>
-                <Col>
+        <Collapse in={showFilter}>
+          <div>
+            <Card.Body>
+              <Row className="g-3">
+                <Col md={3}>
+                  <Form.Label>
+                    <Search size={14} className="me-1" />
+                    Tìm kiếm
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="SĐT, tin nhắn, địa chỉ..."
+                      value={filters.search}
+                      onChange={(e) =>
+                        handleFilterChange("search", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </Col>
+                <Col md={3}>
+                  <Form.Label>
+                    <Search size={14} className="me-1" />
+                    ID của yêu cầu
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="ID của yêu cầu..."
+                      value={filters.emergencyId}
+                      onChange={(e) =>
+                        handleFilterChange("emergencyId", e.target.value)
+                      }
+                    />
+                  </InputGroup>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>
+                    <AlertTriangle size={14} className="me-1" />
+                    Loại yêu cầu
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange("type", e.target.value)}
+                  >
+                    <option value="">Tất cả loại</option>
+                    <option value="panic">Khẩn cấp</option>
+                    <option value="medical">Y tế</option>
+                    <option value="fire">Hỏa hoạn</option>
+                    <option value="police">Cảnh sát</option>
+                    <option value="other">Khác</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>
+                    <Shield size={14} className="me-1" />
+                    Trạng thái
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.status}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending">Đang chờ</option>
+                    <option value="responded">Đã tiếp nhận</option>
+                    <option value="in_progress">Đang xử lý</option>
+                    <option value="resolved">Đã giải quyết</option>
+                    <option value="cancelled">Đã hủy</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>
+                    <Activity size={14} className="me-1" />
+                    Độ ưu tiên
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.priority}
+                    onChange={(e) =>
+                      handleFilterChange("priority", e.target.value)
+                    }
+                  >
+                    <option value="">Tất cả độ ưu tiên</option>
+                    <option value="critical">Khẩn cấp</option>
+                    <option value="high">Cao</option>
+                    <option value="medium">Trung bình</option>
+                    <option value="low">Thấp</option>
+                  </Form.Select>
+                </Col>
+                <Col md={3}>
+                  <Form.Label>Thời gian</Form.Label>
+                  <Row>
+                    <Col>
+                      <Form.Control
+                        type="date"
+                        placeholder="Từ ngày"
+                        value={filters.dateFrom}
+                        onChange={(e) =>
+                          handleFilterChange("dateFrom", e.target.value)
+                        }
+                      />
+                    </Col>
+                    <Col>
+                      <Form.Control
+                        type="date"
+                        placeholder="Đến ngày"
+                        value={filters.dateTo}
+                        onChange={(e) =>
+                          handleFilterChange("dateTo", e.target.value)
+                        }
+                      />
+                    </Col>
+                  </Row>
+                </Col>
+              </Row>
+
+              <Row className="g-3 mt-2">
+                <Col md={2}>
+                  <Form.Label>Vị trí</Form.Label>
+                  <Form.Select
+                    value={filters.hasLocation}
+                    onChange={(e) =>
+                      handleFilterChange("hasLocation", e.target.value)
+                    }
+                  >
+                    <option value="">Tất cả vị trí</option>
+                    <option value="true">Có vị trí</option>
+                    <option value="false">Không có vị trí</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Chế độ</Form.Label>
+                  <Form.Select
+                    value={filters.isSilent}
+                    onChange={(e) =>
+                      handleFilterChange("isSilent", e.target.value)
+                    }
+                  >
+                    <option value="">Tất cả chế độ</option>
+                    <option value="true">Im lặng</option>
+                    <option value="false">Có âm thanh</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Sắp xếp</Form.Label>
+                  <Form.Select
+                    value={`${filters.sortBy}-${filters.sortOrder}`}
+                    onChange={(e) => {
+                      const [sortBy, sortOrder] = e.target.value.split("-");
+                      handleFilterChange("sortBy", sortBy);
+                      handleFilterChange("sortOrder", sortOrder);
+                    }}
+                  >
+                    <option value="createdAt-desc">Mới nhất</option>
+                    <option value="createdAt-asc">Cũ nhất</option>
+                    <option value="priority-desc">Ưu tiên cao nhất</option>
+                    <option value="updatedAt-desc">Cập nhật gần nhất</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2} className="d-flex align-items-end">
+                  <Button
+                    variant="outline-secondary"
+                    className="w-100"
+                    onClick={handleResetFilters}
+                  >
+                    <Trash2 size={16} className="me-1" />
+                    Xóa lọc
+                  </Button>
+                </Col>
+                <Col md={2} className="d-flex align-items-end">
+                  <Button
+                    variant="danger"
+                    className="w-100"
+                    onClick={fetchEmergencies}
+                  >
+                    <Search size={16} className="me-1" />
+                    Tìm kiếm
+                  </Button>
+                </Col>
+                <Col md={2} className="d-flex align-items-end">
+                  <Button
+                    variant="outline-primary"
+                    className="w-100"
+                    onClick={() => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: "pending",
+                        priority: "critical",
+                      }));
+                    }}
+                  >
+                    <AlertTriangle size={16} className="me-1" />
+                    Khẩn cấp
+                  </Button>
+                </Col>
+              </Row>
+            </Card.Body>
+          </div>
+        </Collapse>
+      </Card> */}
+      <Card className="emergency-filter-card border-0 shadow-sm">
+        <Card.Header
+          className="bg-white d-flex justify-content-between align-items-center cursor-pointer py-3"
+          onClick={() => setShowFilter((v) => !v)}
+        >
+          <h5 className="mb-0 d-flex align-items-center">
+            <Filter size={20} className="me-2 text-danger" />
+            Bộ lọc tìm kiếm
+            {Object.values(filters).some(
+              (value) => value !== "" && value !== null && value !== undefined
+            ) && (
+              <Badge bg="danger" pill className="ms-2">
+                Đang lọc
+              </Badge>
+            )}
+          </h5>
+          <div className="d-flex align-items-center">
+            <Button
+              variant="link"
+              size="sm"
+              className="text-decoration-none me-2"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResetFilters();
+              }}
+            >
+              <Trash2 size={16} className="me-1" />
+              Xóa lọc
+            </Button>
+            {showFilter ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
+          </div>
+        </Card.Header>
+
+        <Collapse in={showFilter}>
+          <Card.Body className="pt-3">
+            {/* Hàng 1: Tìm kiếm chung và ID */}
+            <Row className="g-3 mb-4">
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Search size={14} className="me-1" />
+                    Tìm kiếm chung
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="SĐT, tin nhắn, địa chỉ..."
+                      value={filters.search}
+                      onChange={(e) =>
+                        handleFilterChange("search", e.target.value)
+                      }
+                      className="py-2"
+                    />
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Tìm kiếm theo nội dung, SĐT hoặc địa chỉ
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Hash size={14} className="me-1" />
+                    ID yêu cầu
+                  </Form.Label>
+                  <InputGroup>
+                    <Form.Control
+                      type="text"
+                      placeholder="Nhập ID yêu cầu cụ thể..."
+                      value={filters.emergencyId}
+                      onChange={(e) =>
+                        handleFilterChange("emergencyId", e.target.value)
+                      }
+                      className="py-2"
+                    />
+                    {filters.emergencyId && (
+                      <Button
+                        variant="outline-secondary"
+                        onClick={() => handleFilterChange("emergencyId", "")}
+                      >
+                        <X size={16} />
+                      </Button>
+                    )}
+                  </InputGroup>
+                  <Form.Text className="text-muted">
+                    Tìm kiếm chính xác theo ID
+                  </Form.Text>
+                </Form.Group>
+              </Col>
+
+              <Col md={2}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Calendar size={14} className="me-1" />
+                    Từ ngày
+                  </Form.Label>
                   <Form.Control
                     type="date"
-                    placeholder="Từ ngày"
                     value={filters.dateFrom}
                     onChange={(e) =>
                       handleFilterChange("dateFrom", e.target.value)
                     }
+                    className="py-2"
                   />
-                </Col>
-                <Col>
+                </Form.Group>
+              </Col>
+
+              <Col md={2}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Calendar size={14} className="me-1" />
+                    Đến ngày
+                  </Form.Label>
                   <Form.Control
                     type="date"
-                    placeholder="Đến ngày"
                     value={filters.dateTo}
                     onChange={(e) =>
                       handleFilterChange("dateTo", e.target.value)
                     }
+                    className="py-2"
                   />
-                </Col>
-              </Row>
-            </Col>
-          </Row>
+                </Form.Group>
+              </Col>
+            </Row>
 
-          <Row className="g-3 mt-2">
-            <Col md={2}>
-              <Form.Label>Vị trí</Form.Label>
-              <Form.Select
-                value={filters.hasLocation}
-                onChange={(e) =>
-                  handleFilterChange("hasLocation", e.target.value)
-                }
-              >
-                <option value="">Tất cả vị trí</option>
-                <option value="true">Có vị trí</option>
-                <option value="false">Không có vị trí</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Chế độ</Form.Label>
-              <Form.Select
-                value={filters.isSilent}
-                onChange={(e) => handleFilterChange("isSilent", e.target.value)}
-              >
-                <option value="">Tất cả chế độ</option>
-                <option value="true">Im lặng</option>
-                <option value="false">Có âm thanh</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Sắp xếp</Form.Label>
-              <Form.Select
-                value={`${filters.sortBy}-${filters.sortOrder}`}
-                onChange={(e) => {
-                  const [sortBy, sortOrder] = e.target.value.split("-");
-                  handleFilterChange("sortBy", sortBy);
-                  handleFilterChange("sortOrder", sortOrder);
-                }}
-              >
-                <option value="createdAt-desc">Mới nhất</option>
-                <option value="createdAt-asc">Cũ nhất</option>
-                <option value="priority-desc">Ưu tiên cao nhất</option>
-                <option value="updatedAt-desc">Cập nhật gần nhất</option>
-              </Form.Select>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button
-                variant="outline-secondary"
-                className="w-100"
-                onClick={handleResetFilters}
-              >
-                <Trash2 size={16} className="me-1" />
-                Xóa lọc
-              </Button>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button
-                variant="danger"
-                className="w-100"
-                onClick={fetchEmergencies}
-              >
-                <Search size={16} className="me-1" />
-                Tìm kiếm
-              </Button>
-            </Col>
-            <Col md={2} className="d-flex align-items-end">
-              <Button
-                variant="outline-primary"
-                className="w-100"
-                onClick={() => {
-                  setFilters((prev) => ({
-                    ...prev,
-                    status: "pending",
-                    priority: "critical",
-                  }));
-                }}
-              >
-                <AlertTriangle size={16} className="me-1" />
-                Khẩn cấp
-              </Button>
-            </Col>
-          </Row>
-        </Card.Body>
+            {/* Hàng 2: Bộ lọc chính */}
+            <Row className="g-3 mb-4">
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <AlertTriangle size={14} className="me-1 text-warning" />
+                    Loại yêu cầu
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.type}
+                    onChange={(e) => handleFilterChange("type", e.target.value)}
+                    className="py-2"
+                  >
+                    <option value="">Tất cả loại</option>
+                    <option value="panic" className="text-danger">
+                      Khẩn cấp
+                    </option>
+                    <option value="medical" className="text-primary">
+                      Y tế
+                    </option>
+                    <option value="fire" className="text-danger">
+                      Hỏa hoạn
+                    </option>
+                    <option value="police" className="text-primary">
+                      Cảnh sát
+                    </option>
+                    <option value="other" className="text-secondary">
+                      Khác
+                    </option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Shield size={14} className="me-1 text-success" />
+                    Trạng thái
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.status}
+                    onChange={(e) =>
+                      handleFilterChange("status", e.target.value)
+                    }
+                    className="py-2"
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="pending" className="text-warning">
+                      Đang chờ
+                    </option>
+                    <option value="responded" className="text-info">
+                      Đã tiếp nhận
+                    </option>
+                    <option value="in_progress" className="text-primary">
+                      Đang xử lý
+                    </option>
+                    <option value="resolved" className="text-success">
+                      Đã giải quyết
+                    </option>
+                    <option value="cancelled" className="text-secondary">
+                      Đã hủy
+                    </option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <Activity size={14} className="me-1 text-danger" />
+                    Độ ưu tiên
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.priority}
+                    onChange={(e) =>
+                      handleFilterChange("priority", e.target.value)
+                    }
+                    className="py-2"
+                  >
+                    <option value="">Tất cả độ ưu tiên</option>
+                    <option value="critical" className="text-danger fw-bold">
+                      Khẩn cấp
+                    </option>
+                    <option value="high" className="text-warning fw-bold">
+                      Cao
+                    </option>
+                    <option value="medium" className="text-primary">
+                      Trung bình
+                    </option>
+                    <option value="low" className="text-success">
+                      Thấp
+                    </option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={3}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <MapPin size={14} className="me-1 text-info" />
+                    Vị trí
+                  </Form.Label>
+                  <Form.Select
+                    value={filters.hasLocation}
+                    onChange={(e) =>
+                      handleFilterChange("hasLocation", e.target.value)
+                    }
+                    className="py-2"
+                  >
+                    <option value="">Tất cả vị trí</option>
+                    <option value="true"> Có vị trí</option>
+                    <option value="false"> Không có vị trí</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+            </Row>
+
+            {/* Hàng 3: Sắp xếp và nút hành động */}
+            <Row className="g-3 align-items-end">
+              <Col md={4}>
+                <Form.Group>
+                  <Form.Label className="fw-semibold">
+                    <ArrowUpDown size={14} className="me-1" />
+                    Sắp xếp
+                  </Form.Label>
+                  <Form.Select
+                    value={`${filters.sortBy}-${filters.sortOrder}`}
+                    onChange={(e) => {
+                      const [sortBy, sortOrder] = e.target.value.split("-");
+                      handleFilterChange("sortBy", sortBy);
+                      handleFilterChange("sortOrder", sortOrder);
+                    }}
+                    className="py-2"
+                  >
+                    <option value="createdAt-desc">Mới nhất (mặc định)</option>
+                    <option value="createdAt-asc">Cũ nhất</option>
+                    <option value="priority-desc"> Ưu tiên cao nhất</option>
+                    <option value="updatedAt-desc"> Cập nhật gần nhất</option>
+                  </Form.Select>
+                </Form.Group>
+              </Col>
+
+              <Col md={8}>
+                <div className="d-flex gap-2 justify-content-end">
+                  <Button
+                    variant="outline-secondary"
+                    className="px-4 py-2 d-flex align-items-center"
+                    onClick={() => {
+                      // Reset tất cả filter trừ ID nếu đang có
+                      const newFilters = {
+                        search: "",
+                        dateFrom: "",
+                        dateTo: "",
+                        type: "",
+                        status: "",
+                        priority: "",
+                        hasLocation: "",
+                        sortBy: "createdAt",
+                        sortOrder: "desc",
+                        emergencyId: filters.emergencyId, // Giữ lại ID nếu có
+                      };
+                      setFilters(newFilters);
+                    }}
+                  >
+                    <RotateCcw size={16} className="me-2" />
+                    Giữ ID, reset khác
+                  </Button>
+
+                  <Button
+                    variant="outline-primary"
+                    className="px-4 py-2 d-flex align-items-center"
+                    onClick={() => {
+                      setFilters((prev) => ({
+                        ...prev,
+                        status: "pending",
+                        priority: "critical",
+                        hasLocation: "true",
+                      }));
+                    }}
+                  >
+                    <AlertTriangle size={16} className="me-2" />
+                    Khẩn cấp chờ xử lý
+                  </Button>
+
+                  <Button
+                    variant="danger"
+                    className="px-4 py-2 d-flex align-items-center fw-semibold"
+                    onClick={fetchEmergencies}
+                  >
+                    <Search size={16} className="me-2" />
+                    Tìm kiếm
+                  </Button>
+                </div>
+              </Col>
+            </Row>
+
+            {/* Hiển thị bộ lọc hiện tại */}
+            {Object.values(filters).some(
+              (value) => value !== "" && value !== null && value !== undefined
+            ) && (
+              <div className="mt-4 pt-3 border-top">
+                <small className="text-muted d-block mb-2">
+                  Bộ lọc đang áp dụng:
+                </small>
+                <div className="d-flex flex-wrap gap-2">
+                  {filters.emergencyId && (
+                    <Badge bg="primary" className="d-flex align-items-center">
+                      <Hash size={12} className="me-1" />
+                      ID: {filters.emergencyId}
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("emergencyId", "")}
+                      />
+                    </Badge>
+                  )}
+
+                  {filters.type && (
+                    <Badge bg="warning" className="d-flex align-items-center">
+                      Loại:{" "}
+                      {filters.type === "panic"
+                        ? "Khẩn cấp"
+                        : filters.type === "medical"
+                        ? "Y tế"
+                        : filters.type === "fire"
+                        ? "Hỏa hoạn"
+                        : filters.type === "police"
+                        ? "Cảnh sát"
+                        : "Khác"}
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("type", "")}
+                      />
+                    </Badge>
+                  )}
+
+                  {filters.status && (
+                    <Badge bg="info" className="d-flex align-items-center">
+                      Trạng thái:{" "}
+                      {filters.status === "pending"
+                        ? "Đang chờ"
+                        : filters.status === "responded"
+                        ? "Đã tiếp nhận"
+                        : filters.status === "in_progress"
+                        ? "Đang xử lý"
+                        : filters.status === "resolved"
+                        ? "Đã giải quyết"
+                        : "Đã hủy"}
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("status", "")}
+                      />
+                    </Badge>
+                  )}
+
+                  {filters.priority && (
+                    <Badge bg="danger" className="d-flex align-items-center">
+                      Ưu tiên:{" "}
+                      {filters.priority === "critical"
+                        ? "Khẩn cấp"
+                        : filters.priority === "high"
+                        ? "Cao"
+                        : filters.priority === "medium"
+                        ? "Trung bình"
+                        : "Thấp"}
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("priority", "")}
+                      />
+                    </Badge>
+                  )}
+
+                  {filters.search && (
+                    <Badge bg="secondary" className="d-flex align-items-center">
+                      <Search size={12} className="me-1" />
+                      Tìm: {filters.search.substring(0, 15)}...
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("search", "")}
+                      />
+                    </Badge>
+                  )}
+
+                  {filters.hasLocation && (
+                    <Badge bg="success" className="d-flex align-items-center">
+                      <MapPin size={12} className="me-1" />
+                      Vị trí:{" "}
+                      {filters.hasLocation === "true" ? "Có" : "Không có"}
+                      <X
+                        size={12}
+                        className="ms-1 cursor-pointer"
+                        onClick={() => handleFilterChange("hasLocation", "")}
+                      />
+                    </Badge>
+                  )}
+                </div>
+              </div>
+            )}
+          </Card.Body>
+        </Collapse>
       </Card>
 
       {/* Emergencies Table */}
@@ -1197,7 +1671,7 @@ const AdminEmergencyManagement = () => {
         centered
         className="emergency-modal-enhanced"
       >
-        <Modal.Header className="emergency-modal-header-enhanced">
+        <Modal.Header className="emergency-modal-header-enhanced" closeButton>
           <Modal.Title>
             <AlertTriangle size={24} className="me-2" />
             Chi tiết Yêu cầu Khẩn cấp
@@ -2079,7 +2553,7 @@ const AdminEmergencyManagement = () => {
                 <small className="text-muted">Xử lý dữ liệu</small>
               </Button>
             </Col>
-            <Col md={6}>
+            {/* <Col md={6}>
               <Button
                 variant="outline-info"
                 className="w-100 py-3"
@@ -2100,7 +2574,7 @@ const AdminEmergencyManagement = () => {
                 <div>Excel</div>
                 <small className="text-muted">Định dạng Excel đầy đủ</small>
               </Button>
-            </Col>
+            </Col> */}
           </Row>
         </Modal.Body>
         <Modal.Footer className="bg-light">

@@ -20,6 +20,7 @@ import Badge from "react-bootstrap/Badge";
 import Row from "react-bootstrap/Row";
 import Col from "react-bootstrap/Col";
 import Image from "react-bootstrap/Image";
+import { Collapse } from "react-bootstrap";
 
 const AdminGroupManagement = () => {
   const [groups, setGroups] = useState([]);
@@ -39,6 +40,8 @@ const AdminGroupManagement = () => {
     sortBy: "createdAt",
     sortOrder: "desc",
   });
+
+  const [showFilter, setShowFilter] = useState(true);
 
   // Modal states
   const [showGroupModal, setShowGroupModal] = useState(false);
@@ -579,95 +582,118 @@ const AdminGroupManagement = () => {
 
       {/* Advanced Filters */}
       <Card className="mb-4">
-        <Card.Body>
-          <Row className="g-3">
-            <Col md={3}>
-              <Form.Label>Tìm kiếm</Form.Label>
-              <Form.Control
-                type="text"
-                placeholder="Tìm theo tên, mô tả..."
-                value={filters.search}
-                onChange={handleSearch}
-              />
-            </Col>
-            <Col md={2}>
-              <Form.Label>Thể loại</Form.Label>
-              <Form.Select
-                value={filters.category}
-                onChange={handleCategoryFilter}
-              >
-                <option value="">Tất cả thể loại</option>
-                {categoryOptions.map((cat) => (
-                  <option key={cat} value={cat}>
-                    {categoryDisplayNames[cat]}
-                  </option>
-                ))}
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Quyền riêng tư</Form.Label>
-              <Form.Select
-                value={filters.visibility}
-                onChange={handleVisibilityFilter}
-              >
-                <option value="">Tất cả</option>
-                <option value="public">Công khai</option>
-                <option value="private">Riêng tư</option>
-                <option value="invite">Theo lời mời</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Trạng thái</Form.Label>
-              <Form.Select value={filters.status} onChange={handleStatusFilter}>
-                <option value="">Tất cả trạng thái</option>
-                <option value="active">Đang hoạt động</option>
-                <option value="inactive">Vô hiệu hóa</option>
-              </Form.Select>
-            </Col>
-            <Col md={2}>
-              <Form.Label>Sắp xếp</Form.Label>
-              <Form.Select
-                value={`${filters.sortBy}-${filters.sortOrder}`}
-                onChange={handleSortChange}
-              >
-                <option value="createdAt-desc">Mới nhất</option>
-                <option value="createdAt-asc">Cũ nhất</option>
-                <option value="memberCount-desc">Nhiều thành viên</option>
-                <option value="memberCount-asc">Ít thành viên</option>
-                <option value="name-asc">Tên A-Z</option>
-                <option value="name-desc">Tên Z-A</option>
-              </Form.Select>
-            </Col>
-            <Col md={1} className="d-flex align-items-end">
-              <Button
-                variant="outline-secondary"
-                className="w-100"
-                onClick={handleResetFilters}
-                title="Reset bộ lọc"
-              >
-                <i className="ri-refresh-line"></i>
-              </Button>
-            </Col>
-          </Row>
-          <Row className="g-3 mt-2">
-            <Col md={3}>
-              <Form.Label>Từ ngày</Form.Label>
-              <Form.Control
-                type="date"
-                value={filters.dateFrom}
-                onChange={(e) => handleDateFilter("dateFrom", e.target.value)}
-              />
-            </Col>
-            <Col md={3}>
-              <Form.Label>Đến ngày</Form.Label>
-              <Form.Control
-                type="date"
-                value={filters.dateTo}
-                onChange={(e) => handleDateFilter("dateTo", e.target.value)}
-              />
-            </Col>
-          </Row>
-        </Card.Body>
+        <Card.Header
+          className="bg-white d-flex justify-content-between align-items-center cursor-pointer"
+          onClick={() => setShowFilter((v) => !v)}
+        >
+          <h5 className="mb-0">
+            <i className="ri-filter-3-line me-2 text-primary"></i>
+            Bộ lọc
+          </h5>
+
+          <i
+            className={`ri-arrow-${showFilter ? "up" : "down"}-s-line`}
+            style={{ fontSize: 20 }}
+          ></i>
+        </Card.Header>
+        <Collapse in={showFilter}>
+          <div>
+            <Card.Body>
+              <Row className="g-3">
+                <Col md={3}>
+                  <Form.Label>Tìm kiếm</Form.Label>
+                  <Form.Control
+                    type="text"
+                    placeholder="Tìm theo tên, mô tả..."
+                    value={filters.search}
+                    onChange={handleSearch}
+                  />
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Thể loại</Form.Label>
+                  <Form.Select
+                    value={filters.category}
+                    onChange={handleCategoryFilter}
+                  >
+                    <option value="">Tất cả thể loại</option>
+                    {categoryOptions.map((cat) => (
+                      <option key={cat} value={cat}>
+                        {categoryDisplayNames[cat]}
+                      </option>
+                    ))}
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Quyền riêng tư</Form.Label>
+                  <Form.Select
+                    value={filters.visibility}
+                    onChange={handleVisibilityFilter}
+                  >
+                    <option value="">Tất cả</option>
+                    <option value="public">Công khai</option>
+                    <option value="private">Riêng tư</option>
+                    <option value="invite">Theo lời mời</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Trạng thái</Form.Label>
+                  <Form.Select
+                    value={filters.status}
+                    onChange={handleStatusFilter}
+                  >
+                    <option value="">Tất cả trạng thái</option>
+                    <option value="active">Đang hoạt động</option>
+                    <option value="inactive">Vô hiệu hóa</option>
+                  </Form.Select>
+                </Col>
+                <Col md={2}>
+                  <Form.Label>Sắp xếp</Form.Label>
+                  <Form.Select
+                    value={`${filters.sortBy}-${filters.sortOrder}`}
+                    onChange={handleSortChange}
+                  >
+                    <option value="createdAt-desc">Mới nhất</option>
+                    <option value="createdAt-asc">Cũ nhất</option>
+                    <option value="memberCount-desc">Nhiều thành viên</option>
+                    <option value="memberCount-asc">Ít thành viên</option>
+                    <option value="name-asc">Tên A-Z</option>
+                    <option value="name-desc">Tên Z-A</option>
+                  </Form.Select>
+                </Col>
+                <Col md={1} className="d-flex align-items-end">
+                  <Button
+                    variant="outline-secondary"
+                    className="w-100"
+                    onClick={handleResetFilters}
+                    title="Reset bộ lọc"
+                  >
+                    <i className="ri-refresh-line"></i>
+                  </Button>
+                </Col>
+              </Row>
+              <Row className="g-3 mt-2">
+                <Col md={3}>
+                  <Form.Label>Từ ngày</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={filters.dateFrom}
+                    onChange={(e) =>
+                      handleDateFilter("dateFrom", e.target.value)
+                    }
+                  />
+                </Col>
+                <Col md={3}>
+                  <Form.Label>Đến ngày</Form.Label>
+                  <Form.Control
+                    type="date"
+                    value={filters.dateTo}
+                    onChange={(e) => handleDateFilter("dateTo", e.target.value)}
+                  />
+                </Col>
+              </Row>
+            </Card.Body>
+          </div>
+        </Collapse>
       </Card>
 
       {loading && (

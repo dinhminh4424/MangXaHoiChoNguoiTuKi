@@ -41,7 +41,10 @@ import {
   Users,
   User,
   Plane,
+  Eye,
   FileText,
+  Bell,
+  Mail,
 } from "lucide-react";
 import { todoService } from "../../services/todoService";
 import "./TodoForm.css";
@@ -59,6 +62,7 @@ const TodoForm = ({ todoId }) => {
     variant: "success",
   });
 
+  // Trong phần state của TodoForm.jsx
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -74,6 +78,10 @@ const TodoForm = ({ todoId }) => {
     isImportant: false,
     status: "scheduled",
     notes: "",
+    // === THÊM CÁC FIELD MỚI ===
+    reminderEnabled: true, // Bật/tắt reminder
+    reminderMinutes: 5, // Mặc định 5 phút
+    reminderType: "push", // Loại reminder
   });
 
   const [newTag, setNewTag] = useState("");
@@ -88,6 +96,7 @@ const TodoForm = ({ todoId }) => {
     }
   }, [actualTodoId]);
 
+  // Trong hàm fetchTodoDetail của TodoForm.jsx
   const fetchTodoDetail = async () => {
     try {
       setLoading(true);
@@ -109,6 +118,10 @@ const TodoForm = ({ todoId }) => {
         isImportant: todo.isImportant || false,
         status: todo.status || "scheduled",
         notes: todo.notes || "",
+        // === THÊM CÁC FIELD MỚI ===
+        reminderEnabled: todo.reminderEnabled !== false, // Mặc định true
+        reminderMinutes: todo.reminderMinutes || 5,
+        reminderType: todo.reminderType || "push",
       });
 
       setSubtasks(todo.subtasks || []);
@@ -136,12 +149,40 @@ const TodoForm = ({ todoId }) => {
     }, 3000);
   };
 
+  // Trong hàm handleSubmit của TodoForm.jsx
   const handleSubmit = async (e) => {
     e.preventDefault();
 
     if (!formData.title.trim()) {
       showAlertMessage("Vui lòng nhập tiêu đề công việc", "danger");
       return;
+    }
+
+    // Validation: Nếu có start time và reminder bật
+    if (formData.start && formData.reminderEnabled) {
+      const startTime = new Date(formData.start);
+      const now = new Date();
+
+      if (startTime <= now) {
+        showAlertMessage(
+          "Thời gian bắt đầu phải ở tương lai để gửi reminder",
+          "warning"
+        );
+        return;
+      }
+
+      // Tính thời gian reminder
+      const reminderTime = new Date(
+        startTime.getTime() - formData.reminderMinutes * 60000
+      );
+
+      if (reminderTime <= now) {
+        showAlertMessage(
+          `Không thể đặt reminder ${formData.reminderMinutes} phút trước vì thời gian đã qua`,
+          "warning"
+        );
+        return;
+      }
     }
 
     try {
@@ -153,6 +194,10 @@ const TodoForm = ({ todoId }) => {
           title: st.title,
           completed: st.completed || false,
         })),
+        // Đảm bảo các field reminder được gửi
+        reminderEnabled: formData.reminderEnabled,
+        reminderMinutes: formData.reminderMinutes,
+        reminderType: formData.reminderType,
       };
 
       if (isEditing) {
@@ -825,6 +870,238 @@ const TodoForm = ({ todoId }) => {
                     className="form-control-lg"
                   />
                 </Form.Group>
+              </Card.Body>
+            </Card>
+
+            <Card className="todo-form-card mb-4">
+              <Card.Header className="todo-card-header">
+                <div className="d-flex align-items-center">
+                  <div
+                    className="todo-card-icon bg-info"
+                    style={{ backgroundColor: "#0dcaf0" }}
+                  >
+                    <Clock size={20} />
+                  </div>
+                  <h5 className="mb-0 ms-3">Cài đặt nhắc nhở</h5>
+                </div>
+              </Card.Header>
+              <Card.Body>
+                {/* Toggle Reminder */}
+                <Form.Group className="mb-3">
+                  <Form.Check
+                    type="switch"
+                    id="reminderEnabled"
+                    label={
+                      <span className="fw-medium d-flex align-items-center">
+                        <div className="me-2">
+                          {formData.reminderEnabled ? (
+                            <Badge bg="success" className="p-1">
+                              <CheckCircle size={14} />
+                            </Badge>
+                          ) : (
+                            <Badge bg="secondary" className="p-1">
+                              <XCircle size={14} />
+                            </Badge>
+                          )}
+                        </div>
+                        <span>Bật nhắc nhở</span>
+                      </span>
+                    }
+                    checked={formData.reminderEnabled}
+                    onChange={(e) =>
+                      setFormData({
+                        ...formData,
+                        reminderEnabled: e.target.checked,
+                      })
+                    }
+                  />
+                  <Form.Text className="text-muted">
+                    Hệ thống sẽ gửi thông báo trước khi công việc bắt đầu
+                  </Form.Text>
+                </Form.Group>
+
+                {/* Reminder Time Selection */}
+                {formData.reminderEnabled && (
+                  <>
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        <Clock className="me-2" size={16} />
+                        Nhắc nhở trước
+                      </Form.Label>
+                      <div className="reminder-time-buttons">
+                        <div className="d-flex flex-wrap gap-2 mb-2">
+                          {[1, 5, 10, 15, 30, 60].map((minutes) => (
+                            <Button
+                              key={minutes}
+                              variant={
+                                formData.reminderMinutes === minutes
+                                  ? "primary"
+                                  : "outline-primary"
+                              }
+                              size="sm"
+                              onClick={() =>
+                                setFormData({
+                                  ...formData,
+                                  reminderMinutes: minutes,
+                                })
+                              }
+                              className="px-3"
+                            >
+                              {minutes} phút
+                            </Button>
+                          ))}
+                        </div>
+                        <div className="mt-2">
+                          <Form.Range
+                            min="1"
+                            max="120"
+                            step="1"
+                            value={formData.reminderMinutes}
+                            onChange={(e) =>
+                              setFormData({
+                                ...formData,
+                                reminderMinutes: parseInt(e.target.value),
+                              })
+                            }
+                            className="form-range"
+                          />
+                          <div className="d-flex justify-content-between mt-1">
+                            <small className="text-muted">1 phút</small>
+                            <small className="fw-bold">
+                              {formData.reminderMinutes} phút
+                            </small>
+                            <small className="text-muted">2 giờ</small>
+                          </div>
+                        </div>
+                      </div>
+                    </Form.Group>
+
+                    {/* Reminder Type */}
+                    <Form.Group className="mb-3">
+                      <Form.Label className="fw-semibold">
+                        <Bell className="me-2" size={16} />
+                        Loại thông báo
+                      </Form.Label>
+                      <div>
+                        {[
+                          {
+                            value: "push",
+                            label: "Thông báo web",
+                            icon: <Bell size={14} />,
+                          },
+                          {
+                            value: "email",
+                            label: "Email",
+                            icon: <Mail size={14} />,
+                          },
+                          {
+                            value: "both",
+                            label: "Cả hai",
+                            icon: <Bell size={14} />,
+                          },
+                        ].map((type) => (
+                          <Form.Check
+                            key={type.value}
+                            type="radio"
+                            id={`reminder-${type.value}`}
+                            name="reminderType"
+                            label={
+                              <span className="d-flex align-items-center">
+                                <span className="me-2">{type.icon}</span>
+                                {type.label}
+                              </span>
+                            }
+                            checked={formData.reminderType === type.value}
+                            onChange={() =>
+                              setFormData({
+                                ...formData,
+                                reminderType: type.value,
+                              })
+                            }
+                            className="mb-2"
+                          />
+                        ))}
+                      </div>
+                    </Form.Group>
+
+                    {isEditing && (
+                      <div className="mt-4 pt-3 border-top">
+                        <Button
+                          variant="outline-warning"
+                          size="sm"
+                          onClick={async () => {
+                            if (
+                              window.confirm("Gửi test reminder ngay bây giờ?")
+                            ) {
+                              try {
+                                setLoading(true);
+                                const result = await todoService.testReminder(
+                                  actualTodoId
+                                );
+                                showAlertMessage(
+                                  result.message || "Đã gửi test reminder"
+                                );
+                              } catch (error) {
+                                showAlertMessage(error.message, "danger");
+                              } finally {
+                                setLoading(false);
+                              }
+                            }
+                          }}
+                          disabled={loading}
+                          className="w-100"
+                        >
+                          <Bell size={16} className="me-2" />
+                          Test gửi reminder ngay
+                        </Button>
+                        <Form.Text className="text-muted small">
+                          Chỉ dành cho testing - sẽ gửi thông báo ngay lập tức
+                        </Form.Text>
+                      </div>
+                    )}
+
+                    {/* Reminder Preview */}
+                    {formData.start && (
+                      <div className="reminder-preview p-3 bg-light rounded">
+                        <h6 className="fw-semibold mb-2">
+                          <Eye className="me-2" size={16} />
+                          Xem trước
+                        </h6>
+                        <p className="mb-2 small">
+                          Bạn sẽ nhận thông báo vào lúc:
+                        </p>
+                        <div className="alert alert-primary py-2">
+                          <div className="d-flex align-items-center">
+                            <Clock size={14} className="me-2" />
+                            <strong>
+                              {(() => {
+                                try {
+                                  const startTime = new Date(formData.start);
+                                  const reminderTime = new Date(
+                                    startTime.getTime() -
+                                      formData.reminderMinutes * 60000
+                                  );
+                                  return reminderTime.toLocaleString("vi-VN");
+                                } catch (e) {
+                                  return "Chưa có thời gian bắt đầu";
+                                }
+                              })()}
+                            </strong>
+                          </div>
+                        </div>
+                        <p className="small text-muted mb-0">
+                          Trước khi "{formData.title || "công việc"}" bắt đầu
+                          lúc{" "}
+                          {formData.start
+                            ? new Date(formData.start).toLocaleTimeString(
+                                "vi-VN"
+                              )
+                            : "..."}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                )}
               </Card.Body>
             </Card>
 

@@ -748,7 +748,7 @@ const GroupHeader = ({ group, isMember, userRole, onJoin, onLeave }) => {
                     variant="primary"
                     size="sm"
                     onClick={() => {
-                      const profileUrl = `${process.env.REACT_APP_FRONTEND_URL}/group/${group._id}`;
+                      const profileUrl = `${process.env.REACT_APP_URL}/group/${group._id}`;
                       navigator.clipboard.writeText(profileUrl);
                       NotificationService.success({
                         title: "Đã sao chép!",

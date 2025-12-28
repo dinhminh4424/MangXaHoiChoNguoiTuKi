@@ -3,6 +3,8 @@ import { useProfile } from "../../contexts/ProfileContext";
 import "./profileEdit.css";
 import notificationService from "../../services/notificationService";
 
+import { useAuth } from "../../contexts/AuthContext";
+
 const ProfileEdit = () => {
   const {
     viewedUser,
@@ -13,6 +15,8 @@ const ProfileEdit = () => {
     clearError,
     clearSuccess,
   } = useProfile();
+
+  const { loadingUser123 } = useAuth();
 
   const [formData, setFormData] = useState({
     fullName: "",
@@ -203,6 +207,8 @@ const ProfileEdit = () => {
       setTimeout(() => {
         clearSuccess();
       }, 2000);
+
+      await loadingUser123();
     } else {
       notificationService.error({
         title: "Lỗi",

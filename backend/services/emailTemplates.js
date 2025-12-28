@@ -1011,6 +1011,106 @@ class EmailTemplates {
         </body>
         </html>
       `,
+
+      // gửi mail todo
+      TODO_REMINDER: (data) => `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    .container { max-width: 600px; margin: 0 auto; font-family: Arial, sans-serif; }
+    .header { background: linear-gradient(135deg, #3788d8 0%, #0d6efd 100%); padding: 30px; text-align: center; color: white; }
+    .content { padding: 30px; background: #f9f9f9; }
+    .footer { padding: 20px; text-align: center; background: #333; color: white; }
+    .alert-box { background: #fff3cd; border: 1px solid #ffeeba; padding: 20px; border-radius: 5px; margin: 20px 0; }
+    .info-box { background: white; padding: 20px; border-radius: 5px; margin: 15px 0; border-left: 4px solid #3788d8; }
+    .button { background: #0d6efd; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block; }
+    .badge { display: inline-block; padding: 4px 10px; border-radius: 12px; font-size: 12px; color: white; }
+    .high { background: #dc3545; }
+    .medium { background: #ffc107; color: #000; }
+    .low { background: #28a745; }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⏰ Nhắc Việc Todo</h1>
+    </div>
+
+    <div class="content">
+      <h2>Xin chào ${data.userName},</h2>
+
+      <div class="alert-box">
+        <p>
+          ${
+            data.isOverdue
+              ? "⚠️ Công việc này đã <strong>QUÁ HẠN</strong>."
+              : "🔔 Đây là nhắc nhở cho công việc sắp đến hạn."
+          }
+        </p>
+      </div>
+
+      <div class="info-box">
+        <h3>📌 Thông tin công việc</h3>
+        <p><strong>Tiêu đề:</strong> ${data.title}</p>
+        <p><strong>Mô tả:</strong> ${data.description || "Không có mô tả"}</p>
+        <p><strong>Loại:</strong> ${data.type}</p>
+        <p>
+          <strong>Ưu tiên:</strong>
+          <span class="badge ${data.priority}">
+            ${data.priority.toUpperCase()}
+          </span>
+        </p>
+        <p><strong>Trạng thái:</strong> ${data.status}</p>
+        ${
+          data.dueDate
+            ? `<p><strong>Hạn chót:</strong> ${data.dueDate}</p>`
+            : ""
+        }
+        ${data.start ? `<p><strong>Bắt đầu:</strong> ${data.start}</p>` : ""}
+        ${data.end ? `<p><strong>Kết thúc:</strong> ${data.end}</p>` : ""}
+        ${
+          data.location
+            ? `<p><strong>Địa điểm:</strong> ${data.location}</p>`
+            : ""
+        }
+      </div>
+
+      ${
+        data.subtasks?.length
+          ? `
+        <div class="info-box">
+          <h3>🧩 Subtasks</h3>
+          <ul>
+            ${data.subtasks
+              .map((st) => `<li>${st.completed ? "✅" : "⬜"} ${st.title}</li>`)
+              .join("")}
+          </ul>
+        </div>
+      `
+          : ""
+      }
+
+      <div style="text-align: center; margin: 25px 0;">
+        <a href="${data.todoLink}" class="button">Xem chi tiết công việc</a>
+      </div>
+
+      <p>
+        👉 Hãy hoàn thành công việc đúng hạn để đảm bảo tiến độ của bạn.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>Autism Support Platform</strong></p>
+      <p>Hỗ trợ: ${data.supportEmail}</p>
+      <p>© ${new Date().getFullYear()}</p>
+    </div>
+  </div>
+</body>
+</html>
+`,
     };
   }
 

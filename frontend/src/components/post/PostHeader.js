@@ -8,6 +8,9 @@ import {
   Flag,
   X,
   Image,
+  Globe,
+  Users,
+  Lock,
 } from "lucide-react";
 import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
@@ -199,26 +202,36 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
     <div className="post-header">
       <div className="header-content d-flex align-items-start justify-content-between">
         <div className="user-info d-flex align-items-start">
-          <Link to={`/profile/${post.userCreateID._id}`}>
+          {post.isAnonymous ? (
             <img
-              src={
-                post.userCreateID.profile?.avatar ||
-                "/assets/images/default-avatar.png"
-              }
+              src={"/assets/images/andanh.jpg"}
               alt="Avatar"
               className="user-avatar rounded-circle"
             />
-          </Link>
+          ) : (
+            <Link to={`/profile/${post.userCreateID._id}`}>
+              <img
+                src={
+                  post.isAnonymous
+                    ? "/assets/images/andanh.jpg"
+                    : post.userCreateID.profile?.avatar ||
+                      "/assets/images/default-avatar.png"
+                }
+                alt="Avatar"
+                className="user-avatar rounded-circle"
+              />
+            </Link>
+          )}
 
           <div className="user-details ms-2 ">
             <div className="user-name text-start">
               <h5>
-                {post.isAnonymous ? "🕶️ Ẩn danh" : post.userCreateID.fullName}
+                {post.isAnonymous ? "Ẩn danh" : post.userCreateID.fullName}
               </h5>
             </div>
             {post.group?._id && (
               <Link
-                to={`/groups/${post.group._id}`}
+                to={`/group/${post.group._id}`}
                 className="group-badge btn btn-sm btn-outline-primary"
               >
                 {post.group.name}
@@ -271,13 +284,13 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                     className="dropdown-item d-flex align-items-center"
                     onClick={() => handleMenuAction("edit")}
                   >
-                    <Edit3 size={16} /> <span className="ms-2">Chỉnh sửa</span>
+                    <Edit3 size={16} /> <span className="ms-2"> Chỉnh sửa</span>
                   </button>
                   <button
                     className="dropdown-item d-flex align-items-center text-danger"
                     onClick={() => handleMenuAction("delete")}
                   >
-                    <Trash2 size={16} /> <span className="ms-2">Xóa</span>
+                    <Trash2 size={16} /> <span className="ms-2"> Xóa</span>
                   </button>
                 </>
               ) : (
@@ -286,13 +299,14 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
                     className="dropdown-item d-flex align-items-center"
                     onClick={() => handleMenuAction("report")}
                   >
-                    <Flag size={16} /> <span className="ms-2">Báo cáo</span>
+                    <Flag size={16} /> <span className="ms-2"> Báo cáo</span>
                   </button>
                   <button
                     className="dropdown-item d-flex align-items-center"
                     onClick={() => handleMenuAction("detail")}
                   >
-                    <Eye size={16} /> <span className="ms-2">Xem chi tiết</span>
+                    <Eye size={16} />{" "}
+                    <span className="ms-2"> Xem chi tiết</span>
                   </button>
                 </>
               )}
@@ -514,12 +528,28 @@ const PostHeader = ({ post, isOwner, onUpdate, onDelete, onReport }) => {
       {/* Privacy Badge */}
       <div className="privacy-info mt-2 text-start">
         <span className={`privacy-badge ${post.privacy}`}>
-          {post.privacy === "public" && "🌍 Công khai"}
-          {post.privacy === "friends" && "👥 Bạn bè"}
-          {post.privacy === "private" && "🔒 Riêng tư"}
+          {post.privacy === "public" && (
+            <span className="">
+              <Globe size={18} /> {"          "}
+              <span>Công khai</span>
+            </span>
+          )}
+          {post.privacy === "friends" && (
+            <span className="">
+              <Users size={18} /> {"  "}
+              <span>Bạn bè</span>
+            </span>
+          )}
+          {post.privacy === "private" && (
+            <span className="">
+              <Lock size={18} /> {"  "} <span>Riêng tư</span>
+            </span>
+          )}
         </span>
         {post.isAnonymous && (
-          <span className="anonymous-badge ms-2">🕶️ Ẩn danh</span>
+          <span className="anonymous-badge ms-2">
+            <i className="fa fa-eye-slash"></i> Ẩn danh
+          </span>
         )}
       </div>
     </div>

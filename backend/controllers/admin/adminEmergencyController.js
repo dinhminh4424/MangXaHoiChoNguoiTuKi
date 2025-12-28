@@ -18,10 +18,28 @@ const adminEmergencyController = {
         sortOrder = "desc",
         hasLocation = "",
         isSilent = "",
+        emergencyId = "",
       } = req.query;
 
       // Build filter query
       let filter = {};
+
+      const searchConditions = [];
+      if (emergencyId) {
+        searchConditions.push({
+          $expr: {
+            $regexMatch: {
+              input: { $toString: "$_id" },
+              regex: emergencyId,
+              options: "i",
+            },
+          },
+        });
+      }
+
+      if (searchConditions.length > 0) {
+        filter.$or = searchConditions;
+      }
 
       // Filter theo type
       if (type) {

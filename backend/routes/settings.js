@@ -52,6 +52,7 @@ router.put("/", auth, async (req, res) => {
       message: "Cập nhật cài đặt thành công",
       data: {
         settings: user.settings,
+        user: user,
       },
     });
   } catch (error) {

@@ -22,11 +22,8 @@ import {
 const AnalyticsDashboard = () => {
   const {
     overviewData,
-    chartData,
-    chartConfigs,
     loading,
     error,
-    period,
     filters,
     refreshData,
     applyFilters,
@@ -178,6 +175,7 @@ const AnalyticsDashboard = () => {
                 chartConfig={getChartConfig("activeUsersChart")}
                 onConfigChange={updateChartConfig}
                 onToggleVisibility={toggleChartVisibility}
+                customizable={false}
               >
                 <ChartRenderer
                   chartId="activeUsersChart"
