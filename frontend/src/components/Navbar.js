@@ -51,6 +51,11 @@ function Navbar({ isCollapsed = false, onToggleSidebar }) {
       children: [
         { path: "/nhandien", icon: "ri-emotion-happy-line", label: "Cảm xúc" }, // icon mới
         { path: "/aiChatScreen", icon: "ri-chat-1-line", label: "AI Chat" }, // icon mới
+        {
+          path: "/QuizBot",
+          icon: "ri-trophy-line",
+          label: "Luyện tập AI",
+        },
       ],
     },
     {

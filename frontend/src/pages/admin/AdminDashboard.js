@@ -690,8 +690,8 @@ const AdminDashboard = () => {
         <div className="ad-header-content">
           <div className="ad-header-title">
             <h1 className="ad-main-title">
-              <FiGlobe className="ad-title-icon" />
-              Dashboard Quản trị
+              <FiGlobe className="ad-title-icon" color="#007bff " />
+              Dashboard Manage
             </h1>
             <p className="ad-subtitle">
               Xin chào, <strong>{user?.username || "Administrator"}</strong>!
