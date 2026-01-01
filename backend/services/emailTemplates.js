@@ -948,6 +948,116 @@ class EmailTemplates {
           </body>
           </html>
         `,
+
+      EMERGENCY_CONTACT_NOTIFICATION: (data) => {
+        const {
+          contactName = "Người nhận",
+          userName = "Người dùng",
+          userPhone = "Không có",
+          emergencyType = "Khẩn cấp",
+          address = "Không xác định",
+          mapLink = "#",
+          message = "Cần hỗ trợ khẩn cấp",
+          timestamp = "",
+          googleMapsLink = "#",
+          what3wordsLink = "#",
+          actionRequired = "Vui lòng liên hệ ngay",
+          relationship = "liên hệ",
+          priority = "medium",
+        } = data;
+
+        const priorityColor =
+          priority === "high"
+            ? "#dc3545"
+            : priority === "medium"
+            ? "#ffc107"
+            : "#28a745";
+
+        return `
+              <!DOCTYPE html>
+              <html>
+              <head>
+                  <meta charset="UTF-8">
+                  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                  <title>Thông báo khẩn cấp</title>
+                  <style>
+                      body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                      .container { max-width: 600px; margin: 0 auto; padding: 20px; border: 3px solid #dc3545; border-radius: 10px; }
+                      .header { background-color: #dc3545; color: white; padding: 20px; text-align: center; border-radius: 5px 5px 0 0; }
+                      .content { padding: 20px; background-color: #f8f9fa; }
+                      .alert-box { background-color: #fff3cd; border: 1px solid #ffeaa7; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                      .info-box { background-color: #e7f3ff; border: 1px solid #b3d7ff; padding: 15px; border-radius: 5px; margin: 15px 0; }
+                      .button { display: inline-block; padding: 12px 24px; background-color: #dc3545; color: white; text-decoration: none; border-radius: 5px; font-weight: bold; }
+                      .footer { text-align: center; margin-top: 30px; color: #666; font-size: 12px; }
+                      .priority-badge { display: inline-block; padding: 5px 10px; border-radius: 20px; color: white; font-weight: bold; }
+                  </style>
+              </head>
+              <body>
+                  <div class="container">
+                      <div class="header">
+                          <h1>🚨 THÔNG BÁO KHẨN CẤP</h1>
+                      </div>
+                      
+                      <div class="content">
+                          <p>Xin chào <strong>${contactName}</strong>,</p>
+                          
+                          <div class="alert-box">
+                              <h3>⚠️ Bạn được liệt kê là liên hệ khẩn cấp của <strong>${userName}</strong></h3>
+                              <p><strong>Mối quan hệ:</strong> ${relationship}</p>
+                              <div style="background-color: ${priorityColor}; color: white; padding: 8px; border-radius: 5px; text-align: center;">
+                                  Mức độ ưu tiên: ${
+                                    priority === "high"
+                                      ? "CAO"
+                                      : priority === "medium"
+                                      ? "TRUNG BÌNH"
+                                      : "THẤP"
+                                  }
+                              </div>
+                          </div>
+                          
+                          <div class="info-box">
+                              <h4>📋 Thông tin yêu cầu hỗ trợ:</h4>
+                              <ul>
+                                  <li><strong>Người cần trợ giúp:</strong> ${userName}</li>
+                                  <li><strong>Số điện thoại:</strong> ${userPhone}</li>
+                                  <li><strong>Loại khẩn cấp:</strong> ${emergencyType}</li>
+                                  <li><strong>Thời gian:</strong> ${timestamp}</li>
+                                  <li><strong>Địa chỉ:</strong> ${address}</li>
+                                  <li><strong>Tin nhắn:</strong> ${message}</li>
+                              </ul>
+                          </div>
+                          
+                          <h4>📍 Vị trí trên bản đồ:</h4>
+                          <p>
+                              <a href="${googleMapsLink}" class="button" target="_blank">
+                                  Xem trên Google Maps
+                              </a>
+                          </p>
+                          <p>
+                              <small>Hoặc truy cập: <a href="${what3wordsLink}" target="_blank">what3words</a></small>
+                          </p>
+                          
+                          <div style="background-color: #f8d7da; border-left: 4px solid #dc3545; padding: 15px; margin: 20px 0;">
+                              <h4 style="color: #721c24; margin-top: 0;">🚑 HÀNH ĐỘNG CẦN THỰC HIỆN:</h4>
+                              <ol>
+                                  <li>Liên hệ ngay với <strong>${userName}</strong> qua số điện thoại: ${userPhone}</li>
+                                  <li>Nếu không liên lạc được, hãy đến vị trí đã cung cấp</li>
+                                  <li>Trong trường hợp khẩn cấp, hãy gọi 113 (cảnh sát) hoặc 115 (cấp cứu)</li>
+                                  <li>Cập nhật trạng thái cho đội ngũ hỗ trợ nếu có thể</li>
+                              </ol>
+                          </div>
+                          
+                          <p><em>Thông báo này được gửi tự động từ hệ thống Autism Support khi người dùng kích hoạt tính năng SOS.</em></p>
+                      </div>
+                      
+                      <div class="footer">
+                          <p>© ${new Date().getFullYear()} Autism Support Platform. All rights reserved.</p>
+                          <p>Nếu bạn nhận được email này nhầm lẫn, vui lòng liên hệ với quản trị viên.</p>
+                      </div>
+                  </div>
+              </body>
+              </html>`;
+      },
       // Template thông báo đổi mật khẩu thành công
       PASSWORD_CHANGED: (data) => `
         <!DOCTYPE html>

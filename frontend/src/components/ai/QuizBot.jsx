@@ -1288,37 +1288,14 @@ const QuizBotEnhanced = () => {
 
                         <div className="quizbot-question-content">
                           {question.title && (
-                            <div class="d-flex  justify-content-center">
-                              <div className="quizbot-scenario-box">
-                                <div className="quizbot-scenario-header">
-                                  <FiHelpCircle />
-                                  <h4>Tình huống</h4>
-                                </div>
-                                <p className="quizbot-scenario-text">
-                                  {question.title}
-                                </p>
-                                <div className="quizbot-question-actions-header">
-                                  <TextReaderTwoButtons
-                                    text={`Câu ${question.id}: ${
-                                      question.title || ""
-                                    }. ${question.question}`}
-                                    lang="vi-VN"
-                                    rate={0.95}
-                                    pitch={1.0}
-                                    volume={1.0}
-                                    height={32}
-                                    minWidth={36}
-                                    className={`quizbot-read-question-btn ${
-                                      isCurrentlyReading(
-                                        "question",
-                                        question.id
-                                      )
-                                        ? "quizbot-reading"
-                                        : ""
-                                    }`}
-                                  />
-                                </div>
+                            <div className="quizbot-scenario-box">
+                              <div className="quizbot-scenario-header">
+                                <FiHelpCircle />
+                                <h4>Tình huống</h4>
                               </div>
+                              <p className="quizbot-scenario-text">
+                                {question.title}
+                              </p>
                             </div>
                           )}
 
@@ -1327,6 +1304,24 @@ const QuizBotEnhanced = () => {
                               <p className="quizbot-question-text">
                                 {question.question}
                               </p>
+                              <div className="quizbot-question-actions-header">
+                                <TextReaderTwoButtons
+                                  text={`Câu ${question.id}: ${
+                                    question.title || ""
+                                  }. ${question.question}`}
+                                  lang="vi-VN"
+                                  rate={0.95}
+                                  pitch={1.0}
+                                  volume={1.0}
+                                  height={32}
+                                  minWidth={36}
+                                  className={`quizbot-read-question-btn ${
+                                    isCurrentlyReading("question", question.id)
+                                      ? "quizbot-reading"
+                                      : ""
+                                  }`}
+                                />
+                              </div>
                             </div>
                           </div>
 

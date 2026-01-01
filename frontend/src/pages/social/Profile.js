@@ -10,6 +10,7 @@ import VerificationTab from "../../components/profile/VerificationTab";
 import ProfileJournal from "../../components/profile/profileJournal";
 import ProfileFriends from "../../components/profile/profileFriends";
 import ProfilePosts from "../../components/profile/profilePost";
+import EmergencyContactsTab from "../../components/profile/EmergencyContactsTab";
 import api from "../../services/api";
 
 const Profile = () => {
@@ -160,8 +161,30 @@ const Profile = () => {
                       >
                         Xác minh danh tính
                         {isVerified && (
-                          <i className="fas fa-check-circle ms-1"></i>
+                          <svg
+                            width="22"
+                            height="22"
+                            xmlns="http://www.w3.org/2000/svg"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              fill="#06af25ff"
+                              d="M9 3L8 6H4l1 4l-3 2l3 2l-1 4h4l1 3l3-2l3 2l1-3h4l-1-4l3-2l-3-2l1-4h-4l-1-3l-3 2zm7 5l1 1l-7 7l-3-3l1-1l2 2z"
+                            />
+                          </svg>
                         )}
+                      </button>
+                    </li>
+
+                    {/* LIÊN HỆ KHẨN CẤP */}
+                    <li className="nav-item">
+                      <button
+                        className={`nav-link ${
+                          activeTab === "emergency" ? "active" : ""
+                        }`}
+                        onClick={() => handleTabSelect("emergency")}
+                      >
+                        Liên hệ khẩn cấp
                       </button>
                     </li>
                   </>
@@ -208,6 +231,13 @@ const Profile = () => {
                 {activeTab === "verify" && isOwnProfile && (
                   <div className="tab-pane fade show active">
                     <VerificationTab />
+                  </div>
+                )}
+
+                {/* Liên hệ khẩn cấp */}
+                {activeTab === "emergency" && isOwnProfile && (
+                  <div className="tab-pane fade show active">
+                    <EmergencyContactsTab userId={userId} />
                   </div>
                 )}
               </div>

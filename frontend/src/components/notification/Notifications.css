@@ -1132,3 +1132,32 @@
 .toast-secondary::before {
   background: #6c757d;
 }
+
+/* SOS Map Modal */
+.emergency-map-modal .modal-content {
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.emergency-map-container {
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+}
+
+.map-info {
+  background-color: #f8f9fa;
+  border-left: 4px solid #dc3545;
+}
+
+.sos-popup-action-btn {
+  padding: 8px 16px;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.sos-popup-action-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}

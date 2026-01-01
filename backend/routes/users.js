@@ -558,6 +558,7 @@ const userController = require("../controllers/userController");
 const User = require("../models/User");
 const router = express.Router();
 const FileManager = require("../utils/fileManager");
+const emergencyContactController = require("../controllers/emergencyContactController");
 
 // Public routes (no auth) - useful for client-side debugging or public search
 router.get("/public", userController.getUsersPublic);
@@ -579,6 +580,39 @@ router.get("/:userId/qr", userController.getUserQR);
 router.get("/:userId", userController.getUserById);
 
 router.put("/:userId/qr", userController.updateUserQR);
+
+// ==================== EMERGENCY CONTACTS ROUTES ====================
+// Tất cả routes emergency contacts đều cần auth
+router.get(
+  "/:userId/emergency-contacts",
+  auth,
+  emergencyContactController.getContacts
+);
+router.post(
+  "/:userId/emergency-contacts",
+  auth,
+  emergencyContactController.addContact
+);
+router.put(
+  "/:userId/emergency-contacts/:contactId",
+  auth,
+  emergencyContactController.updateContact
+);
+router.delete(
+  "/:userId/emergency-contacts/:contactId",
+  auth,
+  emergencyContactController.deleteContact
+);
+router.post(
+  "/:userId/emergency-contacts/notify",
+  auth,
+  emergencyContactController.notifyContacts
+);
+router.get(
+  "/:userId/emergency-contacts/stats",
+  auth,
+  emergencyContactController.getStats
+);
 
 // Route "/" phải đứng CUỐI CÙNG
 router.get("/", userController.getUsers);

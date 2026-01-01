@@ -15,6 +15,8 @@ const UserNotifications = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [sosNotification, setSosNotification] = useState(null);
   const [isSosPopupOpen, setIsSosPopupOpen] = useState(false);
+  const [showMapModal, setShowMapModal] = useState(false);
+  const [selectedLocation, setSelectedLocation] = useState(null);
 
   const [toasts, setToasts] = useState([]);
 
@@ -58,6 +60,9 @@ const UserNotifications = () => {
       "APPEAL_CREATE",
       "FORCE_LOGOUT",
       "TODO_REMINDER",
+      "EMERGENCY_CONTACT_ADDED", // Thêm liên hệ khẩn cấp
+      "EMERGENCY_CONTACT_REMOVED", // Xóa liên hệ khẩn cấp
+      "EMERGENCY_NOTIFICATION_SENT", // Gửi thông báo khẩn cấp
     ];
     return systemTypes.includes(type);
   };
@@ -389,6 +394,8 @@ const UserNotifications = () => {
 
     setIsSosPopupOpen(false);
     setSosNotification(null);
+    setShowMapModal(false);
+    setSelectedLocation(null);
   };
 
   const markAllAsRead = async () => {
@@ -514,6 +521,63 @@ const UserNotifications = () => {
     setTimeout(() => {
       setToasts((prev) => prev.filter((t) => t.id !== id));
     }, duration);
+  };
+
+  // Thêm sau hàm showToast
+  const renderMap = () => {
+    if (!selectedLocation) {
+      return <div className="text-center p-4">Không có thông tin vị trí</div>;
+    }
+
+    const mapUrl = `https://maps.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}&z=15&output=embed`;
+
+    return (
+      <div className="emergency-map-container">
+        <iframe
+          title="Emergency Location"
+          width="100%"
+          height="400"
+          frameBorder="0"
+          style={{ border: 0 }}
+          src={mapUrl}
+          allowFullScreen
+        />
+        <div className="map-info mt-3 p-3 bg-light rounded">
+          <p>
+            <strong>Vĩ độ:</strong> {selectedLocation.lat}
+          </p>
+          <p>
+            <strong>Kinh độ:</strong> {selectedLocation.lng}
+          </p>
+          <p>
+            <strong>Địa chỉ:</strong> {selectedLocation.address}
+          </p>
+        </div>
+      </div>
+    );
+  };
+
+  // Thêm sau renderMap
+  const parseLocation = (notification) => {
+    if (!notification || !notification.data) return null;
+
+    try {
+      // Lấy từ data của notification
+      const { latitude, longitude, address, mapUrl } = notification.data;
+
+      if (!latitude || !longitude) return null;
+
+      return {
+        lat: parseFloat(latitude),
+        lng: parseFloat(longitude),
+        address: address || "Không xác định địa chỉ",
+        mapUrl:
+          mapUrl || `https://www.google.com/maps?q=${latitude},${longitude}`,
+      };
+    } catch (error) {
+      console.error("Error parsing location from notification:", error);
+      return null;
+    }
   };
 
   const getEmptyMessage = () => {
@@ -758,6 +822,46 @@ const UserNotifications = () => {
       </div>
 
       {/* ===== END TOAST ===== */}
+
+      {/* Map Modal */}
+      <Modal
+        show={showMapModal}
+        onHide={() => setShowMapModal(false)}
+        size="lg"
+        centered
+        className="emergency-map-modal"
+        scrollable
+      >
+        <Modal.Header closeButton className="bg-primary text-white">
+          <Modal.Title>
+            <i className="ri-map-pin-line me-2"></i>
+            Vị trí Khẩn cấp
+          </Modal.Title>
+        </Modal.Header>
+        <Modal.Body>{renderMap()}</Modal.Body>
+        <Modal.Footer className="bg-light">
+          <Button
+            variant="outline-secondary"
+            onClick={() => setShowMapModal(false)}
+          >
+            Đóng
+          </Button>
+          {selectedLocation && (
+            <Button
+              variant="primary"
+              onClick={() => {
+                window.open(
+                  `https://www.google.com/maps?q=${selectedLocation.lat},${selectedLocation.lng}`,
+                  "_blank"
+                );
+              }}
+            >
+              <i className="ri-external-link-line me-2"></i>
+              Mở Google Maps
+            </Button>
+          )}
+        </Modal.Footer>
+      </Modal>
 
       {/* === SỬA LỖI MODAL: Bỏ các modal lỗi, chỉ giữ lại 1 modal react-bootstrap === */}
       {selectedNotification && (
@@ -1201,6 +1305,37 @@ const UserNotifications = () => {
                 <i className="ri-check-line me-2"></i>
                 {sosNotification.type === "FORCE_LOGOUT" ? "Đồng ý" : "Đã xem"}
               </button>
+
+              {/* Trong sos-popup-footer */}
+              {sosNotification?.data?.latitude &&
+                sosNotification?.data?.longitude && (
+                  <button
+                    className="btn btn-warning sos-popup-action-btn"
+                    onClick={() => {
+                      const location = parseLocation(sosNotification); // Truyền cả notification
+                      if (location) {
+                        setSelectedLocation(location);
+                        setShowMapModal(true);
+                      } else {
+                        // Fallback: mở Google Maps trực tiếp
+                        if (sosNotification.data.mapUrl) {
+                          window.open(sosNotification.data.mapUrl, "_blank");
+                        } else if (
+                          sosNotification.data.latitude &&
+                          sosNotification.data.longitude
+                        ) {
+                          window.open(
+                            `https://www.google.com/maps?q=${sosNotification.data.latitude},${sosNotification.data.longitude}`,
+                            "_blank"
+                          );
+                        }
+                      }
+                    }}
+                  >
+                    <i className="ri-map-pin-line me-2"></i>
+                    Xem vị trí
+                  </button>
+                )}
 
               {sosNotification.type !== "FORCE_LOGOUT" &&
                 sosNotification.data?.phoneNumber && (
