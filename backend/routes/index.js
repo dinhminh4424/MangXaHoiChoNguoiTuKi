@@ -30,6 +30,8 @@ const aiChatRoutes = require("./aiChat");
 const backupRestoreRoutes = require("./backupRestore");
 const contactRoutes = require("./contact");
 
+const questionResult = require("./questionResult");
+
 // Sử dụng các routes
 router.use("/auth", authRoutes);
 router.use("/users", userRoutes);
@@ -58,6 +60,7 @@ router.use("/contact", contactRoutes); //
 
 router.use("/client-logs", clientLogsRouter); // aiChatRoutes
 router.use("/ai-chat", aiChatRoutes); // aiChatRoutes
+router.use("/question-results", questionResult); // aiChatRoutes
 
 // Health check endpoint
 router.get("/health", (req, res) => {

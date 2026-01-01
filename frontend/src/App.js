@@ -110,6 +110,10 @@ import Test from "./pages/test";
 
 import AIChat from "./components/ai/AIChat";
 import AiChatScreen from "./components/ai/AiChatScreen";
+import QuizBot from "./components/ai/QuizBot";
+import QuizHistory from "./pages/quiz/QuizHistory";
+import QuizResultDetail from "./pages/quiz/QuizResultDetail";
+
 // import 'animate.css';
 
 /**
@@ -183,6 +187,14 @@ const routeConfigs = [
   { path: "/test", component: Test, layout: UserLayout },
   { path: "/aiChat", component: AIChat, layout: UserLayout },
   { path: "/aiChatScreen", component: AiChatScreen, layout: UserLayout },
+
+  { path: "/QuizBot", component: QuizBot, layout: UserLayout },
+  { path: "/quiz-history", component: QuizHistory, layout: UserLayout },
+  {
+    path: "/quiz-result/:resultId",
+    component: QuizResultDetail,
+    layout: UserLayout,
+  },
 
   // Protected User Routes - Chat
   { path: "/chat", component: Chat, layout: UserLayout },
