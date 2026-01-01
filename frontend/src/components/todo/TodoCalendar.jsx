@@ -321,20 +321,8 @@ const TodoCalendar = () => {
   };
 
   useEffect(() => {
-    const start = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth(),
-      1
-    );
-    const end = new Date(
-      currentDate.getFullYear(),
-      currentDate.getMonth() + 1,
-      0
-    );
-
-    fetchEvents(start, end);
     fetchAllData();
-  }, [currentDate]);
+  }, []);
 
   // Thêm useEffect này sau các useEffect khác trong component
   useEffect(() => {
@@ -465,15 +453,31 @@ const TodoCalendar = () => {
     }
   };
 
-  const handleDatesSet = (dateInfo) => {
-    setCurrentDate(new Date(dateInfo.start));
+  const handleDatesSet = async (dateInfo) => {
+    const newDate = new Date(dateInfo.start);
+
+    if (
+      newDate.getFullYear() !== currentDate.getFullYear() ||
+      newDate.getMonth() !== currentDate.getMonth()
+    ) {
+      setCurrentDate(newDate);
+      // Optional: recalculate monthly stats ở đây nếu cần, nhưng hiện tại đã OK vì stats dùng currentDate
+    }
+
+    try {
+      setLoading(true);
+      await fetchEvents(dateInfo.start, dateInfo.end); // range chính xác nhất
+    } catch (error) {
+      showMessage("Lỗi tải sự kiện", "error");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePrevMonth = () => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       calendarApi.prev();
-      setCurrentDate(calendarApi.getDate());
     }
   };
 
@@ -481,7 +485,6 @@ const TodoCalendar = () => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       calendarApi.next();
-      setCurrentDate(calendarApi.getDate());
     }
   };
 
@@ -489,7 +492,6 @@ const TodoCalendar = () => {
     if (calendarRef.current) {
       const calendarApi = calendarRef.current.getApi();
       calendarApi.today();
-      setCurrentDate(calendarApi.getDate());
     }
   };
 

@@ -2147,9 +2147,9 @@ const AdminEmergencyManagement = () => {
         className="emergency-map-modal"
         scrollable
       >
-        <Modal.Header className="emergency-modal-header-enhanced">
-          <Modal.Title>
-            <Navigation size={24} className="me-2" />
+        <Modal.Header className="emergency-modal-header-enhanced" closeButton>
+          <Modal.Title className="text-white">
+            <Navigation size={24} className="me-2" color="white" />
             Vị trí Khẩn cấp
           </Modal.Title>
         </Modal.Header>

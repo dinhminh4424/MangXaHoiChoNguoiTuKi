@@ -86,6 +86,9 @@ const notificationSchema = new mongoose.Schema(
 
         // Khẩn cấp
         "SOS_EMERGENCY", // Tín hiệu SOS khẩn cấp
+        "EMERGENCY_CONTACT_ADDED", // Thêm liên hệ khẩn cấp
+        "EMERGENCY_CONTACT_REMOVED", // Xóa liên hệ khẩn cấp
+        "EMERGENCY_NOTIFICATION_SENT", // Gửi thông báo khẩn cấp
 
         // Todo
         "TODO_REMINDER", // Nhắc nhở sự kiện todo

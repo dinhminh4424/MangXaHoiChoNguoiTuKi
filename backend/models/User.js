@@ -163,6 +163,7 @@ const userSchema = new mongoose.Schema(
       },
     },
 
+    // QR
     qrCode: {
       data: {
         type: String, // URL profile (vd: "https://example.com/profile/123")
@@ -195,6 +196,44 @@ const userSchema = new mongoose.Schema(
         default: null,
       },
     },
+
+    // LIÊN HỆ KHẨN CẤP
+    // EMAIL LIÊN HỆ KHẨN CẤP
+    emergencyContacts: [
+      {
+        email: {
+          type: String,
+          trim: true,
+        },
+        name: {
+          type: String,
+          trim: true,
+        },
+        relationship: {
+          type: String,
+          required: true,
+          trim: true,
+          enum: ["family", "friend", "spouse", "parent", "sibling", "other"], // ["gia đình", "bạn bè", "vợ/chồng", "cha mẹ", "anh chị em ruột", "khác"]
+        },
+        phone: {
+          type: String,
+          trim: true,
+        },
+        priority: {
+          type: String,
+          enum: ["high", "medium", "low"],
+          default: "medium",
+        },
+
+        addedAt: {
+          type: Date,
+          default: Date.now,
+        },
+        lastNotified: {
+          type: Date,
+        },
+      },
+    ],
   },
   {
     timestamps: true, // Tự động tạo createdAt và updatedAt
